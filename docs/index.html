@@ -38,8 +38,7 @@
   "offers": [
     { "@type": "Offer", "name": "Gratis", "price": "0", "priceCurrency": "COP" },
     { "@type": "Offer", "name": "Barrio", "price": "59000", "priceCurrency": "COP" },
-    { "@type": "Offer", "name": "Pro", "price": "129000", "priceCurrency": "COP" },
-    { "@type": "Offer", "name": "Sedes", "price": "249000", "priceCurrency": "COP" }
+    { "@type": "Offer", "name": "Pro", "price": "129000", "priceCurrency": "COP" }
   ]
 }
 </script>
@@ -116,13 +115,20 @@
     <div class="hero-grid">
       <div class="hero-col-texto">
         <span class="hero-badge"><span class="dot"></span> 0% DE COMISIÓN · TÚ COBRAS DIRECTO</span>
-        <h1>Vende por WhatsApp <em>sin pagar comisión</em>. Y haz que vuelvan.</h1>
+        <h1><span class="palabra" style="animation-delay:.15s">Vende</span> <span class="palabra" style="animation-delay:.195s">por</span> <span class="palabra" style="animation-delay:.24s">WhatsApp</span> <em><span class="palabra" style="animation-delay:.285s">sin</span> <span class="palabra" style="animation-delay:.33s">pagar</span> <span class="palabra" style="animation-delay:.375s">comisión</span></em>. <span class="palabra" style="animation-delay:.42s">Y</span> <span class="palabra" style="animation-delay:.465s">haz</span> <span class="palabra" style="animation-delay:.51s">que</span> <span class="palabra" style="animation-delay:.555s">vuelvan.</span></h1>
         <p>Publica tu tienda con una foto de tu menú, cobra por Bre-B en segundos y deja que el copiloto te diga cada mañana a quién escribirle hoy.</p>
 
         <div class="hero-ctas">
           <a href="https://github.com/cgomez2305/NUEVO-MVP" class="btn btn-sello">Ver el código en GitHub →</a>
           <a href="#como-funciona" class="btn btn-ghost">Cómo funciona</a>
         </div>
+
+        <ul class="hero-trust">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg> 0% de comisión, siempre</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg> Código abierto en GitHub</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg> Bre-B desde el día uno</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg> Sin tarjeta de crédito</li>
+        </ul>
       </div>
 
       <div class="hero-col-tel">
@@ -270,27 +276,131 @@
 
 <section id="como-funciona" class="reveal">
   <div class="wrap">
-    <h2>Cómo funciona en 3 pasos</h2>
-    <p class="lead">Sin curso de tecnología. Todo desde un Android de gama media.</p>
+    <span class="eyebrow" style="color:var(--sello)">CÓMO FUNCIONA</span>
+    <h2>De la foto a tu primer pedido</h2>
+    <p class="lead">Sin curso de tecnología. Todo desde un Android de gama media, en el tiempo que dura un café.</p>
 
-    <div class="pasos reveal-fila">
-      <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
-        <span class="n">01</span>
-        <h3>Foto del menú</h3>
-        <p>Una carta impresa, una pizarra o tus fotos de Instagram. La IA lee productos y precios por ti.</p>
+    <div class="pasos-alternados">
+      <div class="paso-fila reveal-der">
+        <div class="paso-fila-texto">
+          <span class="paso-fila-num mono">01</span>
+          <h3>Tomas una foto de tu menú</h3>
+          <p>Una carta impresa, una pizarra o tus fotos de Instagram. No necesitas diseñar nada ni escribir el catálogo a mano.</p>
+        </div>
+        <div class="paso-fila-visual">
+          <div class="mini-mockup">
+            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">tu-menu.jpg</span></div>
+            <div class="mini-mockup-cuerpo" style="text-align:center">
+              <div class="mm-icono-grande" style="background:var(--tinte-sello)">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+              </div>
+              <svg class="mm-flecha" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+              <div style="background:var(--bg-suave);border-radius:10px;padding:10px 12px;text-align:left">
+                <div class="mm-linea"><span>Bandeja paisa</span><span class="precio">$28.000</span></div>
+                <div class="mm-linea"><span>Arepa con queso</span><span class="precio">$6.000</span></div>
+                <div class="mm-linea"><span>Jugo natural</span><span class="precio">$5.000</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
-        <span class="n">02</span>
-        <h3>Enlace en tu estado</h3>
-        <p>Tu tienda queda publicada en un enlace propio. Lo compartes en WhatsApp e Instagram.</p>
+
+      <div class="paso-fila reversa reveal-izq">
+        <div class="paso-fila-texto">
+          <span class="paso-fila-num mono">02</span>
+          <h3>La IA arma tu tienda y tú la revisas</h3>
+          <p>Lee productos y precios de tu foto y arma tu catálogo. Tú solo confirmas, corriges lo que haga falta y publicas.</p>
+        </div>
+        <div class="paso-fila-visual">
+          <div class="mini-mockup">
+            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">veci.com/t/tu-negocio</span></div>
+            <div class="mini-mockup-cuerpo">
+              <div class="mm-grid">
+                <div class="item"><div class="foto" style="background:#E8452C"></div><span class="nombre">Bandeja paisa</span><span class="precio">$28.000</span></div>
+                <div class="item"><div class="foto" style="background:#F2B632"></div><span class="nombre">Arepa</span><span class="precio">$6.000</span></div>
+                <div class="item"><div class="foto" style="background:#5B7F3A"></div><span class="nombre">Jugo natural</span><span class="precio">$5.000</span></div>
+                <div class="item"><div class="foto" style="background:#3B4CCA"></div><span class="nombre">Sancocho</span><span class="precio">$16.000</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
-        <span class="n">03</span>
+
+      <div class="paso-fila reveal-der">
+        <div class="paso-fila-texto">
+          <span class="paso-fila-num mono">03</span>
+          <h3>Cobras por Bre-B, sin comisión de tarjeta</h3>
+          <p>Pagos en menos de 20 segundos, entre cualquier banco o billetera. Gratis para personas naturales los primeros 3 años.</p>
+        </div>
+        <div class="paso-fila-visual">
+          <div class="mini-mockup">
+            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">wa.me/57…</span></div>
+            <div class="mini-mockup-cuerpo">
+              <div class="mm-confirmacion">
+                <span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span>
+                <div><strong>Pago Bre-B confirmado</strong><span>Menos de 20 segundos</span></div>
+              </div>
+              <div class="mm-linea" style="margin-top:12px"><span>Total del pedido</span><span class="precio">$39.000</span></div>
+              <div class="mm-linea"><span>Comisión de Veci</span><span class="precio" style="color:#16A36A">$0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <div class="wrap">
+    <span class="eyebrow" style="color:var(--sello)">CARACTERÍSTICAS</span>
+    <h2>Todo lo que necesitas para vender</h2>
+    <p class="lead">Sin comisiones, sin intermediarios, sin depender de nadie más.</p>
+
+    <div class="feature-grid reveal-fila">
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
+        <h3>Vende por WhatsApp</h3>
+        <p>Tu cliente ya lo usa a diario. No tiene que instalar nada ni aprender una app nueva.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
+        <h3>0% de comisión</h3>
+        <p>Pagas un plan fijo, nunca un porcentaje de lo que vendes. Lo que cobras es tuyo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
         <h3>Cobro por Bre-B</h3>
-        <p>Pagos en menos de 20 segundos, sin comisión de tarjeta. Gratis para personas naturales 3 años.</p>
+        <p>Transferencias en menos de 20 segundos, sin pasarela de tarjeta ni comisión bancaria.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <h3>Copiloto de recompra</h3>
+        <p>Cada mañana revisa quién lleva más tiempo del habitual sin pedir y te sugiere a quién escribirle.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
+        <h3>Onboarding con foto + IA</h3>
+        <p>Subes una foto de tu menú o tus servicios y la IA arma tu catálogo. Tú solo revisas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <h3>Pedidos o reservas</h3>
+        <p>Catálogo con carrito para comida y tiendas, o agenda con horario para peluquerías, spas y talleres.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <h3>Panel simple</h3>
+        <p>Pedidos o agenda, catálogo y copiloto en un solo lugar. Sin curva de aprendizaje.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg></div>
+        <h3>Código abierto</h3>
+        <p>Se instala en tu propio hosting. Lo lees línea por línea en GitHub, sin cajas negras.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Hecho para Colombia</h3>
+        <p>Pesos colombianos, Ley 1581 de datos personales y Bre-B nativo desde el primer día.</p>
       </div>
     </div>
   </div>
@@ -426,47 +536,43 @@
       <button type="button" id="btnAnual">Anual <span class="ahorro">2 meses gratis</span></button>
     </div>
 
-    <div class="precios reveal-fila">
+    <div class="precios precios-3 reveal-fila">
       <div class="plan">
         <span class="nombre">Gratis</span>
         <span class="precio">$0</span>
+        <span class="plan-sub">Para probar sin arriesgar nada</span>
         <ul>
-          <li>Hasta 50 pedidos al mes</li>
-          <li>Tienda en subdominio</li>
-          <li>Cobro por Bre-B</li>
-          <li>Marca de Veci visible</li>
+          <li>Hasta 50 pedidos o citas al mes</li>
+          <li>Tienda con tu propio enlace</li>
+          <li>Cobro por Bre-B, Nequi o efectivo</li>
+          <li>Marca "Hecho con Veci" visible</li>
         </ul>
       </div>
       <div class="plan destacado">
+        <span class="chip-popular">Más elegido</span>
         <span class="nombre">Barrio</span>
         <span class="precio"><span class="precio-mensual">$59<small>.000/mes</small></span><span class="precio-anual">$49<small>.000/mes, facturado anual</small></span></span>
+        <span class="plan-sub">Para el negocio que ya vende todos los días</span>
         <ul>
-          <li>Pedidos ilimitados</li>
+          <li>Pedidos o citas ilimitados</li>
           <li>Copiloto de recompra</li>
-          <li>Tarjeta de sellos digital</li>
+          <li>Pedidos <strong>y</strong> reservas en la misma cuenta</li>
           <li>Sin marca de Veci</li>
         </ul>
       </div>
       <div class="plan">
         <span class="nombre">Pro</span>
         <span class="precio"><span class="precio-mensual">$129<small>.000/mes</small></span><span class="precio-anual">$108<small>.000/mes, facturado anual</small></span></span>
+        <span class="plan-sub">Para el negocio que ya tiene equipo</span>
         <ul>
           <li>Todo lo de Barrio</li>
-          <li>Dominio propio</li>
-          <li>Domiciliarios</li>
-          <li>Factura DIAN (cuando exista)</li>
-        </ul>
-      </div>
-      <div class="plan">
-        <span class="nombre">Sedes</span>
-        <span class="precio"><span class="precio-mensual">$249<small>.000/mes</small></span><span class="precio-anual">$208<small>.000/mes, facturado anual</small></span></span>
-        <ul>
-          <li>Varias sedes</li>
-          <li>Usuarios por rol</li>
-          <li>Soporte prioritario</li>
+          <li>Onboarding con IA (lee tu foto con Claude)</li>
+          <li>Historial completo y panel de estadísticas</li>
+          <li>Soporte prioritario por WhatsApp</li>
         </ul>
       </div>
     </div>
+    <p class="precios-nota">¿Necesitas varias sedes o usuarios por rol? Está en el roadmap — <a href="https://github.com/cgomez2305/NUEVO-MVP" style="color:var(--sello)">ábrelo como issue en GitHub</a> y lo priorizamos.</p>
   </div>
 </section>
 
@@ -509,14 +615,31 @@
   </div>
 </div>
 
-<footer>
+<footer class="footer-grande">
   <div class="wrap">
-    <p>Veci · a partir del documento de análisis "Tienda propia para Colombia"</p>
-    <div class="footer-links">
-      <a href="blog/">Blog</a>
-      <a href="https://github.com/cgomez2305/NUEVO-MVP">GitHub</a>
+    <div class="footer-columnas">
+      <div class="footer-marca">
+        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
+        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Producto</span>
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#precios">Precios</a>
+        <a href="demo.html">Demos en vivo</a>
+        <a href="#faq">Preguntas frecuentes</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Recursos</span>
+        <a href="blog/">Blog</a>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP">Código en GitHub</a>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP#instalación">Guía de instalación</a>
+      </div>
     </div>
-    <span class="estado"><span class="dot"></span> MVP funcional en desarrollo</span>
+    <div class="footer-abajo">
+      <p>Veci · a partir del documento de análisis "Tienda propia para Colombia"</p>
+      <span class="estado"><span class="dot"></span> MVP funcional en desarrollo</span>
+    </div>
   </div>
 </footer>
 
@@ -583,7 +706,7 @@
   // salto directo a un ancla (#precios desde otra página) también revele
   // todo lo que quedó "atrás" del salto, no solo lo que se cruza al hacer
   // scroll normal.
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
+  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila, .reveal-der, .reveal-izq'));
   var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
   var revisando = false;
 
