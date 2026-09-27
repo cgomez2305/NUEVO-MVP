@@ -57,7 +57,7 @@
       </div>
     </nav>
 
-    <span class="eyebrow">Mostrador digital para negocios colombianos</span>
+    <span class="hero-badge"><span class="dot"></span> 0% DE COMISIÓN · TÚ COBRAS DIRECTO</span>
     <h1>Vende por WhatsApp sin pagar comisión. Y haz que vuelvan.</h1>
     <p>Publica tu tienda con una foto de tu menú, cobra por Bre-B en segundos y deja que el copiloto te diga cada mañana a quién escribirle hoy.</p>
 
@@ -74,15 +74,57 @@
   </div>
 </div>
 
-<section id="calculadora">
+<section class="reveal">
+  <div class="wrap">
+    <h2>¿Te suena familiar?</h2>
+    <p class="lead">Los mismos dolores de siempre, casi todos los días.</p>
+
+    <div class="dolores reveal-fila">
+      <div class="dolor-card">
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l7-3"/></svg></div>
+        <div>
+          <h3>Rappi y DiDi se quedan con el 25-30%</h3>
+          <p>De cada $35.000 vendidos, hasta $10.500 se van en comisión antes de que veas un peso.</p>
+        </div>
+      </div>
+      <div class="dolor-card">
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+        <div>
+          <h3>Tu cliente es "de la app", no tuyo</h3>
+          <p>No tienes su número, no sabes cuándo dejó de pedir, no puedes escribirle para que vuelva.</p>
+        </div>
+      </div>
+      <div class="dolor-card">
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><path d="M4 4h16v12H7l-3 3V4Z"/></svg></div>
+        <div>
+          <h3>Pedidos anotados en el chat, sin orden</h3>
+          <p>Direcciones y cantidades que se pierden entre mensajes de texto y notas de voz.</p>
+        </div>
+      </div>
+      <div class="dolor-card">
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg></div>
+        <div>
+          <h3>Publicar una tienda "de verdad" toma días</h3>
+          <p>Plantillas que no entiendes, fotos que hay que subir una por una, un curso de tecnología que nadie tiene tiempo de hacer.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dolores-cierre">Veci resuelve todo eso en <strong>10 minutos</strong>, con una foto de tu menú.</div>
+  </div>
+</section>
+
+<section id="calculadora" class="reveal">
   <div class="wrap">
     <h2>¿Cuánto le dejas a las apps al mes?</h2>
-    <p class="lead">Rappi y DiDi Food cobran a restaurantes en Colombia entre 25% y 30% del pedido. Escribe cuánto vendes al mes por esas apps.</p>
+    <p class="lead">Rappi y DiDi Food cobran a restaurantes en Colombia entre 25% y 30% del pedido. Mueve el control para ver tu caso.</p>
 
     <div class="calc">
       <div>
-        <label for="ventaApps">Ventas mensuales por apps de domicilio (COP)</label>
-        <input type="text" inputmode="numeric" id="ventaApps" placeholder="8.000.000" autocomplete="off">
+        <label for="ventaApps">Ventas mensuales por apps de domicilio</label>
+        <span class="calc-valor-grande mono" id="calcValorGrande">$8.000.000</span>
+        <input type="range" class="calc-slider" id="ventaApps" min="500000" max="30000000" step="500000" value="8000000" aria-label="Ventas mensuales por apps de domicilio">
+        <div class="calc-marcas"><span>$500 mil</span><span>$15 M</span><span>$30 M</span></div>
       </div>
       <div class="recibo-card">
         <div class="recibo-linea">
@@ -99,15 +141,28 @@
         </div>
       </div>
     </div>
+
+    <div class="comparativa reveal-fila">
+      <div class="comparativa-fila">
+        <span class="nombre">Apps de domicilio</span>
+        <div class="barra-track"><div class="barra-fill" id="barraApps" style="width:0%"></div></div>
+        <span class="monto mono" id="montoApps">$0/mes</span>
+      </div>
+      <div class="comparativa-fila veci">
+        <span class="nombre">Con Veci (Pro)</span>
+        <div class="barra-track"><div class="barra-fill" id="barraVeci" style="width:0%"></div></div>
+        <span class="monto mono">$129.000/mes</span>
+      </div>
+    </div>
   </div>
 </section>
 
-<section id="como-funciona">
+<section id="como-funciona" class="reveal">
   <div class="wrap">
     <h2>Cómo funciona en 3 pasos</h2>
     <p class="lead">Sin curso de tecnología. Todo desde un Android de gama media.</p>
 
-    <div class="pasos">
+    <div class="pasos reveal-fila">
       <div class="paso-card">
         <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
         <span class="n">01</span>
@@ -130,12 +185,12 @@
   </div>
 </section>
 
-<section>
+<section class="reveal">
   <div class="wrap">
     <h2>Tu cliente nunca sale de WhatsApp</h2>
     <p class="lead">Otras plataformas te dan una tienda web aparte y esperan que tu cliente aprenda a usarla. Aquí el pedido empieza y termina donde tu cliente ya está.</p>
 
-    <div class="contraste-grid">
+    <div class="contraste-grid reveal-fila">
       <div class="contraste-card otras">
         <span class="titulo">Otras plataformas</span>
         <ul>
@@ -156,7 +211,7 @@
   </div>
 </section>
 
-<section>
+<section class="reveal">
   <div class="wrap">
     <div class="copiloto-demo">
       <div>
@@ -186,12 +241,55 @@
   </div>
 </section>
 
-<section id="precios">
+<section class="reveal">
+  <div class="wrap">
+    <h2>Lo que puedes verificar hoy mismo</h2>
+    <p class="lead">Preferimos que lo compruebes tú mismo a que confíes en nuestra palabra.</p>
+
+    <div class="verificable reveal-fila">
+      <div class="verificable-item">
+        <div class="icono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg></div>
+        <div>
+          <h3>Código abierto, sin cajas negras</h3>
+          <p>Todo el backend está en GitHub — lo puedes leer línea por línea, no hay que confiar en nuestra palabra.</p>
+        </div>
+      </div>
+      <div class="verificable-item">
+        <div class="icono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div>
+          <h3>Tu base de datos, tu servidor</h3>
+          <p>Se instala en tu propio hosting. Nadie más tiene acceso a los datos de tus clientes, ni nosotros.</p>
+        </div>
+      </div>
+      <div class="verificable-item">
+        <div class="icono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div>
+          <h3>PHP y MySQL estándar, sin candado</h3>
+          <p>Si un día te vas, tus datos siguen siendo tuyos: sin exportaciones raras ni formatos propietarios.</p>
+        </div>
+      </div>
+      <div class="verificable-item">
+        <div class="icono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+        <div>
+          <h3>El copiloto es código, no una promesa</h3>
+          <p>La lógica de a quién escribirle vive en <code>src/Models/Copiloto.php</code>, pública y auditable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="precios" class="reveal">
   <div class="wrap">
     <h2>Precios</h2>
     <p class="lead">0% de comisión por pedido en todos los planes. Eso es lo que cambia frente a las apps.</p>
 
-    <div class="precios">
+    <div class="precio-toggle" role="group" aria-label="Ciclo de facturación">
+      <button type="button" id="btnMensual" class="activo">Mensual</button>
+      <button type="button" id="btnAnual">Anual <span class="ahorro">2 meses gratis</span></button>
+    </div>
+
+    <div class="precios reveal-fila">
       <div class="plan">
         <span class="nombre">Gratis</span>
         <span class="precio">$0</span>
@@ -204,7 +302,7 @@
       </div>
       <div class="plan destacado">
         <span class="nombre">Barrio</span>
-        <span class="precio">$59<small>.000/mes</small></span>
+        <span class="precio"><span class="precio-mensual">$59<small>.000/mes</small></span><span class="precio-anual">$49<small>.000/mes, facturado anual</small></span></span>
         <ul>
           <li>Pedidos ilimitados</li>
           <li>Copiloto de recompra</li>
@@ -214,7 +312,7 @@
       </div>
       <div class="plan">
         <span class="nombre">Pro</span>
-        <span class="precio">$129<small>.000/mes</small></span>
+        <span class="precio"><span class="precio-mensual">$129<small>.000/mes</small></span><span class="precio-anual">$108<small>.000/mes, facturado anual</small></span></span>
         <ul>
           <li>Todo lo de Barrio</li>
           <li>Dominio propio</li>
@@ -224,7 +322,7 @@
       </div>
       <div class="plan">
         <span class="nombre">Sedes</span>
-        <span class="precio">$249<small>.000/mes</small></span>
+        <span class="precio"><span class="precio-mensual">$249<small>.000/mes</small></span><span class="precio-anual">$208<small>.000/mes, facturado anual</small></span></span>
         <ul>
           <li>Varias sedes</li>
           <li>Usuarios por rol</li>
@@ -278,30 +376,88 @@
 </footer>
 
 <script>
+  // ---- Calculadora: slider + recibo + barras comparativas ----
   var input = document.getElementById('ventaApps');
+  var elValorGrande = document.getElementById('calcValorGrande');
   var elVentas = document.getElementById('reciboVentas');
   var elComision = document.getElementById('reciboComision');
+  var barraApps = document.getElementById('barraApps');
+  var barraVeci = document.getElementById('barraVeci');
+  var montoApps = document.getElementById('montoApps');
+  var VECI_PRO = 129000;
 
   function formatoCOP(n) {
     return '$' + Math.round(n).toLocaleString('es-CO');
   }
 
   function calcular() {
-    var crudo = (input.value || '').replace(/\D/g, '');
-    var venta = parseInt(crudo, 10) || 0;
+    var venta = parseInt(input.value, 10) || 0;
     var baja = venta * 0.25;
     var alta = venta * 0.30;
+    var promedio = venta * 0.275;
+
+    elValorGrande.textContent = formatoCOP(venta);
     elVentas.textContent = formatoCOP(venta);
     elComision.textContent = venta > 0 ? (formatoCOP(baja) + ' – ' + formatoCOP(alta)) : '$0 – $0';
+    montoApps.textContent = formatoCOP(promedio) + '/mes';
+
+    var tope = Math.max(promedio, VECI_PRO, 1);
+    barraApps.style.width = Math.min(100, (promedio / tope) * 100) + '%';
+    barraVeci.style.width = Math.min(100, (VECI_PRO / tope) * 100) + '%';
   }
 
-  // No reformateamos el input mientras el usuario escribe (eso salta el
-  // cursor y hace imposible corregir un número a mitad de escritura).
-  // Solo leemos los dígitos para calcular en cada tecla.
   input.addEventListener('input', calcular);
-
-  input.value = '8.000.000'; // ejemplo inicial, con puntos solo por legibilidad
   calcular();
+
+  // ---- Precios: toggle mensual / anual ----
+  var btnMensual = document.getElementById('btnMensual');
+  var btnAnual = document.getElementById('btnAnual');
+  var contPrecios = document.querySelector('.precios');
+
+  function elegirCiclo(anual) {
+    contPrecios.classList.toggle('modo-anual', anual);
+    btnMensual.classList.toggle('activo', !anual);
+    btnAnual.classList.toggle('activo', anual);
+  }
+  btnMensual.addEventListener('click', function () { elegirCiclo(false); });
+  btnAnual.addEventListener('click', function () { elegirCiclo(true); });
+
+  // ---- Animaciones al hacer scroll ----
+  // Un simple chequeo de posición (no IntersectionObserver) para que un
+  // salto directo a un ancla (#precios desde otra página) también revele
+  // todo lo que quedó "atrás" del salto, no solo lo que se cruza al hacer
+  // scroll normal.
+  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
+  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
+  var revisando = false;
+
+  function revisarReveal() {
+    pendientes = pendientes.filter(function (el) {
+      var rect = el.getBoundingClientRect();
+      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+      if (enVista) el.classList.add('visto');
+      return !enVista;
+    });
+    revisando = false;
+  }
+
+  function pedirRevision() {
+    if (!revisando) {
+      revisando = true;
+      requestAnimationFrame(revisarReveal);
+    }
+  }
+
+  revisarReveal();
+  window.addEventListener('scroll', pedirRevision, { passive: true });
+  window.addEventListener('resize', pedirRevision);
+
+  // Red de seguridad: si algo quedó fuera de pantalla (un salto directo a
+  // un ancla, un rastreador que no hace scroll), que igual se muestre.
+  setTimeout(function () {
+    pendientes.forEach(function (el) { el.classList.add('visto'); });
+    pendientes = [];
+  }, 1500);
 </script>
 
 </body>

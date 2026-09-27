@@ -51,6 +51,20 @@ footer .footer-links a:hover{color:var(--sello)}
 .hero-receipt .paso{display:flex;align-items:baseline;gap:14px;padding:12px 0;border-bottom:1px dashed #C7CCD1}
 .hero-receipt .paso:last-child{border-bottom:none}
 .paso-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sello);width:26px;flex-shrink:0}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,76,202,.18);border:1px solid rgba(59,76,202,.4);color:#B7C0F5;font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 14px;border-radius:20px;margin-bottom:18px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--caja);animation:pulso 2s ease-in-out infinite}
+
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes entrada{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hero-badge{animation:entrada .6s ease both}
+.hero h1{animation:entrada .6s ease .08s both}
+.hero p{animation:entrada .6s ease .16s both}
+.hero-ctas{animation:entrada .6s ease .24s both}
+.hero-receipt{animation:entrada .6s ease .32s both}
+@media (prefers-reduced-motion: reduce){
+  .hero-badge, .hero h1, .hero p, .hero-ctas, .hero-receipt{animation:none}
+  .hero-badge .dot{animation:none}
+}
 
 section{padding:72px 0}
 h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(28px,4vw,38px);margin:0 0 12px}
@@ -69,6 +83,60 @@ h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(28px,4vw
 .recibo-linea.destaque .valor{color:var(--mostaza);font-size:20px}
 .recibo-linea.final .etiqueta{color:var(--caja)}
 .recibo-linea.final .valor{color:var(--tiquete)}
+
+/* dolores */
+.dolores{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.dolor-card{background:#F4F1E9;border-radius:16px;padding:24px;display:flex;gap:16px;align-items:flex-start}
+.dolor-card .icono{width:40px;height:40px;border-radius:10px;background:#FBDFD9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dolor-card h3{font-size:15px;margin:0 0 6px;font-weight:700}
+.dolor-card p{font-size:13px;color:var(--gris);line-height:1.5;margin:0}
+.dolores-cierre{margin-top:20px;padding:18px 22px;background:var(--carbon);color:var(--tiquete);border-radius:14px;font-size:15px;text-align:center}
+.dolores-cierre strong{color:var(--mostaza)}
+
+/* calculadora con slider */
+.calc-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:4px;background:var(--recibo);outline:none;margin:14px 0}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--sello);cursor:pointer;border:3px solid var(--tiquete);box-shadow:0 2px 8px rgba(59,76,202,.4)}
+.calc-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--sello);cursor:pointer;border:3px solid var(--tiquete);box-shadow:0 2px 8px rgba(59,76,202,.4)}
+.calc-marcas{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gris-suave)}
+.calc-valor-grande{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--carbon);display:block;margin-top:4px}
+
+.comparativa{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.comparativa-fila{display:flex;align-items:center;gap:14px;background:var(--tiquete);border:1px solid var(--recibo);border-radius:12px;padding:14px 16px}
+.comparativa-fila.veci{border-color:var(--caja);background:#EAF6EF}
+.comparativa-fila .nombre{font-size:13px;font-weight:600;width:112px;flex-shrink:0}
+.comparativa-fila .barra-track{flex-grow:1;height:10px;border-radius:6px;background:var(--recibo);overflow:hidden}
+.comparativa-fila .barra-fill{height:100%;border-radius:6px;background:var(--aji);transition:width .5s ease}
+.comparativa-fila.veci .barra-fill{background:var(--caja)}
+.comparativa-fila .monto{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;width:126px;text-align:right;flex-shrink:0}
+
+/* confianza verificable */
+.verificable{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.verificable-item{display:flex;gap:14px;padding:22px;border:1px solid var(--recibo);border-radius:14px}
+.verificable-item .icono{width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.verificable-item h3{font-size:14px;margin:0 0 6px}
+.verificable-item p{font-size:13px;color:var(--gris);line-height:1.5;margin:0}
+.verificable-item code{font-size:12px;background:#F4F1E9;padding:2px 6px;border-radius:4px}
+
+/* toggle mensual/anual en precios */
+.precio-toggle{display:inline-flex;background:#F4F1E9;border-radius:12px;padding:4px;gap:4px;margin-bottom:28px}
+.precio-toggle button{border:none;background:transparent;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--gris)}
+.precio-toggle button.activo{background:var(--carbon);color:var(--tiquete)}
+.precio-toggle .ahorro{font-size:10px;background:var(--caja);color:var(--tiquete);padding:2px 6px;border-radius:8px;margin-left:6px}
+.plan .precio-anual{display:none}
+.precios.modo-anual .precio-mensual{display:none}
+.precios.modo-anual .precio-anual{display:inline}
+
+/* animaciones al hacer scroll */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease, transform .6s ease}
+.reveal.visto{opacity:1;transform:translateY(0)}
+.reveal-fila > *{opacity:0;transform:translateY(18px);transition:opacity .5s ease, transform .5s ease}
+.reveal-fila.visto > *{opacity:1;transform:translateY(0)}
+.reveal-fila.visto > *:nth-child(2){transition-delay:.08s}
+.reveal-fila.visto > *:nth-child(3){transition-delay:.16s}
+.reveal-fila.visto > *:nth-child(4){transition-delay:.24s}
+@media (prefers-reduced-motion: reduce){
+  .reveal, .reveal-fila > *{opacity:1!important;transform:none!important;transition:none!important}
+}
 
 /* pasos */
 .pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
@@ -154,7 +222,7 @@ details p{font-size:14px;color:var(--gris);line-height:1.6;margin:12px 0 0}
 .articulo-cta p{margin:0;font-size:15px;max-width:420px}
 
 @media (max-width: 860px){
-  .calc, .copiloto-demo, .contraste-grid{grid-template-columns:1fr}
+  .calc, .copiloto-demo, .contraste-grid, .dolores, .verificable{grid-template-columns:1fr}
   .pasos{grid-template-columns:1fr}
   .precios{grid-template-columns:1fr 1fr}
 }
@@ -162,4 +230,8 @@ details p{font-size:14px;color:var(--gris);line-height:1.6;margin:12px 0 0}
   .precios{grid-template-columns:1fr}
   .nav-links{display:none}
   .articulo-cuerpo{font-size:16px}
+  .comparativa-fila{flex-wrap:wrap}
+  .comparativa-fila .nombre{width:100%}
+  .comparativa-fila .barra-track{order:3;width:100%}
+  .comparativa-fila .monto{width:auto;margin-left:auto}
 }
