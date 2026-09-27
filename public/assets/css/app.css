@@ -1,0 +1,401 @@
+/*
+  Parroquia — hoja de estilos única.
+  Dos paletas del documento de producto, cada una donde tiene sentido:
+    Ruta 2 "Tiquete y papel"  → panel del dueño (claridad operativa)
+    Ruta 1 "Letrero de barrio" → tienda pública del cliente (calidez local)
+*/
+
+:root {
+  --carbon: #202124;
+  --tiquete: #FFFDF8;
+  --sello: #3B4CCA;
+  --recibo: #E9E4D8;
+  --caja: #16A36A;
+
+  --tinta: #1B1A17;
+  --papel: #F6F1E7;
+  --aji: #E8452C;
+  --aguacate: #5B7F3A;
+  --mostaza: #F2B632;
+
+  --gris-texto: #54565f;
+  --gris-suave: #8a8d97;
+  --borde: #D8D3C6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', sans-serif;
+  color: var(--carbon);
+  background: var(--tiquete);
+}
+
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+button { font-family: inherit; }
+
+.pq-mono { font-family: 'JetBrains Mono', monospace; }
+.pq-serif { font-family: 'Instrument Serif', serif; }
+
+.pq-panel-bg { background: var(--tiquete); color: var(--carbon); }
+.pq-tienda-bg { background: var(--papel); color: var(--tinta); font-family: 'Inter Tight', sans-serif; }
+
+/* ---------- layout ---------- */
+
+.pq-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--tiquete);
+}
+
+.pq-shell-tienda {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--papel);
+  position: relative;
+}
+
+.pq-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--recibo);
+}
+
+.pq-topbar-brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  text-decoration: none;
+  color: var(--carbon);
+}
+
+.pq-topbar-links { display: flex; align-items: center; gap: 16px; }
+.pq-topbar-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--gris-suave);
+  padding: 6px 0;
+}
+.pq-topbar-links a.activo { color: var(--sello); border-bottom: 2px solid var(--sello); }
+
+.pq-content { padding: 24px 20px 40px; flex-grow: 1; }
+.pq-content-tienda { padding: 0 20px 120px; flex-grow: 1; }
+
+/* ---------- tipografía ---------- */
+
+.pq-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sello);
+}
+
+h1.pq-h1 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.1;
+  margin: 6px 0 0;
+  color: var(--carbon);
+}
+
+p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin: 8px 0 0; }
+
+/* ---------- botones ---------- */
+
+.pq-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+  transition: transform .12s ease;
+}
+.pq-btn:active { transform: scale(.98); }
+.pq-btn-sello { background: var(--sello); color: var(--tiquete); }
+.pq-btn-caja { background: var(--caja); color: var(--tiquete); }
+.pq-btn-aji { background: var(--aji); color: #FFFEF9; }
+.pq-btn-oscuro { background: var(--tinta); color: var(--papel); }
+.pq-btn-whatsapp { background: #25D366; color: #0b3d24; }
+.pq-btn-ghost { background: transparent; border: 1.5px solid var(--borde); color: var(--carbon); }
+.pq-btn-chico { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 9px; }
+.pq-btn-deshabilitado { background: var(--recibo); color: var(--gris-suave); pointer-events: none; }
+
+/* ---------- formularios ---------- */
+
+.pq-campo { margin-bottom: 16px; }
+.pq-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  display: block;
+  margin-bottom: 6px;
+}
+.pq-input, .pq-select, .pq-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--tiquete);
+  color: var(--carbon);
+}
+.pq-input:focus, .pq-select:focus, .pq-textarea:focus {
+  outline: 2px solid var(--sello);
+  outline-offset: 1px;
+  border-color: var(--sello);
+}
+.pq-ayuda { font-size: 12px; color: var(--gris-suave); margin-top: 4px; }
+
+.pq-alerta {
+  background: #FDEDEA;
+  border: 1px solid #F3C6BC;
+  color: #9c2c17;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.pq-alerta-ok {
+  background: #EAF6EF;
+  border-color: #BFE3CE;
+  color: #16603f;
+}
+
+/* ---------- tarjetas / listas ---------- */
+
+.pq-card {
+  background: #F4F1E9;
+  border-radius: 14px;
+  padding: 16px;
+}
+.pq-card-borde {
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.pq-paso {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px dashed #C7CCD1;
+}
+.pq-paso:last-child { border-bottom: none; }
+.pq-paso-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--sello);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.pq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .04em;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--recibo);
+  color: var(--gris-texto);
+}
+.pq-chip-caja { background: #DFF3E8; color: #0f6b45; }
+.pq-chip-pendiente { background: #FDF1DA; color: #8a5a00; }
+.pq-chip-cancelado { background: #FBE3E0; color: #9c2c17; }
+
+/* ---------- estadísticas del panel ---------- */
+
+.pq-stats { display: flex; gap: 10px; margin-top: 16px; }
+.pq-stat {
+  flex: 1;
+  background: #F4F1E9;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pq-stat-valor {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 600;
+}
+.pq-stat-label { font-size: 11px; color: var(--gris-texto); }
+
+/* ---------- copiloto ---------- */
+
+.pq-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 14px;
+  margin-bottom: 10px;
+}
+.pq-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: var(--tiquete);
+}
+
+/* ---------- tienda pública (Ruta 1) ---------- */
+
+.pq-tienda-header {
+  padding: 16px 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pq-tienda-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 22px;
+  color: var(--tinta);
+  background: var(--mostaza);
+}
+.pq-tienda-nombre {
+  margin: 0;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--tinta);
+}
+.pq-tienda-desc { font-size: 13px; color: #6b6350; }
+
+.pq-productos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.pq-producto {
+  background: #FFFFFF;
+  border: 1px solid #E7E0CF;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pq-producto-foto { height: 70px; border-radius: 10px; }
+.pq-producto-nombre { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.pq-producto-fila { display: flex; align-items: center; justify-content: space-between; }
+.pq-producto-precio { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b6350; }
+.pq-add {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--aji);
+  color: #FFFEF9;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pq-barra-carrito {
+  position: sticky;
+  bottom: 20px;
+  margin: 20px 20px 0;
+  background: var(--tinta);
+  color: var(--papel);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 24px rgba(27, 26, 23, .25);
+  text-decoration: none;
+}
+
+.pq-fila-carrito {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #E7E0CF;
+}
+.pq-fila-carrito-icono { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
+
+/* ---------- burbujas estilo WhatsApp ---------- */
+
+.pq-chat-bg { background: #ECE5DD; }
+.pq-chat-topbar {
+  background: #075E54;
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #FFFFFF;
+}
+.pq-burbuja-in, .pq-burbuja-out {
+  border-radius: 12px;
+  padding: 10px 12px;
+  max-width: 82%;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .06);
+}
+.pq-burbuja-in { background: #FFFFFF; border-radius: 12px 12px 12px 2px; }
+.pq-burbuja-out { background: #DCF8C6; border-radius: 12px 12px 2px 12px; margin-left: auto; }
+
+/* ---------- utilidades ---------- */
+
+.pq-stack { display: flex; flex-direction: column; }
+.pq-fila { display: flex; align-items: center; }
+.pq-espacio { flex-grow: 1; }
+.pq-centro { text-align: center; }
+.pq-sr-solo {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}
+
+@media (min-width: 640px) {
+  .pq-shell, .pq-shell-tienda { border-left: 1px solid var(--recibo); border-right: 1px solid var(--recibo); }
+}

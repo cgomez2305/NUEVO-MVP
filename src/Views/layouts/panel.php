@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<?php require __DIR__ . '/_head.php'; ?>
+</head>
+<body class="pq-panel-bg">
+  <div class="pq-shell">
+    <div class="pq-topbar">
+      <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">Parroquia</a>
+      <nav class="pq-topbar-links">
+        <a href="<?= e(base_url('/panel')) ?>" class="<?= ($activo ?? '') === 'panel' ? 'activo' : '' ?>">Panel</a>
+        <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>">Pedidos</a>
+        <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+        <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>">Menú</a>
+      </nav>
+    </div>
+
+    <div class="pq-content">
+      <?= $contenido ?>
+    </div>
+
+    <form method="post" action="<?= e(base_url('/logout')) ?>" style="padding: 0 20px 24px">
+      <?= csrf_campo() ?>
+      <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión</button>
+    </form>
+  </div>
+</body>
+</html>

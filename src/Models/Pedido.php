@@ -1,0 +1,117 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Database;
+
+class Pedido
+{
+    public const ESTADOS = ['pendiente', 'pagado', 'en_cocina', 'en_camino', 'entregado', 'cancelado'];
+
+    /**
+     * @param array<int, array{producto_id:int, nombre:string, precio:int, cantidad:int}> $items
+     */
+    public static function crear(int $negocioId, int $clienteId, string $metodoPago, array $items): int
+    {
+        $pdo = Database::conexion();
+        $total = array_sum(array_map(fn ($it) => $it['precio'] * $it['cantidad'], $items));
+
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO pedidos (negocio_id, cliente_id, total, metodo_pago, estado)
+                 VALUES (:negocio_id, :cliente_id, :total, :metodo_pago, :pendiente)'
+            );
+            $stmt->execute([
+                'negocio_id'  => $negocioId,
+                'cliente_id'  => $clienteId,
+                'total'       => $total,
+                'metodo_pago' => $metodoPago,
+                'pendiente'   => 'pendiente',
+            ]);
+            $pedidoId = (int) $pdo->lastInsertId();
+
+            $stmtItem = $pdo->prepare(
+                'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad)
+                 VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad)'
+            );
+            foreach ($items as $item) {
+                $stmtItem->execute([
+                    'pedido_id'   => $pedidoId,
+                    'producto_id' => $item['producto_id'],
+                    'nombre'      => $item['nombre'],
+                    'precio'      => $item['precio'],
+                    'cantidad'    => $item['cantidad'],
+                ]);
+            }
+
+            $pdo->commit();
+            return $pedidoId;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public static function listarPorNegocio(int $negocioId, int $limite = 50): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
+             FROM pedidos p
+             JOIN clientes c ON c.id = p.cliente_id
+             WHERE p.negocio_id = :negocio_id
+             ORDER BY p.creado_en DESC
+             LIMIT :limite'
+        );
+        $stmt->bindValue('negocio_id', $negocioId, \PDO::PARAM_INT);
+        $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function buscar(int $id, int $negocioId): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
+             FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
+             WHERE p.id = :id AND p.negocio_id = :negocio_id'
+        );
+        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public static function items(int $pedidoId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT * FROM pedido_items WHERE pedido_id = :pedido_id'
+        );
+        $stmt->execute(['pedido_id' => $pedidoId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function actualizarEstado(int $id, int $negocioId, string $estado): void
+    {
+        if (!in_array($estado, self::ESTADOS, true)) {
+            return;
+        }
+        $stmt = Database::conexion()->prepare(
+            'UPDATE pedidos SET estado = :estado WHERE id = :id AND negocio_id = :negocio_id'
+        );
+        $stmt->execute(['estado' => $estado, 'id' => $id, 'negocio_id' => $negocioId]);
+    }
+
+    public static function contarHoy(int $negocioId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COUNT(*) AS total FROM pedidos
+             WHERE negocio_id = :negocio_id AND DATE(creado_en) = CURDATE()'
+        );
+        $stmt->execute(['negocio_id' => $negocioId]);
+        return (int) $stmt->fetch()['total'];
+    }
+}
