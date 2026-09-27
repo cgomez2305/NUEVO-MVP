@@ -6,7 +6,7 @@
 <body class="pq-panel-bg">
   <div class="pq-shell">
     <div class="pq-topbar">
-      <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">Parroquia</a>
+      <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">Veci</a>
       <nav class="pq-topbar-links">
         <a href="<?= e(base_url('/panel')) ?>" class="<?= ($activo ?? '') === 'panel' ? 'activo' : '' ?>">Panel</a>
         <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>">Pedidos</a>

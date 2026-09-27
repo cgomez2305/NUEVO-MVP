@@ -1,13 +1,13 @@
--- Parroquia — esquema MySQL
+-- Veci — esquema MySQL
 -- Vende por WhatsApp sin comisión. Y haz que vuelvan.
 --
 -- Importar con:
 --   mysql -u root -p < database/schema.sql
 
-CREATE DATABASE IF NOT EXISTS parroquia
+CREATE DATABASE IF NOT EXISTS veci
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE parroquia;
+USE veci;
 SET NAMES utf8mb4;
 
 -- Un negocio = un comerciante con su tienda propia.

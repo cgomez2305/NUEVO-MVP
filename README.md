@@ -1,4 +1,4 @@
-# Parroquia
+# Veci
 
 Vende por WhatsApp sin pagar comisión. Y haz que vuelvan.
 
@@ -35,7 +35,7 @@ PHP puro + MySQL, sin framework:
    para que el copiloto tenga algo real que mostrar:
 
    ```bash
-   mysql -u root -p parroquia < database/seed.sql
+   mysql -u root -p veci < database/seed.sql
    ```
 
 3. Copia la configuración y ajusta tus credenciales de MySQL:
@@ -71,40 +71,40 @@ PHP puro + MySQL, sin framework:
    demostración si cargaste `seed.sql`:
 
    - **WhatsApp:** `3001234567`
-   - **Contraseña:** `parroquia123`
+   - **Contraseña:** `veci123`
    - **Tienda pública:** `/t/donamaria`
 
 ## Publicar en hosting compartido (cPanel)
 
 Si ya tienes hosting para sitios de WordPress, casi seguro soporta PHP 8+
-y MySQL — es todo lo que Parroquia necesita. Pasos:
+y MySQL — es todo lo que Veci necesita. Pasos:
 
 1. **Crea un subdominio** (por ejemplo `app.tudominio.com`) desde
    cPanel → Dominios/Subdominios. Cuando te pida la carpeta de destino
    ("Document Root"), apúntala a una ruta que **no** esté dentro de
    `public_html` visible al público — por ejemplo
-   `parroquia-app/public` (cPanel crea `parroquia-app/` en tu directorio
+   `veci-app/public` (cPanel crea `veci-app/` en tu directorio
    raíz, tú luego subes el proyecto ahí). Así `config/`, `src/` y
    `database/` quedan fuera del alcance del navegador, no solo
    protegidos por `.htaccess`.
 
    Si tu panel *no* te deja elegir una carpeta fuera de `public_html`,
-   sube igual todo el proyecto (por ejemplo a `public_html/parroquia/`)
-   y usa `public_html/parroquia/public` como Document Root si te lo
+   sube igual todo el proyecto (por ejemplo a `public_html/veci/`)
+   y usa `public_html/veci/public` como Document Root si te lo
    permite; si ni eso, el `.htaccess` de la raíz del proyecto bloquea el
    acceso directo a `config/`, `src/` y `database/` como red de
    seguridad — pero apuntar el dominio a `public/` sigue siendo lo
    correcto.
 
 2. **Sube los archivos.** Comprime el proyecto en tu computador
-   (`zip -r parroquia.zip .` en la raíz del repo, sin incluir
+   (`zip -r veci.zip .` en la raíz del repo, sin incluir
    `config/config.php` si ya lo creaste) y súbelo por el Administrador
    de archivos de cPanel (botón *Upload*, luego *Extract*), o por FTP
    con FileZilla si lo prefieres.
 
 3. **Crea la base de datos** en cPanel → MySQL Databases:
    - Crea una base (cPanel suele anteponer tu usuario, ej.
-     `usuario_parroquia`).
+     `usuario_veci`).
    - Crea un usuario MySQL con una contraseña fuerte.
    - Agrega ese usuario a esa base con **todos los privilegios**.
 
@@ -133,7 +133,7 @@ y MySQL — es todo lo que Parroquia necesita. Pasos:
 8. **Pruébala:** entra a `https://app.tudominio.com/registro`, crea un
    negocio, sube una foto de menú y publica la tienda. Si prefieres
    partir con datos ya cargados, entra con la cuenta de demostración
-   (`3001234567` / `parroquia123`) si importaste `seed.sql`.
+   (`3001234567` / `veci123`) si importaste `seed.sql`.
 
 ## Estructura
 

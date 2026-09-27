@@ -6,7 +6,7 @@
 return [
     'db' => [
         'host'    => '127.0.0.1',
-        'name'    => 'parroquia',
+        'name'    => 'veci',
         'user'    => 'root',
         'pass'    => '',
         'charset' => 'utf8mb4',
@@ -15,7 +15,7 @@ return [
     'app' => [
         // Sin barra al final. Se usa para armar el enlace público de cada tienda.
         'url'    => 'http://localhost:8000',
-        'nombre' => 'Parroquia',
+        'nombre' => 'Veci',
     ],
 
     // Opcional. Si defines una llave aquí, la pantalla "La IA arma tu tienda"

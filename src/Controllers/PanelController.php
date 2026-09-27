@@ -18,7 +18,7 @@ class PanelController
         $negocioId = (int) $negocio['id'];
 
         ver('panel/dashboard', [
-            'titulo'          => 'Panel · Parroquia',
+            'titulo'          => 'Panel · Veci',
             'activo'          => 'panel',
             'negocio'         => $negocio,
             'pedidosHoy'      => Pedido::contarHoy($negocioId),
@@ -33,7 +33,7 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/pedidos', [
-            'titulo'  => 'Pedidos · Parroquia',
+            'titulo'  => 'Pedidos · Veci',
             'activo'  => 'pedidos',
             'negocio' => $negocio,
             'pedidos' => Pedido::listarPorNegocio((int) $negocio['id']),
@@ -57,7 +57,7 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/productos', [
-            'titulo'    => 'Tu menú · Parroquia',
+            'titulo'    => 'Tu menú · Veci',
             'activo'    => 'productos',
             'negocio'   => $negocio,
             'productos' => Producto::listarPorNegocio((int) $negocio['id']),
@@ -122,7 +122,7 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/copiloto', [
-            'titulo'      => 'Copiloto de recompra · Parroquia',
+            'titulo'      => 'Copiloto de recompra · Veci',
             'activo'      => 'copiloto',
             'negocio'     => $negocio,
             'lista'       => Copiloto::clientesAReactivar((int) $negocio['id']),
@@ -145,7 +145,7 @@ class PanelController
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($mensaje);
 
         ver('panel/copiloto_mensaje', [
-            'titulo'         => 'Mensaje sugerido · Parroquia',
+            'titulo'         => 'Mensaje sugerido · Veci',
             'activo'         => 'copiloto',
             'negocio'        => $negocio,
             'cliente'        => $cliente,

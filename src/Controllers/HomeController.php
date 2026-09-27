@@ -11,7 +11,7 @@ class HomeController
     public function index(array $parametros): void
     {
         ver('home/index', [
-            'titulo'  => 'Parroquia — vende por WhatsApp sin comisión',
+            'titulo'  => 'Veci — vende por WhatsApp sin comisión',
             'negocio' => Auth::negocioActual(),
         ]);
     }

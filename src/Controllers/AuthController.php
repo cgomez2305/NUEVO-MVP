@@ -16,7 +16,7 @@ class AuthController
         }
 
         ver('auth/registro', [
-            'titulo' => 'Crear tu tienda · Parroquia',
+            'titulo' => 'Crear tu tienda · Veci',
             'error'  => flash_obtener('error'),
         ], 'auth');
     }
@@ -56,7 +56,7 @@ class AuthController
         }
 
         ver('auth/login', [
-            'titulo' => 'Iniciar sesión · Parroquia',
+            'titulo' => 'Iniciar sesión · Veci',
             'error'  => flash_obtener('error'),
         ], 'auth');
     }

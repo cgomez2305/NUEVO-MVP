@@ -21,7 +21,7 @@ class OnboardingController
         $negocio = Auth::exigirSesion();
 
         ver('onboarding/foto', [
-            'titulo'  => 'Foto del menú · Parroquia',
+            'titulo'  => 'Foto del menú · Veci',
             'negocio' => $negocio,
             'error'   => flash_obtener('error'),
         ], 'onboarding');
@@ -76,7 +76,7 @@ class OnboardingController
         }
 
         ver('onboarding/productos', [
-            'titulo'    => 'Revisa tu catálogo · Parroquia',
+            'titulo'    => 'Revisa tu catálogo · Veci',
             'negocio'   => $negocio,
             'productos' => Producto::listarPorNegocio((int) $negocio['id']),
             'volver'    => '/panel/onboarding/productos',
@@ -117,7 +117,7 @@ class OnboardingController
         }
 
         ver('onboarding/pago', [
-            'titulo'  => 'Cómo cobras · Parroquia',
+            'titulo'  => 'Cómo cobras · Veci',
             'negocio' => $negocio,
         ], 'onboarding');
     }
@@ -140,7 +140,7 @@ class OnboardingController
         Negocio::publicar((int) $negocio['id']);
 
         ver('onboarding/publicada', [
-            'titulo'  => '¡Tienda publicada! · Parroquia',
+            'titulo'  => '¡Tienda publicada! · Veci',
             'negocio' => Negocio::buscarPorId((int) $negocio['id']),
         ], 'onboarding');
     }

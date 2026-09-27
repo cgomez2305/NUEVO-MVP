@@ -23,7 +23,7 @@ class TiendaController
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         ver('tienda/mostrar', [
-            'titulo'    => $negocio['nombre'] . ' · Parroquia',
+            'titulo'    => $negocio['nombre'] . ' · Veci',
             'negocio'   => $negocio,
             'productos' => $productos,
             'carrito'   => $carrito,

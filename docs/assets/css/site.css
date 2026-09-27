@@ -1,4 +1,4 @@
-/* Parroquia — hoja de estilos del sitio público (landing + blog). */
+/* Veci — hoja de estilos del sitio público (landing + blog). */
 
 :root{
   --carbon:#202124; --tiquete:#FFFDF8; --sello:#3B4CCA; --recibo:#E9E4D8; --caja:#16A36A;
@@ -78,18 +78,18 @@ h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(28px,4vw
 .paso-card h3{font-size:18px;margin:0 0 8px}
 .paso-card p{font-size:14px;color:var(--gris);line-height:1.5;margin:0}
 
-/* contraste: Parroquia vs. otras plataformas */
+/* contraste: Veci vs. otras plataformas */
 .contraste-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .contraste-card{border-radius:16px;padding:28px}
 .contraste-card.otras{background:#F4F1E9;border:1px solid var(--recibo)}
-.contraste-card.parroquia{background:var(--carbon);color:var(--tiquete)}
+.contraste-card.veci{background:var(--carbon);color:var(--tiquete)}
 .contraste-card .titulo{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;display:block}
 .contraste-card.otras .titulo{color:var(--gris-suave)}
-.contraste-card.parroquia .titulo{color:var(--mostaza)}
+.contraste-card.veci .titulo{color:var(--mostaza)}
 .contraste-card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .contraste-card li{font-size:14px;line-height:1.5;padding-left:22px;position:relative}
 .contraste-card.otras li::before{content:"–";position:absolute;left:0;color:var(--gris-suave)}
-.contraste-card.parroquia li::before{content:"✓";position:absolute;left:0;color:var(--caja);font-weight:700}
+.contraste-card.veci li::before{content:"✓";position:absolute;left:0;color:var(--caja);font-weight:700}
 
 /* copiloto demo */
 .copiloto-demo{background:var(--carbon);color:var(--tiquete);border-radius:20px;padding:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}

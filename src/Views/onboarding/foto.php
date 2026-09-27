@@ -1,5 +1,5 @@
 <div class="pq-topbar" style="border-bottom: none">
-  <a href="<?= e(base_url('/')) ?>" class="pq-topbar-brand">Parroquia</a>
+  <a href="<?= e(base_url('/')) ?>" class="pq-topbar-brand">Veci</a>
   <span class="pq-chip">PASO 1 DE 3</span>
 </div>
 

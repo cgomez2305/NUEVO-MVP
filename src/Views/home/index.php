@@ -8,7 +8,7 @@
     <div class="pq-content" style="display: flex; flex-direction: column; min-height: 100vh; justify-content: center; gap: 28px">
 
       <div>
-        <span class="pq-eyebrow">Parroquia</span>
+        <span class="pq-eyebrow">Veci</span>
         <h1 class="pq-h1" style="font-size: 40px">Vende por WhatsApp sin pagar comisión. Y haz que vuelvan.</h1>
         <p class="pq-lead">Publica tu tienda con una foto de tu menú, cobra por Bre-B y deja que el copiloto te diga a quién escribirle hoy.</p>
       </div>

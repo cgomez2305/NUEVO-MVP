@@ -1,4 +1,4 @@
--- Parroquia — datos de demostración
+-- Veci — datos de demostración
 -- Crea el negocio "Doña María" (el mismo de la maqueta) con su catálogo,
 -- clientes y un historial de pedidos pensado para que el copiloto de
 -- recompra tenga algo real que mostrar apenas entras.
@@ -7,11 +7,11 @@
 -- (asume que los AUTO_INCREMENT empiezan en 1).
 --
 -- Importar con:
---   mysql -u root -p parroquia < database/seed.sql
+--   mysql -u root -p veci < database/seed.sql
 --
--- Acceso de prueba al panel: WhatsApp 3001234567 · contraseña parroquia123
+-- Acceso de prueba al panel: WhatsApp 3001234567 · contraseña veci123
 
-USE parroquia;
+USE veci;
 SET NAMES utf8mb4;
 
 INSERT INTO negocios
@@ -19,7 +19,7 @@ INSERT INTO negocios
    llave_breb_tipo, llave_breb_valor, publicada)
 VALUES
   (1, 'donamaria', 'Doña María', 'Arepas y jugos naturales · Bucaramanga',
-   '3001234567', '$2y$12$kL7CzC4mrb8.kwPt5VdRPukubjtXVz9xixh9GQp6D2Tk6zxaGeK1O',
+   '3001234567', '$2y$12$Rp/Uc3/Mg/f0A7wwOH/7w.OrB97It.nmx2n1sExSPVsAdf6Q/cQFW',
    'M', '#F2B632', 'celular', '3001234567', 1);
 
 INSERT INTO productos (negocio_id, nombre, precio, categoria, color, orden) VALUES

@@ -27,5 +27,5 @@
 </p>
 
 <p class="pq-ayuda pq-centro" style="margin-top: 24px">
-  Demo: WhatsApp <strong>3001234567</strong> · contraseña <strong>parroquia123</strong>
+  Demo: WhatsApp <strong>3001234567</strong> · contraseña <strong>veci123</strong>
 </p>
