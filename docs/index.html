@@ -5,6 +5,7 @@
 <title>Veci — vende por WhatsApp sin comisión</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
+<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://cgomez2305.github.io/NUEVO-MVP/">
@@ -24,6 +25,7 @@
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/js/tema.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -48,12 +50,60 @@
   <div class="wrap">
     <nav class="nav-oscura">
       <a href="./" class="brand"><img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="26"></a>
+
+      <div class="nav-derecha">
       <div class="nav-links">
-        <a href="#como-funciona">Cómo funciona</a>
+        <div class="nav-item-menu">
+          <button type="button" class="nav-trigger">Producto
+            <svg class="flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="mega-menu">
+            <div class="columna">
+              <span class="titulo-col">PLATAFORMA</span>
+              <a href="#como-funciona" class="item">
+                <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
+                <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
+              </a>
+              <a href="#copiloto" class="item">
+                <span class="icono" style="background:var(--tinte-aji)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></span>
+                <span><strong>Copiloto de recompra</strong><span>A quién escribirle cada mañana</span></span>
+              </a>
+              <a href="#precios" class="item">
+                <span class="icono" style="background:var(--tinte-mostaza)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>
+                <span><strong>Precios</strong><span>0% de comisión en todos los planes</span></span>
+              </a>
+            </div>
+            <div class="columna">
+              <span class="titulo-col">DEMOS EN VIVO</span>
+              <a href="demo.html#pedidos" class="item">
+                <span class="icono" style="background:var(--tinte-caja)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></svg></span>
+                <span><strong>Tienda de pedidos</strong><span>Doña María · comida con carrito</span></span>
+              </a>
+              <a href="demo.html#reservas" class="item">
+                <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+                <span><strong>Tienda de reservas</strong><span>Salón Bonita · citas con horario</span></span>
+              </a>
+              <a href="https://github.com/cgomez2305/NUEVO-MVP" class="item">
+                <span class="icono" style="background:var(--bg-suave)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></span>
+                <span><strong>Código en GitHub</strong><span>PHP + MySQL, sin cajas negras</span></span>
+              </a>
+            </div>
+          </div>
+        </div>
+
         <a href="#precios">Precios</a>
         <a href="#faq">Preguntas</a>
         <a href="blog/">Blog</a>
-        <a href="https://github.com/cgomez2305/NUEVO-MVP">GitHub</a>
+        <a href="demo.html">Ver demos →</a>
+      </div>
+
+      <button type="button" class="btn-tema" aria-label="Cambiar a modo claro/oscuro">
+        <svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button type="button" class="btn-hamburguesa" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
       </div>
     </nav>
   </div>
@@ -246,6 +296,31 @@
   </div>
 </section>
 
+<section id="demos" class="reveal">
+  <div class="wrap">
+    <div class="demo-teaser">
+      <div class="demo-teaser-texto">
+        <span class="eyebrow" style="color:var(--sello)">PRUÉBALO TÚ MISMO</span>
+        <h2>Esto no es una maqueta</h2>
+        <p class="lead" style="margin-bottom:24px">Dos tiendas de ejemplo, interactivas, corriendo ahora mismo en tu navegador: una vende con carrito, la otra agenda citas por horario. Agrega productos, reserva un turno, mira el mensaje que le llegaría al negocio.</p>
+        <a href="demo.html" class="btn btn-sello">Abrir las demos en vivo →</a>
+      </div>
+      <div class="demo-teaser-tarjetas">
+        <a href="demo.html#pedidos" class="demo-teaser-card">
+          <span class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></svg></span>
+          <strong>Doña María</strong>
+          <span>Pedidos con carrito →</span>
+        </a>
+        <a href="demo.html#reservas" class="demo-teaser-card">
+          <span class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+          <strong>Salón Bonita</strong>
+          <span>Reservas con horario →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="reveal">
   <div class="wrap">
     <h2>Tu cliente nunca sale de WhatsApp</h2>
@@ -272,7 +347,7 @@
   </div>
 </section>
 
-<section class="reveal">
+<section id="copiloto" class="reveal">
   <div class="wrap">
     <div class="copiloto-demo">
       <div>
