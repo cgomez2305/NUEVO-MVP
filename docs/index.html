@@ -47,7 +47,7 @@
 <div class="nav-fija oscura">
   <div class="wrap">
     <nav class="nav-oscura">
-      <a href="./" class="brand"><img src="assets/img/favicon-32.png" alt="" width="26" height="26"> Veci</a>
+      <a href="./" class="brand"><img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="26"></a>
       <div class="nav-links">
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#precios">Precios</a>
@@ -61,11 +61,12 @@
 
 <div class="hero">
   <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-glow izq" aria-hidden="true"></div>
   <div class="wrap">
     <div class="hero-grid">
       <div class="hero-col-texto">
         <span class="hero-badge"><span class="dot"></span> 0% DE COMISIÓN · TÚ COBRAS DIRECTO</span>
-        <h1>Vende por WhatsApp sin pagar comisión. Y haz que vuelvan.</h1>
+        <h1>Vende por WhatsApp <em>sin pagar comisión</em>. Y haz que vuelvan.</h1>
         <p>Publica tu tienda con una foto de tu menú, cobra por Bre-B en segundos y deja que el copiloto te diga cada mañana a quién escribirle hoy.</p>
 
         <div class="hero-ctas">
@@ -75,6 +76,14 @@
       </div>
 
       <div class="hero-col-tel">
+        <div class="chip-flotante chip-pedido" aria-hidden="true">
+          <span class="icono-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg></span>
+          <span>Pedido nuevo<br><small>hace 12 segundos</small></span>
+        </div>
+        <div class="chip-flotante chip-pago" aria-hidden="true">
+          <span class="icono-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="2.2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></span>
+          <span>Pago Bre-B<br><small>confirmado</small></span>
+        </div>
         <div class="telefono" aria-hidden="true">
           <span class="telefono-badge mono">EN VIVO EN WHATSAPP</span>
           <div class="telefono-pantalla">
@@ -102,7 +111,7 @@
                 <span class="precio">$5.000</span>
               </div>
               <div class="telefono-producto">
-                <div class="telefono-foto" style="background:#3B4CCA"></div>
+                <div class="telefono-foto" style="background:#3449D6"></div>
                 <span class="nombre">Sancocho</span>
                 <span class="precio">$16.000</span>
               </div>
@@ -216,19 +225,19 @@
 
     <div class="pasos reveal-fila">
       <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
         <span class="n">01</span>
         <h3>Foto del menú</h3>
         <p>Una carta impresa, una pizarra o tus fotos de Instagram. La IA lee productos y precios por ti.</p>
       </div>
       <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.7"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
         <span class="n">02</span>
         <h3>Enlace en tu estado</h3>
         <p>Tu tienda queda publicada en un enlace propio. Lo compartes en WhatsApp e Instagram.</p>
       </div>
       <div class="paso-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3449D6" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
         <span class="n">03</span>
         <h3>Cobro por Bre-B</h3>
         <p>Pagos en menos de 20 segundos, sin comisión de tarjeta. Gratis para personas naturales 3 años.</p>
@@ -337,6 +346,7 @@
     <p class="lead">0% de comisión por pedido en todos los planes. Eso es lo que cambia frente a las apps.</p>
 
     <div class="precio-toggle" role="group" aria-label="Ciclo de facturación">
+      <span class="pastilla" aria-hidden="true"></span>
       <button type="button" id="btnMensual" class="activo">Mensual</button>
       <button type="button" id="btnAnual">Anual <span class="ahorro">2 meses gratis</span></button>
     </div>
@@ -391,19 +401,27 @@
 
     <details open>
       <summary>¿Qué pasa con los datos de mis clientes?</summary>
-      <p>Se guardan solo con autorización explícita del cliente en el checkout, como pide la Ley 1581 de 2012. Puedes borrar los datos de un cliente cuando lo pida.</p>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>Se guardan solo con autorización explícita del cliente en el checkout, como pide la Ley 1581 de 2012. Puedes borrar los datos de un cliente cuando lo pida.</p>
+      </div></div>
     </details>
     <details>
       <summary>¿Qué es Bre-B y por qué no hay comisión de tarjeta?</summary>
-      <p>Bre-B es el sistema de pagos inmediatos del Banco de la República: transfiere en menos de 20 segundos entre cualquier banco o billetera, 24/7. Es gratis para personas naturales los primeros 3 años, así que el cobro por llave reemplaza la pasarela de tarjeta en la mayoría de pedidos. <a href="blog/que-es-bre-b.html" style="color:var(--sello)">Más sobre Bre-B →</a></p>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>Bre-B es el sistema de pagos inmediatos del Banco de la República: transfiere en menos de 20 segundos entre cualquier banco o billetera, 24/7. Es gratis para personas naturales los primeros 3 años, así que el cobro por llave reemplaza la pasarela de tarjeta en la mayoría de pedidos. <a href="blog/que-es-bre-b.html" style="color:var(--sello)">Más sobre Bre-B →</a></p>
+      </div></div>
     </details>
     <details>
       <summary>¿Qué pasa si dejo Rappi o DiDi?</summary>
-      <p>No tienes que dejarlas. Veci es tu canal propio adicional, sin comisión, para los clientes que ya conocen tu negocio. Muchos dueños usan ambos: las apps para tráfico nuevo, Veci para que los de siempre no dependan de ellas.</p>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>No tienes que dejarlas. Veci es tu canal propio adicional, sin comisión, para los clientes que ya conocen tu negocio. Muchos dueños usan ambos: las apps para tráfico nuevo, Veci para que los de siempre no dependan de ellas.</p>
+      </div></div>
     </details>
     <details>
       <summary>¿Necesito saber de tecnología?</summary>
-      <p>No. Todo el alta se hace desde el celular con una foto del menú, en el tiempo que dura un café.</p>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>No. Todo el alta se hace desde el celular con una foto del menú, en el tiempo que dura un café.</p>
+      </div></div>
     </details>
   </div>
 </section>
@@ -461,18 +479,29 @@
   input.addEventListener('input', calcular);
   calcular();
 
-  // ---- Precios: toggle mensual / anual ----
+  // ---- Precios: toggle mensual / anual, con pastilla deslizante ----
   var btnMensual = document.getElementById('btnMensual');
   var btnAnual = document.getElementById('btnAnual');
   var contPrecios = document.querySelector('.precios');
+  var pastilla = document.querySelector('.precio-toggle .pastilla');
+
+  function moverPastilla(btn) {
+    pastilla.style.left = btn.offsetLeft + 'px';
+    pastilla.style.width = btn.offsetWidth + 'px';
+  }
 
   function elegirCiclo(anual) {
     contPrecios.classList.toggle('modo-anual', anual);
     btnMensual.classList.toggle('activo', !anual);
     btnAnual.classList.toggle('activo', anual);
+    moverPastilla(anual ? btnAnual : btnMensual);
   }
   btnMensual.addEventListener('click', function () { elegirCiclo(false); });
   btnAnual.addEventListener('click', function () { elegirCiclo(true); });
+  moverPastilla(btnMensual);
+  window.addEventListener('resize', function () {
+    moverPastilla(btnAnual.classList.contains('activo') ? btnAnual : btnMensual);
+  });
 
   // ---- Animaciones al hacer scroll ----
   // Un simple chequeo de posición (no IntersectionObserver) para que un
