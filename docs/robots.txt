@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cgomez2305.github.io/NUEVO-MVP/sitemap.xml
