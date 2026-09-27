@@ -1,0 +1,23 @@
+# Red de seguridad para hosting compartido: si por error el dominio o
+# subdominio apunta a esta carpeta (la raíz del proyecto) en vez de a
+# public/, esto bloquea el acceso directo a lo que nunca debe verse desde
+# el navegador. public/ no se toca: sigue sirviéndose normal.
+# En una instalación correcta (docroot = public/) este archivo ni se lee,
+# porque Apache nunca sube por encima del docroot del subdominio.
+
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/(config|src|database)(/|$) [OR]
+RewriteCond %{REQUEST_URI} ^/(\.git|composer\.(json|lock)|serve\.php)(/|$)
+RewriteRule ^ - [F]
+
+<IfModule mod_authz_core.c>
+  <FilesMatch "\.(sql|md)$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+  <FilesMatch "\.(sql|md)$">
+    Order deny,allow
+    Deny from all
+  </FilesMatch>
+</IfModule>

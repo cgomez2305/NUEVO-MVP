@@ -64,9 +64,8 @@ PHP puro + MySQL, sin framework:
      php -S localhost:8000 serve.php
      ```
 
-   - **Producción** (Apache/LiteSpeed, el típico hosting compartido de
-     WordPress): apunta el docroot del dominio o subdominio a `public/`.
-     Ahí ya está el `.htaccess` con la reescritura a `index.php`.
+   - **Producción**: ver la guía completa para hosting compartido tipo
+     cPanel (el mismo donde sueles instalar WordPress) más abajo.
 
 5. Entra a `/registro` para crear tu propio negocio, o usa la cuenta de
    demostración si cargaste `seed.sql`:
@@ -74,6 +73,67 @@ PHP puro + MySQL, sin framework:
    - **WhatsApp:** `3001234567`
    - **Contraseña:** `parroquia123`
    - **Tienda pública:** `/t/donamaria`
+
+## Publicar en hosting compartido (cPanel)
+
+Si ya tienes hosting para sitios de WordPress, casi seguro soporta PHP 8+
+y MySQL — es todo lo que Parroquia necesita. Pasos:
+
+1. **Crea un subdominio** (por ejemplo `app.tudominio.com`) desde
+   cPanel → Dominios/Subdominios. Cuando te pida la carpeta de destino
+   ("Document Root"), apúntala a una ruta que **no** esté dentro de
+   `public_html` visible al público — por ejemplo
+   `parroquia-app/public` (cPanel crea `parroquia-app/` en tu directorio
+   raíz, tú luego subes el proyecto ahí). Así `config/`, `src/` y
+   `database/` quedan fuera del alcance del navegador, no solo
+   protegidos por `.htaccess`.
+
+   Si tu panel *no* te deja elegir una carpeta fuera de `public_html`,
+   sube igual todo el proyecto (por ejemplo a `public_html/parroquia/`)
+   y usa `public_html/parroquia/public` como Document Root si te lo
+   permite; si ni eso, el `.htaccess` de la raíz del proyecto bloquea el
+   acceso directo a `config/`, `src/` y `database/` como red de
+   seguridad — pero apuntar el dominio a `public/` sigue siendo lo
+   correcto.
+
+2. **Sube los archivos.** Comprime el proyecto en tu computador
+   (`zip -r parroquia.zip .` en la raíz del repo, sin incluir
+   `config/config.php` si ya lo creaste) y súbelo por el Administrador
+   de archivos de cPanel (botón *Upload*, luego *Extract*), o por FTP
+   con FileZilla si lo prefieres.
+
+3. **Crea la base de datos** en cPanel → MySQL Databases:
+   - Crea una base (cPanel suele anteponer tu usuario, ej.
+     `usuario_parroquia`).
+   - Crea un usuario MySQL con una contraseña fuerte.
+   - Agrega ese usuario a esa base con **todos los privilegios**.
+
+4. **Importa el esquema.** cPanel → phpMyAdmin → selecciona tu base →
+   pestaña *Import* → sube primero `database/schema.sql` y luego,
+   opcionalmente, `database/seed.sql` (los datos de demostración).
+
+5. **Configura la app.** En el Administrador de archivos, dentro de
+   `config/`, duplica `config.example.php` como `config.php` y edítalo
+   con el editor de cPanel:
+   - `db.host`: normalmente `localhost` en hosting compartido.
+   - `db.name`, `db.user`, `db.pass`: los que creaste en el paso 3
+     (con el prefijo que cPanel les haya puesto).
+   - `app.url`: `https://app.tudominio.com` (tu subdominio real, sin
+     barra al final).
+
+6. **Revisa la versión de PHP.** cPanel → *Select PHP Version* /
+   *MultiPHP Manager*: elige 8.1 o superior para tu subdominio, y
+   confirma que la extensión `pdo_mysql` esté activada (casi siempre lo
+   está por defecto).
+
+7. **Da permisos de escritura** a `public/uploads/menus/` y
+   `public/uploads/logos/` (clic derecho → Permissions → 755, o 775 si
+   tu hosting lo exige) para que las fotos de menú se puedan guardar.
+
+8. **Pruébala:** entra a `https://app.tudominio.com/registro`, crea un
+   negocio, sube una foto de menú y publica la tienda. Si prefieres
+   partir con datos ya cargados, entra con la cuenta de demostración
+   (`3001234567` / `parroquia123`) si importaste `seed.sql`.
 
 ## Estructura
 
