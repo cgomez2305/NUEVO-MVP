@@ -11,20 +11,28 @@ USE veci;
 SET NAMES utf8mb4;
 
 -- Un negocio = un comerciante con su tienda propia.
+-- tipo_negocio decide qué flujo usa: catálogo con carrito ('pedidos', comida,
+-- tiendas) o servicios con cita previa ('reservas', peluquerías, talleres,
+-- consultorios, spas...). horario_atencion guarda la disponibilidad semanal
+-- como JSON: {"1":["09:00","18:00"], ...} con 1=lunes .. 7=domingo, un día
+-- ausente del objeto significa que ese día el negocio está cerrado.
 CREATE TABLE IF NOT EXISTS negocios (
-  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  slug              VARCHAR(60)  NOT NULL UNIQUE,
-  nombre            VARCHAR(120) NOT NULL,
-  descripcion       VARCHAR(180) DEFAULT NULL,
-  whatsapp          VARCHAR(20)  NOT NULL UNIQUE,
-  password_hash     VARCHAR(255) NOT NULL,
-  inicial           CHAR(2)      DEFAULT NULL,
-  color_marca       CHAR(7)      DEFAULT '#E8452C',
-  menu_foto         VARCHAR(255) DEFAULT NULL,
-  llave_breb_tipo   ENUM('celular','cedula','correo') DEFAULT 'celular',
-  llave_breb_valor  VARCHAR(120) DEFAULT NULL,
-  publicada         TINYINT(1)   NOT NULL DEFAULT 0,
-  creado_en         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug                VARCHAR(60)  NOT NULL UNIQUE,
+  nombre              VARCHAR(120) NOT NULL,
+  descripcion         VARCHAR(180) DEFAULT NULL,
+  whatsapp            VARCHAR(20)  NOT NULL UNIQUE,
+  password_hash       VARCHAR(255) NOT NULL,
+  inicial             CHAR(2)      DEFAULT NULL,
+  color_marca         CHAR(7)      DEFAULT '#E8452C',
+  menu_foto           VARCHAR(255) DEFAULT NULL,
+  llave_breb_tipo     ENUM('celular','cedula','correo') DEFAULT 'celular',
+  llave_breb_valor    VARCHAR(120) DEFAULT NULL,
+  tipo_negocio        ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
+  horario_atencion    JSON         DEFAULT NULL,
+  intervalo_citas_min SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  publicada           TINYINT(1)   NOT NULL DEFAULT 0,
+  creado_en           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- Catálogo del negocio, extraído por la IA o cargado a mano.
@@ -91,4 +99,42 @@ CREATE TABLE IF NOT EXISTS mensajes_copiloto (
   enviado_en  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Catálogo de servicios para negocios tipo 'reservas' (equivalente a
+-- productos, pero con duración: cada servicio ocupa un bloque de agenda).
+CREATE TABLE IF NOT EXISTS servicios (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id    INT UNSIGNED NOT NULL,
+  nombre        VARCHAR(120) NOT NULL,
+  precio        INT UNSIGNED NOT NULL,
+  duracion_min  SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  color         CHAR(7)      NOT NULL DEFAULT '#5B7F3A',
+  activo        TINYINT(1)   NOT NULL DEFAULT 1,
+  orden         SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  INDEX idx_servicios_negocio (negocio_id, activo)
+) ENGINE=InnoDB;
+
+-- Una cita = una reserva de un cliente para un servicio, en una fecha y hora.
+-- duracion_min queda copiado del servicio al momento de reservar, así si el
+-- dueño cambia la duración después no descuadra las citas ya agendadas.
+CREATE TABLE IF NOT EXISTS citas (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id    INT UNSIGNED NOT NULL,
+  cliente_id    INT UNSIGNED NOT NULL,
+  servicio_id   INT UNSIGNED DEFAULT NULL,
+  nombre_servicio VARCHAR(120) NOT NULL,
+  precio        INT UNSIGNED NOT NULL,
+  fecha_hora    DATETIME     NOT NULL,
+  duracion_min  SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  estado        ENUM('pendiente','confirmada','completada','cancelada')
+                NOT NULL DEFAULT 'pendiente',
+  notas         VARCHAR(255) DEFAULT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
+  INDEX idx_citas_negocio_fecha (negocio_id, fecha_hora)
 ) ENGINE=InnoDB;

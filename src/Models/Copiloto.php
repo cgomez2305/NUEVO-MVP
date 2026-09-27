@@ -21,18 +21,18 @@ class Copiloto
      *
      * @return array<int, array{cliente: array<string, mixed>, dias_sin_pedir: int, frecuencia_prom: int, motivo: string}>
      */
-    public static function clientesAReactivar(int $negocioId): array
+    public static function clientesAReactivar(int $negocioId, string $tipoNegocio = 'pedidos'): array
     {
-        $stmt = Database::conexion()->prepare(
-            'SELECT cliente_id, creado_en FROM pedidos
-             WHERE negocio_id = :negocio_id
-             ORDER BY cliente_id ASC, creado_en ASC'
-        );
+        $sql = $tipoNegocio === 'reservas'
+            ? 'SELECT cliente_id, fecha_hora AS fecha FROM citas WHERE negocio_id = :negocio_id AND estado != "cancelada" ORDER BY cliente_id ASC, fecha_hora ASC'
+            : 'SELECT cliente_id, creado_en AS fecha FROM pedidos WHERE negocio_id = :negocio_id ORDER BY cliente_id ASC, creado_en ASC';
+
+        $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['negocio_id' => $negocioId]);
 
         $porCliente = [];
         foreach ($stmt->fetchAll() as $fila) {
-            $porCliente[(int) $fila['cliente_id']][] = new DateTimeImmutable((string) $fila['creado_en']);
+            $porCliente[(int) $fila['cliente_id']][] = new DateTimeImmutable((string) $fila['fecha']);
         }
 
         $hoy = new DateTimeImmutable('today');
@@ -87,14 +87,18 @@ class Copiloto
             . 'pedido. ¿Te separamos lo de siempre?';
     }
 
-    /** % de clientes que pidieron más de una vez en los últimos 30 días. */
-    public static function recompraMensualPct(int $negocioId): int
+    /** % de clientes que pidieron/reservaron más de una vez en los últimos 30 días. */
+    public static function recompraMensualPct(int $negocioId, string $tipoNegocio = 'pedidos'): int
     {
-        $stmt = Database::conexion()->prepare(
-            'SELECT cliente_id, COUNT(*) AS total FROM pedidos
-             WHERE negocio_id = :negocio_id AND creado_en >= NOW() - INTERVAL 30 DAY
-             GROUP BY cliente_id'
-        );
+        $sql = $tipoNegocio === 'reservas'
+            ? 'SELECT cliente_id, COUNT(*) AS total FROM citas
+               WHERE negocio_id = :negocio_id AND fecha_hora >= NOW() - INTERVAL 30 DAY AND estado != "cancelada"
+               GROUP BY cliente_id'
+            : 'SELECT cliente_id, COUNT(*) AS total FROM pedidos
+               WHERE negocio_id = :negocio_id AND creado_en >= NOW() - INTERVAL 30 DAY
+               GROUP BY cliente_id';
+
+        $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['negocio_id' => $negocioId]);
         $filas = $stmt->fetchAll();
 

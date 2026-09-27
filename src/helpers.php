@@ -151,8 +151,8 @@ function strftime_es(): string
 function chip_estado(string $estado): string
 {
     return match ($estado) {
-        'pagado', 'entregado' => 'pq-chip-caja',
-        'cancelado' => 'pq-chip-cancelado',
+        'pagado', 'entregado', 'completada', 'confirmada' => 'pq-chip-caja',
+        'cancelado', 'cancelada' => 'pq-chip-cancelado',
         default => 'pq-chip-pendiente',
     };
 }

@@ -31,6 +31,7 @@ class AuthController
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
         $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
         $password = (string) ($_POST['password'] ?? '');
+        $tipoNegocio = (string) ($_POST['tipo_negocio'] ?? 'pedidos');
 
         if ($nombre === '' || $whatsapp === '' || strlen($password) < 6) {
             flash_set('error', 'Completa el nombre del negocio, tu WhatsApp y una contraseña de al menos 6 caracteres.');
@@ -42,7 +43,7 @@ class AuthController
             redirigir('/login');
         }
 
-        $id = Negocio::crear($nombre, $whatsapp, $password);
+        $id = Negocio::crear($nombre, $whatsapp, $password, $tipoNegocio);
         session_regenerate_id(true);
         $_SESSION['negocio_id'] = $id;
 

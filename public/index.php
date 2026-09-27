@@ -33,6 +33,8 @@ $router->get('/panel/onboarding/foto', [$onboarding, 'mostrarFoto']);
 $router->post('/panel/onboarding/foto', [$onboarding, 'subirFoto']);
 $router->post('/panel/onboarding/analizar', [$onboarding, 'analizar']);
 $router->get('/panel/onboarding/productos', [$onboarding, 'mostrarProductos']);
+$router->get('/panel/onboarding/horario', [$onboarding, 'mostrarHorario']);
+$router->post('/panel/onboarding/horario', [$onboarding, 'guardarHorario']);
 $router->get('/panel/onboarding/pago', [$onboarding, 'mostrarPago']);
 $router->post('/panel/onboarding/publicar', [$onboarding, 'publicar']);
 
@@ -44,6 +46,14 @@ $router->get('/panel/productos', [$panel, 'productos']);
 $router->post('/panel/productos', [$panel, 'crearProducto']);
 $router->post('/panel/productos/{id}/actualizar', [$panel, 'actualizarProducto']);
 $router->post('/panel/productos/{id}/eliminar', [$panel, 'eliminarProducto']);
+$router->get('/panel/servicios', [$panel, 'servicios']);
+$router->post('/panel/servicios', [$panel, 'crearServicio']);
+$router->post('/panel/servicios/{id}/actualizar', [$panel, 'actualizarServicio']);
+$router->post('/panel/servicios/{id}/eliminar', [$panel, 'eliminarServicio']);
+$router->get('/panel/citas', [$panel, 'citas']);
+$router->post('/panel/citas/{id}/estado', [$panel, 'cambiarEstadoCita']);
+$router->get('/panel/horario', [$panel, 'horario']);
+$router->post('/panel/horario', [$panel, 'guardarHorario']);
 $router->get('/panel/copiloto', [$panel, 'copiloto']);
 $router->get('/panel/copiloto/{cliente}/mensaje', [$panel, 'mensajeCopiloto']);
 $router->post('/panel/copiloto/{cliente}/enviar', [$panel, 'registrarEnvioCopiloto']);
@@ -54,5 +64,9 @@ $router->post('/t/{slug}/carrito/agregar', [$tienda, 'agregarAlCarrito']);
 $router->post('/t/{slug}/carrito/quitar', [$tienda, 'quitarDelCarrito']);
 $router->get('/t/{slug}/carrito', [$tienda, 'verCarrito']);
 $router->post('/t/{slug}/pedido', [$tienda, 'crearPedido']);
+
+// --- Tienda pública del cliente, negocios de tipo reservas --------------
+$router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
+$router->post('/t/{slug}/cita', [$tienda, 'crearCita']);
 
 $router->despachar($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

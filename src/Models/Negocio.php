@@ -8,13 +8,17 @@ use App\Database;
 
 class Negocio
 {
-    public static function crear(string $nombre, string $whatsapp, string $password): int
+    public static function crear(string $nombre, string $whatsapp, string $password, string $tipoNegocio = 'pedidos'): int
     {
+        if (!in_array($tipoNegocio, ['pedidos', 'reservas'], true)) {
+            $tipoNegocio = 'pedidos';
+        }
+
         $pdo = Database::conexion();
 
         $stmt = $pdo->prepare(
-            'INSERT INTO negocios (slug, nombre, whatsapp, password_hash, inicial)
-             VALUES (:slug, :nombre, :whatsapp, :password_hash, :inicial)'
+            'INSERT INTO negocios (slug, nombre, whatsapp, password_hash, inicial, tipo_negocio)
+             VALUES (:slug, :nombre, :whatsapp, :password_hash, :inicial, :tipo_negocio)'
         );
         $stmt->execute([
             'slug'          => self::slugUnico($nombre),
@@ -22,6 +26,7 @@ class Negocio
             'whatsapp'      => $whatsapp,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'inicial'       => mb_strtoupper(mb_substr($nombre, 0, 1)),
+            'tipo_negocio'  => $tipoNegocio,
         ]);
 
         return (int) $pdo->lastInsertId();
@@ -68,6 +73,59 @@ class Negocio
     {
         $stmt = Database::conexion()->prepare('UPDATE negocios SET publicada = 1 WHERE id = :id');
         $stmt->execute(['id' => $id]);
+    }
+
+    /** @param array<string, array{0:string,1:string}> $horario día ISO (1-7) => [inicio, fin] */
+    public static function guardarHorario(int $id, array $horario, int $intervaloMin): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE negocios SET horario_atencion = :horario, intervalo_citas_min = :intervalo WHERE id = :id'
+        );
+        $stmt->execute([
+            'horario'   => json_encode($horario, JSON_UNESCAPED_UNICODE),
+            'intervalo' => $intervaloMin,
+            'id'        => $id,
+        ]);
+    }
+
+    /** @return array<string, array{0:string,1:string}> */
+    public static function horario(array $negocio): array
+    {
+        if (empty($negocio['horario_atencion'])) {
+            return [];
+        }
+        $decodificado = json_decode((string) $negocio['horario_atencion'], true);
+        return is_array($decodificado) ? $decodificado : [];
+    }
+
+    /**
+     * Arma el JSON de horario a partir de un formulario con campos
+     * abierto_1..abierto_7, inicio_1..inicio_7, fin_1..fin_7 (1=lunes..7=domingo).
+     *
+     * @param array<string, mixed> $post
+     * @return array<string, array{0:string,1:string}>
+     */
+    public static function horarioDesdePost(array $post): array
+    {
+        $horario = [];
+        for ($dia = 1; $dia <= 7; $dia++) {
+            if (empty($post["abierto_{$dia}"])) {
+                continue;
+            }
+            $inicio = (string) ($post["inicio_{$dia}"] ?? '');
+            $fin = (string) ($post["fin_{$dia}"] ?? '');
+            if (preg_match('/^\d{1,2}:\d{2}$/', $inicio) && preg_match('/^\d{1,2}:\d{2}$/', $fin) && $inicio < $fin) {
+                $horario[(string) $dia] = [$inicio, $fin];
+            }
+        }
+        return $horario;
+    }
+
+    /** @param array<string, mixed> $post */
+    public static function intervaloDesdePost(array $post): int
+    {
+        $intervalo = (int) ($post['intervalo'] ?? 30);
+        return in_array($intervalo, [15, 20, 30, 45, 60], true) ? $intervalo : 30;
     }
 
     private static function existeSlug(string $slug): bool

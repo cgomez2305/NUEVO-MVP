@@ -74,3 +74,43 @@ INSERT INTO pedidos (negocio_id, cliente_id, total, metodo_pago, estado, creado_
 -- muestre algo real; el copiloto solo necesita cliente_id + creado_en).
 INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad)
 SELECT id, 1, 'Bandeja paisa', 28000, 1 FROM pedidos;
+
+-- Segundo negocio de ejemplo, tipo 'reservas': una peluquería, para mostrar
+-- el flujo de servicios con cita previa (distinto de pedidos con carrito).
+-- Acceso de prueba al panel: WhatsApp 3005556677 · contraseña veci123
+INSERT INTO negocios
+  (id, slug, nombre, descripcion, whatsapp, password_hash, inicial, color_marca,
+   llave_breb_tipo, llave_breb_valor, tipo_negocio, horario_atencion, intervalo_citas_min, publicada)
+VALUES
+  (2, 'salonbonita', 'Salón Bonita', 'Peluquería y manicure · Bucaramanga',
+   '3005556677', '$2y$12$Rp/Uc3/Mg/f0A7wwOH/7w.OrB97It.nmx2n1sExSPVsAdf6Q/cQFW',
+   'S', '#3B4CCA', 'celular', '3005556677', 'reservas',
+   '{"1":["09:00","18:00"],"2":["09:00","18:00"],"3":["09:00","18:00"],"4":["09:00","18:00"],"5":["09:00","18:00"],"6":["09:00","14:00"]}',
+   30, 1);
+
+INSERT INTO servicios (id, negocio_id, nombre, precio, duracion_min, color, orden) VALUES
+  (1, 2, 'Corte de cabello', 20000, 30, '#5B7F3A', 1),
+  (2, 2, 'Manicure',         18000, 45, '#3B4CCA', 2),
+  (3, 2, 'Peinado',          35000, 60, '#E8452C', 3),
+  (4, 2, 'Tinte y color',    70000, 90, '#F2B632', 4);
+
+INSERT INTO clientes (id, negocio_id, nombre, telefono, autorizo_datos, autorizado_en) VALUES
+  (6, 2, 'Sandra Molina',  '3101112233', 1, NOW()),
+  (7, 2, 'Julián Peña',    '3109998877', 1, NOW()),
+  (8, 2, 'Camila Rojas',   '3112223344', 1, NOW());
+
+-- Sandra Molina: se cortaba el cabello cada ~20 días y dejó de venir hace 40 (se debe reactivar).
+INSERT INTO citas (negocio_id, cliente_id, servicio_id, nombre_servicio, precio, fecha_hora, duracion_min, estado) VALUES
+  (2, 6, 1, 'Corte de cabello', 20000, NOW() - INTERVAL 80 DAY, 30, 'completada'),
+  (2, 6, 1, 'Corte de cabello', 20000, NOW() - INTERVAL 60 DAY, 30, 'completada'),
+  (2, 6, 1, 'Corte de cabello', 20000, NOW() - INTERVAL 40 DAY, 30, 'completada');
+
+-- Julián Peña: viene cada 15 días y tiene una cita agendada para dentro de poco (no necesita reactivación).
+INSERT INTO citas (negocio_id, cliente_id, servicio_id, nombre_servicio, precio, fecha_hora, duracion_min, estado) VALUES
+  (2, 7, 1, 'Corte de cabello', 20000, NOW() - INTERVAL 30 DAY, 30, 'completada'),
+  (2, 7, 1, 'Corte de cabello', 20000, NOW() - INTERVAL 15 DAY, 30, 'completada'),
+  (2, 7, 1, 'Corte de cabello', 20000, NOW() + INTERVAL 2 DAY, 30, 'confirmada');
+
+-- Camila Rojas: apenas una cita (aún no hay suficiente historia).
+INSERT INTO citas (negocio_id, cliente_id, servicio_id, nombre_servicio, precio, fecha_hora, duracion_min, estado) VALUES
+  (2, 8, 3, 'Peinado', 35000, NOW() - INTERVAL 5 DAY, 60, 'completada');

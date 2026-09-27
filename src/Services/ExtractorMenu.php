@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 /**
- * "La IA arma tu tienda": lee productos y precios de la foto del menú.
+ * "La IA arma tu tienda": lee de una foto el catálogo del negocio.
+ * Para negocios de tipo 'pedidos' lee productos y precios (extraer);
+ * para negocios de tipo 'reservas' lee servicios, precio y duración
+ * aproximada (extraerServicios).
  *
  * Sin ANTHROPIC_API_KEY configurada (config/config.php → anthropic_api_key),
  * o si la llamada falla por cualquier razón, devuelve un catálogo de ejemplo:
- * así el flujo completo (foto → productos → Bre-B → publicar) funciona de
+ * así el flujo completo (foto → catálogo → Bre-B → publicar) funciona de
  * punta a punta sin depender de una API externa ni de una llave pagada.
  */
 class ExtractorMenu
@@ -20,13 +23,40 @@ class ExtractorMenu
         $apiKey = config('anthropic_api_key');
 
         if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
-            $real = self::extraerConClaude($rutaAbsolutaImagen, $apiKey);
+            $prompt = 'Lee esta foto de un menú de un negocio colombiano. Responde SOLO con '
+                . 'un JSON (sin texto adicional, sin bloque de código) con una lista de '
+                . 'productos: [{"nombre":"...", "precio": 12000, "categoria":"Comidas|Bebidas|General"}]. '
+                . 'El precio va en pesos colombianos, como número entero sin puntos ni símbolo.';
+            $texto = self::preguntarClaude($rutaAbsolutaImagen, $apiKey, $prompt);
+            $real = self::parsearProductos($texto);
             if ($real !== null) {
                 return $real;
             }
         }
 
         return self::catalogoDeEjemplo();
+    }
+
+    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}> */
+    public static function extraerServicios(string $rutaAbsolutaImagen): array
+    {
+        $apiKey = config('anthropic_api_key');
+
+        if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
+            $prompt = 'Lee esta foto de la lista de servicios y precios de un negocio colombiano '
+                . '(por ejemplo una peluquería, un spa, un taller o un consultorio). Responde SOLO '
+                . 'con un JSON (sin texto adicional, sin bloque de código) con una lista de '
+                . 'servicios: [{"nombre":"...", "precio": 25000, "duracion_min": 45}]. El precio va '
+                . 'en pesos colombianos, como número entero sin puntos ni símbolo. Si no ves la '
+                . 'duración escrita, estima una duración típica razonable para ese servicio en minutos.';
+            $texto = self::preguntarClaude($rutaAbsolutaImagen, $apiKey, $prompt);
+            $real = self::parsearServicios($texto);
+            if ($real !== null) {
+                return $real;
+            }
+        }
+
+        return self::catalogoServiciosDeEjemplo();
     }
 
     /** @return array<int, array{nombre:string, precio:int, categoria:string}> */
@@ -40,8 +70,19 @@ class ExtractorMenu
         ];
     }
 
-    /** @return array<int, array{nombre:string, precio:int, categoria:string}>|null */
-    private static function extraerConClaude(string $ruta, string $apiKey): ?array
+    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}> */
+    private static function catalogoServiciosDeEjemplo(): array
+    {
+        return [
+            ['nombre' => 'Corte de cabello',      'precio' => 20000, 'duracion_min' => 30],
+            ['nombre' => 'Manicure',               'precio' => 18000, 'duracion_min' => 45],
+            ['nombre' => 'Peinado',                'precio' => 35000, 'duracion_min' => 60],
+            ['nombre' => 'Tinte y color',           'precio' => 70000, 'duracion_min' => 90],
+        ];
+    }
+
+    /** Llama a la API de Claude con la imagen y el prompt dados; devuelve el texto de la respuesta o null. */
+    private static function preguntarClaude(string $ruta, string $apiKey, string $prompt): ?string
     {
         $datosImagen = @file_get_contents($ruta);
         if ($datosImagen === false) {
@@ -61,13 +102,7 @@ class ExtractorMenu
                         'type'   => 'image',
                         'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $base64],
                     ],
-                    [
-                        'type' => 'text',
-                        'text' => 'Lee esta foto de un menú de un negocio colombiano. Responde SOLO con '
-                            . 'un JSON (sin texto adicional, sin bloque de código) con una lista de '
-                            . 'productos: [{"nombre":"...", "precio": 12000, "categoria":"Comidas|Bebidas|General"}]. '
-                            . 'El precio va en pesos colombianos, como número entero sin puntos ni símbolo.',
-                    ],
+                    ['type' => 'text', 'text' => $prompt],
                 ],
             ]],
         ], JSON_UNESCAPED_UNICODE);
@@ -98,19 +133,20 @@ class ExtractorMenu
 
         $json = json_decode($respuesta, true);
         $texto = $json['content'][0]['text'] ?? null;
-        if (!is_string($texto)) {
-            return null;
-        }
 
-        // El modelo a veces envuelve el JSON en ```json ... ``` pese a la instrucción.
-        $limpio = preg_replace('/^```(json)?|```$/m', '', $texto);
-        $productos = json_decode(trim($limpio ?? $texto), true);
-        if (!is_array($productos)) {
+        return is_string($texto) ? $texto : null;
+    }
+
+    /** @return array<int, array{nombre:string, precio:int, categoria:string}>|null */
+    private static function parsearProductos(?string $texto): ?array
+    {
+        $items = self::decodificarJson($texto);
+        if ($items === null) {
             return null;
         }
 
         $resultado = [];
-        foreach ($productos as $item) {
+        foreach ($items as $item) {
             if (!is_array($item) || !isset($item['nombre'], $item['precio'])) {
                 continue;
             }
@@ -122,5 +158,42 @@ class ExtractorMenu
         }
 
         return $resultado === [] ? null : $resultado;
+    }
+
+    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}>|null */
+    private static function parsearServicios(?string $texto): ?array
+    {
+        $items = self::decodificarJson($texto);
+        if ($items === null) {
+            return null;
+        }
+
+        $resultado = [];
+        foreach ($items as $item) {
+            if (!is_array($item) || !isset($item['nombre'], $item['precio'])) {
+                continue;
+            }
+            $resultado[] = [
+                'nombre'       => (string) $item['nombre'],
+                'precio'       => (int) $item['precio'],
+                'duracion_min' => (int) ($item['duracion_min'] ?? 30),
+            ];
+        }
+
+        return $resultado === [] ? null : $resultado;
+    }
+
+    /** @return array<int, mixed>|null */
+    private static function decodificarJson(?string $texto): ?array
+    {
+        if ($texto === null) {
+            return null;
+        }
+
+        // El modelo a veces envuelve el JSON en ```json ... ``` pese a la instrucción.
+        $limpio = preg_replace('/^```(json)?|```$/m', '', $texto);
+        $datos = json_decode(trim($limpio ?? $texto), true);
+
+        return is_array($datos) ? $datos : null;
     }
 }

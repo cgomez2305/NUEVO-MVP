@@ -10,7 +10,7 @@
 <div class="pq-stats">
   <div class="pq-stat">
     <span class="pq-stat-valor" style="color: var(--caja)"><?= $pedidosHoy ?></span>
-    <span class="pq-stat-label">pedidos hoy</span>
+    <span class="pq-stat-label"><?= $negocio['tipo_negocio'] === 'reservas' ? 'citas hoy' : 'pedidos hoy' ?></span>
   </div>
   <div class="pq-stat">
     <span class="pq-stat-valor" style="color: var(--sello)"><?= $recompraPct ?>%</span>

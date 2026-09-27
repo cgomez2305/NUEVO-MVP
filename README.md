@@ -7,6 +7,17 @@ análisis: un mostrador digital para el negocio colombiano que vive en
 WhatsApp, cobra por Bre-B y usa un copiloto de recompra para decirle al
 dueño a quién escribirle hoy.
 
+Veci soporta dos tipos de negocio, elegidos al registrarse:
+
+- **Pedidos** (comida, tiendas, panaderías): catálogo con carrito, el
+  cliente arma su pedido y paga por Bre-B, Nequi o efectivo.
+- **Reservas** (peluquerías, spas, talleres, consultorios): catálogo de
+  servicios con duración, el cliente elige un horario disponible según
+  el horario de atención del negocio y confirma por WhatsApp. El panel
+  cambia "Pedidos" por "Agenda" y agrega "Horario de atención"; el
+  copiloto de recompra funciona igual, calculando la frecuencia sobre
+  las citas en vez de los pedidos.
+
 ## Stack
 
 PHP puro + MySQL, sin framework:
@@ -31,8 +42,9 @@ PHP puro + MySQL, sin framework:
    ```
 
 2. (Opcional pero recomendado) Carga datos de demostración — el negocio
-   "Doña María" con productos, clientes y un historial de pedidos pensado
-   para que el copiloto tenga algo real que mostrar:
+   "Doña María" (tipo pedidos) y "Salón Bonita" (tipo reservas), cada uno
+   con catálogo, clientes y un historial pensado para que el copiloto
+   tenga algo real que mostrar:
 
    ```bash
    mysql -u root -p veci < database/seed.sql
@@ -67,12 +79,13 @@ PHP puro + MySQL, sin framework:
    - **Producción**: ver la guía completa para hosting compartido tipo
      cPanel (el mismo donde sueles instalar WordPress) más abajo.
 
-5. Entra a `/registro` para crear tu propio negocio, o usa la cuenta de
+5. Entra a `/registro` para crear tu propio negocio, o usa las cuentas de
    demostración si cargaste `seed.sql`:
 
-   - **WhatsApp:** `3001234567`
-   - **Contraseña:** `veci123`
-   - **Tienda pública:** `/t/donamaria`
+   | Negocio | Tipo | WhatsApp | Contraseña | Tienda pública |
+   |---|---|---|---|---|
+   | Doña María | Pedidos | `3001234567` | `veci123` | `/t/donamaria` |
+   | Salón Bonita | Reservas | `3005556677` | `veci123` | `/t/salonbonita` |
 
 ## Publicar en hosting compartido (cPanel)
 

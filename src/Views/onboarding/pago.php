@@ -1,6 +1,7 @@
+<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; ?>
 <div class="pq-topbar" style="border-bottom: none">
-  <a href="<?= e(base_url('/panel/onboarding/productos')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <span class="pq-chip">PASO 3 DE 3</span>
+  <a href="<?= e(base_url($esReservas ? '/panel/onboarding/horario' : '/panel/onboarding/productos')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
+  <span class="pq-chip"><?= $esReservas ? 'PASO 4 DE 4' : 'PASO 3 DE 3' ?></span>
 </div>
 
 <div class="pq-content">

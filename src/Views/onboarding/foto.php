@@ -3,9 +3,14 @@
   <span class="pq-chip">PASO 1 DE 3</span>
 </div>
 
+<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; ?>
 <div class="pq-content">
-  <h1 class="pq-h1" style="font-size: 28px">Toma foto de tu menú</h1>
-  <p class="pq-lead">Puede ser una carta impresa, una pizarra o tus fotos de Instagram. La IA hace el resto.</p>
+  <h1 class="pq-h1" style="font-size: 28px"><?= $esReservas ? 'Toma foto de tu lista de servicios' : 'Toma foto de tu menú' ?></h1>
+  <p class="pq-lead">
+    <?= $esReservas
+      ? 'Puede ser una lista de precios, una pizarra o tus fotos de Instagram. La IA hace el resto.'
+      : 'Puede ser una carta impresa, una pizarra o tus fotos de Instagram. La IA hace el resto.' ?>
+  </p>
 
   <?php if (!empty($error)): ?>
     <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
@@ -24,7 +29,7 @@
   <form method="post" action="<?= e(base_url('/panel/onboarding/foto')) ?>" enctype="multipart/form-data" style="margin-top: 20px">
     <?= csrf_campo() ?>
     <div class="pq-campo">
-      <label class="pq-label" for="foto">Foto del menú</label>
+      <label class="pq-label" for="foto"><?= $esReservas ? 'Foto de tus servicios' : 'Foto del menú' ?></label>
       <input class="pq-input" type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/webp" required>
       <p class="pq-ayuda">JPG, PNG o WEBP. Máximo 8 MB.</p>
     </div>

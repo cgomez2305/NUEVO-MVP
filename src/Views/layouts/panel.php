@@ -9,9 +9,16 @@
       <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">Veci</a>
       <nav class="pq-topbar-links">
         <a href="<?= e(base_url('/panel')) ?>" class="<?= ($activo ?? '') === 'panel' ? 'activo' : '' ?>">Panel</a>
-        <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>">Pedidos</a>
-        <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
-        <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>">Menú</a>
+        <?php if (($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas'): ?>
+          <a href="<?= e(base_url('/panel/citas')) ?>" class="<?= ($activo ?? '') === 'citas' ? 'activo' : '' ?>">Agenda</a>
+          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <a href="<?= e(base_url('/panel/servicios')) ?>" class="<?= ($activo ?? '') === 'servicios' ? 'activo' : '' ?>">Servicios</a>
+          <a href="<?= e(base_url('/panel/horario')) ?>" class="<?= ($activo ?? '') === 'horario' ? 'activo' : '' ?>">Horario</a>
+        <?php else: ?>
+          <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>">Pedidos</a>
+          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>">Menú</a>
+        <?php endif; ?>
       </nav>
     </div>
 

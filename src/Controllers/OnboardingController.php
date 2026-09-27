@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Auth;
 use App\Models\Negocio;
 use App\Models\Producto;
+use App\Models\Servicio;
 use App\Services\ExtractorMenu;
 
 /**
@@ -75,6 +76,16 @@ class OnboardingController
             redirigir('/panel/onboarding/foto');
         }
 
+        if ($negocio['tipo_negocio'] === 'reservas') {
+            ver('onboarding/servicios', [
+                'titulo'    => 'Revisa tus servicios · Veci',
+                'negocio'   => $negocio,
+                'servicios' => Servicio::listarPorNegocio((int) $negocio['id']),
+                'volver'    => '/panel/onboarding/productos',
+            ], 'onboarding');
+            return;
+        }
+
         ver('onboarding/productos', [
             'titulo'    => 'Revisa tu catálogo · Veci',
             'negocio'   => $negocio,
@@ -91,28 +102,73 @@ class OnboardingController
             redirigir('/panel/onboarding/productos');
         }
 
+        $negocioId = (int) $negocio['id'];
+        $rutaImagen = __DIR__ . '/../../public/' . $negocio['menu_foto'];
+
         // Solo analiza si el catálogo todavía está vacío: evita duplicar
-        // productos si el dueño recarga la página después de analizar.
-        if (Producto::contarPorNegocio((int) $negocio['id']) === 0) {
-            $rutaImagen = __DIR__ . '/../../public/' . $negocio['menu_foto'];
+        // productos/servicios si el dueño recarga la página después de analizar.
+        if ($negocio['tipo_negocio'] === 'reservas') {
+            if (Servicio::contarPorNegocio($negocioId) === 0) {
+                foreach (ExtractorMenu::extraerServicios($rutaImagen) as $servicio) {
+                    Servicio::crear($negocioId, $servicio['nombre'], $servicio['precio'], $servicio['duracion_min']);
+                }
+            }
+        } elseif (Producto::contarPorNegocio($negocioId) === 0) {
             foreach (ExtractorMenu::extraer($rutaImagen) as $producto) {
-                Producto::crear(
-                    (int) $negocio['id'],
-                    $producto['nombre'],
-                    $producto['precio'],
-                    $producto['categoria']
-                );
+                Producto::crear($negocioId, $producto['nombre'], $producto['precio'], $producto['categoria']);
             }
         }
 
         redirigir('/panel/onboarding/productos');
     }
 
+    public function mostrarHorario(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if ($negocio['tipo_negocio'] !== 'reservas') {
+            redirigir('/panel/onboarding/pago');
+        }
+        if (Servicio::contarPorNegocio((int) $negocio['id']) === 0) {
+            redirigir('/panel/onboarding/productos');
+        }
+
+        ver('onboarding/horario', [
+            'titulo'  => 'Tu horario de atención · Veci',
+            'negocio' => $negocio,
+            'horario' => Negocio::horario($negocio),
+        ], 'onboarding');
+    }
+
+    public function guardarHorario(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (!csrf_verificar()) {
+            redirigir('/panel/onboarding/horario');
+        }
+
+        Negocio::guardarHorario(
+            (int) $negocio['id'],
+            Negocio::horarioDesdePost($_POST),
+            Negocio::intervaloDesdePost($_POST)
+        );
+
+        redirigir('/panel/onboarding/pago');
+    }
+
     public function mostrarPago(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
 
-        if (Producto::contarPorNegocio((int) $negocio['id']) === 0) {
+        if ($negocio['tipo_negocio'] === 'reservas') {
+            if (Servicio::contarPorNegocio((int) $negocio['id']) === 0) {
+                redirigir('/panel/onboarding/productos');
+            }
+            if (Negocio::horario($negocio) === []) {
+                redirigir('/panel/onboarding/horario');
+            }
+        } elseif (Producto::contarPorNegocio((int) $negocio['id']) === 0) {
             redirigir('/panel/onboarding/productos');
         }
 

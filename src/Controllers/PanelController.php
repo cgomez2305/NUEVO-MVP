@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
+use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Copiloto;
+use App\Models\Negocio;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\Servicio;
 
 class PanelController
 {
@@ -16,15 +19,18 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         $negocioId = (int) $negocio['id'];
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
         ver('panel/dashboard', [
             'titulo'          => 'Panel · Veci',
             'activo'          => 'panel',
             'negocio'         => $negocio,
-            'pedidosHoy'      => Pedido::contarHoy($negocioId),
-            'recompraPct'     => Copiloto::recompraMensualPct($negocioId),
-            'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId)),
-            'ultimosPedidos'  => array_slice(Pedido::listarPorNegocio($negocioId), 0, 5),
+            'esReservas'      => $esReservas,
+            'pedidosHoy'      => $esReservas ? Cita::contarHoy($negocioId) : Pedido::contarHoy($negocioId),
+            'recompraPct'     => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
+            'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio'])),
+            'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorNegocio($negocioId), 0, 5),
+            'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($negocioId), 0, 5) : [],
         ], 'panel');
     }
 
@@ -117,17 +123,137 @@ class PanelController
         redirigir($volver);
     }
 
+    public function servicios(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/servicios', [
+            'titulo'    => 'Tus servicios · Veci',
+            'activo'    => 'servicios',
+            'negocio'   => $negocio,
+            'servicios' => Servicio::listarPorNegocio((int) $negocio['id']),
+            'volver'    => '/panel/servicios',
+        ], 'panel');
+    }
+
+    public function crearServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (!csrf_verificar()) {
+            redirigir($volver);
+        }
+
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $precio = (int) ($_POST['precio'] ?? 0);
+        $duracion = (int) ($_POST['duracion_min'] ?? 30);
+
+        if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
+            Servicio::crear((int) $negocio['id'], $nombre, $precio, $duracion);
+        }
+
+        redirigir($volver);
+    }
+
+    public function actualizarServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (!csrf_verificar()) {
+            redirigir($volver);
+        }
+
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $precio = (int) ($_POST['precio'] ?? 0);
+        $duracion = (int) ($_POST['duracion_min'] ?? 30);
+
+        if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
+            Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
+        }
+
+        redirigir($volver);
+    }
+
+    public function eliminarServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (csrf_verificar()) {
+            Servicio::eliminar((int) $parametros['id'], (int) $negocio['id']);
+        }
+
+        redirigir($volver);
+    }
+
+    public function citas(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/citas', [
+            'titulo'  => 'Agenda · Veci',
+            'activo'  => 'citas',
+            'negocio' => $negocio,
+            'citas'   => Cita::listarProximas((int) $negocio['id']),
+        ], 'panel');
+    }
+
+    public function cambiarEstadoCita(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $estado = (string) ($_POST['estado'] ?? '');
+            Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+        }
+
+        redirigir('/panel/citas');
+    }
+
+    public function horario(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/horario', [
+            'titulo'  => 'Horario de atención · Veci',
+            'activo'  => 'horario',
+            'negocio' => $negocio,
+            'horario' => Negocio::horario($negocio),
+            'ok'      => flash_obtener('ok'),
+        ], 'panel');
+    }
+
+    public function guardarHorario(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            Negocio::guardarHorario(
+                (int) $negocio['id'],
+                Negocio::horarioDesdePost($_POST),
+                Negocio::intervaloDesdePost($_POST)
+            );
+            flash_set('ok', 'Horario actualizado.');
+        }
+
+        redirigir('/panel/horario');
+    }
+
     public function copiloto(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $negocioId = (int) $negocio['id'];
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
         ver('panel/copiloto', [
             'titulo'      => 'Copiloto de recompra · Veci',
             'activo'      => 'copiloto',
             'negocio'     => $negocio,
-            'lista'       => Copiloto::clientesAReactivar((int) $negocio['id']),
-            'pedidosHoy'  => Pedido::contarHoy((int) $negocio['id']),
-            'recompraPct' => Copiloto::recompraMensualPct((int) $negocio['id']),
+            'lista'       => Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio']),
+            'pedidosHoy'  => $esReservas ? Cita::contarHoy($negocioId) : Pedido::contarHoy($negocioId),
+            'recompraPct' => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
         ], 'panel');
     }
 
