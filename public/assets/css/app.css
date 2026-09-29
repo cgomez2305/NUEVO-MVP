@@ -21,6 +21,12 @@
   --gris-texto: #54565f;
   --gris-suave: #8a8d97;
   --borde: #D8D3C6;
+
+  --tinte-sello: rgba(59, 76, 202, .08);
+  --tinte-caja: rgba(22, 163, 106, .10);
+  --tinte-aji: rgba(232, 69, 44, .08);
+  --sombra-suave: 0 1px 2px rgba(32, 33, 36, .04), 0 8px 20px -10px rgba(32, 33, 36, .12);
+  --sombra-media: 0 4px 10px rgba(32, 33, 36, .05), 0 16px 32px -14px rgba(32, 33, 36, .18);
 }
 
 * { box-sizing: border-box; }
@@ -70,11 +76,16 @@ button { font-family: inherit; }
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--recibo);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--tiquete);
 }
 
 .pq-topbar-brand {
   font-family: 'Instrument Serif', serif;
-  font-size: 20px;
+  font-size: 21px;
+  font-weight: 400;
   text-decoration: none;
   color: var(--carbon);
 }
@@ -105,10 +116,11 @@ button { font-family: inherit; }
 h1.pq-h1 {
   font-family: 'Instrument Serif', serif;
   font-weight: 400;
-  font-size: 32px;
-  line-height: 1.1;
+  font-size: clamp(28px, 8vw, 36px);
+  line-height: 1.06;
   margin: 6px 0 0;
   color: var(--carbon);
+  letter-spacing: -.01em;
 }
 
 p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin: 8px 0 0; }
@@ -128,17 +140,20 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   cursor: pointer;
   text-decoration: none;
   width: 100%;
-  transition: transform .12s ease;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
 .pq-btn:active { transform: scale(.98); }
+.pq-btn-sello, .pq-btn-caja, .pq-btn-aji, .pq-btn-oscuro { box-shadow: var(--sombra-suave); }
+.pq-btn-sello:hover, .pq-btn-caja:hover, .pq-btn-aji:hover, .pq-btn-oscuro:hover { filter: brightness(1.06); box-shadow: var(--sombra-media); }
 .pq-btn-sello { background: var(--sello); color: var(--tiquete); }
 .pq-btn-caja { background: var(--caja); color: var(--tiquete); }
 .pq-btn-aji { background: var(--aji); color: #FFFEF9; }
 .pq-btn-oscuro { background: var(--tinta); color: var(--papel); }
-.pq-btn-whatsapp { background: #25D366; color: #0b3d24; }
+.pq-btn-whatsapp { background: #25D366; color: #0b3d24; box-shadow: var(--sombra-suave); }
 .pq-btn-ghost { background: transparent; border: 1.5px solid var(--borde); color: var(--carbon); }
+.pq-btn-ghost:hover { border-color: var(--sello); color: var(--sello); }
 .pq-btn-chico { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 9px; }
-.pq-btn-deshabilitado { background: var(--recibo); color: var(--gris-suave); pointer-events: none; }
+.pq-btn-deshabilitado { background: var(--recibo); color: var(--gris-suave); pointer-events: none; box-shadow: none; }
 
 /* ---------- formularios ---------- */
 
@@ -194,7 +209,10 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   border: 1px solid var(--recibo);
   border-radius: 14px;
   padding: 16px;
+  box-shadow: var(--sombra-suave);
+  transition: box-shadow .15s ease, transform .15s ease;
 }
+.pq-card-borde:hover { box-shadow: var(--sombra-media); transform: translateY(-1px); }
 
 .pq-paso {
   display: flex;
@@ -239,10 +257,15 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   display: flex;
   flex-direction: column;
   gap: 2px;
+  border: 1px solid transparent;
+  transition: transform .15s ease;
 }
+.pq-stat:has(.pq-stat-valor[style*="caja"]) { background: var(--tinte-caja); }
+.pq-stat:has(.pq-stat-valor[style*="sello"]) { background: var(--tinte-sello); }
+.pq-stat:has(.pq-stat-valor[style*="aji"]) { background: var(--tinte-aji); }
 .pq-stat-valor {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
 }
 .pq-stat-label { font-size: 11px; color: var(--gris-texto); }
@@ -258,7 +281,10 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   border: 1px solid var(--recibo);
   border-radius: 14px;
   margin-bottom: 10px;
+  box-shadow: var(--sombra-suave);
+  transition: box-shadow .15s ease, transform .15s ease;
 }
+.pq-lead:hover { box-shadow: var(--sombra-media); transform: translateY(-1px); }
 .pq-avatar {
   width: 42px;
   height: 42px;
@@ -270,6 +296,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   font-family: 'Instrument Serif', serif;
   font-size: 16px;
   color: var(--tiquete);
+  box-shadow: 0 3px 8px rgba(32, 33, 36, .18);
 }
 
 /* ---------- tienda pública (Ruta 1) ---------- */
@@ -316,7 +343,10 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 1px 2px rgba(27, 26, 23, .03), 0 6px 16px -10px rgba(27, 26, 23, .12);
+  transition: box-shadow .15s ease, transform .15s ease;
 }
+.pq-producto:hover { box-shadow: 0 4px 8px rgba(27, 26, 23, .04), 0 14px 28px -14px rgba(27, 26, 23, .2); transform: translateY(-2px); }
 .pq-producto-foto { height: 70px; border-radius: 10px; }
 .pq-producto-nombre { font-size: 13px; font-weight: 600; line-height: 1.25; }
 .pq-producto-fila { display: flex; align-items: center; justify-content: space-between; }
@@ -397,5 +427,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 }
 
 @media (min-width: 640px) {
-  .pq-shell, .pq-shell-tienda { border-left: 1px solid var(--recibo); border-right: 1px solid var(--recibo); }
+  body.pq-panel-bg { background: var(--recibo); }
+  body.pq-tienda-bg { background: #E9E0CC; }
+  .pq-shell, .pq-shell-tienda { box-shadow: 0 30px 70px -30px rgba(32, 33, 36, .28); }
 }
