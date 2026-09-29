@@ -67,9 +67,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0
 .nav-oscura .nav-links a,.nav-oscura .nav-trigger{color:#C9CCD6}
 
 .nav-fija{position:sticky;top:0;z-index:60;transition:background .2s ease,border-color .2s ease}
-.nav-fija.oscura{background:rgba(32,33,36,.93);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-fija.clara{background:rgba(255,253,248,.85);border-bottom:1px solid var(--borde)}
-[data-theme="dark"] .nav-fija.clara{background:rgba(17,18,23,.86)}
+.nav-fija.oscura{background:var(--carbon);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-fija.clara{background:var(--bg);border-bottom:1px solid var(--borde)}
 .nav-fija .wrap{position:static}
 
 /* botón de tema: sol/luna, con crossfade entre los dos íconos */
@@ -144,7 +143,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0
   .nav-links > a{padding:15px 2px;border-bottom:1px solid var(--borde);font-size:15px}
   .nav-oscura .nav-links > a{border-bottom-color:rgba(255,255,255,.1)}
   .nav-links a::after{display:none}
-  .nav-item-menu{order:2;border-bottom:1px solid var(--borde)}
+  .nav-item-menu{order:-1;border-bottom:1px solid var(--borde)}
   .nav-oscura .nav-item-menu{border-bottom-color:rgba(255,255,255,.1)}
   .nav-item-menu .nav-trigger{width:100%;justify-content:space-between;padding:15px 2px}
 }
