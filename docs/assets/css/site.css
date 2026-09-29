@@ -475,6 +475,27 @@ h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(28px,4vw
 .tabla-precios .si{color:#16A36A;font-weight:700}
 .tabla-precios .no{color:var(--texto-tenue)}
 
+/* para qué negocios: modo pedidos / modo reservas */
+.industrias-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
+.industria-col{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio-tarjeta);padding:28px;box-shadow:var(--sombra-suave)}
+.industria-col .icono-modo{width:44px;height:44px;border-radius:var(--radio-badge);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.industria-col h3{font-size:17px;margin:0 0 6px}
+.industria-col p.desc{font-size:13.5px;color:var(--texto-suave);margin:0 0 18px}
+.industria-tags{display:flex;flex-wrap:wrap;gap:8px}
+.industria-tag{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--radio-pill);background:var(--bg-suave);color:var(--texto)}
+@media (max-width:760px){.industrias-grid{grid-template-columns:1fr}}
+
+/* página de referidos */
+.referido-pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:32px}
+.referido-paso{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio-tarjeta);padding:26px;box-shadow:var(--sombra-suave);position:relative}
+.referido-paso .num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sello);display:block;margin-bottom:12px}
+.referido-paso h3{font-size:16px;margin:0 0 8px}
+.referido-paso p{font-size:13.5px;color:var(--texto-suave);line-height:1.55;margin:0}
+.referido-comision{background:var(--carbon);color:var(--tiquete);border-radius:var(--radio-tarjeta);padding:36px;text-align:center;margin:36px 0}
+.referido-comision .cifra{font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:700;color:var(--mostaza);display:block;line-height:1}
+.referido-comision p{color:#C9CCD6;max-width:480px;margin:10px auto 0;font-size:14.5px}
+@media (max-width:760px){.referido-pasos{grid-template-columns:1fr}}
+
 /* página de integraciones */
 .integra-grupo{margin-bottom:48px}
 .integra-grupo:last-child{margin-bottom:0}
