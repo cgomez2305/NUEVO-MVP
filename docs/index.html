@@ -118,8 +118,11 @@
 </div>
 
 <div class="hero">
-  <div class="hero-glow" aria-hidden="true"></div>
-  <div class="hero-glow izq" aria-hidden="true"></div>
+  <div class="hero-glows" aria-hidden="true">
+    <div class="hero-glow"></div>
+    <div class="hero-glow izq"></div>
+    <div class="hero-glow centro"></div>
+  </div>
   <div class="wrap">
     <div class="hero-grid">
       <div class="hero-col-texto">
@@ -289,13 +292,21 @@
     <p class="lead">Rappi y DiDi Food cobran a restaurantes en Colombia entre 25% y 30% del pedido. Mueve el control para ver tu caso.</p>
 
     <div class="calc">
-      <div>
+      <div class="calc-panel">
         <label for="ventaApps">Ventas mensuales por apps de domicilio</label>
         <span class="calc-valor-grande mono" id="calcValorGrande">$8.000.000</span>
         <input type="range" class="calc-slider" id="ventaApps" min="500000" max="30000000" step="500000" value="8000000" aria-label="Ventas mensuales por apps de domicilio">
         <div class="calc-marcas"><span>$500 mil</span><span>$15 M</span><span>$30 M</span></div>
+
+        <div class="calc-ahorro">
+          <span class="calc-ahorro-label">TE AHORRAS AL MES CON VECI (PLAN PRO)</span>
+          <span class="calc-ahorro-cifra mono" id="calcAhorro">$0</span>
+          <div class="calc-ahorro-track"><div class="calc-ahorro-fill" id="calcAhorroFill"></div></div>
+          <span class="calc-ahorro-nota">Comisión promedio de apps (27.5%) menos la cuota fija de Veci.</span>
+        </div>
       </div>
       <div class="recibo-card">
+        <span class="recibo-badge mono">RECIBO EN VIVO</span>
         <div class="recibo-linea">
           <span class="etiqueta">VENDES</span>
           <span class="valor" id="reciboVentas">$0</span>
@@ -308,19 +319,6 @@
           <span class="etiqueta">CON VECI (PLAN PRO)</span>
           <span class="valor">$129.000/mes fijo</span>
         </div>
-      </div>
-    </div>
-
-    <div class="comparativa reveal-fila">
-      <div class="comparativa-fila">
-        <span class="nombre">Apps de domicilio</span>
-        <div class="barra-track"><div class="barra-fill" id="barraApps" style="width:0%"></div></div>
-        <span class="monto mono" id="montoApps">$0/mes</span>
-      </div>
-      <div class="comparativa-fila veci">
-        <span class="nombre">Con Veci (Pro)</span>
-        <div class="barra-track"><div class="barra-fill" id="barraVeci" style="width:0%"></div></div>
-        <span class="monto mono">$129.000/mes</span>
       </div>
     </div>
   </div>
@@ -661,6 +659,7 @@
 
     <div class="precios precios-3 reveal-fila">
       <div class="plan">
+        <div class="plan-icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
         <span class="nombre">Gratis</span>
         <span class="precio">$0</span>
         <span class="plan-sub">Para probar sin arriesgar nada</span>
@@ -670,9 +669,11 @@
           <li>Cobro por Bre-B, Nequi o efectivo</li>
           <li>Marca "Hecho con Veci" visible</li>
         </ul>
+        <a href="https://app.tuveci.co/registro" class="btn btn-ghost-oscuro" style="margin-top:auto">Empezar gratis →</a>
       </div>
       <div class="plan destacado">
         <span class="chip-popular">Más elegido</span>
+        <div class="plan-icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div>
         <span class="nombre">Barrio</span>
         <span class="precio"><span class="precio-mensual">$59<small>.000/mes</small></span><span class="precio-anual">$49<small>.000/mes, facturado anual</small></span></span>
         <span class="plan-sub">Para el negocio que ya vende todos los días</span>
@@ -682,8 +683,10 @@
           <li>Pedidos <strong>y</strong> reservas en la misma cuenta</li>
           <li>Sin marca de Veci</li>
         </ul>
+        <a href="https://app.tuveci.co/registro?plan=barrio" class="btn btn-sello" style="margin-top:auto">Elegir plan Barrio →</a>
       </div>
       <div class="plan">
+        <div class="plan-icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
         <span class="nombre">Pro</span>
         <span class="precio"><span class="precio-mensual">$129<small>.000/mes</small></span><span class="precio-anual">$108<small>.000/mes, facturado anual</small></span></span>
         <span class="plan-sub">Para el negocio que ya tiene equipo</span>
@@ -693,6 +696,7 @@
           <li>Historial completo y panel de estadísticas</li>
           <li>Soporte prioritario por WhatsApp</li>
         </ul>
+        <a href="https://app.tuveci.co/registro?plan=pro" class="btn btn-ghost-oscuro" style="margin-top:auto">Elegir plan Pro →</a>
       </div>
     </div>
     <p class="precios-nota">¿Necesitas varias sedes o usuarios por rol? Está en el roadmap de los próximos meses.</p>
@@ -780,14 +784,13 @@
 </footer>
 
 <script>
-  // ---- Calculadora: slider + recibo + barras comparativas ----
+  // ---- Calculadora: slider + recibo + ahorro ----
   var input = document.getElementById('ventaApps');
   var elValorGrande = document.getElementById('calcValorGrande');
   var elVentas = document.getElementById('reciboVentas');
   var elComision = document.getElementById('reciboComision');
-  var barraApps = document.getElementById('barraApps');
-  var barraVeci = document.getElementById('barraVeci');
-  var montoApps = document.getElementById('montoApps');
+  var elAhorro = document.getElementById('calcAhorro');
+  var elAhorroFill = document.getElementById('calcAhorroFill');
   var VECI_PRO = 129000;
 
   function formatoCOP(n) {
@@ -799,15 +802,22 @@
     var baja = venta * 0.25;
     var alta = venta * 0.30;
     var promedio = venta * 0.275;
+    var ahorro = Math.max(0, promedio - VECI_PRO);
 
     elValorGrande.textContent = formatoCOP(venta);
     elVentas.textContent = formatoCOP(venta);
     elComision.textContent = venta > 0 ? (formatoCOP(baja) + ' – ' + formatoCOP(alta)) : '$0 – $0';
-    montoApps.textContent = formatoCOP(promedio) + '/mes';
+    elAhorro.textContent = formatoCOP(ahorro) + '/mes';
 
-    var tope = Math.max(promedio, VECI_PRO, 1);
-    barraApps.style.width = Math.min(100, (promedio / tope) * 100) + '%';
-    barraVeci.style.width = Math.min(100, (VECI_PRO / tope) * 100) + '%';
+    var pct = promedio > 0 ? Math.min(100, (ahorro / promedio) * 100) : 0;
+    elAhorroFill.style.width = pct + '%';
+
+    var pctSlider = ((venta - input.min) / (input.max - input.min)) * 100;
+    input.style.setProperty('--val', pctSlider + '%');
+
+    elValorGrande.classList.remove('calc-pulso');
+    void elValorGrande.offsetWidth;
+    elValorGrande.classList.add('calc-pulso');
   }
 
   input.addEventListener('input', calcular);
@@ -874,8 +884,40 @@
     pendientes = [];
   }, 1500);
 
+  // ---- Luces de fondo del hero: reaccionan al mouse y al scroll ----
+  (function () {
+    var hero = document.querySelector('.hero');
+    var glows = document.querySelector('.hero-glows');
+    if (!hero || !glows) return;
+    var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducido) return;
+
+    hero.addEventListener('mousemove', function (e) {
+      var rect = hero.getBoundingClientRect();
+      var px = (e.clientX - rect.left) / rect.width - 0.5;
+      var py = (e.clientY - rect.top) / rect.height - 0.5;
+      glows.style.setProperty('--gx', (px * 46) + 'px');
+      glows.style.setProperty('--gy', (py * 36) + 'px');
+    });
+    hero.addEventListener('mouseleave', function () {
+      glows.style.setProperty('--gx', '0px');
+      glows.style.setProperty('--gy', '0px');
+    });
+
+    function actualizarScroll() {
+      var rect = hero.getBoundingClientRect();
+      var progreso = Math.max(0, Math.min(1, 1 - rect.bottom / (rect.height + window.innerHeight)));
+      glows.style.setProperty('--sy', (progreso * 70) + 'px');
+    }
+    var pidiendo = false;
+    window.addEventListener('scroll', function () {
+      if (!pidiendo) { pidiendo = true; requestAnimationFrame(function () { actualizarScroll(); pidiendo = false; }); }
+    }, { passive: true });
+    actualizarScroll();
+  })();
+
   // ---- Spotlight que sigue el cursor en las tarjetas ----
-  document.querySelectorAll('.feature-card, .dolor-card').forEach(function (card) {
+  document.querySelectorAll('.feature-card, .dolor-card, .plan, .industria-col').forEach(function (card) {
     card.addEventListener('mousemove', function (e) {
       var rect = card.getBoundingClientRect();
       card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
