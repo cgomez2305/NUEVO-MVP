@@ -34,7 +34,7 @@ img{max-width:100%;display:block}
 .wrap-angosto{max-width:740px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
 .wrap-ancho{max-width:1400px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
 
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:14px 24px;border-radius:var(--radio-pill);border:none;cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .2s ease,background-color .2s ease;-webkit-tap-highlight-color:transparent}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:14px 24px;border-radius:var(--radio-pill);border:none;cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .2s ease,background-color .2s ease;-webkit-tap-highlight-color:transparent;outline:none}
 .btn:active{transform:scale(.98)}
 .btn-sello{background:var(--sello);color:var(--tiquete)}
 .btn-sello:hover{box-shadow:0 10px 24px -6px rgba(59,76,202,.55);transform:translateY(-2px)}
@@ -59,16 +59,18 @@ nav{
   transition:box-shadow .2s ease,border-color .2s ease,background .2s ease;
 }
 .brand{text-decoration:none;color:inherit;display:inline-flex;align-items:center;flex-shrink:0}
-.brand img{height:24px;width:auto;display:block}
-.nav-derecha{display:flex;align-items:center;gap:14px}
-.nav-links{display:flex;gap:2px;align-items:center}
+.brand img{height:32px;width:auto;display:block}
+.nav-derecha{display:flex;align-items:center;gap:16px}
+.nav-links{display:flex;gap:6px;align-items:center}
 .nav-links a{
   font-size:13.5px;font-weight:500;text-decoration:none;color:var(--texto-suave);
-  padding:9px 14px;border-radius:999px;transition:background .15s ease,color .15s ease;
+  padding:10px 16px;border-radius:999px;transition:background .15s ease,color .15s ease;
+  outline:none;
 }
-.nav-links a:hover{color:var(--texto);background:var(--bg-suave)}
-.nav-links .nav-auth a{padding:0}
-.nav-links .nav-auth a:hover{background:none}
+.nav-links a:focus-visible,.btn-login:focus-visible,.btn-tema:focus-visible,.btn:focus-visible{
+  outline:none;box-shadow:0 0 0 3px var(--tinte-sello);
+}
+.nav-links a:not(.nav-chip):not(.btn-nav):not(.btn-login):hover{color:var(--texto);background:var(--bg-suave)}
 .nav-links .nav-auth .btn-nav,.nav-links .nav-auth .btn-nav:hover{color:var(--tiquete)}
 .nav-clara .nav-links a{color:var(--texto-suave)}
 .nav-oscura nav{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.1)}
@@ -86,10 +88,18 @@ nav{
 .nav-oscura .nav-links a.nav-chip{color:var(--sello-claro);background:rgba(122,133,219,.16)}
 .nav-oscura .nav-links a.nav-chip:hover{background:var(--sello-claro);color:var(--carbon)}
 
-.nav-fija{position:sticky;top:0;z-index:60;padding:16px 0}
-.nav-fija.oscura{background:var(--carbon)}
-.nav-fija.clara{background:var(--bg)}
+/* el header flota SOBRE el contenido (position:fixed, sin franja de fondo
+   propia) — es la cápsula de <nav> la que tiene fondo/sombra, no esta capa.
+   Cada página compensa el espacio con padding-top en <body> (ver más abajo),
+   excepto el home, cuyo hero sube hasta el borde superior a propósito. */
+.nav-fija{position:fixed;top:0;left:0;right:0;z-index:60;padding:18px 0}
 .nav-fija .wrap{position:static}
+body{padding-top:88px}
+body.sin-nav-espacio{padding-top:0}
+@media (max-width:860px){
+  .nav-fija{padding:14px 0}
+  body{padding-top:76px}
+}
 
 /* botón de tema: sol/luna, con crossfade entre los dos íconos */
 .btn-tema{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:none;background:var(--bg-suave);color:var(--texto-suave);cursor:pointer;flex-shrink:0;transition:color .2s ease,transform .2s ease,background .2s ease}
@@ -153,7 +163,7 @@ nav{
 @media (max-width:860px){
   .btn-hamburguesa{display:inline-flex}
   .nav-links{
-    position:fixed;top:64px;left:0;right:0;bottom:0;z-index:59;
+    position:fixed;top:72px;left:0;right:0;bottom:0;z-index:59;
     background:var(--superficie);flex-direction:column;align-items:stretch;gap:0;padding:8px 24px 24px;
     transform:translateY(-10px);opacity:0;visibility:hidden;pointer-events:none;overflow-y:auto;
     transition:opacity .2s ease,transform .2s ease,visibility .2s;
@@ -205,8 +215,8 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 
 /* hero */
 .hero{
-  color:var(--texto);padding:56px 0 64px;position:relative;overflow:hidden;
-  min-height:calc(100vh - 75px);display:flex;align-items:center;
+  color:var(--texto);padding:150px 0 64px;position:relative;overflow:hidden;
+  min-height:100vh;display:flex;align-items:center;
   background-color:var(--bg);
   background-image:
     radial-gradient(ellipse 760px 560px at 8% -10%, rgba(59,76,202,.16), transparent 60%),
@@ -215,7 +225,7 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
     radial-gradient(ellipse 480px 380px at 100% 100%, rgba(232,69,44,.10), transparent 55%);
 }
 .hero .wrap{width:100%}
-@media (max-width:860px){ .hero{min-height:0;padding:36px 0 48px} }
+@media (max-width:860px){ .hero{min-height:0;padding:104px 0 48px} }
 .hero::before{content:"";position:absolute;inset:0;z-index:0;opacity:.5;pointer-events:none;background-image:radial-gradient(var(--borde) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%)}
 .hero .wrap{position:relative;z-index:1}
 .hero-glow{position:absolute;top:-140px;right:-100px;width:440px;height:440px;border-radius:50%;background:var(--sello);opacity:.16;filter:blur(50px);animation:glowPulso 7s ease-in-out infinite}
