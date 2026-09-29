@@ -6,6 +6,16 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://cgomez2305.github.io/NUEVO-MVP/precios.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://cgomez2305.github.io/NUEVO-MVP/nosotros.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://cgomez2305.github.io/NUEVO-MVP/demo.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>

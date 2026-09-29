@@ -445,6 +445,35 @@ h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(28px,4vw
 .plan li::before{content:"✓";position:absolute;left:0;color:var(--caja);font-weight:700}
 .precios-nota{text-align:center;font-size:13px;color:var(--texto-tenue);margin:24px 0 0}
 
+/* callout de "instálalo tú mismo", en la página de precios */
+.callout-selfhost{display:flex;gap:18px;align-items:flex-start;max-width:740px;margin:40px auto 0;padding:24px;background:var(--bg-suave);border-radius:var(--radio-tarjeta)}
+.callout-selfhost .icono{width:44px;height:44px;border-radius:var(--radio-badge);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.callout-selfhost strong{display:block;font-size:15px;margin-bottom:6px}
+.callout-selfhost p{font-size:13.5px;color:var(--texto-suave);line-height:1.6;margin:0 0 8px}
+
+/* tabla comparativa de precios */
+.tabla-wrap{overflow-x:auto;margin-top:36px;border:1px solid var(--borde);border-radius:var(--radio-tarjeta);box-shadow:var(--sombra-suave)}
+.tabla-precios{width:100%;border-collapse:collapse;min-width:620px;background:var(--superficie)}
+.tabla-precios th,.tabla-precios td{padding:13px 18px;text-align:left;border-bottom:1px solid var(--borde);font-size:13.5px;color:var(--texto)}
+.tabla-precios thead th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-tenue);font-weight:700;background:var(--bg-suave)}
+.tabla-precios thead th.destacado{color:var(--sello)}
+.tabla-precios th:not(:first-child),.tabla-precios td:not(:first-child){text-align:center}
+.tabla-precios tr.categoria td{background:var(--bg-suave);font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--texto-tenue);font-weight:700;padding-top:16px;padding-bottom:8px}
+.tabla-precios tbody tr:last-child td{border-bottom:none}
+.tabla-precios .si{color:#16A36A;font-weight:700}
+.tabla-precios .no{color:var(--texto-tenue)}
+
+/* cronología, página quiénes somos */
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:32px}
+.timeline-item{display:grid;grid-template-columns:80px 1fr;gap:24px;padding:24px 0;border-top:1px solid var(--borde)}
+.timeline-item:last-child{border-bottom:1px solid var(--borde)}
+.timeline-fecha{font-size:13px;color:var(--sello);padding-top:2px}
+.timeline-item h3{font-size:17px;margin:0 0 8px}
+.timeline-item p{font-size:14.5px;color:var(--texto-suave);line-height:1.65;margin:0}
+@media (max-width:560px){
+  .timeline-item{grid-template-columns:1fr;gap:8px}
+}
+
 /* faq */
 details{border-bottom:1px solid var(--borde);padding:18px 0}
 summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;transition:color .2s ease}

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Precios · Veci</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+<link rel="canonical" href="https://cgomez2305.github.io/NUEVO-MVP/precios.html">
+<meta name="description" content="Precios de Veci: 0% de comisión en todos los planes. Instálalo gratis tú mismo (código abierto) o deja que nosotros lo hospedemos por ti desde $59.000/mes.">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Veci">
+<meta property="og:title" content="Precios · Veci">
+<meta property="og:description" content="0% de comisión en todos los planes. Instálalo gratis tú mismo o deja que nosotros lo hospedemos.">
+<meta property="og:image" content="https://cgomez2305.github.io/NUEVO-MVP/assets/img/og-image.png">
+<meta property="og:url" content="https://cgomez2305.github.io/NUEVO-MVP/precios.html">
+<meta property="og:locale" content="es_CO">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/js/tema.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Veci",
+  "description": "Mostrador digital para negocios colombianos: pedidos o reservas por WhatsApp, cobro por Bre-B y copiloto de recompra.",
+  "offers": [
+    { "@type": "Offer", "name": "Gratis", "price": "0", "priceCurrency": "COP" },
+    { "@type": "Offer", "name": "Barrio", "price": "59000", "priceCurrency": "COP" },
+    { "@type": "Offer", "name": "Pro", "price": "129000", "priceCurrency": "COP" }
+  ]
+}
+</script>
+</head>
+<body>
+
+<div class="nav-fija clara">
+  <div class="wrap">
+    <nav class="nav-clara">
+      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
+        <img src="assets/img/logo-veci-lockup.png" alt="Veci" height="26">
+      </a>
+
+      <div class="nav-derecha">
+      <div class="nav-links">
+        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="precios.html" style="color:var(--sello)">Precios</a>
+        <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/">Blog</a>
+        <a href="demo.html">Ver demos →</a>
+      </div>
+
+      <button type="button" class="btn-tema" aria-label="Cambiar a modo claro/oscuro">
+        <svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button type="button" class="btn-hamburguesa" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="demo-hero">
+    <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:#16A36A"><span class="dot"></span> 0% DE COMISIÓN EN TODOS LOS PLANES</span>
+    <h1>Precios claros, sin letra pequeña</h1>
+    <p>Instálalo gratis tú mismo — es código abierto — o deja que nosotros lo hospedemos y mantengamos por ti. Nunca cobramos un porcentaje de lo que vendes.</p>
+  </div>
+</div>
+
+<section class="reveal">
+  <div class="wrap">
+    <div class="precio-toggle" role="group" aria-label="Ciclo de facturación">
+      <span class="pastilla" aria-hidden="true"></span>
+      <button type="button" id="btnMensual" class="activo">Mensual</button>
+      <button type="button" id="btnAnual">Anual <span class="ahorro">2 meses gratis</span></button>
+    </div>
+
+    <div class="precios precios-3 reveal-fila">
+      <div class="plan">
+        <span class="nombre">Gratis</span>
+        <span class="precio">$0</span>
+        <span class="plan-sub">Para probar sin arriesgar nada</span>
+        <ul>
+          <li>Hasta 50 pedidos o citas al mes</li>
+          <li>Tienda con tu propio enlace</li>
+          <li>Cobro por Bre-B, Nequi o efectivo</li>
+          <li>Marca "Hecho con Veci" visible</li>
+        </ul>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP" class="btn btn-ghost-oscuro" style="margin-top:auto">Instalarlo gratis →</a>
+      </div>
+      <div class="plan destacado">
+        <span class="chip-popular">Más elegido</span>
+        <span class="nombre">Barrio</span>
+        <span class="precio"><span class="precio-mensual">$59<small>.000/mes</small></span><span class="precio-anual">$49<small>.000/mes, facturado anual</small></span></span>
+        <span class="plan-sub">Para el negocio que ya vende todos los días</span>
+        <ul>
+          <li>Pedidos o citas ilimitados</li>
+          <li>Copiloto de recompra</li>
+          <li>Pedidos <strong>y</strong> reservas en la misma cuenta</li>
+          <li>Sin marca de Veci</li>
+        </ul>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP" class="btn btn-sello" style="margin-top:auto">Solicitar acceso →</a>
+      </div>
+      <div class="plan">
+        <span class="nombre">Pro</span>
+        <span class="precio"><span class="precio-mensual">$129<small>.000/mes</small></span><span class="precio-anual">$108<small>.000/mes, facturado anual</small></span></span>
+        <span class="plan-sub">Para el negocio que ya tiene equipo</span>
+        <ul>
+          <li>Todo lo de Barrio</li>
+          <li>Onboarding con IA (lee tu foto con Claude)</li>
+          <li>Historial completo y panel de estadísticas</li>
+          <li>Soporte prioritario por WhatsApp</li>
+        </ul>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP" class="btn btn-ghost-oscuro" style="margin-top:auto">Solicitar acceso →</a>
+      </div>
+    </div>
+
+    <div class="callout-selfhost reveal">
+      <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg></div>
+      <div>
+        <strong>¿Prefieres instalarlo tú mismo?</strong>
+        <p>Todo el código está en GitHub bajo licencia abierta. Lo pones en tu propio hosting, sin límite de pedidos y sin pagarnos nada. Los planes de arriba son para cuando prefieres que nosotros nos encarguemos del servidor, las copias de seguridad y las actualizaciones.</p>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP" style="color:var(--sello);font-weight:600">Ver el código en GitHub →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <div class="wrap">
+    <h2>Compara los planes a detalle</h2>
+    <p class="lead">Todo lo que incluye cada plan, línea por línea.</p>
+
+    <div class="tabla-wrap">
+      <table class="tabla-precios">
+        <thead>
+          <tr>
+            <th>&nbsp;</th>
+            <th>Gratis</th>
+            <th class="destacado">Barrio</th>
+            <th>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="categoria"><td colspan="4">General</td></tr>
+          <tr><td>Precio</td><td>$0</td><td>$59.000/mes</td><td>$129.000/mes</td></tr>
+          <tr><td>Pedidos o citas al mes</td><td>Hasta 50</td><td>Ilimitados</td><td>Ilimitados</td></tr>
+          <tr><td>Tienda con tu propio enlace</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Marca "Hecho con Veci"</td><td>Visible</td><td>Oculta</td><td>Oculta</td></tr>
+
+          <tr class="categoria"><td colspan="4">Ventas y clientes</td></tr>
+          <tr><td>Cobro por Bre-B, Nequi o efectivo</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Copiloto de recompra</td><td class="no">–</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Pedidos y reservas en la misma cuenta</td><td class="no">–</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Onboarding con foto + IA (Claude)</td><td>Catálogo de ejemplo</td><td>Catálogo de ejemplo</td><td>Lee tu foto real</td></tr>
+
+          <tr class="categoria"><td colspan="4">Soporte y datos</td></tr>
+          <tr><td>Historial y panel de estadísticas</td><td>Básico</td><td>Básico</td><td>Completo</td></tr>
+          <tr><td>Soporte</td><td>Comunidad en GitHub</td><td>WhatsApp</td><td>WhatsApp prioritario</td></tr>
+          <tr><td>Exportas tus datos cuando quieras</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="faq-precios">
+  <div class="wrap-angosto">
+    <h2>Preguntas sobre precios</h2>
+
+    <details open>
+      <summary>¿Puedo instalarlo gratis yo mismo, sin ninguno de estos planes?</summary>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>Sí. Todo el código está en GitHub bajo licencia abierta. Lo instalas en tu propio hosting (PHP + MySQL, como el que usarías para WordPress) y no tiene límite de pedidos ni nos pagas nada. Los planes de esta página son para la versión que nosotros hospedamos por ti.</p>
+      </div></div>
+    </details>
+    <details>
+      <summary>¿Cuál es la diferencia entre el plan Gratis y usar el código yo mismo?</summary>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>El plan Gratis es la versión que hospedamos nosotros, con un límite de 50 pedidos o citas al mes. Si instalas el código tú mismo, no hay ese límite, pero tú te encargas del servidor, las copias de seguridad y las actualizaciones.</p>
+      </div></div>
+    </details>
+    <details>
+      <summary>¿Cómo activo un plan pago?</summary>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>Escríbenos por GitHub y activamos tu plan el mismo día. Todavía no tenemos checkout automático con tarjeta — mientras tanto lo coordinamos directo contigo, sin formularios largos.</p>
+      </div></div>
+    </details>
+    <details>
+      <summary>¿Hay permanencia mínima o contrato?</summary>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>No. Cancelas cuando quieras y tus datos siguen siendo tuyos: los puedes exportar en cualquier momento, en cualquier plan.</p>
+      </div></div>
+    </details>
+    <details>
+      <summary>¿Qué pasa si supero los 50 pedidos del plan gratis?</summary>
+      <div class="faq-cuerpo"><div class="faq-inner">
+        <p>Te avisamos para que subas de plan. No cortamos tu tienda de un momento a otro ni escondemos pedidos que ya recibiste.</p>
+      </div></div>
+    </details>
+  </div>
+</section>
+
+<div class="cierre">
+  <div class="wrap">
+    <h2>Tu clientela es tuya.</h2>
+    <p>Veci es código abierto, listo para instalar hoy. Sin intermediarios, sin comisión, sin letra pequeña.</p>
+    <a href="https://github.com/cgomez2305/NUEVO-MVP" class="btn btn-caja">Ver el repositorio →</a>
+  </div>
+</div>
+
+<footer class="footer-grande">
+  <div class="wrap">
+    <div class="footer-columnas">
+      <div class="footer-marca">
+        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
+        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Producto</span>
+        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="precios.html">Precios</a>
+        <a href="demo.html">Demos en vivo</a>
+        <a href="./#faq">Preguntas frecuentes</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Recursos</span>
+        <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/">Blog</a>
+        <a href="https://github.com/cgomez2305/NUEVO-MVP">Código en GitHub</a>
+      </div>
+    </div>
+    <div class="footer-abajo">
+      <p>Veci · a partir del documento de análisis "Tienda propia para Colombia"</p>
+      <span class="estado"><span class="dot"></span> Código abierto</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var btnMensual = document.getElementById('btnMensual');
+  var btnAnual = document.getElementById('btnAnual');
+  var contPrecios = document.querySelector('.precios');
+  var pastilla = document.querySelector('.precio-toggle .pastilla');
+
+  function moverPastilla(btn) {
+    pastilla.style.left = btn.offsetLeft + 'px';
+    pastilla.style.width = btn.offsetWidth + 'px';
+  }
+  function elegirCiclo(anual) {
+    contPrecios.classList.toggle('modo-anual', anual);
+    btnMensual.classList.toggle('activo', !anual);
+    btnAnual.classList.toggle('activo', anual);
+    moverPastilla(anual ? btnAnual : btnMensual);
+  }
+  btnMensual.addEventListener('click', function () { elegirCiclo(false); });
+  btnAnual.addEventListener('click', function () { elegirCiclo(true); });
+  moverPastilla(btnMensual);
+  window.addEventListener('resize', function () {
+    moverPastilla(btnAnual.classList.contains('activo') ? btnAnual : btnMensual);
+  });
+
+  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
+  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
+  var revisando = false;
+  function revisarReveal() {
+    pendientes = pendientes.filter(function (el) {
+      var rect = el.getBoundingClientRect();
+      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+      if (enVista) el.classList.add('visto');
+      return !enVista;
+    });
+    revisando = false;
+  }
+  function pedirRevision() {
+    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
+  }
+  revisarReveal();
+  window.addEventListener('scroll', pedirRevision, { passive: true });
+  window.addEventListener('resize', pedirRevision);
+  setTimeout(function () {
+    pendientes.forEach(function (el) { el.classList.add('visto'); });
+    pendientes = [];
+  }, 1500);
+</script>
+
+</body>
+</html>
