@@ -9,12 +9,12 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/demo.html">
-<meta name="description" content="Prueba las dos tiendas demo de Veci: pedidos con carrito (Doña María) y reservas con cita previa (Salón Bonita). Interactivo, en tu navegador, sin instalar nada.">
+<meta name="description" content="Prueba Veci en cinco industrias distintas: restaurante, minimarket, peluquería, entrenador personal y consultorio odontológico. Vista de cliente y vista de administrador, 100% interactivo.">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Veci">
 <meta property="og:title" content="Demos en vivo · Veci">
-<meta property="og:description" content="Prueba las dos tiendas demo de Veci: pedidos con carrito y reservas con cita previa.">
+<meta property="og:description" content="Cinco industrias, dos vistas cada una: cliente y administrador. Interactivo, sin instalar nada.">
 <meta property="og:image" content="https://tuveci.co/assets/img/og-image.png">
 <meta property="og:url" content="https://tuveci.co/demo.html">
 <meta property="og:locale" content="es_CO">
@@ -83,17 +83,29 @@
 <div class="wrap">
   <div class="demo-hero">
     <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:#16A36A"><span class="dot"></span> 100% INTERACTIVO · SIN INSTALAR NADA</span>
-    <h1>Así se ve tu tienda</h1>
-    <p>Dos negocios de ejemplo, con datos reales del proyecto: uno vende productos con carrito, el otro reserva citas por horario. Pruébalos tal como los vería tu cliente.</p>
+    <h1>Así se ve Veci en cinco industrias</h1>
+    <p>Comida, minimarket, peluquería, entrenador personal y consultorio: el mismo producto, aplicado a negocios distintos. Prueba la tienda tal como la vería tu cliente, y el panel tal como lo verías tú.</p>
 
     <div class="demo-tabs" role="tablist">
       <button type="button" class="demo-tab activo" data-demo-tab="pedidos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></svg>
-        Pedidos · Doña María
+        Doña María
+      </button>
+      <button type="button" class="demo-tab" data-demo-tab="minimarket">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+        El Ahorro
       </button>
       <button type="button" class="demo-tab" data-demo-tab="reservas">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-        Reservas · Salón Bonita
+        Salón Bonita
+      </button>
+      <button type="button" class="demo-tab" data-demo-tab="entrenador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M5 5l2 2m10 10 2 2M3 8l2-2m14 14 2-2M8 3l1 1m6 16 1 1"/><rect x="7.5" y="7.5" width="9" height="9" rx="2" transform="rotate(45 12 12)"/></svg>
+        Marta Fit
+      </button>
+      <button type="button" class="demo-tab" data-demo-tab="odontologo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5c-2-2-6-1-6 3 0 3 1 4 1.5 8 .2 1.6 1 2.5 2 2.5s1.5-1.5 1.5-3.5.5-2.5 1-2.5 1 .5 1 2.5.5 3.5 1.5 3.5 1.8-.9 2-2.5c.5-4 1.5-5 1.5-8 0-4-4-5-6-3Z"/></svg>
+        Sonrisa Dental
       </button>
     </div>
   </div>
@@ -101,8 +113,12 @@
 
 <div class="wrap" style="padding-bottom:80px">
 
-  <!-- ===================== DEMO: PEDIDOS ===================== -->
-  <div class="demo-panel activo" id="pedidos">
+  <!-- ===================== DEMO: RESTAURANTE (pedidos) ===================== -->
+  <div class="demo-panel activo" id="pedidos" data-tipo="pedidos">
+    <div class="demo-vista-toggle" role="group">
+      <button type="button" class="activo" data-vista-btn="cliente">Vista cliente</button>
+      <button type="button" data-vista-btn="admin">Vista administrador</button>
+    </div>
     <div class="demo-browser">
       <div class="demo-browser-barra">
         <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
@@ -157,6 +173,44 @@
         </div>
       </div>
 
+      <div class="demo-admin">
+        <div class="demo-admin-topbar">
+          <span class="demo-admin-marca">Veci</span>
+          <div class="demo-admin-nav">
+            <span class="activo">Panel</span>
+            <span>Pedidos</span>
+            <span>Copiloto</span>
+            <span>Menú</span>
+          </div>
+        </div>
+        <span class="demo-admin-eyebrow">MAR 27 SEP</span>
+        <h4>Hola, Doña María</h4>
+        <div class="demo-admin-stats">
+          <div class="demo-admin-stat"><b>8</b><span>pedidos hoy</span></div>
+          <div class="demo-admin-stat"><b>42%</b><span>recompra del mes</span></div>
+          <div class="demo-admin-stat"><b>3</b><span>por reactivar</span></div>
+        </div>
+        <span class="demo-admin-titulo">Últimos pedidos</span>
+        <div class="demo-admin-lista">
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Carlos Ramírez</span><span class="meta">Bandeja paisa, Jugo natural</span></div>
+            <div class="der"><span class="precio">$33.000</span><span class="demo-admin-chip entregado">Entregado</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Laura Gómez</span><span class="meta">2x Arepa con queso, Café tinto</span></div>
+            <div class="der"><span class="precio">$14.500</span><span class="demo-admin-chip en_camino">En camino</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Pedro Ruiz</span><span class="meta">Bandeja paisa</span></div>
+            <div class="der"><span class="precio">$28.000</span><span class="demo-admin-chip pagado">Pagado</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Ana Torres</span><span class="meta">2x Jugo natural, Café tinto</span></div>
+            <div class="der"><span class="precio">$12.500</span><span class="demo-admin-chip pendiente">Pendiente</span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
           <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
@@ -169,8 +223,122 @@
     </div>
   </div>
 
-  <!-- ===================== DEMO: RESERVAS ===================== -->
-  <div class="demo-panel" id="reservas">
+  <!-- ===================== DEMO: MINIMARKET (pedidos) ===================== -->
+  <div class="demo-panel" id="minimarket" data-tipo="pedidos">
+    <div class="demo-vista-toggle" role="group">
+      <button type="button" class="activo" data-vista-btn="cliente">Vista cliente</button>
+      <button type="button" data-vista-btn="admin">Vista administrador</button>
+    </div>
+    <div class="demo-browser">
+      <div class="demo-browser-barra">
+        <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
+        <span class="demo-browser-url">veci.com/t/<strong>elahorro</strong></span>
+      </div>
+      <div class="demo-browser-cuerpo">
+        <div>
+          <div class="demo-tienda-header">
+            <div class="avatar" style="background:var(--caja)">EA</div>
+            <div>
+              <strong>Minimarket El Ahorro</strong>
+              <span>Víveres y aseo · Bucaramanga</span>
+            </div>
+          </div>
+
+          <div class="demo-productos">
+            <div class="demo-producto" data-id="1" data-nombre="Arroz x libra" data-precio="3200">
+              <div class="foto" style="background:#F2B632"></div>
+              <strong>Arroz x libra</strong>
+              <div class="fila"><span class="precio mono">$3.200</span><button type="button" class="demo-add" data-add aria-label="Agregar Arroz x libra">+</button></div>
+            </div>
+            <div class="demo-producto" data-id="2" data-nombre="Aceite 1L" data-precio="9800">
+              <div class="foto" style="background:#5B7F3A"></div>
+              <strong>Aceite 1L</strong>
+              <div class="fila"><span class="precio mono">$9.800</span><button type="button" class="demo-add" data-add aria-label="Agregar Aceite 1L">+</button></div>
+            </div>
+            <div class="demo-producto" data-id="3" data-nombre="Huevos x30" data-precio="16500">
+              <div class="foto" style="background:#E8452C"></div>
+              <strong>Huevos x30</strong>
+              <div class="fila"><span class="precio mono">$16.500</span><button type="button" class="demo-add" data-add aria-label="Agregar Huevos x30">+</button></div>
+            </div>
+            <div class="demo-producto" data-id="4" data-nombre="Leche 1L" data-precio="4200">
+              <div class="foto" style="background:#3B4CCA"></div>
+              <strong>Leche 1L</strong>
+              <div class="fila"><span class="precio mono">$4.200</span><button type="button" class="demo-add" data-add aria-label="Agregar Leche 1L">+</button></div>
+            </div>
+          </div>
+          <p class="demo-carrito-barra" style="text-align:left;margin-top:10px" data-eco></p>
+        </div>
+
+        <div class="demo-carrito">
+          <h3>Tu carrito</h3>
+          <div class="demo-carrito-lista"></div>
+          <div class="demo-carrito-total-fila">
+            <span>Total</span>
+            <span class="demo-carrito-total mono">$0</span>
+          </div>
+          <button type="button" class="demo-confirmar" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+            Pedir por WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <div class="demo-admin">
+        <div class="demo-admin-topbar">
+          <span class="demo-admin-marca">Veci</span>
+          <div class="demo-admin-nav">
+            <span class="activo">Panel</span>
+            <span>Pedidos</span>
+            <span>Copiloto</span>
+            <span>Menú</span>
+          </div>
+        </div>
+        <span class="demo-admin-eyebrow">MAR 27 SEP</span>
+        <h4>Hola, El Ahorro</h4>
+        <div class="demo-admin-stats">
+          <div class="demo-admin-stat"><b>14</b><span>pedidos hoy</span></div>
+          <div class="demo-admin-stat"><b>51%</b><span>recompra del mes</span></div>
+          <div class="demo-admin-stat"><b>5</b><span>por reactivar</span></div>
+        </div>
+        <span class="demo-admin-titulo">Últimos pedidos</span>
+        <div class="demo-admin-lista">
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Marta Rincón</span><span class="meta">Arroz x libra, Aceite 1L, Huevos x30</span></div>
+            <div class="der"><span class="precio">$29.500</span><span class="demo-admin-chip entregado">Entregado</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Jorge Salcedo</span><span class="meta">2x Leche 1L</span></div>
+            <div class="der"><span class="precio">$8.400</span><span class="demo-admin-chip en_camino">En camino</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Diana Peña</span><span class="meta">Huevos x30, Aceite 1L</span></div>
+            <div class="der"><span class="precio">$26.300</span><span class="demo-admin-chip pagado">Pagado</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Fernando Ospina</span><span class="meta">Arroz x libra, Leche 1L</span></div>
+            <div class="der"><span class="precio">$7.400</span><span class="demo-admin-chip pendiente">Pendiente</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-exito">
+        <div class="demo-exito-tarjeta">
+          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
+          <h3>Así de simple llega tu pedido</h3>
+          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
+          <div class="demo-exito-mensaje"></div>
+          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DEMO: PELUQUERÍA (reservas) ===================== -->
+  <div class="demo-panel" id="reservas" data-tipo="reservas">
+    <div class="demo-vista-toggle" role="group">
+      <button type="button" class="activo" data-vista-btn="cliente">Vista cliente</button>
+      <button type="button" data-vista-btn="admin">Vista administrador</button>
+    </div>
     <div class="demo-browser">
       <div class="demo-browser-barra">
         <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
@@ -221,6 +389,247 @@
         </div>
       </div>
 
+      <div class="demo-admin">
+        <div class="demo-admin-topbar">
+          <span class="demo-admin-marca">Veci</span>
+          <div class="demo-admin-nav">
+            <span class="activo">Panel</span>
+            <span>Agenda</span>
+            <span>Copiloto</span>
+            <span>Servicios</span>
+            <span>Horario</span>
+          </div>
+        </div>
+        <span class="demo-admin-eyebrow">MAR 27 SEP</span>
+        <h4>Hola, Salón Bonita</h4>
+        <div class="demo-admin-stats">
+          <div class="demo-admin-stat"><b>5</b><span>citas hoy</span></div>
+          <div class="demo-admin-stat"><b>38%</b><span>recompra del mes</span></div>
+          <div class="demo-admin-stat"><b>2</b><span>por reactivar</span></div>
+        </div>
+        <span class="demo-admin-titulo">Próximas citas</span>
+        <div class="demo-admin-lista">
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Doña Marta · Corte de cabello</span><span class="meta">10:00 a.m.</span></div>
+            <div class="der"><span class="precio">$20.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Laura Gómez · Manicure</span><span class="meta">11:30 a.m.</span></div>
+            <div class="der"><span class="precio">$18.000</span><span class="demo-admin-chip pendiente">Pendiente</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Ana Torres · Peinado</span><span class="meta">2:00 p.m.</span></div>
+            <div class="der"><span class="precio">$35.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-exito">
+        <div class="demo-exito-tarjeta">
+          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
+          <h3>Así de simple llega tu reserva</h3>
+          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
+          <div class="demo-exito-mensaje"></div>
+          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DEMO: ENTRENADOR PERSONAL (reservas) ===================== -->
+  <div class="demo-panel" id="entrenador" data-tipo="reservas">
+    <div class="demo-vista-toggle" role="group">
+      <button type="button" class="activo" data-vista-btn="cliente">Vista cliente</button>
+      <button type="button" data-vista-btn="admin">Vista administrador</button>
+    </div>
+    <div class="demo-browser">
+      <div class="demo-browser-barra">
+        <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
+        <span class="demo-browser-url">veci.com/t/<strong>martafit</strong></span>
+      </div>
+      <div class="demo-browser-cuerpo">
+        <div>
+          <div class="demo-tienda-header">
+            <div class="avatar" style="background:var(--aji)">MF</div>
+            <div>
+              <strong>Marta Fit</strong>
+              <span>Entrenamiento personalizado · Bucaramanga</span>
+            </div>
+          </div>
+
+          <div class="demo-servicios">
+            <button type="button" class="demo-servicio" data-nombre="Sesión personalizada" data-precio="35000" data-duracion="60">
+              <div><strong>Sesión personalizada</strong><span class="meta">60 min</span></div>
+              <span class="precio mono">$35.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Evaluación física" data-precio="25000" data-duracion="45">
+              <div><strong>Evaluación física</strong><span class="meta">45 min</span></div>
+              <span class="precio mono">$25.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Entrenamiento en pareja" data-precio="55000" data-duracion="75">
+              <div><strong>Entrenamiento en pareja</strong><span class="meta">75 min</span></div>
+              <span class="precio mono">$55.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Asesoría nutricional" data-precio="30000" data-duracion="30">
+              <div><strong>Asesoría nutricional</strong><span class="meta">30 min</span></div>
+              <span class="precio mono">$30.000</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="demo-picker">
+            <h4>Elige el día</h4>
+            <div class="demo-dias"></div>
+            <h4>Horarios disponibles</h4>
+            <div class="demo-slots"></div>
+          </div>
+          <p class="demo-resumen-reserva"></p>
+          <button type="button" class="demo-confirmar-reserva" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+            Reservar por WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <div class="demo-admin">
+        <div class="demo-admin-topbar">
+          <span class="demo-admin-marca">Veci</span>
+          <div class="demo-admin-nav">
+            <span class="activo">Panel</span>
+            <span>Agenda</span>
+            <span>Copiloto</span>
+            <span>Servicios</span>
+            <span>Horario</span>
+          </div>
+        </div>
+        <span class="demo-admin-eyebrow">MAR 27 SEP</span>
+        <h4>Hola, Marta Fit</h4>
+        <div class="demo-admin-stats">
+          <div class="demo-admin-stat"><b>6</b><span>sesiones hoy</span></div>
+          <div class="demo-admin-stat"><b>45%</b><span>recompra del mes</span></div>
+          <div class="demo-admin-stat"><b>4</b><span>por reactivar</span></div>
+        </div>
+        <span class="demo-admin-titulo">Próximas citas</span>
+        <div class="demo-admin-lista">
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Andrés Molina · Sesión personalizada</span><span class="meta">7:00 a.m.</span></div>
+            <div class="der"><span class="precio">$35.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Camila Rojas · Asesoría nutricional</span><span class="meta">9:00 a.m.</span></div>
+            <div class="der"><span class="precio">$30.000</span><span class="demo-admin-chip pendiente">Pendiente</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Julián y Paola · Entrenamiento en pareja</span><span class="meta">5:30 p.m.</span></div>
+            <div class="der"><span class="precio">$55.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-exito">
+        <div class="demo-exito-tarjeta">
+          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
+          <h3>Así de simple llega tu reserva</h3>
+          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
+          <div class="demo-exito-mensaje"></div>
+          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DEMO: ODONTOLOGÍA (reservas) ===================== -->
+  <div class="demo-panel" id="odontologo" data-tipo="reservas">
+    <div class="demo-vista-toggle" role="group">
+      <button type="button" class="activo" data-vista-btn="cliente">Vista cliente</button>
+      <button type="button" data-vista-btn="admin">Vista administrador</button>
+    </div>
+    <div class="demo-browser">
+      <div class="demo-browser-barra">
+        <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
+        <span class="demo-browser-url">veci.com/t/<strong>sonrisadental</strong></span>
+      </div>
+      <div class="demo-browser-cuerpo">
+        <div>
+          <div class="demo-tienda-header">
+            <div class="avatar" style="background:var(--caja)">CD</div>
+            <div>
+              <strong>Clínica Dental Sonrisa</strong>
+              <span>Odontología general · Bucaramanga</span>
+            </div>
+          </div>
+
+          <div class="demo-servicios">
+            <button type="button" class="demo-servicio" data-nombre="Consulta general" data-precio="40000" data-duracion="30">
+              <div><strong>Consulta general</strong><span class="meta">30 min</span></div>
+              <span class="precio mono">$40.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Limpieza dental" data-precio="60000" data-duracion="45">
+              <div><strong>Limpieza dental</strong><span class="meta">45 min</span></div>
+              <span class="precio mono">$60.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Blanqueamiento" data-precio="150000" data-duracion="60">
+              <div><strong>Blanqueamiento</strong><span class="meta">60 min</span></div>
+              <span class="precio mono">$150.000</span>
+            </button>
+            <button type="button" class="demo-servicio" data-nombre="Revisión de ortodoncia" data-precio="35000" data-duracion="20">
+              <div><strong>Revisión de ortodoncia</strong><span class="meta">20 min</span></div>
+              <span class="precio mono">$35.000</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="demo-picker">
+            <h4>Elige el día</h4>
+            <div class="demo-dias"></div>
+            <h4>Horarios disponibles</h4>
+            <div class="demo-slots"></div>
+          </div>
+          <p class="demo-resumen-reserva"></p>
+          <button type="button" class="demo-confirmar-reserva" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+            Reservar por WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <div class="demo-admin">
+        <div class="demo-admin-topbar">
+          <span class="demo-admin-marca">Veci</span>
+          <div class="demo-admin-nav">
+            <span class="activo">Panel</span>
+            <span>Agenda</span>
+            <span>Copiloto</span>
+            <span>Servicios</span>
+            <span>Horario</span>
+          </div>
+        </div>
+        <span class="demo-admin-eyebrow">MAR 27 SEP</span>
+        <h4>Hola, Clínica Sonrisa</h4>
+        <div class="demo-admin-stats">
+          <div class="demo-admin-stat"><b>7</b><span>citas hoy</span></div>
+          <div class="demo-admin-stat"><b>33%</b><span>recompra del mes</span></div>
+          <div class="demo-admin-stat"><b>3</b><span>por reactivar</span></div>
+        </div>
+        <span class="demo-admin-titulo">Próximas citas</span>
+        <div class="demo-admin-lista">
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Sofía Herrera · Limpieza dental</span><span class="meta">8:30 a.m.</span></div>
+            <div class="der"><span class="precio">$60.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Miguel Ángel Prada · Consulta general</span><span class="meta">10:15 a.m.</span></div>
+            <div class="der"><span class="precio">$40.000</span><span class="demo-admin-chip pendiente">Pendiente</span></div>
+          </div>
+          <div class="demo-admin-fila">
+            <div><span class="nombre">Valentina Cárdenas · Revisión de ortodoncia</span><span class="meta">4:00 p.m.</span></div>
+            <div class="der"><span class="precio">$35.000</span><span class="demo-admin-chip confirmada">Confirmada</span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
           <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
@@ -237,7 +646,7 @@
     <div class="icono" style="background:var(--tinte-sello)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="2"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div>
     <div>
       <h3>Esta demo corre 100% en tu navegador</h3>
-      <p>No hay backend detrás: es JavaScript puro reproduciendo el flujo real. La versión completa (con base de datos, panel del dueño y copiloto de recompra) es la que activas al <a href="https://app.tuveci.co/registro" style="color:var(--sello)">crear tu tienda</a>.</p>
+      <p>No hay backend detrás: es JavaScript puro reproduciendo el flujo real, incluida la vista de administrador. La versión completa (con base de datos, tu panel real y el copiloto de recompra) es la que activas al <a href="https://app.tuveci.co/registro" style="color:var(--sello)">crear tu tienda</a>.</p>
     </div>
   </div>
 

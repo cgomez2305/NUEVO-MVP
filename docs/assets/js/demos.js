@@ -28,10 +28,27 @@
   }
 
   // ---------------------------------------------------------------------
-  // Demo de pedidos (carrito real, cliente elige productos)
+  // Vista cliente / vista administrador, dentro de cada demo
   // ---------------------------------------------------------------------
-  function initPedidos() {
-    var raiz = document.getElementById('pedidos');
+  function initVistaToggle() {
+    document.querySelectorAll('.demo-vista-toggle').forEach(function (toggle) {
+      var panel = toggle.closest('.demo-panel');
+      if (!panel) return;
+      toggle.querySelectorAll('button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          panel.setAttribute('data-vista', btn.getAttribute('data-vista-btn'));
+          toggle.querySelectorAll('button').forEach(function (b) { b.classList.toggle('activo', b === btn); });
+        });
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Demo de pedidos (carrito real, cliente elige productos)
+  // Se inicializa una vez por cada .demo-panel[data-tipo="pedidos"], así
+  // que un mismo código sirve para Doña María, el minimarket, etc.
+  // ---------------------------------------------------------------------
+  function initPedidos(raiz) {
     if (!raiz) return;
 
     var carrito = {}; // id -> cantidad
@@ -122,9 +139,9 @@
 
   // ---------------------------------------------------------------------
   // Demo de reservas (elegir servicio, día, hora disponible)
+  // Igual que initPedidos: una instancia por cada .demo-panel[data-tipo="reservas"].
   // ---------------------------------------------------------------------
-  function initReservas() {
-    var raiz = document.getElementById('reservas');
+  function initReservas(raiz) {
     if (!raiz) return;
 
     var servicioActivo = null;
@@ -260,7 +277,8 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     initTabs();
-    initPedidos();
-    initReservas();
+    initVistaToggle();
+    document.querySelectorAll('.demo-panel[data-tipo="pedidos"]').forEach(initPedidos);
+    document.querySelectorAll('.demo-panel[data-tipo="reservas"]').forEach(initReservas);
   });
 })();
