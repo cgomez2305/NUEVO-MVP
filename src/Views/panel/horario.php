@@ -39,3 +39,9 @@ $porDefecto = ['08:00', '18:00'];
 
   <button type="submit" class="pq-btn pq-btn-sello" style="margin-top: 20px">Guardar horario</button>
 </form>
+
+<div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #E7E0CF">
+  <span style="font-size: 13px; font-weight: 600">¿Vacaciones o un festivo puntual?</span>
+  <p class="pq-ayuda" style="margin-top: 4px">Bloquea días sueltos sin tocar tu horario semanal.</p>
+  <a href="<?= e(base_url('/panel/horario/fechas')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="margin-top: 10px">Días no disponibles →</a>
+</div>

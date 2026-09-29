@@ -1,5 +1,10 @@
-<span class="pq-eyebrow">Agenda</span>
-<h1 class="pq-h1" style="font-size: 28px">Tus próximas citas</h1>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+  <div>
+    <span class="pq-eyebrow">Agenda</span>
+    <h1 class="pq-h1" style="font-size: 28px">Tus próximas citas</h1>
+  </div>
+  <a href="<?= e(base_url('/panel/citas/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
+</div>
 
 <?php if ($citas === []): ?>
   <p class="pq-lead" style="margin-top: 16px">Todavía no tienes citas reservadas.</p>
@@ -12,7 +17,10 @@
             <span style="font-size: 14px; font-weight: 600">
               <?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?> · <?= e($cita['cliente_nombre']) ?>
             </span>
-            <span class="pq-ayuda"><?= e($cita['nombre_servicio']) ?> · <?= (int) $cita['duracion_min'] ?> min</span>
+            <span class="pq-ayuda">
+              <?= e($cita['nombre_servicio']) ?> · <?= (int) $cita['duracion_min'] ?> min
+              <?php if (!empty($cita['empleado_nombre'])): ?> · <?= e($cita['empleado_nombre']) ?><?php endif; ?>
+            </span>
           </div>
           <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $cita['precio']) ?></span>
         </div>

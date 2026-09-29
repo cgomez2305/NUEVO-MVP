@@ -80,6 +80,15 @@ class Servicio
         $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
     }
 
+    /** Marca/desmarca un servicio como agotado sin borrarlo: sigue visible en la tienda pero no se puede reservar. */
+    public static function alternarAgotado(int $id, int $negocioId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE servicios SET agotado = NOT agotado WHERE id = :id AND negocio_id = :negocio_id'
+        );
+        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+    }
+
     public static function contarPorNegocio(int $negocioId): int
     {
         $stmt = Database::conexion()->prepare(

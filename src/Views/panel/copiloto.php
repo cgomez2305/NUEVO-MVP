@@ -1,7 +1,12 @@
 <?php $ok = flash_obtener('ok'); ?>
 
-<span class="pq-eyebrow">Copiloto</span>
-<h1 class="pq-h1">Buenos días, <?= e($negocio['nombre']) ?></h1>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+  <div>
+    <span class="pq-eyebrow">Copiloto</span>
+    <h1 class="pq-h1">Buenos días, <?= e($negocio['nombre']) ?></h1>
+  </div>
+  <a href="<?= e(base_url('/panel/clientes/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar clientes CSV</a>
+</div>
 
 <?php if ($ok): ?>
   <div class="pq-alerta pq-alerta-ok" style="margin-top: 16px"><?= e($ok) ?></div>

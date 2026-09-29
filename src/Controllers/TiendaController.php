@@ -6,6 +6,8 @@ namespace App\Controllers;
 
 use App\Models\Cita;
 use App\Models\Cliente;
+use App\Models\Empleado;
+use App\Models\FechaBloqueada;
 use App\Models\Negocio;
 use App\Models\Pedido;
 use App\Models\Producto;
@@ -23,11 +25,17 @@ class TiendaController
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
 
+        $metaDescripcion = !empty($negocio['descripcion'])
+            ? (string) $negocio['descripcion']
+            : "Pide o reserva con {$negocio['nombre']} directo por WhatsApp, sin comisión.";
+
         if ($negocio['tipo_negocio'] === 'reservas') {
             ver('tienda/servicios', [
-                'titulo'    => $negocio['nombre'] . ' · Veci',
-                'negocio'   => $negocio,
-                'servicios' => Servicio::listarPorNegocio((int) $negocio['id'], true),
+                'titulo'          => $negocio['nombre'] . ' · Veci',
+                'negocio'         => $negocio,
+                'servicios'       => Servicio::listarPorNegocio((int) $negocio['id'], true),
+                'metaDescripcion' => $metaDescripcion,
+                'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
             return;
         }
@@ -36,10 +44,12 @@ class TiendaController
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         ver('tienda/mostrar', [
-            'titulo'    => $negocio['nombre'] . ' · Veci',
-            'negocio'   => $negocio,
-            'productos' => $productos,
-            'carrito'   => $carrito,
+            'titulo'          => $negocio['nombre'] . ' · Veci',
+            'negocio'         => $negocio,
+            'productos'       => $productos,
+            'carrito'         => $carrito,
+            'metaDescripcion' => $metaDescripcion,
+            'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
         ], 'tienda');
     }
 
@@ -54,16 +64,40 @@ class TiendaController
         if ($servicio === null || (int) $servicio['activo'] !== 1) {
             abortar404();
         }
+        if ((int) $servicio['agotado'] === 1) {
+            redirigir('/t/' . $negocio['slug']);
+        }
 
         $fecha = (string) ($_GET['fecha'] ?? date('Y-m-d'));
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
             $fecha = date('Y-m-d');
         }
 
+        $empleados = Empleado::listarPorNegocio((int) $negocio['id'], true);
+        $empleadoId = (int) ($_GET['empleado'] ?? 0);
+        $empleadoElegido = null;
+        if ($empleados !== []) {
+            foreach ($empleados as $emp) {
+                if ((int) $emp['id'] === $empleadoId) {
+                    $empleadoElegido = $emp;
+                    break;
+                }
+            }
+        }
+
         $horario = Negocio::horario($negocio);
         $intervalo = (int) $negocio['intervalo_citas_min'];
-        $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha);
-        $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados);
+        $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
+        // Si el negocio tiene empleados registrados, hay que elegir uno antes de ver horarios.
+        $faltaElegirEmpleado = $empleados !== [] && $empleadoElegido === null;
+
+        if ($bloqueada || $faltaElegirEmpleado) {
+            $ocupados = [];
+            $slots = [];
+        } else {
+            $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoElegido['id'] ?? null);
+            $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados);
+        }
 
         $horaElegida = (string) ($_GET['hora'] ?? '');
         $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
@@ -80,7 +114,11 @@ class TiendaController
             'servicio'          => $servicio,
             'fecha'             => $fecha,
             'fechasDisponibles' => $fechasDisponibles,
+            'empleados'         => $empleados,
+            'empleadoElegido'   => $empleadoElegido,
+            'faltaElegirEmpleado' => $faltaElegirEmpleado,
             'slots'             => $slots,
+            'bloqueada'         => $bloqueada,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
         ], 'tienda');
@@ -100,7 +138,7 @@ class TiendaController
 
         $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
 
-        if (!csrf_verificar() || $servicio === null) {
+        if (!csrf_verificar() || $servicio === null || (int) $servicio['agotado'] === 1) {
             redirigir('/t/' . $negocio['slug']);
         }
 
@@ -109,10 +147,27 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
+        if (FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha)) {
+            flash_set('error', 'Ese día no está disponible. Elige otra fecha.');
+            redirigir($volverAReservar);
+        }
+
+        $empleados = Empleado::listarPorNegocio((int) $negocio['id'], true);
+        $empleadoId = null;
+        if ($empleados !== []) {
+            $empleadoPost = (int) ($_POST['empleado_id'] ?? 0);
+            $empleado = Empleado::buscar($empleadoPost, (int) $negocio['id']);
+            if ($empleado === null || (int) $empleado['activo'] !== 1) {
+                flash_set('error', 'Elige con quién quieres agendar.');
+                redirigir($volverAReservar);
+            }
+            $empleadoId = (int) $empleado['id'];
+        }
+
         // Vuelve a calcular disponibilidad justo antes de guardar, por si alguien más
         // tomó ese horario mientras el cliente llenaba el formulario.
         $horario = Negocio::horario($negocio);
-        $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha);
+        $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoId);
         $slots = Cita::calcularDisponibilidad(
             $horario,
             (int) $negocio['intervalo_citas_min'],
@@ -145,6 +200,8 @@ class TiendaController
             (int) $servicio['precio'],
             "{$fecha} {$hora}:00",
             (int) $servicio['duracion_min'],
+            null,
+            $empleadoId,
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
 
@@ -171,7 +228,7 @@ class TiendaController
             $productoId = (int) ($_POST['producto_id'] ?? 0);
             $producto = Producto::buscar($productoId, (int) $negocio['id']);
 
-            if ($producto !== null && (int) $producto['activo'] === 1) {
+            if ($producto !== null && (int) $producto['activo'] === 1 && (int) $producto['agotado'] === 0) {
                 $carrito = $this->carritoDeSesion((int) $negocio['id']);
                 $carrito[$productoId] = ($carrito[$productoId] ?? 0) + 1;
                 $this->guardarCarrito((int) $negocio['id'], $carrito);
@@ -270,6 +327,114 @@ class TiendaController
         ], 'tienda');
     }
 
+    public function gestionarCita(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+
+        ver('tienda/cita_gestionar', [
+            'titulo' => 'Tu cita · ' . $cita['negocio_nombre'],
+            'cita'   => $cita,
+            'error'  => flash_obtener('error'),
+            'ok'     => flash_obtener('ok'),
+        ], 'tienda');
+    }
+
+    public function cancelarCitaCliente(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+
+        if (csrf_verificar() && $cita['estado'] !== 'cancelada') {
+            Cita::actualizarEstado((int) $cita['id'], (int) $cita['negocio_id'], 'cancelada');
+            flash_set('ok', 'Tu cita quedó cancelada.');
+        }
+
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    public function reprogramarCitaVista(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+
+        $negocio = Negocio::buscarPorId((int) $cita['negocio_id']);
+
+        $fecha = (string) ($_GET['fecha'] ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
+            $fecha = date('Y-m-d');
+        }
+
+        $horario = Negocio::horario($negocio);
+        $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
+        $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
+        $ocupados = $bloqueada ? [] : Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
+        $slots = $bloqueada ? [] : Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados);
+
+        $fechasDisponibles = [];
+        for ($i = 0; $i < 14; $i++) {
+            $fechasDisponibles[] = date('Y-m-d', strtotime("+{$i} days"));
+        }
+
+        ver('tienda/cita_reprogramar', [
+            'titulo'            => 'Reprogramar cita · ' . $cita['negocio_nombre'],
+            'negocio'           => $negocio,
+            'cita'              => $cita,
+            'fecha'             => $fecha,
+            'fechasDisponibles' => $fechasDisponibles,
+            'slots'             => $slots,
+            'bloqueada'         => $bloqueada,
+            'error'             => flash_obtener('error'),
+        ], 'tienda');
+    }
+
+    public function guardarReprogramacion(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+
+        $negocio = Negocio::buscarPorId((int) $cita['negocio_id']);
+        $fecha = (string) ($_POST['fecha'] ?? '');
+        $hora = (string) ($_POST['hora'] ?? '');
+        $volver = '/cita/' . $cita['token_gestion'] . '/reprogramar?fecha=' . rawurlencode($fecha);
+
+        if (!csrf_verificar()) {
+            redirigir('/cita/' . $cita['token_gestion']);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)) {
+            flash_set('error', 'Elige una fecha y una hora válidas.');
+            redirigir($volver);
+        }
+
+        if (FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha)) {
+            flash_set('error', 'Ese día no está disponible. Elige otra fecha.');
+            redirigir($volver);
+        }
+
+        $horario = Negocio::horario($negocio);
+        $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
+        $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
+        $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados);
+
+        if (!in_array($hora, $slots, true)) {
+            flash_set('error', 'Ese horario ya no está disponible. Elige otro.');
+            redirigir($volver);
+        }
+
+        Cita::reprogramar((int) $cita['id'], (int) $negocio['id'], "{$fecha} {$hora}:00");
+        flash_set('ok', 'Tu cita quedó reprogramada.');
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
     private function negocioOAbortar(string $slug): array
     {
         $negocio = Negocio::buscarPorSlugPublicada($slug);
@@ -314,6 +479,9 @@ class TiendaController
                 continue;
             }
             $producto = $porId[$productoId];
+            if ((int) $producto['agotado'] === 1) {
+                continue;
+            }
             $lineas[] = ['producto' => $producto, 'cantidad' => $cantidad];
             $cantidadTotal += $cantidad;
             $total += (int) $producto['precio'] * $cantidad;

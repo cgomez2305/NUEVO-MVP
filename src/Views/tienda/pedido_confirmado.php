@@ -25,6 +25,9 @@
       <span style="font-size: 14px">Paga en efectivo cuando te entreguen el pedido.</span>
     <?php else: ?>
       <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor'] ?? $negocio['whatsapp']) ?></strong></span>
+      <?php if ($pedido['metodo_pago'] === 'breb'): ?>
+        <span class="pq-ayuda">Incluye este código en el concepto de tu transferencia: <strong class="pq-mono">VECI-P<?= (int) $pedido['id'] ?></strong></span>
+      <?php endif; ?>
       <span class="pq-ayuda">Envía el comprobante por WhatsApp para que confirmen tu pedido.</span>
     <?php endif; ?>
   </div>

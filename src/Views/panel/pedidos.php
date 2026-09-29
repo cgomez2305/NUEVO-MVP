@@ -1,5 +1,10 @@
-<span class="pq-eyebrow">Pedidos</span>
-<h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+  <div>
+    <span class="pq-eyebrow">Pedidos</span>
+    <h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
+  </div>
+  <a href="<?= e(base_url('/panel/pedidos/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
+</div>
 
 <?php if ($pedidos === []): ?>
   <p class="pq-lead" style="margin-top: 16px">Todavía no te han hecho pedidos.</p>

@@ -6,7 +6,8 @@
 ?>
 <div class="pq-stack" style="gap: 8px">
   <?php foreach ($servicios as $servicio): ?>
-    <div class="pq-card-borde" style="display: flex; flex-direction: column; gap: 8px">
+    <?php $agotado = (int) $servicio['agotado'] === 1; ?>
+    <div class="pq-card-borde" style="display: flex; flex-direction: column; gap: 8px<?= $agotado ? '; opacity: .6' : '' ?>">
       <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/actualizar')) ?>"
             style="display: flex; flex-direction: column; gap: 8px">
         <?= csrf_campo() ?>
@@ -14,6 +15,7 @@
         <div style="display: flex; gap: 8px; align-items: center">
           <span style="width: 12px; height: 12px; border-radius: 4px; background: <?= e($servicio['color']) ?>; flex-shrink: 0" aria-hidden="true"></span>
           <input class="pq-input" style="flex-grow: 1" type="text" name="nombre" value="<?= e($servicio['nombre']) ?>" required maxlength="120">
+          <?php if ($agotado): ?><span class="pq-chip pq-chip-cancelado">No disponible</span><?php endif; ?>
         </div>
         <div style="display: flex; gap: 8px">
           <input class="pq-input pq-mono" style="flex-grow: 1" type="number" name="precio" value="<?= (int) $servicio['precio'] ?>" min="0" step="500" required>
@@ -22,11 +24,20 @@
         </div>
         <span class="pq-ayuda">Duración en minutos</span>
       </form>
-      <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/eliminar')) ?>" style="align-self: flex-end">
-        <?= csrf_campo() ?>
-        <input type="hidden" name="volver" value="<?= e($volver) ?>">
-        <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">eliminar</button>
-      </form>
+      <div style="display: flex; gap: 16px; align-items: center; align-self: flex-end">
+        <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/agotado')) ?>">
+          <?= csrf_campo() ?>
+          <input type="hidden" name="volver" value="<?= e($volver) ?>">
+          <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">
+            <?= $agotado ? 'marcar disponible' : 'marcar no disponible' ?>
+          </button>
+        </form>
+        <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/eliminar')) ?>">
+          <?= csrf_campo() ?>
+          <input type="hidden" name="volver" value="<?= e($volver) ?>">
+          <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">eliminar</button>
+        </form>
+      </div>
     </div>
   <?php endforeach; ?>
 

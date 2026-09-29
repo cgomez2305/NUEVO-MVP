@@ -105,6 +105,20 @@ class Pedido
         $stmt->execute(['estado' => $estado, 'id' => $id, 'negocio_id' => $negocioId]);
     }
 
+    /** Pedidos creados después de cierto ID, para el polling de notificaciones del panel. */
+    public static function nuevosDesde(int $negocioId, int $desdeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT p.id, p.total, p.creado_en, c.nombre AS cliente_nombre
+             FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
+             WHERE p.negocio_id = :negocio_id AND p.id > :desde_id
+             ORDER BY p.id ASC
+             LIMIT 20'
+        );
+        $stmt->execute(['negocio_id' => $negocioId, 'desde_id' => $desdeId]);
+        return $stmt->fetchAll();
+    }
+
     public static function contarHoy(int $negocioId): int
     {
         $stmt = Database::conexion()->prepare(

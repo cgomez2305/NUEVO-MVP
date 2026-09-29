@@ -16,14 +16,19 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 10px; margin-top: 8px">
       <?php foreach ($servicios as $servicio): ?>
-        <div class="pq-fila-carrito" style="align-items: center">
+        <?php $agotado = (int) $servicio['agotado'] === 1; ?>
+        <div class="pq-fila-carrito" style="align-items: center<?= $agotado ? '; opacity: .55' : '' ?>">
           <div class="pq-fila-carrito-icono" style="background: <?= e($servicio['color']) ?>"></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($servicio['nombre']) ?></span>
             <span class="pq-mono" style="font-size: 12px; color: var(--gris-texto)"><?= (int) $servicio['duracion_min'] ?> min</span>
           </div>
           <span class="pq-mono" style="font-size: 13px"><?= pesos((int) $servicio['precio']) ?></span>
-          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id'])) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico">Reservar</a>
+          <?php if ($agotado): ?>
+            <span class="pq-chip pq-chip-cancelado">No disponible</span>
+          <?php else: ?>
+            <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id'])) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico">Reservar</a>
+          <?php endif; ?>
         </div>
       <?php endforeach; ?>
     </div>

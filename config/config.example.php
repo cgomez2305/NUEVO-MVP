@@ -23,4 +23,20 @@ return [
     // de la foto del menú. Sin llave, usa datos de ejemplo para que el flujo
     // funcione igual de principio a fin. Ver src/Services/ExtractorMenu.php.
     'anthropic_api_key' => null,
+
+    // Opcional. Credenciales de WhatsApp Business API (Meta Cloud API) para
+    // enviar recordatorios de cita y notificaciones de forma automática.
+    // Sin esto, los recordatorios se quedan como una cola de envío manual
+    // en el panel (enlace wa.me, igual que el copiloto). Ver
+    // src/Services/RecordatorioWhatsapp.php.
+    'whatsapp_api' => [
+        'token'              => null,
+        'phone_number_id'    => null,
+    ],
+
+    // Opcional. Secreto compartido para verificar la firma de las
+    // notificaciones (webhook) del proveedor de pagos Bre-B. Sin esto, el
+    // endpoint /webhooks/breb rechaza cualquier notificación entrante.
+    // Ver src/Controllers/WebhookController.php.
+    'breb_webhook_secret' => null,
 ];

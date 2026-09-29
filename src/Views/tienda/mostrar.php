@@ -16,16 +16,21 @@
   <?php else: ?>
     <div class="pq-productos">
       <?php foreach ($productos as $producto): ?>
-        <div class="pq-producto">
+        <?php $agotado = (int) $producto['agotado'] === 1; ?>
+        <div class="pq-producto<?= $agotado ? ' pq-producto-agotado' : '' ?>">
           <div class="pq-producto-foto" style="background: <?= e($producto['color']) ?>"></div>
           <span class="pq-producto-nombre"><?= e($producto['nombre']) ?></span>
           <div class="pq-producto-fila">
             <span class="pq-producto-precio"><?= pesos((int) $producto['precio']) ?></span>
-            <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/agregar')) ?>">
-              <?= csrf_campo() ?>
-              <input type="hidden" name="producto_id" value="<?= (int) $producto['id'] ?>">
-              <button type="submit" class="pq-add" aria-label="Agregar <?= e($producto['nombre']) ?>">+</button>
-            </form>
+            <?php if ($agotado): ?>
+              <span class="pq-chip pq-chip-cancelado">Agotado</span>
+            <?php else: ?>
+              <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/agregar')) ?>">
+                <?= csrf_campo() ?>
+                <input type="hidden" name="producto_id" value="<?= (int) $producto['id'] ?>">
+                <button type="submit" class="pq-add" aria-label="Agregar <?= e($producto['nombre']) ?>">+</button>
+              </form>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>

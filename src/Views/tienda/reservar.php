@@ -2,7 +2,10 @@
   <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-mono" style="font-size: 11px; color: var(--gris-suave); text-decoration: none">‹ ver servicios</a>
 </div>
 
-<?php $diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']; ?>
+<?php
+$diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+$sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '';
+?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
   <span class="pq-tienda-desc"><?= e($negocio['nombre']) ?> · <?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
@@ -11,12 +14,25 @@
     <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
   <?php endif; ?>
 
+  <?php if (!empty($empleados)): ?>
+    <div style="margin-top: 20px">
+      <span class="pq-label">¿Con quién?</span>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px">
+        <?php foreach ($empleados as $emp): ?>
+          <?php $activo = $empleadoElegido !== null && (int) $empleadoElegido['id'] === (int) $emp['id']; ?>
+          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . '&empleado=' . (int) $emp['id']) ?>"
+             class="pq-chip <?= $activo ? 'pq-chip-caja' : '' ?>" style="text-decoration: none"><?= e($emp['nombre']) ?></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  <?php endif; ?>
+
   <div style="margin-top: 20px">
     <span class="pq-label">Elige el día</span>
     <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 8px">
       <?php foreach ($fechasDisponibles as $opcion): ?>
         <?php $esHoy = $opcion === date('Y-m-d'); $activo = $opcion === $fecha; ?>
-        <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion) ?>"
+        <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado) ?>"
            class="pq-chip <?= $activo ? 'pq-chip-caja' : '' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0">
           <?= $esHoy ? 'Hoy' : e($diasCorto[(int) date('w', strtotime($opcion))] . ' ' . date('d', strtotime($opcion))) ?>
         </a>
@@ -27,13 +43,17 @@
   <div style="margin-top: 20px">
     <span class="pq-label">Horarios disponibles</span>
 
-    <?php if ($slots === []): ?>
+    <?php if (!empty($faltaElegirEmpleado)): ?>
+      <p class="pq-ayuda" style="margin-top: 10px">Elige con quién quieres agendar para ver los horarios.</p>
+    <?php elseif (!empty($bloqueada)): ?>
+      <p class="pq-ayuda" style="margin-top: 10px"><?= e($negocio['nombre']) ?> no atiende ese día. Elige otra fecha.</p>
+    <?php elseif ($slots === []): ?>
       <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles ese día. Elige otra fecha.</p>
     <?php else: ?>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px">
         <?php foreach ($slots as $slot): ?>
           <?php $activo = $slot === $horaElegida; ?>
-          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . '&hora=' . $slot) ?>#confirmar"
+          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . $sufijoEmpleado . '&hora=' . $slot) ?>#confirmar"
              class="pq-btn <?= $activo ? 'pq-btn-sello' : 'pq-btn-ghost-oscuro' ?> pq-btn-chico pq-mono"><?= e($slot) ?></a>
         <?php endforeach; ?>
       </div>
@@ -52,6 +72,9 @@
         <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
         <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
         <input type="hidden" name="hora" value="<?= e($horaElegida) ?>">
+        <?php if ($empleadoElegido !== null): ?>
+          <input type="hidden" name="empleado_id" value="<?= (int) $empleadoElegido['id'] ?>">
+        <?php endif; ?>
 
         <div class="pq-campo">
           <label class="pq-label" for="nombre">Tu nombre</label>
