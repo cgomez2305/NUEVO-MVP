@@ -151,41 +151,84 @@
         </div>
         <div class="telefono" aria-hidden="true">
           <span class="telefono-badge mono">EN VIVO EN WHATSAPP</span>
-          <div class="telefono-pantalla">
-            <div class="telefono-header">
-              <div class="telefono-logo">DM</div>
-              <div>
-                <div class="telefono-nombre">Doña María</div>
-                <div class="telefono-sub">Comida casera · Barrio Restrepo</div>
+          <div class="telefono-pantalla" data-telefono-vivo>
+            <div class="telefono-estado activo" data-telefono-estado="1">
+              <div class="telefono-header">
+                <div class="telefono-logo">DM</div>
+                <div>
+                  <div class="telefono-nombre">Doña María</div>
+                  <div class="telefono-sub">Comida casera · Barrio Restrepo</div>
+                </div>
+              </div>
+              <div class="telefono-productos">
+                <div class="telefono-producto">
+                  <div class="telefono-foto" style="background:#E8452C"></div>
+                  <span class="nombre">Bandeja paisa</span>
+                  <span class="precio">$18.000</span>
+                </div>
+                <div class="telefono-producto">
+                  <div class="telefono-foto" style="background:#F2B632"></div>
+                  <span class="nombre">Arepa con queso</span>
+                  <span class="precio">$4.500</span>
+                </div>
+                <div class="telefono-producto">
+                  <div class="telefono-foto" style="background:#5B7F3A"></div>
+                  <span class="nombre">Jugo de mora</span>
+                  <span class="precio">$5.000</span>
+                </div>
+                <div class="telefono-producto">
+                  <div class="telefono-foto" style="background:#3B4CCA"></div>
+                  <span class="nombre">Sancocho</span>
+                  <span class="precio">$16.000</span>
+                </div>
+              </div>
+              <div class="telefono-carrito">
+                <span>3 productos · $27.500</span>
+                <span class="wa">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                </span>
               </div>
             </div>
-            <div class="telefono-productos">
-              <div class="telefono-producto">
-                <div class="telefono-foto" style="background:#E8452C"></div>
-                <span class="nombre">Bandeja paisa</span>
-                <span class="precio">$18.000</span>
-              </div>
-              <div class="telefono-producto">
-                <div class="telefono-foto" style="background:#F2B632"></div>
-                <span class="nombre">Arepa con queso</span>
-                <span class="precio">$4.500</span>
-              </div>
-              <div class="telefono-producto">
-                <div class="telefono-foto" style="background:#5B7F3A"></div>
-                <span class="nombre">Jugo de mora</span>
-                <span class="precio">$5.000</span>
-              </div>
-              <div class="telefono-producto">
-                <div class="telefono-foto" style="background:#3B4CCA"></div>
-                <span class="nombre">Sancocho</span>
-                <span class="precio">$16.000</span>
+
+            <div class="telefono-estado" data-telefono-estado="2">
+              <div class="telefono-confirmado">
+                <span class="telefono-check">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg>
+                </span>
+                <h4>Pago confirmado</h4>
+                <p>Bre-B · en 18 segundos</p>
+                <div class="telefono-recibo">
+                  <div class="fila"><span>3 productos</span><span>$27.500</span></div>
+                  <div class="fila"><span>Domicilio</span><span>$0</span></div>
+                  <div class="fila"><span>Total recibido</span><span>$27.500</span></div>
+                </div>
               </div>
             </div>
-            <div class="telefono-carrito">
-              <span>3 productos · $27.500</span>
-              <span class="wa">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
-              </span>
+
+            <div class="telefono-estado" data-telefono-estado="3">
+              <div class="telefono-copiloto">
+                <div class="telefono-copiloto-header">
+                  <span class="eyebrow-mini">COPILOTO DE RECOMPRA</span>
+                  <h4>Buenos días, Doña María ☀️</h4>
+                </div>
+                <div class="telefono-cliente-card">
+                  <div class="fila-top">
+                    <span class="av">MJ</span>
+                    <div>
+                      <span class="nombre">María José</span>
+                      <span class="dato">No pide hace 18 días</span>
+                    </div>
+                  </div>
+                  <p class="msg">"Hola María José! Te tengo sancocho recién hecho hoy 🍲 ¿Te separo una porción?"</p>
+                  <button type="button" class="btn-enviar-mini">Enviar por WhatsApp
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="telefono-puntos" aria-hidden="true">
+              <span class="activo"></span><span></span><span></span>
             </div>
           </div>
         </div>
@@ -199,6 +242,12 @@
     </div>
   </div>
 </div>
+
+<section class="reveal-frase">
+  <div class="wrap-angosto">
+    <p class="reveal-frase-texto" data-scroll-frase>Cada domicilio que vendes por una app grande es plata que no vuelve a tu bolsillo. Veci existe para que esa plata se quede en tu barrio — en tu bolsillo, no en el de nadie más.</p>
+  </div>
+</section>
 
 <section class="reveal">
   <div class="wrap">
@@ -804,6 +853,76 @@
     pendientes.forEach(function (el) { el.classList.add('visto'); });
     pendientes = [];
   }, 1500);
+
+  // ---- Spotlight que sigue el cursor en las tarjetas ----
+  document.querySelectorAll('.feature-card, .dolor-card').forEach(function (card) {
+    card.addEventListener('mousemove', function (e) {
+      var rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+    });
+  });
+
+  // ---- Frase con revelado de palabras por scroll ----
+  (function () {
+    var frase = document.querySelector('[data-scroll-frase]');
+    if (!frase) return;
+    var soportaMix = CSS.supports('color', 'color-mix(in srgb, red, blue)');
+    if (!soportaMix) return;
+
+    var texto = frase.textContent.trim();
+    frase.innerHTML = texto.split(' ').map(function (palabra) {
+      return '<span class="rf-w">' + palabra + '</span>';
+    }).join(' ');
+    var palabras = Array.prototype.slice.call(frase.querySelectorAll('.rf-w'));
+    var total = palabras.length;
+    var actualizando = false;
+
+    function actualizar() {
+      var rect = frase.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var progreso = (vh * 0.82 - rect.top) / (rect.height + vh * 0.35);
+      progreso = Math.max(0, Math.min(1, progreso));
+      palabras.forEach(function (span, i) {
+        var local = (progreso - i / total) * total * 1.2;
+        local = Math.max(0, Math.min(1, local));
+        span.style.color = 'color-mix(in srgb, var(--texto) ' + (local * 100) + '%, var(--texto-tenue))';
+      });
+      actualizando = false;
+    }
+
+    function pedir() {
+      if (!actualizando) { actualizando = true; requestAnimationFrame(actualizar); }
+    }
+
+    actualizar();
+    window.addEventListener('scroll', pedir, { passive: true });
+    window.addEventListener('resize', pedir);
+  })();
+
+  // ---- Teléfono del hero: cicla entre pedido / pago confirmado / copiloto ----
+  (function () {
+    var pantalla = document.querySelector('[data-telefono-vivo]');
+    if (!pantalla) return;
+    var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducido) return;
+
+    var estados = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-estado'));
+    var puntos = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-puntos span'));
+    var actual = 0;
+
+    function irA(idx) {
+      estados[actual].classList.remove('activo');
+      puntos[actual].classList.remove('activo');
+      actual = idx;
+      estados[actual].classList.add('activo');
+      puntos[actual].classList.add('activo');
+    }
+
+    setInterval(function () {
+      irA((actual + 1) % estados.length);
+    }, 3400);
+  })();
 </script>
 
 </body>
