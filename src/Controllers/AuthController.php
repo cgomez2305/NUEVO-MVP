@@ -72,6 +72,11 @@ class AuthController
         $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
         $password = (string) ($_POST['password'] ?? '');
 
+        if (Auth::estaBloqueado($whatsapp)) {
+            flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
+            redirigir('/login');
+        }
+
         if (!Auth::intentarLogin($whatsapp, $password)) {
             flash_set('error', 'WhatsApp o contraseña incorrectos.');
             redirigir('/login');

@@ -1,0 +1,14 @@
+# Reservada para subir logos más adelante. Aunque hoy no se escribe nada
+# aquí, queda protegida desde ya con la misma regla que uploads/menus/.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>
+
+Options -ExecCGI -Indexes

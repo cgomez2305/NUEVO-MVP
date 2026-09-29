@@ -1,0 +1,16 @@
+# Esta carpeta solo debe servir imágenes subidas por los comerciantes.
+# Aunque subirFoto() ya valida el tipo real del archivo (mime_content_type)
+# antes de guardarlo, esto es una segunda barrera: aunque algún día un
+# archivo malicioso terminara aquí, el servidor nunca lo ejecuta como script.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>
+
+Options -ExecCGI -Indexes

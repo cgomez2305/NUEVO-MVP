@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS negocios (
   horario_atencion    JSON         DEFAULT NULL,
   intervalo_citas_min SMALLINT UNSIGNED NOT NULL DEFAULT 30,
   publicada           TINYINT(1)   NOT NULL DEFAULT 0,
+  intentos_fallidos   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  bloqueado_hasta     DATETIME     DEFAULT NULL,
   creado_en           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

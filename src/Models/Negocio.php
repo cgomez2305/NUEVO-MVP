@@ -8,6 +8,9 @@ use App\Database;
 
 class Negocio
 {
+    private const MAX_INTENTOS_LOGIN = 5;
+    private const BLOQUEO_MINUTOS = 15;
+
     public static function crear(string $nombre, string $whatsapp, string $password, string $tipoNegocio = 'pedidos'): int
     {
         if (!in_array($tipoNegocio, ['pedidos', 'reservas'], true)) {
@@ -126,6 +129,43 @@ class Negocio
     {
         $intervalo = (int) ($post['intervalo'] ?? 30);
         return in_array($intervalo, [15, 20, 30, 45, 60], true) ? $intervalo : 30;
+    }
+
+    /** ¿Sigue bloqueado por demasiados intentos de login fallidos? */
+    public static function bloqueado(array $negocio): bool
+    {
+        return !empty($negocio['bloqueado_hasta']) && (string) $negocio['bloqueado_hasta'] > date('Y-m-d H:i:s');
+    }
+
+    /**
+     * Suma un intento fallido y, al llegar al máximo, bloquea la cuenta
+     * unos minutos. Protege contra fuerza bruta sobre el número de WhatsApp
+     * sin depender de un servicio externo de rate-limiting.
+     */
+    public static function registrarIntentoFallido(int $id): void
+    {
+        $pdo = Database::conexion();
+
+        $stmt = $pdo->prepare('UPDATE negocios SET intentos_fallidos = intentos_fallidos + 1 WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+
+        $stmt = $pdo->prepare('SELECT intentos_fallidos FROM negocios WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $intentos = (int) ($stmt->fetch()['intentos_fallidos'] ?? 0);
+
+        if ($intentos >= self::MAX_INTENTOS_LOGIN) {
+            $hasta = date('Y-m-d H:i:s', time() + self::BLOQUEO_MINUTOS * 60);
+            $stmt = $pdo->prepare('UPDATE negocios SET bloqueado_hasta = :hasta WHERE id = :id');
+            $stmt->execute(['hasta' => $hasta, 'id' => $id]);
+        }
+    }
+
+    public static function registrarLoginExitoso(int $id): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE negocios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = :id'
+        );
+        $stmt->execute(['id' => $id]);
     }
 
     private static function existeSlug(string $slug): bool

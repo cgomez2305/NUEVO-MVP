@@ -1,7 +1,9 @@
 /config/config.php
 /public/uploads/menus/*
 !/public/uploads/menus/.gitkeep
+!/public/uploads/menus/.htaccess
 /public/uploads/logos/*
 !/public/uploads/logos/.gitkeep
+!/public/uploads/logos/.htaccess
 .DS_Store
 *.log
