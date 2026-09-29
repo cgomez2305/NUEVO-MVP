@@ -160,7 +160,8 @@ footer .footer-links a:hover{color:var(--sello)}
 /* footer grande de la landing, con columnas */
 footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:none;padding:56px 0 28px}
 .footer-grande .wrap{display:block}
-.footer-columnas{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px;padding-bottom:36px;border-bottom:1px solid rgba(255,253,248,.12)}
+.footer-columnas{display:grid;grid-template-columns:1.3fr .9fr .9fr .9fr;gap:28px;padding-bottom:36px;border-bottom:1px solid rgba(255,253,248,.12)}
+.footer-columnas.tres-col{grid-template-columns:1.4fr 1fr 1fr}
 .footer-marca img{margin-bottom:12px}
 .footer-marca p{font-size:13px;color:#9AA0D4;line-height:1.6;max-width:260px;margin:0}
 .footer-col{display:flex;flex-direction:column;gap:11px}
@@ -546,7 +547,8 @@ h3{font-size:clamp(16px,.6vw + .95rem,19px)}
 .industria-col h3{font-size:17px;margin:0 0 6px}
 .industria-col p.desc{font-size:13.5px;color:var(--texto-suave);margin:0 0 18px}
 .industria-tags{display:flex;flex-wrap:wrap;gap:8px}
-.industria-tag{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--radio-pill);background:var(--bg-suave);color:var(--texto)}
+.industria-tag{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:var(--radio-pill);background:var(--bg-suave);color:var(--texto);text-decoration:none;display:inline-block;transition:background .15s ease,color .15s ease}
+a.industria-tag:hover{background:var(--tinte-sello);color:var(--sello)}
 @media (max-width:760px){.industrias-grid{grid-template-columns:1fr}}
 
 /* página de referidos */

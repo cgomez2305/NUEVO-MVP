@@ -36,6 +36,26 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://tuveci.co/peluquerias.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tuveci.co/entrenadores.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tuveci.co/tiendas.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tuveci.co/odontologos.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://tuveci.co/blog/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
