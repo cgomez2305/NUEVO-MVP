@@ -8,15 +8,15 @@
 <script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
-<link rel="canonical" href="https://cgomez2305.github.io/NUEVO-MVP/demo.html">
+<link rel="canonical" href="https://tuveci.co/demo.html">
 <meta name="description" content="Prueba las dos tiendas demo de Veci: pedidos con carrito (Doña María) y reservas con cita previa (Salón Bonita). Interactivo, en tu navegador, sin instalar nada.">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Veci">
 <meta property="og:title" content="Demos en vivo · Veci">
 <meta property="og:description" content="Prueba las dos tiendas demo de Veci: pedidos con carrito y reservas con cita previa.">
-<meta property="og:image" content="https://cgomez2305.github.io/NUEVO-MVP/assets/img/og-image.png">
-<meta property="og:url" content="https://cgomez2305.github.io/NUEVO-MVP/demo.html">
+<meta property="og:image" content="https://tuveci.co/assets/img/og-image.png">
+<meta property="og:url" content="https://tuveci.co/demo.html">
 <meta property="og:locale" content="es_CO">
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
@@ -36,11 +36,14 @@
       <div class="nav-derecha">
       <div class="nav-links">
         <a href="./#como-funciona">Cómo funciona</a>
+        <a href="funciones.html">Funciones</a>
         <a href="precios.html">Precios</a>
         <a href="nosotros.html">Quiénes somos</a>
-        <a href="./#faq">Preguntas</a>
         <a href="blog/">Blog</a>
-        <a href="https://github.com/cgomez2305/NUEVO-MVP">GitHub</a>
+        <div class="nav-auth">
+          <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
+          <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
+        </div>
       </div>
 
       <button type="button" class="btn-tema" aria-label="Cambiar a modo claro/oscuro">
@@ -212,7 +215,7 @@
     <div class="icono" style="background:var(--tinte-sello)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="2"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div>
     <div>
       <h3>Esta demo corre 100% en tu navegador</h3>
-      <p>No hay backend detrás: es JavaScript puro reproduciendo el flujo real. La versión completa (con base de datos, panel del dueño y copiloto de recompra) es la app PHP + MySQL del <a href="https://github.com/cgomez2305/NUEVO-MVP" style="color:var(--sello)">repositorio</a>, lista para instalar en tu propio hosting.</p>
+      <p>No hay backend detrás: es JavaScript puro reproduciendo el flujo real. La versión completa (con base de datos, panel del dueño y copiloto de recompra) es la que activas al <a href="https://app.tuveci.co/registro" style="color:var(--sello)">crear tu tienda</a>.</p>
     </div>
   </div>
 
@@ -228,20 +231,20 @@
       <div class="footer-col">
         <span class="footer-titulo">Producto</span>
         <a href="./#como-funciona">Cómo funciona</a>
+        <a href="funciones.html">Funciones</a>
+        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
-        <a href="./#faq">Preguntas frecuentes</a>
       </div>
       <div class="footer-col">
         <span class="footer-titulo">Recursos</span>
         <a href="nosotros.html">Quiénes somos</a>
         <a href="blog/">Blog</a>
-        <a href="https://github.com/cgomez2305/NUEVO-MVP">Código en GitHub</a>
-        <a href="https://github.com/cgomez2305/NUEVO-MVP#instalación">Guía de instalación</a>
+        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · a partir del documento de análisis "Tienda propia para Colombia"</p>
-      <span class="estado"><span class="dot"></span> Código abierto</span>
+      <p>Veci · hecho para negocios colombianos</p>
+      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
     </div>
   </div>
 </footer>

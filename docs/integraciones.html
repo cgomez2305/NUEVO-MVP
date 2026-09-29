@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Integraciones · Veci</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+<link rel="canonical" href="https://tuveci.co/integraciones.html">
+<meta name="description" content="Las integraciones de pago y de datos de Veci: qué funciona hoy (Bre-B, Nequi, efectivo) y qué está en el roadmap (checkout con tarjeta, exportar a Excel, webhooks).">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Veci">
+<meta property="og:title" content="Integraciones · Veci">
+<meta property="og:description" content="Qué integraciones tiene Veci hoy y cuáles están en camino.">
+<meta property="og:image" content="https://tuveci.co/assets/img/og-image.png">
+<meta property="og:url" content="https://tuveci.co/integraciones.html">
+<meta property="og:locale" content="es_CO">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/js/tema.js" defer></script>
+</head>
+<body>
+
+<div class="nav-fija clara">
+  <div class="wrap">
+    <nav class="nav-clara">
+      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
+        <img src="assets/img/logo-veci-lockup.png" alt="Veci" height="26">
+      </a>
+
+      <div class="nav-derecha">
+      <div class="nav-links">
+        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="funciones.html">Funciones</a>
+        <a href="precios.html">Precios</a>
+        <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/">Blog</a>
+        <a href="demo.html">Ver demos →</a>
+        <div class="nav-auth">
+          <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
+          <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
+        </div>
+      </div>
+
+      <button type="button" class="btn-tema" aria-label="Cambiar a modo claro/oscuro">
+        <svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button type="button" class="btn-hamburguesa" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="demo-hero">
+    <span class="hero-badge" style="background:var(--tinte-sello);border-color:transparent;color:var(--sello)"><span class="dot"></span> PAGOS Y DATOS</span>
+    <h1>Integraciones</h1>
+    <p>Lo que Veci conecta hoy, y lo que estamos construyendo para los próximos meses. Sin promesas sin fecha.</p>
+  </div>
+</div>
+
+<section class="reveal">
+  <div class="wrap">
+
+    <div class="integra-grupo">
+      <span class="integra-titulo">MÉTODOS DE PAGO</span>
+      <div class="integra-lista">
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+          <div>
+            <h3>Bre-B <span class="badge-disponible">Disponible</span></h3>
+            <p>Cobro por llave (celular, cédula o correo) en menos de 20 segundos, sin comisión de tarjeta.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-mostaza)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
+          <div>
+            <h3>Nequi y Daviplata <span class="badge-disponible">Disponible</span></h3>
+            <p>Transferencia manual con comprobante: tu cliente paga y confirmas el pedido al verlo.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-caja)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div>
+            <h3>Efectivo contraentrega <span class="badge-disponible">Disponible</span></h3>
+            <p>Tu cliente paga al recibir. Ideal para negocios que ya reparten en su barrio.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-aji)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+          <div>
+            <h3>Pasarela de tarjeta <span class="badge-proximo">Próximamente</span></h3>
+            <p>Checkout con tarjeta de crédito o débito para clientes que no usan transferencia.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="integra-grupo">
+      <span class="integra-titulo">DATOS Y REPORTES</span>
+      <div class="integra-lista">
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+          <div>
+            <h3>Panel de estadísticas <span class="badge-disponible">Disponible</span></h3>
+            <p>Historial de pedidos y ventas dentro de tu panel, incluido en el plan Pro.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-caja)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div>
+            <h3>Exportar a Excel / Google Sheets <span class="badge-proximo">Próximamente</span></h3>
+            <p>Descarga tus pedidos y ventas para llevar tu propia contabilidad.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-mostaza)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg></div>
+          <div>
+            <h3>Webhooks <span class="badge-proximo">Próximamente</span></h3>
+            <p>Envía cada pedido nuevo a la herramienta que ya usas, sin que tengas que revisar tu panel a cada rato.</p>
+          </div>
+        </div>
+        <div class="integra-item">
+          <div class="icono" style="background:var(--tinte-aji)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg></div>
+          <div>
+            <h3>Múltiples sedes y roles <span class="badge-proximo">Próximamente</span></h3>
+            <p>Para negocios con más de un local o con empleados que necesitan su propio acceso.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="cierre">
+  <div class="wrap">
+    <h2>¿Te falta una integración?</h2>
+    <p>Cuéntanos qué necesitas y lo priorizamos en el roadmap.</p>
+    <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
+  </div>
+</div>
+
+<footer class="footer-grande">
+  <div class="wrap">
+    <div class="footer-columnas">
+      <div class="footer-marca">
+        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
+        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Producto</span>
+        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="funciones.html">Funciones</a>
+        <a href="integraciones.html">Integraciones</a>
+        <a href="precios.html">Precios</a>
+        <a href="demo.html">Demos en vivo</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-titulo">Recursos</span>
+        <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/">Blog</a>
+        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
+      </div>
+    </div>
+    <div class="footer-abajo">
+      <p>Veci · hecho para negocios colombianos</p>
+      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
+  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
+  var revisando = false;
+  function revisarReveal() {
+    pendientes = pendientes.filter(function (el) {
+      var rect = el.getBoundingClientRect();
+      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+      if (enVista) el.classList.add('visto');
+      return !enVista;
+    });
+    revisando = false;
+  }
+  function pedirRevision() {
+    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
+  }
+  revisarReveal();
+  window.addEventListener('scroll', pedirRevision, { passive: true });
+  window.addEventListener('resize', pedirRevision);
+  setTimeout(function () {
+    pendientes.forEach(function (el) { el.classList.add('visto'); });
+    pendientes = [];
+  }, 1500);
+</script>
+
+</body>
+</html>

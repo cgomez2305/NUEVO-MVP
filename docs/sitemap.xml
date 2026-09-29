@@ -1,44 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/</loc>
+    <loc>https://tuveci.co/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/precios.html</loc>
+    <loc>https://tuveci.co/funciones.html</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/nosotros.html</loc>
+    <loc>https://tuveci.co/integraciones.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/demo.html</loc>
+    <loc>https://tuveci.co/precios.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/blog/</loc>
+    <loc>https://tuveci.co/nosotros.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tuveci.co/demo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://tuveci.co/blog/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/blog/cuanto-le-dejas-a-rappi.html</loc>
+    <loc>https://tuveci.co/blog/cuanto-le-dejas-a-rappi.html</loc>
     <lastmod>2026-09-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/blog/que-es-bre-b.html</loc>
+    <loc>https://tuveci.co/blog/que-es-bre-b.html</loc>
     <lastmod>2026-09-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://cgomez2305.github.io/NUEVO-MVP/blog/foto-menu-ia.html</loc>
+    <loc>https://tuveci.co/blog/foto-menu-ia.html</loc>
     <lastmod>2026-09-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
