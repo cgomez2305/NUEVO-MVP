@@ -10,6 +10,7 @@ use App\Models\Cliente;
 use App\Models\Copiloto;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\ListaEspera;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\PushSubscripcion;
@@ -49,6 +50,7 @@ class PanelController
             'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio'])),
             'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorSede($sedeId), 0, 5),
             'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($sedeId), 0, 5) : [],
+            'listaEsperaCount' => $esReservas ? ListaEspera::contarPendientesPorSede($sedeId) : 0,
         ], 'panel');
     }
 
@@ -302,11 +304,12 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/citas', [
-            'titulo'  => 'Agenda · Veci',
-            'activo'  => 'citas',
-            'negocio' => $negocio,
-            'citas'   => Cita::listarProximas((int) $negocio['id']),
-            'ok'      => flash_obtener('ok'),
+            'titulo'      => 'Agenda · Veci',
+            'activo'      => 'citas',
+            'negocio'     => $negocio,
+            'citas'       => Cita::listarProximas((int) $negocio['id']),
+            'listaEspera' => ListaEspera::listarPorSede((int) $negocio['id']),
+            'ok'          => flash_obtener('ok'),
         ], 'panel');
     }
 
@@ -317,6 +320,17 @@ class PanelController
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
             Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+        }
+
+        redirigir('/panel/citas');
+    }
+
+    public function marcarContactadoListaEspera(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            ListaEspera::marcarContactado((int) $parametros['id'], (int) $negocio['id']);
         }
 
         redirigir('/panel/citas');

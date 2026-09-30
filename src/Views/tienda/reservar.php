@@ -19,6 +19,10 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
     <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
   <?php endif; ?>
 
+  <?php if (!empty($ok)): ?>
+    <div class="pq-alerta pq-alerta-ok" style="margin-top: 16px"><?= e($ok) ?></div>
+  <?php endif; ?>
+
   <?php if (!empty($empleados)): ?>
     <div style="margin-top: 20px">
       <span class="pq-label">¿Con quién?</span>
@@ -53,7 +57,29 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
     <?php elseif (!empty($bloqueada)): ?>
       <p class="pq-ayuda" style="margin-top: 10px"><?= e($negocio['nombre']) ?> no atiende ese día. Elige otra fecha.</p>
     <?php elseif ($slots === []): ?>
-      <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles ese día. Elige otra fecha.</p>
+      <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles ese día. Elige otra fecha o anótate en la lista de espera.</p>
+
+      <?php if (empty($ok)): ?>
+        <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera')) ?>" class="pq-card" style="margin-top: 12px; border: 1px dashed var(--borde); background: transparent">
+          <span style="font-size: 13px; font-weight: 700">Avísame si se libera un cupo</span>
+          <p class="pq-ayuda" style="margin-top: 4px">Te escribimos por WhatsApp si alguien cancela ese día.</p>
+          <?= csrf_campo() ?>
+          <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
+          <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
+
+          <div class="pq-campo" style="margin-top: 12px">
+            <input class="pq-input" type="text" name="nombre" placeholder="Tu nombre" required maxlength="120">
+          </div>
+          <div class="pq-campo">
+            <input class="pq-input" type="tel" name="telefono" placeholder="Tu WhatsApp" required maxlength="20">
+          </div>
+          <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); margin-bottom: 4px; line-height: 1.5">
+            <input type="checkbox" name="autorizo_datos" value="1" required style="margin-top: 3px">
+            Autorizo a <?= e($negocio['nombre']) ?> a guardar mi nombre y WhatsApp para avisarme, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
+          </label>
+          <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 8px">Anotarme en la lista</button>
+        </form>
+      <?php endif; ?>
     <?php else: ?>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px">
         <?php foreach ($slots as $slot): ?>

@@ -67,6 +67,7 @@ $router->post('/panel/empleados', [$panel, 'crearEmpleado']);
 $router->post('/panel/empleados/{id}/eliminar', [$panel, 'eliminarEmpleado']);
 $router->get('/panel/citas', [$panel, 'citas']);
 $router->post('/panel/citas/{id}/estado', [$panel, 'cambiarEstadoCita']);
+$router->post('/panel/lista-espera/{id}/contactado', [$panel, 'marcarContactadoListaEspera']);
 $router->post('/panel/citas/{id}/anticipo', [$panel, 'marcarAnticipoPagado']);
 $router->get('/panel/citas/exportar.csv', [$panel, 'exportarCitasCsv']);
 $router->get('/panel/clientes/exportar.csv', [$panel, 'exportarClientesCsv']);
@@ -107,6 +108,7 @@ $router->post('/t/{slug}/pedido', [$tienda, 'crearPedido']);
 // --- Tienda pública del cliente, negocios de tipo reservas --------------
 $router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);
+$router->post('/t/{slug}/lista-espera', [$tienda, 'unirseListaEspera']);
 
 // --- Gestión de cita por el cliente, sin login (enlace con token) -------
 $router->get('/cita/{token}', [$tienda, 'gestionarCita']);

@@ -10,6 +10,36 @@
   <div class="pq-alerta pq-alerta-ok" style="margin-top: 16px"><?= e($ok) ?></div>
 <?php endif; ?>
 
+<?php if ($listaEspera !== []): ?>
+  <div style="margin-top: 20px">
+    <span class="pq-eyebrow">Lista de espera · <?= count($listaEspera) ?></span>
+    <div class="pq-stack" style="gap: 8px; margin-top: 8px">
+      <?php foreach ($listaEspera as $fila): ?>
+        <?php
+        $mensajeWa = "Hola {$fila['cliente_nombre']}, se liberó un cupo para {$fila['nombre_servicio']} el "
+            . date('d/m', strtotime((string) $fila['fecha'])) . '. ¿Te sirve que te lo reserve?';
+        $telefonoWa = preg_replace('/\D+/', '', (string) $fila['cliente_telefono']);
+        $enlaceWa = 'https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($mensajeWa);
+        ?>
+        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 12px">
+          <div class="pq-avatar pq-avatar-chico" style="background: var(--mostaza)"><?= e(mb_strtoupper(mb_substr($fila['cliente_nombre'], 0, 1))) ?></div>
+          <div class="pq-stack" style="flex-grow: 1">
+            <span style="font-size: 14px; font-weight: 600"><?= e($fila['cliente_nombre']) ?></span>
+            <span class="pq-ayuda"><?= e($fila['nombre_servicio']) ?> · quiere el <?= e(date('d M', strtotime((string) $fila['fecha']))) ?></span>
+          </div>
+          <a href="<?= e($enlaceWa) ?>" target="_blank" rel="noopener" class="pq-btn pq-btn-ghost pq-btn-chico">Avisar</a>
+          <form method="post" action="<?= e(base_url('/panel/lista-espera/' . $fila['id'] . '/contactado')) ?>">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-btn-icono" title="Ya la contacté" aria-label="Marcar como contactada">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+            </button>
+          </form>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
 <?php if ($citas === []): ?>
   <p class="pq-lead" style="margin-top: 16px">Todavía no tienes citas reservadas.</p>
 <?php else: ?>

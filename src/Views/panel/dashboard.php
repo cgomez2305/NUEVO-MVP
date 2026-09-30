@@ -43,6 +43,12 @@
   <a href="<?= e(base_url('/panel/copiloto')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 20px">Ver a quién escribirle hoy →</a>
 <?php endif; ?>
 
+<?php if ($listaEsperaCount > 0): ?>
+  <a href="<?= e(base_url('/panel/citas')) ?>" class="pq-btn pq-btn-oscuro" style="margin-top: 12px">
+    <?= $listaEsperaCount === 1 ? '1 persona espera un cupo' : "{$listaEsperaCount} personas esperan un cupo" ?> →
+  </a>
+<?php endif; ?>
+
 <?php if ($esReservas): ?>
 <div style="margin-top: 28px">
   <span style="font-size: 13px; font-weight: 600; color: var(--gris-texto)">Próximas citas</span>

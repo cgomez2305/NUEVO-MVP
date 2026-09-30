@@ -8,6 +8,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\ListaEspera;
 use App\Models\Sede;
 use App\Models\Pedido;
 use App\Models\Producto;
@@ -123,6 +124,7 @@ class TiendaController
             'bloqueada'         => $bloqueada,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
+            'ok'                => flash_obtener('ok'),
         ], 'tienda');
     }
 
@@ -230,6 +232,51 @@ class TiendaController
             'cita'           => $cita,
             'enlaceWhatsapp' => $enlaceWhatsapp,
         ], 'tienda');
+    }
+
+    public function unirseListaEspera(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+        if ($negocio['tipo_negocio'] !== 'reservas') {
+            abortar404();
+        }
+
+        $servicioId = (int) ($_POST['servicio_id'] ?? 0);
+        $servicio = Servicio::buscar($servicioId, (int) $negocio['id']);
+        $fecha = (string) ($_POST['fecha'] ?? '');
+
+        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
+
+        if (!csrf_verificar() || $servicio === null) {
+            redirigir('/t/' . $negocio['slug']);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
+            flash_set('error', 'Elige una fecha válida.');
+            redirigir('/t/' . $negocio['slug'] . '/reservar/' . $servicioId);
+        }
+
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $telefono = preg_replace('/\D+/', '', (string) ($_POST['telefono'] ?? '')) ?? '';
+        $autorizo = isset($_POST['autorizo_datos']);
+
+        if ($nombre === '' || $telefono === '' || !$autorizo) {
+            flash_set('error', 'Escribe tu nombre, tu WhatsApp y autoriza el tratamiento de tus datos para continuar.');
+            redirigir($volverAReservar);
+        }
+
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        ListaEspera::crear((int) $negocio['id'], $clienteId, (int) $servicio['id'], $servicio['nombre'], $fecha);
+
+        WebPush::notificarSede(
+            (int) $negocio['id'],
+            'Alguien quiere un cupo',
+            "{$nombre} quiere «{$servicio['nombre']}» el " . date('d M', strtotime($fecha)),
+            '/panel/citas'
+        );
+
+        flash_set('ok', 'Listo, ' . $nombre . '. Te avisamos por WhatsApp si se libera un cupo ese día.');
+        redirigir($volverAReservar);
     }
 
     public function agregarAlCarrito(array $parametros): void

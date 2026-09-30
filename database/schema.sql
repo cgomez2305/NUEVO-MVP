@@ -236,6 +236,24 @@ CREATE TABLE IF NOT EXISTS citas (
   UNIQUE KEY uniq_citas_token (token_gestion)
 ) ENGINE=InnoDB;
 
+-- Cuando un día no tiene horarios libres, el cliente puede anotarse aquí en
+-- vez de irse sin más: el dueño ve quién quiere ese día y le puede avisar a
+-- mano si se libera un cupo (alguien cancela, se agrega un horario, etc.).
+CREATE TABLE IF NOT EXISTS lista_espera (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id         INT UNSIGNED NOT NULL,
+  cliente_id      INT UNSIGNED NOT NULL,
+  servicio_id     INT UNSIGNED DEFAULT NULL,
+  nombre_servicio VARCHAR(120) NOT NULL,
+  fecha           DATE NOT NULL,
+  estado          ENUM('pendiente','contactado') NOT NULL DEFAULT 'pendiente',
+  creado_en       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
+  INDEX idx_lista_espera_sede_fecha (sede_id, fecha)
+) ENGINE=InnoDB;
+
 -- Quién del equipo de Veci puede entrar al panel interno (/admin): ver
 -- todos los negocios, suspenderlos y generar enlaces de recuperación de
 -- contraseña para soporte. Completamente aparte de `usuarios`: no hay
