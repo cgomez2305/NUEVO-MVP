@@ -8,7 +8,32 @@ use App\Database;
 
 class Pedido
 {
-    public const ESTADOS = ['pendiente', 'pagado', 'en_cocina', 'en_camino', 'entregado', 'cancelado'];
+    public const ESTADOS = ['pendiente', 'pagado', 'en_cocina', 'listo', 'en_camino', 'entregado', 'cancelado'];
+
+    /**
+     * A qué estado pasa un pedido al pulsar el botón de acción principal, y
+     * cómo se llama ese botón. No es fijo: desde "listo", un domicilio pasa
+     * por "en camino", pero recoger/mesa cierran directo (no tiene sentido
+     * un "en camino" para algo que el cliente recoge en el local). Vuelve
+     * null cuando el pedido ya está en un estado final (entregado/cancelado)
+     * o en un estado que solo se cambia a mano (pendiente/pagado).
+     *
+     * @return array{estado:string, texto:string}|null
+     */
+    public static function siguientePaso(array $pedido): ?array
+    {
+        return match ($pedido['estado']) {
+            'pendiente', 'pagado' => ['estado' => 'en_cocina', 'texto' => 'Iniciar preparación'],
+            'en_cocina' => ['estado' => 'listo', 'texto' => 'Marcar listo'],
+            'listo' => match ($pedido['tipo_entrega']) {
+                'domicilio' => ['estado' => 'en_camino', 'texto' => 'Enviar · En camino'],
+                'mesa' => ['estado' => 'entregado', 'texto' => 'Marcar servido'],
+                default => ['estado' => 'entregado', 'texto' => 'Entregar'],
+            },
+            'en_camino' => ['estado' => 'entregado', 'texto' => 'Marcar entregado'],
+            default => null,
+        };
+    }
 
     /**
      * @param array<int, array{producto_id:int, nombre:string, precio:int, cantidad:int}> $items

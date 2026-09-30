@@ -51,6 +51,7 @@ $router->get('/panel', [$panel, 'dashboard']);
 $router->get('/panel/pedidos', [$panel, 'pedidos']);
 $router->post('/panel/pedidos/{id}/estado', [$panel, 'cambiarEstadoPedido']);
 $router->get('/panel/pedidos/exportar.csv', [$panel, 'exportarPedidosCsv']);
+$router->get('/panel/pedidos/{id}', [$panel, 'detallePedido']);
 $router->get('/panel/productos', [$panel, 'productos']);
 $router->post('/panel/productos', [$panel, 'crearProducto']);
 $router->post('/panel/productos/{id}/actualizar', [$panel, 'actualizarProducto']);

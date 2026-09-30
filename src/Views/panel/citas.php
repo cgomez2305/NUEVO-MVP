@@ -48,7 +48,8 @@
       <?php
       $citaSinConfirmar = $cita['estado'] === 'pendiente';
       $minutosEspera = minutos_desde((string) $cita['creado_en']);
-      $demorada = $citaSinConfirmar && $minutosEspera >= 15;
+      $nivel = nivel_espera($minutosEspera, 15);
+      $demorada = $citaSinConfirmar && $nivel === 'prioridad';
       ?>
       <div class="pq-card-borde<?= $demorada ? ' pq-card-demorado' : '' ?>">
         <div style="display: flex; align-items: center; gap: 12px">
@@ -63,9 +64,9 @@
             </span>
           </div>
           <div class="pq-stack" style="align-items: flex-end; gap: 3px">
-            <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $cita['precio']) ?></span>
+            <span class="pq-mono pq-precio-suave" style="font-size: 14px"><?= pesos((int) $cita['precio']) ?></span>
             <?php if ($citaSinConfirmar): ?>
-              <span class="pq-tiempo-espera">
+              <span class="pq-tiempo-espera pq-tiempo-<?= e($nivel) ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
                 <?= e(texto_espera($minutosEspera)) ?>
               </span>
@@ -87,16 +88,28 @@
           </div>
         <?php endif; ?>
 
-        <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/estado')) ?>"
-              style="display: flex; gap: 8px; margin-top: 12px">
-          <?= csrf_campo() ?>
-          <select class="pq-select" name="estado" style="flex-grow: 1">
-            <?php foreach (['pendiente', 'confirmada', 'completada', 'cancelada'] as $estado): ?>
-              <option value="<?= e($estado) ?>" <?= $cita['estado'] === $estado ? 'selected' : '' ?>><?= e(ucfirst($estado)) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Actualizar</button>
-        </form>
+        <?php $siguientePasoCita = \App\Models\Cita::siguientePaso($cita); ?>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap">
+          <?php if ($siguientePasoCita !== null): ?>
+            <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/estado')) ?>">
+              <?= csrf_campo() ?>
+              <input type="hidden" name="estado" value="<?= e($siguientePasoCita['estado']) ?>">
+              <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguientePasoCita['texto']) ?> →</button>
+            </form>
+          <?php endif; ?>
+          <details>
+            <summary class="pq-mono" style="font-size: 11px; color: var(--gris-suave); cursor: pointer">cambiar estado manualmente</summary>
+            <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/estado')) ?>" style="display: flex; gap: 8px; margin-top: 8px">
+              <?= csrf_campo() ?>
+              <select class="pq-select" name="estado" style="flex-grow: 1">
+                <?php foreach (['pendiente', 'confirmada', 'completada', 'cancelada'] as $estado): ?>
+                  <option value="<?= e($estado) ?>" <?= $cita['estado'] === $estado ? 'selected' : '' ?>><?= e(ucfirst($estado)) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Actualizar</button>
+            </form>
+          </details>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>

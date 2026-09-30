@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
   direccion     VARCHAR(255) DEFAULT NULL,
   mesa          VARCHAR(20)  DEFAULT NULL,
   notas         VARCHAR(255) DEFAULT NULL,
-  estado        ENUM('pendiente','pagado','en_cocina','en_camino','entregado','cancelado')
+  estado        ENUM('pendiente','pagado','en_cocina','listo','en_camino','entregado','cancelado')
                 NOT NULL DEFAULT 'pendiente',
   creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,

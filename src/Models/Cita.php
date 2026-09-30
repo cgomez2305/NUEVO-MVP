@@ -189,6 +189,22 @@ class Cita
         $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
     }
 
+    /**
+     * A qué estado pasa una cita al pulsar el botón de acción principal, y
+     * cómo se llama ese botón. Null cuando ya está en un estado final
+     * (completada/cancelada), donde solo queda el cambio manual.
+     *
+     * @return array{estado:string, texto:string}|null
+     */
+    public static function siguientePaso(array $cita): ?array
+    {
+        return match ($cita['estado']) {
+            'pendiente' => ['estado' => 'confirmada', 'texto' => 'Confirmar cita'],
+            'confirmada' => ['estado' => 'completada', 'texto' => 'Marcar completada'],
+            default => null,
+        };
+    }
+
     /** Citas creadas después de cierto ID, para el polling de notificaciones del panel. */
     public static function nuevasDesde(int $sedeId, int $desdeId): array
     {

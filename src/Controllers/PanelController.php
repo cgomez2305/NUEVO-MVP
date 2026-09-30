@@ -65,8 +65,7 @@ class PanelController
         }
 
         $filtro = (string) ($_GET['estado'] ?? '');
-        $estadosValidos = ['pendiente', 'pagado', 'en_cocina', 'en_camino', 'entregado', 'cancelado'];
-        if (!in_array($filtro, $estadosValidos, true)) {
+        if (!in_array($filtro, Pedido::ESTADOS, true)) {
             $filtro = '';
         }
         $pedidos = $filtro === '' ? $todos : array_values(array_filter($todos, fn ($p) => $p['estado'] === $filtro));
@@ -86,13 +85,34 @@ class PanelController
     public function cambiarEstadoPedido(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $volverPost = $_POST['volver'] ?? null;
+        $volver = is_string($volverPost) && str_starts_with($volverPost, '/panel/pedidos') ? $volverPost : '/panel/pedidos';
 
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
             Pedido::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
         }
 
-        redirigir('/panel/pedidos');
+        redirigir($volver);
+    }
+
+    /** Detalle completo de un pedido: ítems, entrega, notas y acciones menos frecuentes. */
+    public function detallePedido(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $pedido = Pedido::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($pedido === null) {
+            redirigir('/panel/pedidos');
+        }
+
+        ver('panel/pedido_detalle', [
+            'titulo'  => "Pedido #{$pedido['id']} · Veci",
+            'activo'  => 'pedidos',
+            'negocio' => $negocio,
+            'pedido'  => $pedido,
+            'items'   => Pedido::items((int) $pedido['id']),
+            'siguientePaso' => Pedido::siguientePaso($pedido),
+        ], 'panel');
     }
 
     public function exportarPedidosCsv(array $parametros): void

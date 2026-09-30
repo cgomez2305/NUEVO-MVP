@@ -58,7 +58,7 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($proximasCitas as $cita): ?>
-        <?php $citaDemorada = $cita['estado'] === 'pendiente' && minutos_desde((string) $cita['creado_en']) >= 15; ?>
+        <?php $citaDemorada = $cita['estado'] === 'pendiente' && nivel_espera(minutos_desde((string) $cita['creado_en']), 15) === 'prioridad'; ?>
         <div class="pq-card-borde<?= $citaDemorada ? ' pq-card-demorado' : '' ?>" style="display: flex; align-items: center; gap: 12px">
           <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
@@ -66,7 +66,7 @@
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?></span>
           </div>
           <div class="pq-stack" style="align-items: flex-end">
-            <span class="pq-mono" style="font-size: 13px"><?= pesos((int) $cita['precio']) ?></span>
+            <span class="pq-mono pq-precio-suave" style="font-size: 13px"><?= pesos((int) $cita['precio']) ?></span>
             <span class="pq-chip <?= e(chip_estado($cita['estado'])) ?>"><?= e($cita['estado']) ?></span>
           </div>
         </div>
@@ -84,7 +84,7 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($ultimosPedidos as $pedido): ?>
-        <?php $pedidoDemorado = !in_array($pedido['estado'], ['entregado', 'cancelado'], true) && minutos_desde((string) $pedido['creado_en']) >= 15; ?>
+        <?php $pedidoDemorado = !in_array($pedido['estado'], ['entregado', 'cancelado'], true) && nivel_espera(minutos_desde((string) $pedido['creado_en']), 20) === 'prioridad'; ?>
         <div class="pq-card-borde<?= $pedidoDemorado ? ' pq-card-demorado' : '' ?>" style="display: flex; align-items: center; gap: 12px">
           <div class="pq-avatar pq-avatar-chico" style="background: var(--caja)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
@@ -92,8 +92,8 @@
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?></span>
           </div>
           <div class="pq-stack" style="align-items: flex-end">
-            <span class="pq-mono" style="font-size: 13px"><?= pesos((int) $pedido['total']) ?></span>
-            <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($pedido['estado']) ?></span>
+            <span class="pq-mono pq-precio-suave" style="font-size: 13px"><?= pesos((int) $pedido['total']) ?></span>
+            <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e(etiqueta_estado_pedido($pedido['estado'])) ?></span>
           </div>
         </div>
       <?php endforeach; ?>

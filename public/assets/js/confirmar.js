@@ -10,6 +10,7 @@
  *   <form data-confirmar="¿Seguro?">              en vez de onsubmit="return confirm(...)"
  *   <select data-autoenviar>                       en vez de onchange="this.form.submit()"
  *   <input data-seleccionar-al-tocar>              en vez de onclick="this.select()"
+ *   <button data-imprimir>                         en vez de onclick="window.print()"
  */
 (function () {
   'use strict';
@@ -31,6 +32,9 @@
   document.addEventListener('click', function (evento) {
     if (evento.target.matches && evento.target.matches('[data-seleccionar-al-tocar]')) {
       evento.target.select();
+    }
+    if (evento.target.closest && evento.target.closest('[data-imprimir]')) {
+      window.print();
     }
   });
 })();

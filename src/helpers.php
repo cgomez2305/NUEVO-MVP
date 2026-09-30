@@ -157,6 +157,21 @@ function chip_estado(string $estado): string
     };
 }
 
+/** Texto legible de un estado de pedidos.estado, para no repetir el mapa en cada plantilla. */
+function etiqueta_estado_pedido(string $estado): string
+{
+    return match ($estado) {
+        'pendiente' => 'Pendiente',
+        'pagado' => 'Pagado',
+        'en_cocina' => 'En cocina',
+        'listo' => 'Listo',
+        'en_camino' => 'En camino',
+        'entregado' => 'Entregado',
+        'cancelado' => 'Cancelado',
+        default => ucfirst(str_replace('_', ' ', $estado)),
+    };
+}
+
 /** Minutos transcurridos desde una fecha DATETIME hasta ahora. */
 function minutos_desde(string $fechaHora): int
 {
@@ -171,4 +186,22 @@ function texto_espera(int $minutos): string
     }
     $horas = intdiv($minutos, 60);
     return $horas . ($horas === 1 ? ' hora esperando' : ' horas esperando');
+}
+
+/**
+ * Nivel de urgencia de una espera, relativo a un tiempo objetivo (no a un
+ * número de minutos fijo): una cafetería que debería resolver en 5 minutos
+ * y un restaurante que se toma 30 usan la misma lógica de semáforo.
+ * 0-60% del objetivo → neutral, 60-100% → atención, >100% → prioridad.
+ */
+function nivel_espera(int $minutos, int $objetivoMin): string
+{
+    $pct = $minutos / max(1, $objetivoMin);
+    if ($pct > 1) {
+        return 'prioridad';
+    }
+    if ($pct >= 0.6) {
+        return 'atencion';
+    }
+    return 'neutral';
 }

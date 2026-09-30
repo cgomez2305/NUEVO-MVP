@@ -389,18 +389,36 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 }
 
 /* Pedido sin resolver o cita sin confirmar que lleva demasiado tiempo
-   esperando: se resalta en rojo para que no se pierda entre los demás. */
+   esperando: se resalta en rojo para que no se pierda entre los demás.
+   El nivel (neutral/atención/prioridad) lo decide nivel_espera() en
+   helpers.php, relativo a un tiempo objetivo — no un minuto fijo. */
 .pq-card-demorado { border-color: var(--aji); background: rgba(232, 69, 44, .05); }
 .pq-tiempo-espera {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gris-texto);
   white-space: nowrap;
 }
 .pq-tiempo-espera svg { width: 12px; height: 12px; flex-shrink: 0; }
-.pq-card-demorado .pq-tiempo-espera { color: var(--aji); font-weight: 600; }
+.pq-tiempo-espera.pq-tiempo-atencion { color: #8a5a00; font-weight: 600; }
+.pq-tiempo-espera.pq-tiempo-prioridad,
+.pq-card-demorado .pq-tiempo-espera { color: var(--aji); font-weight: 700; }
+
+/* El precio nunca debería pesar visualmente más que el cliente o el
+   estado: es un dato de referencia, no la información que hay que leer
+   primero en una tarjeta de pedido/cita. */
+.pq-precio-suave { font-weight: 600; color: var(--gris-texto); }
+
+/* Nota del cliente en una tarjeta: se trunca a 2 líneas por CSS (sin JS)
+   para que una nota larga no desarme el tamaño de la tarjeta. */
+.pq-nota-corta {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* Tablero de pedidos por etapa (solo pantallas grandes: en el celular una
    grilla de 4 columnas no cabe, así que ahí se queda la lista con filtros
@@ -430,7 +448,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--gris-texto);
   padding: 4px 4px 10px;
@@ -455,6 +473,19 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   gap: 4px;
   box-shadow: var(--sombra-suave);
 }
+/* El encabezado (#id · cliente) de cada tarjeta lleva al detalle del
+   pedido; el resto de la tarjeta queda libre para el botón de acción,
+   que nunca debe competir con un enlace de navegación. */
+.pq-kanban-card-link {
+  color: inherit;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pq-kanban-card-link:hover { color: var(--sello); text-decoration: underline; }
 
 .pq-paso {
   display: flex;
