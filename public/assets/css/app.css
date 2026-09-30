@@ -86,6 +86,7 @@ button { font-family: inherit; }
   background: var(--tiquete);
 }
 
+.pq-topbar-brand-fila { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .pq-topbar-brand {
   font-family: 'Instrument Serif', serif;
   font-size: 21px;
@@ -94,8 +95,30 @@ button { font-family: inherit; }
   color: var(--carbon);
   display: inline-flex;
   align-items: center;
+  min-width: 0;
 }
 .pq-topbar-brand img { height: 24px; width: auto; }
+.pq-topbar-brand-isotipo { display: none; border-radius: 7px; }
+
+/* Botón para colapsar/expandir el sidebar a mano (solo tiene sentido
+   ≥960px, donde existe un sidebar que colapsar — en celular no se muestra). */
+.pq-sidebar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gris-suave);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.pq-sidebar-toggle:hover { background: var(--recibo); color: var(--carbon); }
+.pq-sidebar-toggle:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-sidebar-toggle svg { width: 16px; height: 16px; transition: transform .18s ease; }
 
 .pq-topbar-links {
   display: flex;
@@ -109,6 +132,7 @@ button { font-family: inherit; }
 }
 .pq-topbar-links::-webkit-scrollbar { display: none; }
 .pq-topbar-links a {
+  position: relative;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
   text-decoration: none;
@@ -124,12 +148,31 @@ button { font-family: inherit; }
 }
 .pq-topbar-links a svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .8; }
 .pq-topbar-links a:hover { background: var(--recibo); color: var(--carbon); }
+/* Estado activo: tinte + texto en negrita + un acento sólido a la
+   izquierda (el detalle que lo hace fácil de detectar de un vistazo, no
+   solo "un poco más azul que el resto"). El acento vive en ::before para
+   no pelear con el icono/texto del link ni desplazar nada en hover. */
 .pq-topbar-links a.activo { color: var(--sello); background: var(--tinte-sello); font-weight: 600; }
 .pq-topbar-links a.activo svg { opacity: 1; }
+.pq-topbar-links a.activo::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--sello);
+}
+.pq-topbar-links a:focus-visible {
+  outline: 2px solid var(--sello);
+  outline-offset: 2px;
+}
 /* Etiquetas de grupo (Operación / Crecimiento / Configuración): solo
    tienen sentido en el sidebar vertical de escritorio — en el celular la
    nav es una tira horizontal de chips y una etiqueta ahí solo estorbaría. */
 .pq-nav-grupo { display: none; }
+.pq-nav-separador { display: none; }
 
 .pq-content { padding: 24px 20px 40px; flex-grow: 1; }
 .pq-content-tienda { padding: 0 20px 120px; flex-grow: 1; }
@@ -200,6 +243,10 @@ button { font-family: inherit; }
 }
 .pq-bottomnav-mas-panel a svg { width: 16px; height: 16px; opacity: .75; flex-shrink: 0; }
 .pq-bottomnav-mas-panel a:hover, .pq-bottomnav-mas-panel a.activo { background: var(--recibo); color: var(--carbon); }
+.pq-bottomnav a:focus-visible, .pq-bottomnav summary:focus-visible, .pq-bottomnav-mas-panel a:focus-visible {
+  outline: 2px solid var(--sello);
+  outline-offset: 2px;
+}
 
 @media (max-width: 959px) {
   .pq-topbar-links { display: none; }
@@ -1109,6 +1156,14 @@ a.pq-stat:hover { border-color: var(--sello); }
     border-radius: 20px;
   }
 
+  /* Sin overflow-y:auto a propósito, aunque max-height podría pedirlo si el
+     menú creciera mucho: sería la MISMA trampa que ya documentamos arriba
+     con .pq-shell (overflow en cualquier eje activa el otro eje también,
+     per spec), y aquí cortaría los tooltips del modo colapsado, que
+     necesitan salirse del sidebar hacia la derecha. Con el menú actual (un
+     puñado de items) nunca se acerca a max-height, así que el costo es
+     puramente teórico; si algún día el menú crece tanto que no cabe, mejor
+     revisar ESE problema entonces que romper los tooltips hoy. */
   .pq-shell:has(.pq-topbar-links) > .pq-topbar {
     flex: 0 0 236px;
     flex-direction: column;
@@ -1124,10 +1179,16 @@ a.pq-stat:hover { border-color: var(--sello); }
     top: 32px;
     align-self: flex-start;
     max-height: calc(100vh - 64px);
-    overflow-y: auto;
   }
-  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand { padding: 0 6px 6px; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { padding: 6px 8px 14px 6px; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 30px; }
+  .pq-shell:has(.pq-topbar-links) .pq-sidebar-toggle { display: inline-flex; }
+  .pq-shell:has(.pq-topbar-links) .pq-nav-separador {
+    display: block;
+    height: 1px;
+    margin: 12px 12px 10px;
+    background: var(--borde);
+  }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links {
     flex-direction: column;
     align-items: stretch;
@@ -1174,6 +1235,72 @@ a.pq-stat:hover { border-color: var(--sello); }
   .pq-shell:has(.pq-topbar-links) .pq-shell-main > div[style*="padding: 0 20px 24px"] { padding-left: 32px; padding-right: 32px; padding-top: 8px; }
 
   .pq-stats { max-width: 480px; }
+}
+
+/* ---------- sidebar colapsado (solo iconos) ---------- */
+/* Dos disparadores para el mismo resultado visual: la banda tablet lo aplica
+   sola (salvo que la persona lo haya expandido a mano) y el botón de
+   colapso lo fuerza a cualquier ancho ≥960px. Se repite el bloque de
+   declaraciones en vez de intentar compartirlo entre dos @media distintos
+   (uno condicional al ancho Y al atributo, otro solo al atributo) — CSS
+   plano no tiene una forma limpia de combinarlos sin JS. */
+@media (min-width: 960px) and (max-width: 1279px) {
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) > .pq-topbar { flex-basis: 76px; padding-left: 12px; padding-right: 12px; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-completo { display: none; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-isotipo { display: block; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { flex-direction: column; gap: 10px; padding: 4px 0 14px; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-nav-grupo,
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-nav-etiqueta { display: none; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-links a { justify-content: center; padding: 11px; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-sidebar-toggle svg { transform: rotate(180deg); }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-links a[data-tooltip]:hover::after,
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-links a[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--carbon);
+    color: var(--tiquete);
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: var(--sombra-media);
+    z-index: 30;
+    pointer-events: none;
+  }
+}
+@media (min-width: 960px) {
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) > .pq-topbar { flex-basis: 76px; padding-left: 12px; padding-right: 12px; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-completo { display: none; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-isotipo { display: block; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { flex-direction: column; gap: 10px; padding: 4px 0 14px; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-nav-grupo,
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-nav-etiqueta { display: none; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-links a { justify-content: center; padding: 11px; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-sidebar-toggle svg { transform: rotate(180deg); }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-links a[data-tooltip]:hover::after,
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-links a[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--carbon);
+    color: var(--tiquete);
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: var(--sombra-media);
+    z-index: 30;
+    pointer-events: none;
+  }
 }
 
 /* ---------- tienda pública en escritorio: catálogo de verdad, no una columna angosta ---------- */

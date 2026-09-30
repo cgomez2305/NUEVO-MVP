@@ -58,7 +58,10 @@ $navConfiguracion = [['sedes', 'Sedes', base_url('/panel/sedes')]];
 if ($esDueno) {
     $navConfiguracion[] = ['colaboradores', 'Colaboradores', base_url('/panel/colaboradores')];
 }
-$navConfiguracion[] = ['cuenta', 'Mi cuenta', base_url('/panel/cuenta')];
+// "Mi cuenta" no es un módulo de negocio: se separa del resto (divisor propio,
+// ver el <span class="pq-nav-separador"> antes de pintarla) en vez de mezclarse
+// con Sedes/Colaboradores dentro de Configuración.
+$navCuenta = [['cuenta', 'Mi cuenta', base_url('/panel/cuenta')]];
 
 $tercerTabMovil = $esDueno
     ? ['copiloto', 'Copiloto', base_url('/panel/copiloto')]
@@ -70,45 +73,67 @@ $navBottomPrincipal = [
 ];
 $clavesBottomPrincipal = array_column($navBottomPrincipal, 0);
 $navMas = array_values(array_filter(
-    array_merge($navOperacion, $navCrecimiento, $navConfiguracion),
+    array_merge($navOperacion, $navCrecimiento, $navConfiguracion, $navCuenta),
     fn ($item) => !in_array($item[0], $clavesBottomPrincipal, true)
 ));
+
+// Un solo renderer de link para el sidebar de escritorio: así aria-current,
+// el tooltip del modo colapsado (data-tooltip, CSS puro, sin JS) y la
+// etiqueta envuelta en <span> —lo que se oculta al colapsar— salen
+// idénticos en los 4 grupos en vez de repetirse a mano cuatro veces.
+$pqLinkSidebar = static function (string $clave, string $etiqueta, string $href) use ($pqIcono, $activo): string {
+    $esActivo = ($activo ?? '') === $clave;
+    return '<a href="' . e($href) . '" class="' . ($esActivo ? 'activo' : '') . '" data-tooltip="' . e($etiqueta) . '"'
+        . ($esActivo ? ' aria-current="page"' : '') . '>' . $pqIcono($clave) . '<span class="pq-nav-etiqueta">' . e($etiqueta) . '</span></a>';
+};
 ?>
 <body class="pq-panel-bg" data-negocio-id="<?= (int) $negocio['id'] ?>" data-es-reservas="<?= ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas' ? '1' : '0' ?>">
+  <script src="<?= e(base_url('assets/js/panel-sidebar-bootstrap.js')) ?>"></script>
   <div class="pq-shell">
     <div class="pq-topbar">
-      <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">
-        <img src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
-      </a>
+      <div class="pq-topbar-brand-fila">
+        <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">
+          <img class="pq-topbar-brand-completo" src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
+          <img class="pq-topbar-brand-isotipo" src="<?= e(base_url('assets/img/icon-192.png')) ?>" alt="Veci" width="28" height="28">
+        </a>
+        <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+      </div>
       <nav class="pq-topbar-links">
         <span class="pq-nav-grupo">Operación</span>
         <?php foreach ($navOperacion as [$clave, $etiqueta, $href]): ?>
-          <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+          <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
         <?php endforeach; ?>
 
         <?php if ($navCrecimiento !== []): ?>
           <span class="pq-nav-grupo">Crecimiento</span>
           <?php foreach ($navCrecimiento as [$clave, $etiqueta, $href]): ?>
-            <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+            <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
           <?php endforeach; ?>
         <?php endif; ?>
 
         <span class="pq-nav-grupo">Configuración</span>
         <?php foreach ($navConfiguracion as [$clave, $etiqueta, $href]): ?>
-          <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+          <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
+        <?php endforeach; ?>
+
+        <span class="pq-nav-separador" role="separator"></span>
+        <?php foreach ($navCuenta as [$clave, $etiqueta, $href]): ?>
+          <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
         <?php endforeach; ?>
       </nav>
     </div>
 
     <nav class="pq-bottomnav">
       <?php foreach ($navBottomPrincipal as [$clave, $etiqueta, $href]): ?>
-        <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><span><?= e($etiqueta) ?></span></a>
+        <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"<?= ($activo ?? '') === $clave ? ' aria-current="page"' : '' ?>><?= $pqIcono($clave) ?><span><?= e($etiqueta) ?></span></a>
       <?php endforeach; ?>
       <details class="pq-bottomnav-mas">
         <summary class="<?= in_array($activo ?? '', array_column($navMas, 0), true) ? 'activo' : '' ?>"><?= $pqIcono('mas') ?><span>Más</span></summary>
         <div class="pq-bottomnav-mas-panel">
           <?php foreach ($navMas as [$clave, $etiqueta, $href]): ?>
-            <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+            <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"<?= ($activo ?? '') === $clave ? ' aria-current="page"' : '' ?>><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
           <?php endforeach; ?>
         </div>
       </details>
@@ -142,6 +167,7 @@ $navMas = array_values(array_filter(
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/interacciones.js')) ?>" defer></script>
+  <script src="<?= e(base_url('assets/js/panel-sidebar.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-notificaciones.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-push.js')) ?>" defer></script>
 </body>
