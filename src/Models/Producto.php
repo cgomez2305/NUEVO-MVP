@@ -120,6 +120,92 @@ class Producto
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
+    /**
+     * Distinto de "agotado": esto lo saca por completo de la tienda pública
+     * (TiendaController ya filtra por activo=1), para cuando el dueño
+     * quiere preparar o pausar un producto sin que el cliente lo vea
+     * todavía. La columna ya existía en el esquema desde el principio —
+     * solo le faltaba un botón en el panel para usarla.
+     */
+    public static function alternarActivo(int $id, int $sedeId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET activo = NOT activo WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    /** A diferencia de alternar*, estos fijan el valor exacto — para cuando vienen como checkbox de un formulario, no de un botón de "cambiar". */
+    public static function establecerAgotado(int $id, int $sedeId, bool $agotado): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET agotado = :agotado WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['agotado' => $agotado ? 1 : 0, 'id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    public static function establecerActivo(int $id, int $sedeId, bool $activo): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET activo = :activo WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['activo' => $activo ? 1 : 0, 'id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    public static function eliminarImagen(int $id, int $sedeId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET imagen = NULL WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    /**
+     * Catálogo del panel: búsqueda + filtro de categoría/disponibilidad +
+     * orden. A diferencia del historial de pedidos, un catálogo de
+     * productos rara vez pasa de unos pocos cientos de filas, así que no
+     * hace falta paginar — pero sí conviene que el filtrado sea en SQL,
+     * no trayendo todo y recortando en PHP.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function buscarPorSede(
+        int $sedeId,
+        string $busqueda = '',
+        string $categoria = '',
+        string $disponibilidad = '',
+        string $orden = 'nombre'
+    ): array {
+        $condiciones = ['sede_id = :sede_id'];
+        $params = ['sede_id' => $sedeId];
+
+        if ($busqueda !== '') {
+            $condiciones[] = 'nombre LIKE :busqueda';
+            $params['busqueda'] = '%' . $busqueda . '%';
+        }
+        if ($categoria !== '') {
+            $condiciones[] = 'categoria = :categoria';
+            $params['categoria'] = $categoria;
+        }
+        if ($disponibilidad === 'disponibles') {
+            $condiciones[] = 'agotado = 0';
+        } elseif ($disponibilidad === 'agotados') {
+            $condiciones[] = 'agotado = 1';
+        }
+
+        $ordenSql = match ($orden) {
+            'precio' => 'precio ASC',
+            'recientes' => 'creado_en DESC',
+            default => 'nombre ASC',
+        };
+
+        $stmt = Database::conexion()->prepare(
+            'SELECT * FROM productos WHERE ' . implode(' AND ', $condiciones) . ' ORDER BY ' . $ordenSql
+        );
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
     public static function contarPorSede(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(

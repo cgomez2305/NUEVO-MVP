@@ -103,4 +103,21 @@
   }
   document.addEventListener('change', actualizarCamposCondicionales);
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
+
+  // ---------------------------------------------------------------------
+  // Precio con puntos de miles mientras se escribe (input data-precio). Es
+  // puramente visual: el servidor ya limpia cualquier caracter que no sea
+  // dígito (ver dinero_desde_texto() en helpers.php), así que si el
+  // navegador no corre este script el formulario sigue funcionando igual,
+  // solo sin el separador en pantalla.
+  // ---------------------------------------------------------------------
+  document.addEventListener('input', function (evento) {
+    if (!evento.target.matches || !evento.target.matches('[data-precio]')) return;
+    var campo = evento.target;
+    var soloDigitos = campo.value.replace(/\D+/g, '');
+    var cursorDesdeElFinal = campo.value.length - campo.selectionStart;
+    campo.value = soloDigitos === '' ? '' : soloDigitos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    var nuevaPosicion = Math.max(0, campo.value.length - cursorDesdeElFinal);
+    campo.setSelectionRange(nuevaPosicion, nuevaPosicion);
+  });
 })();

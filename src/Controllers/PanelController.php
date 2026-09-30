@@ -194,15 +194,78 @@ class PanelController
     public function productos(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $sedeId = (int) $negocio['id'];
+
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $categoria = trim((string) ($_GET['categoria'] ?? ''));
+        $disponibilidad = (string) ($_GET['disponibilidad'] ?? '');
+        if (!in_array($disponibilidad, ['disponibles', 'agotados'], true)) {
+            $disponibilidad = '';
+        }
+        $orden = (string) ($_GET['orden'] ?? 'nombre');
+        if (!in_array($orden, ['nombre', 'precio', 'recientes'], true)) {
+            $orden = 'nombre';
+        }
+
+        $productos = Producto::buscarPorSede($sedeId, $busqueda, $categoria, $disponibilidad, $orden);
+        $porCategoria = [];
+        foreach ($productos as $producto) {
+            $porCategoria[$producto['categoria']][] = $producto;
+        }
 
         ver('panel/productos', [
-            'titulo'     => 'Tu menú · Veci',
+            'titulo'         => 'Tu menú · Veci',
+            'activo'         => 'productos',
+            'negocio'        => $negocio,
+            'porCategoria'   => $porCategoria,
+            'totalProductos' => Producto::contarPorSede($sedeId),
+            'categorias'     => Producto::categoriasPorSede($sedeId),
+            'busqueda'       => $busqueda,
+            'filtroCategoria' => $categoria,
+            'disponibilidad' => $disponibilidad,
+            'orden'          => $orden,
+            'ok'             => flash_obtener('ok'),
+        ], 'panel');
+    }
+
+    public function nuevoProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/producto_form', [
+            'titulo'     => 'Nuevo producto · Veci',
             'activo'     => 'productos',
             'negocio'    => $negocio,
-            'productos'  => Producto::listarPorSede((int) $negocio['id']),
+            'producto'   => null,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
-            'volver'     => '/panel/productos',
         ], 'panel');
+    }
+
+    public function editarProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $producto = Producto::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($producto === null) {
+            redirigir('/panel/productos');
+        }
+
+        ver('panel/producto_form', [
+            'titulo'     => "Editar {$producto['nombre']} · Veci",
+            'activo'     => 'productos',
+            'negocio'    => $negocio,
+            'producto'   => $producto,
+            'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
+        ], 'panel');
+    }
+
+    /** El <select> de categoría manda '__otra__' cuando el dueño escribió una categoría nueva en vez de elegir una existente. */
+    private function categoriaDelFormulario(): string
+    {
+        $categoria = trim((string) ($_POST['categoria'] ?? ''));
+        if ($categoria === '__otra__') {
+            $categoria = trim((string) ($_POST['categoria_otra'] ?? ''));
+        }
+        return $categoria !== '' ? mb_substr($categoria, 0, 60) : 'General';
     }
 
     public function crearProducto(array $parametros): void
@@ -215,8 +278,8 @@ class PanelController
         }
 
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
-        $precio = (int) ($_POST['precio'] ?? 0);
-        $categoria = trim((string) ($_POST['categoria'] ?? '')) ?: 'General';
+        $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
+        $categoria = $this->categoriaDelFormulario();
         $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
 
         if ($nombre !== '' && $precio > 0) {
@@ -225,6 +288,13 @@ class PanelController
             if ($imagen !== null) {
                 Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
             }
+            if (!isset($_POST['disponible'])) {
+                Producto::establecerAgotado($id, (int) $negocio['id'], true);
+            }
+            if (!isset($_POST['visible'])) {
+                Producto::establecerActivo($id, (int) $negocio['id'], false);
+            }
+            flash_set('ok', "«{$nombre}» se agregó a tu catálogo.");
         }
 
         redirigir($volver);
@@ -240,17 +310,24 @@ class PanelController
         }
 
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
-        $precio = (int) ($_POST['precio'] ?? 0);
-        $categoria = trim((string) ($_POST['categoria'] ?? '')) ?: 'General';
+        $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
+        $categoria = $this->categoriaDelFormulario();
         $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
 
         if ($nombre !== '' && $precio > 0) {
             $id = (int) $parametros['id'];
-            Producto::actualizar($id, (int) $negocio['id'], $nombre, $precio, $categoria, $descripcion);
+            $sedeId = (int) $negocio['id'];
+            Producto::actualizar($id, $sedeId, $nombre, $precio, $categoria, $descripcion);
+            Producto::establecerAgotado($id, $sedeId, !isset($_POST['disponible']));
+            Producto::establecerActivo($id, $sedeId, isset($_POST['visible']));
+            if (!empty($_POST['quitar_imagen'])) {
+                Producto::eliminarImagen($id, $sedeId);
+            }
             $imagen = $this->subirImagenProducto();
             if ($imagen !== null) {
-                Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
+                Producto::actualizarImagen($id, $sedeId, $imagen);
             }
+            flash_set('ok', "«{$nombre}» se actualizó.");
         }
 
         redirigir($volver);
@@ -294,6 +371,7 @@ class PanelController
 
         if (csrf_verificar()) {
             Producto::eliminar((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Producto eliminado.');
         }
 
         redirigir($volver);
@@ -306,6 +384,19 @@ class PanelController
 
         if (csrf_verificar()) {
             Producto::alternarAgotado((int) $parametros['id'], (int) $negocio['id']);
+        }
+
+        redirigir($volver);
+    }
+
+    /** "Visible en la tienda": distinto de agotado — esto lo saca por completo del catálogo público. */
+    public function alternarActivoProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (csrf_verificar()) {
+            Producto::alternarActivo((int) $parametros['id'], (int) $negocio['id']);
         }
 
         redirigir($volver);

@@ -172,6 +172,16 @@ function etiqueta_estado_pedido(string $estado): string
     };
 }
 
+/**
+ * Un campo de precio puede llegar como "28000" (sin JS) o "28.000" (el
+ * formateo en vivo de interacciones.js) — esto lo deja en entero sin
+ * importar cuál de los dos haya mandado el navegador.
+ */
+function dinero_desde_texto(string $texto): int
+{
+    return (int) preg_replace('/\D+/', '', $texto);
+}
+
 /** Minutos transcurridos desde una fecha DATETIME hasta ahora. */
 function minutos_desde(string $fechaHora): int
 {
