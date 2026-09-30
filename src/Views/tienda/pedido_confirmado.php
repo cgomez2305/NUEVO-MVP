@@ -20,6 +20,15 @@
   </div>
 
   <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
+    <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)"><?= $pedido['tipo_entrega'] === 'recoger' ? 'RECOGES EN EL LOCAL' : 'TE LO LLEVAMOS A' ?></span>
+    <?php if ($pedido['tipo_entrega'] === 'recoger'): ?>
+      <span style="font-size: 14px"><?= e($negocio['nombre']) ?></span>
+    <?php else: ?>
+      <span style="font-size: 14px"><?= e($pedido['direccion']) ?></span>
+    <?php endif; ?>
+  </div>
+
+  <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
     <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">PAGA POR <?= strtoupper(e($pedido['metodo_pago'])) ?></span>
     <?php if ($pedido['metodo_pago'] === 'efectivo'): ?>
       <span style="font-size: 14px">Paga en efectivo cuando te entreguen el pedido.</span>

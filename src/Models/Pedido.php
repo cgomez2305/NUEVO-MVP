@@ -13,8 +13,14 @@ class Pedido
     /**
      * @param array<int, array{producto_id:int, nombre:string, precio:int, cantidad:int}> $items
      */
-    public static function crear(int $sedeId, int $clienteId, string $metodoPago, array $items): int
-    {
+    public static function crear(
+        int $sedeId,
+        int $clienteId,
+        string $metodoPago,
+        array $items,
+        string $tipoEntrega = 'domicilio',
+        ?string $direccion = null
+    ): int {
         $pdo = Database::conexion();
         $total = array_sum(array_map(fn ($it) => $it['precio'] * $it['cantidad'], $items));
 
@@ -22,15 +28,17 @@ class Pedido
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO pedidos (sede_id, cliente_id, total, metodo_pago, estado)
-                 VALUES (:sede_id, :cliente_id, :total, :metodo_pago, :pendiente)'
+                'INSERT INTO pedidos (sede_id, cliente_id, total, metodo_pago, tipo_entrega, direccion, estado)
+                 VALUES (:sede_id, :cliente_id, :total, :metodo_pago, :tipo_entrega, :direccion, :pendiente)'
             );
             $stmt->execute([
-                'sede_id'  => $sedeId,
-                'cliente_id'  => $clienteId,
-                'total'       => $total,
-                'metodo_pago' => $metodoPago,
-                'pendiente'   => 'pendiente',
+                'sede_id'      => $sedeId,
+                'cliente_id'   => $clienteId,
+                'total'        => $total,
+                'metodo_pago'  => $metodoPago,
+                'tipo_entrega' => $tipoEntrega,
+                'direccion'    => $tipoEntrega === 'domicilio' ? $direccion : null,
+                'pendiente'    => 'pendiente',
             ]);
             $pedidoId = (int) $pdo->lastInsertId();
 

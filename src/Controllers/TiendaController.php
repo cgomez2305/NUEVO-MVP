@@ -297,9 +297,20 @@ class TiendaController
         $telefono = preg_replace('/\D+/', '', (string) ($_POST['telefono'] ?? '')) ?? '';
         $autorizo = isset($_POST['autorizo_datos']);
         $metodoPago = (string) ($_POST['metodo_pago'] ?? 'breb');
+        $tipoEntrega = (string) ($_POST['tipo_entrega'] ?? 'domicilio');
+        $direccion = trim((string) ($_POST['direccion'] ?? ''));
+
+        if (!in_array($tipoEntrega, ['domicilio', 'recoger'], true)) {
+            $tipoEntrega = 'domicilio';
+        }
 
         if ($nombre === '' || $telefono === '' || !$autorizo) {
             flash_set('error', 'Escribe tu nombre, tu WhatsApp y autoriza el tratamiento de tus datos para continuar.');
+            redirigir('/t/' . $negocio['slug'] . '/carrito');
+        }
+
+        if ($tipoEntrega === 'domicilio' && $direccion === '') {
+            flash_set('error', 'Escribe la dirección donde quieres recibir el domicilio.');
             redirigir('/t/' . $negocio['slug'] . '/carrito');
         }
 
@@ -316,7 +327,7 @@ class TiendaController
             'cantidad'    => $linea['cantidad'],
         ], $carrito['lineas']);
 
-        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items);
+        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion);
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
 
         $this->guardarCarrito((int) $negocio['id'], []);
@@ -324,7 +335,7 @@ class TiendaController
         WebPush::notificarSede(
             (int) $negocio['id'],
             'Pedido nuevo',
-            "{$nombre} · " . pesos((int) $pedido['total']),
+            "{$nombre} · " . pesos((int) $pedido['total']) . ($tipoEntrega === 'recoger' ? ' · recoge en el local' : ' · domicilio'),
             '/panel/pedidos'
         );
 
@@ -332,7 +343,10 @@ class TiendaController
         foreach ($items as $item) {
             $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}\n";
         }
-        $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']);
+        $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']) . "\n";
+        $resumenTexto .= $tipoEntrega === 'recoger'
+            ? 'Recojo en el local'
+            : "Domicilio a: {$direccion}";
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);

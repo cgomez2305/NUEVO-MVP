@@ -244,6 +244,35 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   border-color: var(--sello);
   box-shadow: 0 0 0 3px var(--tinte-sello);
 }
+textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
+
+/* Selector "domicilio / recoger" del carrito: dos tarjetas tipo radio en
+   vez de un <select>, para que sea obvio de un vistazo sin tener que abrir
+   un desplegable. */
+.pq-opciones-entrega { display: flex; gap: 8px; }
+.pq-opcion-entrega {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.pq-opcion-entrega svg { width: 20px; height: 20px; }
+.pq-opcion-entrega input { position: absolute; opacity: 0; pointer-events: none; }
+.pq-opcion-entrega:has(input:checked) {
+  border-color: var(--sello);
+  background: var(--tinte-sello);
+  color: var(--sello);
+}
 .pq-select {
   appearance: none;
   -webkit-appearance: none;
@@ -343,6 +372,60 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 }
 .pq-tiempo-espera svg { width: 12px; height: 12px; flex-shrink: 0; }
 .pq-card-demorado .pq-tiempo-espera { color: var(--aji); font-weight: 600; }
+
+/* Tablero de pedidos por etapa (solo pantallas grandes: en el celular una
+   grilla de 4 columnas no cabe, así que ahí se queda la lista con filtros
+   de siempre). Cada columna es su propia mini-tarjeta con scroll interno
+   si se llena, para que la página no crezca sin límite hacia abajo. */
+.pq-kanban { display: none; }
+.pq-kanban-label { display: none; }
+@media (min-width: 960px) {
+  .pq-kanban {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .pq-kanban-label { display: block; margin-top: 28px; }
+}
+.pq-kanban-col {
+  background: #F4F1E9;
+  border-radius: 14px;
+  padding: 10px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+.pq-kanban-col-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gris-texto);
+  padding: 4px 4px 10px;
+  flex-shrink: 0;
+}
+.pq-kanban-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pq-kanban-count { margin-left: auto; color: var(--gris-suave); font-weight: 600; }
+.pq-kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.pq-kanban-card {
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--sombra-suave);
+}
 
 .pq-paso {
   display: flex;

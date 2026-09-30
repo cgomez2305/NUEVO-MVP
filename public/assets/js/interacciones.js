@@ -81,4 +81,26 @@
       }, 4500);
     });
   });
+
+  // ---------------------------------------------------------------------
+  // Campos que solo aparecen según lo que la persona eligió en un radio o
+  // select (p. ej. la dirección del carrito solo se pide si el cliente
+  // marcó "domicilio"). El campo lleva data-mostrar-si="nombre=valor"; su
+  // input/textarea con data-requerido-si-visible se vuelve required solo
+  // mientras está visible.
+  // ---------------------------------------------------------------------
+  function actualizarCamposCondicionales() {
+    document.querySelectorAll('[data-mostrar-si]').forEach(function (campo) {
+      var partes = campo.getAttribute('data-mostrar-si').split('=');
+      var nombre = partes[0];
+      var valorEsperado = partes[1];
+      var elegido = document.querySelector('[name="' + nombre + '"]:checked') || document.querySelector('[name="' + nombre + '"]');
+      var mostrar = !!elegido && elegido.value === valorEsperado;
+      campo.style.display = mostrar ? '' : 'none';
+      var entrada = campo.querySelector('[data-requerido-si-visible]');
+      if (entrada) entrada.required = mostrar;
+    });
+  }
+  document.addEventListener('change', actualizarCamposCondicionales);
+  document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
 })();

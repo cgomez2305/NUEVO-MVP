@@ -126,6 +126,8 @@ CREATE TABLE IF NOT EXISTS pedidos (
   cliente_id    INT UNSIGNED NOT NULL,
   total         INT UNSIGNED NOT NULL,
   metodo_pago   ENUM('breb','nequi','efectivo') NOT NULL DEFAULT 'breb',
+  tipo_entrega  ENUM('domicilio','recoger') NOT NULL DEFAULT 'domicilio',
+  direccion     VARCHAR(255) DEFAULT NULL,
   estado        ENUM('pendiente','pagado','en_cocina','en_camino','entregado','cancelado')
                 NOT NULL DEFAULT 'pendiente',
   creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -74,6 +74,7 @@ class PanelController
             'activo'  => 'pedidos',
             'negocio' => $negocio,
             'pedidos' => $pedidos,
+            'todos'   => $todos,
             'total'   => count($todos),
             'conteos' => $conteos,
             'filtro'  => $filtro,

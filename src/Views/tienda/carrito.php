@@ -52,6 +52,27 @@
       </div>
 
       <div class="pq-campo">
+        <label class="pq-label">Cómo lo recibes</label>
+        <div class="pq-opciones-entrega">
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="tipo_entrega" value="domicilio" checked>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg>
+            Domicilio
+          </label>
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="tipo_entrega" value="recoger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+            Recoger en el local
+          </label>
+        </div>
+      </div>
+
+      <div class="pq-campo" data-mostrar-si="tipo_entrega=domicilio">
+        <label class="pq-label" for="direccion">Dirección de entrega</label>
+        <textarea class="pq-input" id="direccion" name="direccion" rows="2" placeholder="Calle, número, barrio, referencia..." data-requerido-si-visible></textarea>
+      </div>
+
+      <div class="pq-campo">
         <label class="pq-label" for="metodo_pago">Cómo vas a pagar</label>
         <select class="pq-select" id="metodo_pago" name="metodo_pago">
           <option value="breb">Bre-B</option>
