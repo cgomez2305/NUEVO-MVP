@@ -57,7 +57,7 @@
     <?php foreach ($usuarios as $usuario): ?>
       <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
         <div class="pq-stack" style="gap: 2px">
-          <span style="font-size: 13px; font-weight: 600"><?= e($usuario['nombre']) ?> <span class="pq-chip" style="font-size: 10px; padding: 2px 6px"><?= e($usuario['rol']) ?></span></span>
+          <span style="font-size: 13px; font-weight: 600"><?= e($usuario['nombre']) ?> <span class="pq-chip" style="font-size: 11px; padding: 2px 7px"><?= e($usuario['rol']) ?></span></span>
           <span class="pq-ayuda pq-mono"><?= e($usuario['whatsapp']) ?><?= !empty($usuario['correo']) ? ' · ' . e($usuario['correo']) : '' ?></span>
         </div>
         <form method="post" action="<?= e(base_url('/admin/usuarios/' . $usuario['id'] . '/generar-reset')) ?>">

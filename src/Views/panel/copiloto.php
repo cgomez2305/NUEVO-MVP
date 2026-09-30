@@ -63,7 +63,7 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
             <span style="font-size: 14px; font-weight: 600">
               <?= e($cliente['nombre']) ?>
               <?php foreach ($fila['tags'] as $tag): ?>
-                <span class="pq-chip <?= $colorTag[$tag] ?? 'pq-chip' ?>" style="font-size: 10px; padding: 2px 7px; margin-left: 4px"><?= e($etiquetas[$tag]) ?></span>
+                <span class="pq-chip <?= $colorTag[$tag] ?? 'pq-chip' ?>" style="font-size: 11px; padding: 2px 8px; margin-left: 4px"><?= e($etiquetas[$tag]) ?></span>
               <?php endforeach; ?>
             </span>
             <span class="pq-ayuda"><?= e($fila['motivo']) ?></span>
@@ -71,7 +71,7 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
           <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje') . '?segmento=' . $segmentoEfectivo) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Enviar</a>
           <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar todos los datos de <?= e($cliente['nombre']) ?> (incluye su historial de pedidos/citas)? Esta acción no se puede deshacer.">
             <?= csrf_campo() ?>
-            <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 10px; cursor: pointer; padding: 0; margin-left: 8px" title="Eliminar sus datos (habeas data)">eliminar datos</button>
+            <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0; margin-left: 8px" title="Eliminar sus datos (habeas data)">eliminar datos</button>
           </form>
         </div>
       <?php endforeach; ?>

@@ -14,7 +14,7 @@
         <span style="font-size: 14px; font-weight: 600; color: var(--carbon)">
           <?= e($negocio['nombre']) ?>
           <?php if ((int) $negocio['suspendido'] === 1): ?>
-            <span class="pq-chip pq-chip-cancelado" style="font-size: 10px; padding: 2px 7px; margin-left: 4px">Suspendido</span>
+            <span class="pq-chip pq-chip-cancelado" style="font-size: 11px; padding: 2px 8px; margin-left: 4px">Suspendido</span>
           <?php endif; ?>
         </span>
         <span class="pq-ayuda">

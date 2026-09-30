@@ -88,12 +88,24 @@
       </div>
 
       <div class="pq-campo">
-        <label class="pq-label" for="metodo_pago">Cómo vas a pagar</label>
-        <select class="pq-select" id="metodo_pago" name="metodo_pago">
-          <option value="breb">Bre-B</option>
-          <option value="nequi">Nequi</option>
-          <option value="efectivo">Efectivo contra entrega</option>
-        </select>
+        <label class="pq-label">Cómo vas a pagar</label>
+        <div class="pq-opciones-entrega">
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="metodo_pago" value="breb" checked>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg>
+            Bre-B
+          </label>
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="metodo_pago" value="nequi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            Nequi
+          </label>
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="metodo_pago" value="efectivo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+            Efectivo
+          </label>
+        </div>
       </div>
 
       <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); margin-bottom: 20px; line-height: 1.5">
