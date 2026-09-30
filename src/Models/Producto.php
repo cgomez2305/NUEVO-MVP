@@ -10,23 +10,29 @@ class Producto
 {
     private const PALETA = ['#E8452C', '#F2B632', '#5B7F3A', '#1B1A17', '#3B4CCA'];
 
-    public static function crear(int $sedeId, string $nombre, int $precio, string $categoria = 'General'): int
-    {
+    public static function crear(
+        int $sedeId,
+        string $nombre,
+        int $precio,
+        string $categoria = 'General',
+        ?string $descripcion = null
+    ): int {
         $pdo = Database::conexion();
         $orden = self::contarPorSede($sedeId);
         $color = self::PALETA[$orden % count(self::PALETA)];
 
         $stmt = $pdo->prepare(
-            'INSERT INTO productos (sede_id, nombre, precio, categoria, color, orden)
-             VALUES (:sede_id, :nombre, :precio, :categoria, :color, :orden)'
+            'INSERT INTO productos (sede_id, nombre, precio, categoria, descripcion, color, orden)
+             VALUES (:sede_id, :nombre, :precio, :categoria, :descripcion, :color, :orden)'
         );
         $stmt->execute([
-            'sede_id' => $sedeId,
-            'nombre'     => $nombre,
-            'precio'     => $precio,
-            'categoria'  => $categoria,
-            'color'      => $color,
-            'orden'      => $orden,
+            'sede_id'     => $sedeId,
+            'nombre'      => $nombre,
+            'precio'      => $precio,
+            'categoria'   => $categoria,
+            'descripcion' => $descripcion !== '' ? $descripcion : null,
+            'color'       => $color,
+            'orden'       => $orden,
         ]);
 
         return (int) $pdo->lastInsertId();
@@ -57,19 +63,44 @@ class Producto
         return $stmt->fetch() ?: null;
     }
 
-    public static function actualizar(int $id, int $sedeId, string $nombre, int $precio, string $categoria): void
-    {
+    public static function actualizar(
+        int $id,
+        int $sedeId,
+        string $nombre,
+        int $precio,
+        string $categoria,
+        ?string $descripcion = null
+    ): void {
         $stmt = Database::conexion()->prepare(
-            'UPDATE productos SET nombre = :nombre, precio = :precio, categoria = :categoria
+            'UPDATE productos SET nombre = :nombre, precio = :precio, categoria = :categoria, descripcion = :descripcion
              WHERE id = :id AND sede_id = :sede_id'
         );
         $stmt->execute([
-            'nombre'     => $nombre,
-            'precio'     => $precio,
-            'categoria'  => $categoria,
-            'id'         => $id,
-            'sede_id' => $sedeId,
+            'nombre'      => $nombre,
+            'precio'      => $precio,
+            'categoria'   => $categoria,
+            'descripcion' => $descripcion !== '' ? $descripcion : null,
+            'id'          => $id,
+            'sede_id'     => $sedeId,
         ]);
+    }
+
+    public static function actualizarImagen(int $id, int $sedeId, string $rutaImagen): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET imagen = :imagen WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['imagen' => $rutaImagen, 'id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    /** Categorías ya usadas por esta sede, para sugerir con datalist y evitar duplicados como "Bebida" y "Bebidas". */
+    public static function categoriasPorSede(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT DISTINCT categoria FROM productos WHERE sede_id = :sede_id ORDER BY categoria ASC'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        return array_column($stmt->fetchAll(), 'categoria');
     }
 
     public static function eliminar(int $id, int $sedeId): void

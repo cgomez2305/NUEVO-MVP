@@ -1,0 +1,15 @@
+# Fotos de productos subidas por el dueño desde el panel. Misma regla que
+# uploads/menus/ y uploads/logos/: nunca se ejecuta nada aquí, solo se sirven
+# como imágenes.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>
+
+Options -ExecCGI -Indexes

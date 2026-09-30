@@ -20,7 +20,7 @@
       <span class="pq-mono" style="font-size: 12px; color: var(--caja); display: block; margin-bottom: 10px">
         <?= count($productos) ?> PRODUCTOS ENCONTRADOS
       </span>
-      <?php require __DIR__ . '/../productos/_gestor.php'; ?>
+      <?php $compacto = true; require __DIR__ . '/../productos/_gestor.php'; ?>
     </div>
 
     <a href="<?= e(base_url('/panel/onboarding/pago')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 24px">Todo correcto, seguir →</a>

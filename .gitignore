@@ -5,5 +5,8 @@
 /public/uploads/logos/*
 !/public/uploads/logos/.gitkeep
 !/public/uploads/logos/.htaccess
+/public/uploads/productos/*
+!/public/uploads/productos/.gitkeep
+!/public/uploads/productos/.htaccess
 .DS_Store
 *.log

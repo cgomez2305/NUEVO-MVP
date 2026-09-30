@@ -95,6 +95,8 @@ CREATE TABLE IF NOT EXISTS productos (
   nombre      VARCHAR(120) NOT NULL,
   precio      INT UNSIGNED NOT NULL,
   categoria   VARCHAR(60)  NOT NULL DEFAULT 'General',
+  descripcion VARCHAR(160) DEFAULT NULL,
+  imagen      VARCHAR(255) DEFAULT NULL,
   color       CHAR(7)      NOT NULL DEFAULT '#5B7F3A',
   activo      TINYINT(1)   NOT NULL DEFAULT 1,
   agotado     TINYINT(1)   NOT NULL DEFAULT 0,

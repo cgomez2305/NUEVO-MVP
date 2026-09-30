@@ -123,11 +123,12 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/productos', [
-            'titulo'    => 'Tu menú · Veci',
-            'activo'    => 'productos',
-            'negocio'   => $negocio,
-            'productos' => Producto::listarPorSede((int) $negocio['id']),
-            'volver'    => '/panel/productos',
+            'titulo'     => 'Tu menú · Veci',
+            'activo'     => 'productos',
+            'negocio'    => $negocio,
+            'productos'  => Producto::listarPorSede((int) $negocio['id']),
+            'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
+            'volver'     => '/panel/productos',
         ], 'panel');
     }
 
@@ -143,9 +144,14 @@ class PanelController
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
         $precio = (int) ($_POST['precio'] ?? 0);
         $categoria = trim((string) ($_POST['categoria'] ?? '')) ?: 'General';
+        $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
 
         if ($nombre !== '' && $precio > 0) {
-            Producto::crear((int) $negocio['id'], $nombre, $precio, $categoria);
+            $id = Producto::crear((int) $negocio['id'], $nombre, $precio, $categoria, $descripcion);
+            $imagen = $this->subirImagenProducto();
+            if ($imagen !== null) {
+                Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
+            }
         }
 
         redirigir($volver);
@@ -163,12 +169,49 @@ class PanelController
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
         $precio = (int) ($_POST['precio'] ?? 0);
         $categoria = trim((string) ($_POST['categoria'] ?? '')) ?: 'General';
+        $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
 
         if ($nombre !== '' && $precio > 0) {
-            Producto::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $categoria);
+            $id = (int) $parametros['id'];
+            Producto::actualizar($id, (int) $negocio['id'], $nombre, $precio, $categoria, $descripcion);
+            $imagen = $this->subirImagenProducto();
+            if ($imagen !== null) {
+                Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
+            }
         }
 
         redirigir($volver);
+    }
+
+    /**
+     * Sube la foto opcional de un producto (mismo criterio de validación que
+     * la foto de menú del onboarding). Devuelve la ruta relativa a guardar,
+     * o null si no venía ningún archivo (no es un error: la foto es opcional).
+     */
+    private function subirImagenProducto(): ?string
+    {
+        $archivo = $_FILES['imagen'] ?? null;
+        if ($archivo === null || $archivo['error'] === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        $tiposPermitidos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $mime = mime_content_type($archivo['tmp_name']) ?: '';
+        if (!isset($tiposPermitidos[$mime]) || $archivo['size'] > 5 * 1024 * 1024) {
+            return null;
+        }
+
+        $nombreArchivo = 'producto-' . bin2hex(random_bytes(8)) . '.' . $tiposPermitidos[$mime];
+        $destino = __DIR__ . '/../../public/uploads/productos/' . $nombreArchivo;
+
+        if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
+            return null;
+        }
+
+        return 'uploads/productos/' . $nombreArchivo;
     }
 
     public function eliminarProducto(array $parametros): void
