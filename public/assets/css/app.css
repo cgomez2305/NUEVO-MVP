@@ -134,6 +134,81 @@ button { font-family: inherit; }
 .pq-content { padding: 24px 20px 40px; flex-grow: 1; }
 .pq-content-tienda { padding: 0 20px 120px; flex-grow: 1; }
 
+/* ---------- nav inferior de celular ---------- */
+/* En escritorio .pq-topbar-links es el sidebar (ver más abajo); en celular
+   era antes una tira horizontal apretada con el logo y todos los enlaces.
+   Se reemplaza por una bottom nav de 4 items (patrón app nativa), con todo
+   lo que no cabe agrupado bajo "Más" — mismo árbol de navegación que el
+   sidebar, ver layouts/panel.php. */
+.pq-bottomnav {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 40;
+  background: var(--tiquete);
+  border-top: 1px solid var(--recibo);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 24px -14px rgba(32, 33, 36, .25);
+}
+.pq-bottomnav a, .pq-bottomnav summary {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--gris-suave);
+  text-decoration: none;
+  padding: 6px 2px;
+  border-radius: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+.pq-bottomnav a svg, .pq-bottomnav summary svg { width: 20px; height: 20px; }
+.pq-bottomnav summary::-webkit-details-marker { display: none; }
+.pq-bottomnav a.activo, .pq-bottomnav summary.activo { color: var(--sello); }
+.pq-bottomnav-mas { position: relative; flex: 1 1 0; }
+.pq-bottomnav-mas[open] > summary { color: var(--sello); }
+.pq-bottomnav-mas-panel {
+  position: absolute;
+  bottom: 52px;
+  right: 2px;
+  width: 200px;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 14px;
+  box-shadow: var(--sombra-media);
+  padding: 8px;
+  z-index: 45;
+}
+.pq-bottomnav-mas-panel a {
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--carbon);
+}
+.pq-bottomnav-mas-panel a svg { width: 16px; height: 16px; opacity: .75; flex-shrink: 0; }
+.pq-bottomnav-mas-panel a:hover, .pq-bottomnav-mas-panel a.activo { background: var(--recibo); color: var(--carbon); }
+
+@media (max-width: 959px) {
+  .pq-topbar-links { display: none; }
+  .pq-shell-main { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 960px) {
+  .pq-bottomnav { display: none; }
+}
+
 /* ---------- tipografía ---------- */
 
 .pq-eyebrow {
@@ -1090,12 +1165,12 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-producto-card-precio { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; flex-shrink: 0; margin-right: 4px }
 .pq-producto-card-acciones { display: flex; align-items: center; gap: 4px; flex-shrink: 0 }
 
-.pq-menu-producto { position: relative }
-.pq-menu-producto > summary { list-style: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gris-suave) }
-.pq-menu-producto > summary::-webkit-details-marker { display: none }
-.pq-menu-producto > summary:hover { background: var(--recibo); color: var(--carbon) }
-.pq-menu-producto[open] > summary { background: var(--recibo); color: var(--carbon) }
-.pq-menu-producto-panel {
+.pq-menu-kebab { position: relative }
+.pq-menu-kebab > summary { list-style: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gris-suave) }
+.pq-menu-kebab > summary::-webkit-details-marker { display: none }
+.pq-menu-kebab > summary:hover { background: var(--recibo); color: var(--carbon) }
+.pq-menu-kebab[open] > summary { background: var(--recibo); color: var(--carbon) }
+.pq-menu-kebab-panel {
   position: absolute;
   top: 38px;
   right: 0;
@@ -1107,7 +1182,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   padding: 6px;
   z-index: 20;
 }
-.pq-menu-producto-panel button, .pq-menu-producto-panel a {
+.pq-menu-kebab-panel button, .pq-menu-kebab-panel a {
   display: block;
   width: 100%;
   text-align: left;
@@ -1122,9 +1197,9 @@ a.pq-stat:hover { border-color: var(--sello); }
   text-decoration: none;
   font-family: inherit;
 }
-.pq-menu-producto-panel button:hover, .pq-menu-producto-panel a:hover { background: var(--recibo) }
-.pq-menu-producto-panel button.pq-peligro { color: var(--aji) }
-.pq-menu-producto-panel hr { border: none; border-top: 1px solid var(--recibo); margin: 5px 2px }
+.pq-menu-kebab-panel button:hover, .pq-menu-kebab-panel a:hover { background: var(--recibo) }
+.pq-menu-kebab-panel button.pq-peligro { color: var(--aji) }
+.pq-menu-kebab-panel hr { border: none; border-top: 1px solid var(--recibo); margin: 5px 2px }
 
 /* ---------- formulario de producto (página dedicada) ---------- */
 
@@ -1165,6 +1240,8 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-switch input:checked + .pq-switch-riel { background: var(--caja) }
 .pq-switch input:checked + .pq-switch-riel::before { transform: translateX(18px) }
 .pq-switch input:focus-visible + .pq-switch-riel { outline: 2px solid var(--sello); outline-offset: 2px }
+
+.pq-contador-caracteres { display: block; text-align: right; font-size: 11px; color: var(--gris-suave); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
 /* ---------- toast de confirmación ---------- */
 

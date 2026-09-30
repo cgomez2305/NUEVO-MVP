@@ -68,11 +68,11 @@
             <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?></span>
             <div class="pq-producto-card-acciones">
               <a href="<?= e(base_url('/panel/productos/' . $producto['id'] . '/editar')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Editar</a>
-              <details class="pq-menu-producto">
+              <details class="pq-menu-kebab">
                 <summary aria-label="Más acciones">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
                 </summary>
-                <div class="pq-menu-producto-panel">
+                <div class="pq-menu-kebab-panel">
                   <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/visible')) ?>">
                     <?= csrf_campo() ?>
                     <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">

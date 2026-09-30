@@ -32,14 +32,20 @@
   }
 
   // ---------------------------------------------------------------------
-  // Botones "copiar enlace" (data-copiar="texto a copiar")
+  // Botones "copiar" (data-copiar="texto fijo" o data-copiar-de="#selector"
+  // para copiar el valor actual de un campo, p. ej. un mensaje que la
+  // persona acaba de editar).
   // ---------------------------------------------------------------------
   document.addEventListener('click', function (evento) {
-    var boton = evento.target.closest('[data-copiar]');
+    var boton = evento.target.closest('[data-copiar], [data-copiar-de]');
     if (!boton) return;
     evento.preventDefault();
 
-    var texto = boton.getAttribute('data-copiar');
+    var referencia = boton.getAttribute('data-copiar-de');
+    var campoOrigen = referencia ? document.querySelector(referencia) : null;
+    var texto = campoOrigen ? campoOrigen.value : boton.getAttribute('data-copiar');
+    if (texto === null || texto === undefined) return;
+
     copiarTexto(texto).then(function () {
       if (boton.dataset.copiando === '1') return; // ya está mostrando el check
       boton.dataset.copiando = '1';
@@ -119,5 +125,23 @@
     campo.value = soloDigitos === '' ? '' : soloDigitos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     var nuevaPosicion = Math.max(0, campo.value.length - cursorDesdeElFinal);
     campo.setSelectionRange(nuevaPosicion, nuevaPosicion);
+  });
+
+  // ---------------------------------------------------------------------
+  // Contador "123/500" bajo un textarea marcado con data-contador (p. ej.
+  // el mensaje del copiloto). Puramente informativo: el maxlength del HTML
+  // ya impide pasarse aunque este script no corra.
+  // ---------------------------------------------------------------------
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('textarea[data-contador][maxlength]').forEach(function (campo) {
+      var contador = document.createElement('span');
+      contador.className = 'pq-contador-caracteres';
+      var actualizar = function () {
+        contador.textContent = campo.value.length + '/' + campo.getAttribute('maxlength');
+      };
+      actualizar();
+      campo.insertAdjacentElement('afterend', contador);
+      campo.addEventListener('input', actualizar);
+    });
   });
 })();

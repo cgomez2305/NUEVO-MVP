@@ -37,18 +37,36 @@ class Copiloto
         ], $inactivos));
     }
 
-    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo'): string
+    /**
+     * $descuentoPct es una elección explícita de quien va a enviar el
+     * mensaje (ver selector en copiloto_mensaje.php), nunca un incentivo
+     * que el copiloto inventa solo: si viene en 0, el mensaje no promete
+     * ningún descuento.
+     */
+    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo', int $descuentoPct = 0): string
     {
         $nombreParaSaludo = self::nombreParaSaludo((string) $cliente['nombre']);
+        $fraseDescuento = $descuentoPct > 0 ? "Tienes {$descuentoPct}% en tu próximo pedido." : null;
 
-        return match ($segmento) {
-            'vip'   => "Hola {$nombreParaSaludo}, eres uno de nuestros mejores clientes y queremos que lo notes: "
-                . 'tienes 15% en tu próximo pedido, solo por ser tú. ¿Qué te separamos?',
-            'nuevo' => "Hola {$nombreParaSaludo}, gracias por tu primera compra con nosotros. "
-                . 'Si quieres repetir, tienes 10% en tu segundo pedido. ¿Te ayudamos con algo?',
-            default => "Hola {$nombreParaSaludo}, te extrañamos. Como cliente frecuente tienes 10% en tu próximo "
-                . 'pedido. ¿Te separamos lo de siempre?',
+        $partes = match ($segmento) {
+            'vip'   => [
+                "Hola {$nombreParaSaludo}, eres uno de nuestros mejores clientes y queremos que lo notes.",
+                $fraseDescuento,
+                '¿Qué te separamos?',
+            ],
+            'nuevo' => [
+                "Hola {$nombreParaSaludo}, gracias por tu primera compra con nosotros.",
+                $fraseDescuento,
+                '¿Te ayudamos con algo para la próxima?',
+            ],
+            default => [
+                "Hola {$nombreParaSaludo}, te extrañamos.",
+                $fraseDescuento,
+                '¿Te separamos lo de siempre?',
+            ],
         };
+
+        return implode(' ', array_filter($partes));
     }
 
     private static function nombreParaSaludo(string $nombreCompleto): string
@@ -126,12 +144,13 @@ class Copiloto
             }
 
             $resultado[] = [
-                'cliente'         => $cliente,
-                'total_compras'   => $totalCompras,
-                'gasto_total'     => $gastoTotal,
-                'dias_sin_pedir'  => $diasSinPedir,
-                'dias_desde_alta' => $diasDesdeAlta,
-                'frecuencia_prom' => $frecuenciaProm,
+                'cliente'              => $cliente,
+                'total_compras'        => $totalCompras,
+                'gasto_total'          => $gastoTotal,
+                'dias_sin_pedir'       => $diasSinPedir,
+                'dias_desde_alta'      => $diasDesdeAlta,
+                'frecuencia_prom'      => $frecuenciaProm,
+                'ultima_compra_monto'  => end($datos['montos']),
             ];
         }
 
@@ -215,5 +234,63 @@ class Copiloto
              VALUES (:negocio_id, :cliente_id, :mensaje)'
         );
         $stmt->execute(['negocio_id' => $negocioId, 'cliente_id' => $clienteId, 'mensaje' => $mensaje]);
+    }
+
+    /**
+     * La misma fila que arma segmentar() pero para un solo cliente, para la
+     * pantalla de detalle ("por qué te lo recomendamos"). No vale la pena
+     * una consulta aparte: segmentar() ya trae todo el negocio en un par de
+     * queries y el volumen esperado (MVP, un barrio) lo hace barato.
+     *
+     * @return array{cliente: array<string, mixed>, total_compras: int, gasto_total: int, dias_sin_pedir: int, frecuencia_prom: ?int, ultima_compra_monto: int, tags: array<int, string>, motivo: string}|null
+     */
+    public static function contextoCliente(int $negocioId, int $clienteId, string $tipoNegocio = 'pedidos'): ?array
+    {
+        foreach (self::segmentar($negocioId, $tipoNegocio) as $fila) {
+            if ((int) $fila['cliente']['id'] === $clienteId) {
+                return $fila;
+            }
+        }
+
+        return null;
+    }
+
+    /** Último mensaje que se le marcó como enviado a este cliente, o null si nunca se le ha contactado desde aquí. */
+    public static function ultimoContacto(int $negocioId, int $clienteId): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT enviado_en FROM mensajes_copiloto WHERE negocio_id = :negocio_id AND cliente_id = :cliente_id
+             ORDER BY enviado_en DESC LIMIT 1'
+        );
+        $stmt->execute(['negocio_id' => $negocioId, 'cliente_id' => $clienteId]);
+        $fila = $stmt->fetch();
+
+        if ($fila === false) {
+            return null;
+        }
+
+        $fecha = new DateTimeImmutable((string) $fila['enviado_en']);
+
+        return ['fecha' => $fecha, 'dias' => (int) $fecha->diff(new DateTimeImmutable('today'))->days];
+    }
+
+    /** Si el cliente volvió a comprar/reservar después de una fecha dada (para saber si un contacto dio resultado). */
+    public static function comproDespuesDe(int $negocioId, int $clienteId, DateTimeImmutable $fecha, string $tipoNegocio = 'pedidos'): bool
+    {
+        $sql = $tipoNegocio === 'reservas'
+            ? 'SELECT 1 FROM citas c JOIN sedes s ON s.id = c.sede_id
+               WHERE s.negocio_id = :negocio_id AND c.cliente_id = :cliente_id AND c.estado != "cancelada"
+                 AND c.fecha_hora > :fecha LIMIT 1'
+            : 'SELECT 1 FROM pedidos p JOIN sedes s ON s.id = p.sede_id
+               WHERE s.negocio_id = :negocio_id AND p.cliente_id = :cliente_id AND p.creado_en > :fecha LIMIT 1';
+
+        $stmt = Database::conexion()->prepare($sql);
+        $stmt->execute([
+            'negocio_id' => $negocioId,
+            'cliente_id' => $clienteId,
+            'fecha'      => $fecha->format('Y-m-d H:i:s'),
+        ]);
+
+        return $stmt->fetch() !== false;
     }
 }

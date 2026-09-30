@@ -838,7 +838,6 @@ class PanelController
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
         $negocioId = (int) $negocio['negocio_id'];
-        $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
         $segmentos = Copiloto::segmentar($negocioId, $negocio['tipo_negocio']);
         $conteos = ['inactivo' => 0, 'vip' => 0, 'nuevo' => 0, 'recurrente' => 0];
@@ -858,14 +857,15 @@ class PanelController
             : array_values(array_filter($segmentos, fn ($fila) => in_array($filtro, $fila['tags'], true)));
 
         ver('panel/copiloto', [
-            'titulo'      => 'Copiloto de recompra · Veci',
-            'activo'      => 'copiloto',
-            'negocio'     => $negocio,
-            'lista'       => $lista,
-            'filtro'      => $filtro,
-            'conteos'     => $conteos,
-            'pedidosHoy'  => $esReservas ? Cita::contarHoy((int) $negocio['id']) : Pedido::contarHoy((int) $negocio['id']),
-            'recompraPct' => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
+            'titulo'          => 'Copiloto de recompra · Veci',
+            'activo'          => 'copiloto',
+            'negocio'         => $negocio,
+            'lista'           => $lista,
+            'filtro'          => $filtro,
+            'conteos'         => $conteos,
+            'aReactivarCount' => $conteos['inactivo'],
+            'vipCount'        => $conteos['vip'],
+            'recompraPct'     => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
         ], 'panel');
     }
 
@@ -873,16 +873,23 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
+        $negocioId = (int) $negocio['negocio_id'];
+        $cliente = Cliente::buscar((int) $parametros['cliente'], $negocioId);
 
         if ($cliente === null) {
             redirigir('/panel/copiloto');
         }
 
         $segmento = $this->segmentoValido($_GET['segmento'] ?? null);
-        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento);
+        $descuento = $this->descuentoValido($_GET['descuento'] ?? null);
+        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento, $descuento);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
-        $enlaceWhatsapp = 'https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($mensaje);
+
+        $clienteId = (int) $cliente['id'];
+        $contacto = Copiloto::ultimoContacto($negocioId, $clienteId);
+        $comproDespues = $contacto !== null
+            ? Copiloto::comproDespuesDe($negocioId, $clienteId, $contacto['fecha'], $negocio['tipo_negocio'])
+            : false;
 
         ver('panel/copiloto_mensaje', [
             'titulo'         => 'Mensaje sugerido · Veci',
@@ -890,8 +897,12 @@ class PanelController
             'negocio'        => $negocio,
             'cliente'        => $cliente,
             'segmento'       => $segmento,
+            'descuento'      => $descuento,
             'mensaje'        => $mensaje,
-            'enlaceWhatsapp' => $enlaceWhatsapp,
+            'waBase'         => 'https://wa.me/57' . $telefonoWa,
+            'contexto'       => Copiloto::contextoCliente($negocioId, $clienteId, $negocio['tipo_negocio']),
+            'contacto'       => $contacto,
+            'comproDespues'  => $comproDespues,
         ], 'panel');
     }
 
@@ -899,21 +910,22 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $segmento = $this->segmentoValido($_POST['segmento'] ?? null);
 
         if (csrf_verificar()) {
             $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
             if ($cliente !== null) {
-                $segmento = $this->segmentoValido($_POST['segmento'] ?? null);
+                $descuento = $this->descuentoValido($_POST['descuento'] ?? null);
                 Copiloto::registrarEnvio(
                     (int) $negocio['negocio_id'],
                     (int) $cliente['id'],
-                    Copiloto::mensajeSugerido($cliente, $segmento)
+                    Copiloto::mensajeSugerido($cliente, $segmento, $descuento)
                 );
-                flash_set('ok', 'Mensaje marcado como enviado a ' . $cliente['nombre'] . '.');
+                flash_set('ok', 'Quedó registrado el contacto con ' . $cliente['nombre'] . ' hoy.');
             }
         }
 
-        redirigir('/panel/copiloto');
+        redirigir('/panel/copiloto?segmento=' . $segmento);
     }
 
     /** Todas las sedes del negocio, con el botón para cambiar de una a otra. Cualquier rol puede entrar. */
@@ -1134,6 +1146,13 @@ class PanelController
     private function segmentoValido(mixed $segmento): string
     {
         return in_array($segmento, ['vip', 'nuevo', 'inactivo', 'recurrente'], true) ? $segmento : 'inactivo';
+    }
+
+    /** El copiloto nunca inventa un descuento por su cuenta: solo usa el que la persona eligió explícitamente en el selector. */
+    private function descuentoValido(mixed $descuento): int
+    {
+        $pct = (int) $descuento;
+        return in_array($pct, [0, 5, 10, 15], true) ? $pct : 0;
     }
 
     /** Solo deja volver a rutas propias del panel, nunca a una URL externa. */

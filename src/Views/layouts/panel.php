@@ -23,12 +23,56 @@ $pqIconos = [
     'sedes'          => '<path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/>',
     'colaboradores'  => '<circle cx="8" cy="9" r="3"/><path d="M2 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/><circle cx="17.5" cy="8" r="2.3"/><path d="M15.8 14.7c2.4.4 4.2 2.5 4.2 5.3"/>',
     'cuenta'         => '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>',
+    'mas'            => '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
 ];
 $pqIcono = static function (string $clave) use ($pqIconos): string {
     return isset($pqIconos[$clave])
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . $pqIconos[$clave] . '</svg>'
         : '';
 };
+
+// Un solo árbol de navegación (clave, etiqueta, href), agrupado como antes
+// para el sidebar de escritorio. Se reutiliza también para el bottom nav de
+// celular: los primeros 3 items entran directo en la barra, todo lo demás
+// se agrupa bajo "Más" — así ambas navegaciones nunca se desincronizan.
+$tipoReservas = ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas';
+$esDueno = $negocio['rol'] === 'dueno';
+
+$navOperacion = [['panel', 'Panel', base_url('/panel')]];
+if ($tipoReservas) {
+    $navOperacion[] = ['citas', 'Agenda', base_url('/panel/citas')];
+    $navOperacion[] = ['recordatorios', 'Recordatorios', base_url('/panel/recordatorios')];
+    $navOperacion[] = ['servicios', 'Servicios', base_url('/panel/servicios')];
+    if ($esDueno) {
+        $navOperacion[] = ['empleados', 'Empleados', base_url('/panel/empleados')];
+        $navOperacion[] = ['horario', 'Horario', base_url('/panel/horario')];
+    }
+} else {
+    $navOperacion[] = ['pedidos', 'Pedidos', base_url('/panel/pedidos')];
+    $navOperacion[] = ['productos', 'Menú', base_url('/panel/productos')];
+}
+
+$navCrecimiento = $esDueno ? [['copiloto', 'Copiloto', base_url('/panel/copiloto')]] : [];
+
+$navConfiguracion = [['sedes', 'Sedes', base_url('/panel/sedes')]];
+if ($esDueno) {
+    $navConfiguracion[] = ['colaboradores', 'Colaboradores', base_url('/panel/colaboradores')];
+}
+$navConfiguracion[] = ['cuenta', 'Mi cuenta', base_url('/panel/cuenta')];
+
+$tercerTabMovil = $esDueno
+    ? ['copiloto', 'Copiloto', base_url('/panel/copiloto')]
+    : ($tipoReservas ? ['servicios', 'Servicios', base_url('/panel/servicios')] : ['productos', 'Menú', base_url('/panel/productos')]);
+$navBottomPrincipal = [
+    ['panel', 'Panel', base_url('/panel')],
+    $tipoReservas ? ['citas', 'Agenda', base_url('/panel/citas')] : ['pedidos', 'Pedidos', base_url('/panel/pedidos')],
+    $tercerTabMovil,
+];
+$clavesBottomPrincipal = array_column($navBottomPrincipal, 0);
+$navMas = array_values(array_filter(
+    array_merge($navOperacion, $navCrecimiento, $navConfiguracion),
+    fn ($item) => !in_array($item[0], $clavesBottomPrincipal, true)
+));
 ?>
 <body class="pq-panel-bg" data-negocio-id="<?= (int) $negocio['id'] ?>" data-es-reservas="<?= ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas' ? '1' : '0' ?>">
   <div class="pq-shell">
@@ -38,33 +82,37 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
       </a>
       <nav class="pq-topbar-links">
         <span class="pq-nav-grupo">Operación</span>
-        <a href="<?= e(base_url('/panel')) ?>" class="<?= ($activo ?? '') === 'panel' ? 'activo' : '' ?>"><?= $pqIcono('panel') ?>Panel</a>
-        <?php if (($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas'): ?>
-          <a href="<?= e(base_url('/panel/citas')) ?>" class="<?= ($activo ?? '') === 'citas' ? 'activo' : '' ?>"><?= $pqIcono('citas') ?>Agenda</a>
-          <a href="<?= e(base_url('/panel/recordatorios')) ?>" class="<?= ($activo ?? '') === 'recordatorios' ? 'activo' : '' ?>"><?= $pqIcono('recordatorios') ?>Recordatorios</a>
-          <a href="<?= e(base_url('/panel/servicios')) ?>" class="<?= ($activo ?? '') === 'servicios' ? 'activo' : '' ?>"><?= $pqIcono('servicios') ?>Servicios</a>
-          <?php if ($negocio['rol'] === 'dueno'): ?>
-            <a href="<?= e(base_url('/panel/empleados')) ?>" class="<?= ($activo ?? '') === 'empleados' ? 'activo' : '' ?>"><?= $pqIcono('empleados') ?>Empleados</a>
-            <a href="<?= e(base_url('/panel/horario')) ?>" class="<?= ($activo ?? '') === 'horario' ? 'activo' : '' ?>"><?= $pqIcono('horario') ?>Horario</a>
-          <?php endif; ?>
-        <?php else: ?>
-          <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>"><?= $pqIcono('pedidos') ?>Pedidos</a>
-          <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>"><?= $pqIcono('productos') ?>Menú</a>
-        <?php endif; ?>
+        <?php foreach ($navOperacion as [$clave, $etiqueta, $href]): ?>
+          <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+        <?php endforeach; ?>
 
-        <?php if ($negocio['rol'] === 'dueno'): ?>
+        <?php if ($navCrecimiento !== []): ?>
           <span class="pq-nav-grupo">Crecimiento</span>
-          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>"><?= $pqIcono('copiloto') ?>Copiloto</a>
+          <?php foreach ($navCrecimiento as [$clave, $etiqueta, $href]): ?>
+            <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+          <?php endforeach; ?>
         <?php endif; ?>
 
         <span class="pq-nav-grupo">Configuración</span>
-        <a href="<?= e(base_url('/panel/sedes')) ?>" class="<?= ($activo ?? '') === 'sedes' ? 'activo' : '' ?>"><?= $pqIcono('sedes') ?>Sedes</a>
-        <?php if ($negocio['rol'] === 'dueno'): ?>
-          <a href="<?= e(base_url('/panel/colaboradores')) ?>" class="<?= ($activo ?? '') === 'colaboradores' ? 'activo' : '' ?>"><?= $pqIcono('colaboradores') ?>Colaboradores</a>
-        <?php endif; ?>
-        <a href="<?= e(base_url('/panel/cuenta')) ?>" class="<?= ($activo ?? '') === 'cuenta' ? 'activo' : '' ?>"><?= $pqIcono('cuenta') ?>Mi cuenta</a>
+        <?php foreach ($navConfiguracion as [$clave, $etiqueta, $href]): ?>
+          <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+        <?php endforeach; ?>
       </nav>
     </div>
+
+    <nav class="pq-bottomnav">
+      <?php foreach ($navBottomPrincipal as [$clave, $etiqueta, $href]): ?>
+        <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><span><?= e($etiqueta) ?></span></a>
+      <?php endforeach; ?>
+      <details class="pq-bottomnav-mas">
+        <summary class="<?= in_array($activo ?? '', array_column($navMas, 0), true) ? 'activo' : '' ?>"><?= $pqIcono('mas') ?><span>Más</span></summary>
+        <div class="pq-bottomnav-mas-panel">
+          <?php foreach ($navMas as [$clave, $etiqueta, $href]): ?>
+            <a href="<?= e($href) ?>" class="<?= ($activo ?? '') === $clave ? 'activo' : '' ?>"><?= $pqIcono($clave) ?><?= e($etiqueta) ?></a>
+          <?php endforeach; ?>
+        </div>
+      </details>
+    </nav>
 
     <div class="pq-shell-main">
       <?php $sedesAcceso = \App\Auth::sedesAccesibles($negocio); ?>
