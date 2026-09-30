@@ -94,6 +94,7 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
     </form>
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
+  <script src="<?= e(base_url('assets/js/interacciones.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-notificaciones.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-push.js')) ?>" defer></script>
 </body>

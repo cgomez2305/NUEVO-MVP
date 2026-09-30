@@ -2,12 +2,18 @@
 <h1 class="pq-h1">Hola, <?= e($negocio['nombre']) ?></h1>
 
 <?php if ((int) $negocio['publicada'] === 1): ?>
-  <p class="pq-lead">
-    Tu tienda está publicada en
-    <a href="<?= e(url_publica('/t/' . $negocio['slug'])) ?>" target="_blank" rel="noopener" style="color: var(--sello); font-weight: 600">
-      <?= e(url_publica('/t/' . $negocio['slug'])) ?>
-    </a>
-  </p>
+  <?php $urlTienda = url_publica('/t/' . $negocio['slug']); ?>
+  <div class="pq-compartir">
+    <a href="<?= e($urlTienda) ?>" target="_blank" rel="noopener" class="pq-compartir-url"><?= e($urlTienda) ?></a>
+    <div class="pq-compartir-botones">
+      <button type="button" class="pq-btn-icono" data-copiar="<?= e($urlTienda) ?>" title="Copiar enlace" aria-label="Copiar enlace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
+      </button>
+      <a class="pq-btn-icono" href="https://wa.me/?text=<?= rawurlencode('Mira mi tienda: ' . $urlTienda) ?>" target="_blank" rel="noopener" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
+      </a>
+    </div>
+  </div>
 <?php else: ?>
   <div class="pq-alerta" style="margin-top: 16px">
     Tu tienda todavía no está publicada.

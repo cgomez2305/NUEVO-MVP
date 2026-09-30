@@ -12,10 +12,14 @@
     <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 10px<?= $activa ? '; border-color: var(--sello)' : '' ?>">
       <div class="pq-stack">
         <span style="font-size: 14px; font-weight: 600"><?= e($sede['nombre']) ?> <?= $activa ? '· activa' : '' ?></span>
-        <span class="pq-ayuda">
+        <span class="pq-ayuda" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
           <?= (int) $sede['publicada'] === 1 ? 'Publicada' : 'Sin publicar' ?> ·
           <?php if ((int) $sede['publicada'] === 1): ?>
-            <a href="<?= e(url_publica('/t/' . $sede['slug'])) ?>" target="_blank" rel="noopener"><?= e(url_publica('/t/' . $sede['slug'])) ?></a>
+            <?php $urlSede = url_publica('/t/' . $sede['slug']); ?>
+            <a href="<?= e($urlSede) ?>" target="_blank" rel="noopener"><?= e($urlSede) ?></a>
+            <button type="button" class="pq-btn-icono" data-copiar="<?= e($urlSede) ?>" title="Copiar enlace" aria-label="Copiar enlace" style="width: 22px; height: 22px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
+            </button>
           <?php else: ?>
             termina su configuración para publicarla
           <?php endif; ?>

@@ -22,5 +22,6 @@
     </form>
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
+  <script src="<?= e(base_url('assets/js/interacciones.js')) ?>" defer></script>
 </body>
 </html>

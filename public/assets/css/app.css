@@ -181,6 +181,25 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 .pq-btn-ghost { background: transparent; border: 1.5px solid var(--borde); color: var(--carbon); }
 .pq-btn-ghost:hover { border-color: var(--sello); color: var(--sello); }
 .pq-btn-chico { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 9px; }
+
+/* estado "enviando…" de un botón: se agrega solo, con JS, al mandar
+   cualquier formulario (ver assets/js/interacciones.js) — evita el doble
+   clic (doble pedido, producto duplicado) y da una señal de que sí pasó
+   algo mientras la página recarga. */
+.pq-btn.pq-btn-cargando { pointer-events: none; opacity: .65; }
+.pq-btn.pq-btn-cargando::after {
+  content: "";
+  width: 13px; height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pqGirar .6s linear infinite;
+}
+@keyframes pqGirar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .pq-btn.pq-btn-cargando::after { animation: none; }
+}
 .pq-btn-deshabilitado { background: var(--recibo); color: var(--gris-suave); pointer-events: none; box-shadow: none; }
 
 /* ---------- formularios ---------- */
@@ -258,7 +277,12 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   padding: 12px 14px;
   font-size: 13px;
   margin-bottom: 16px;
+  animation: pqAlertaEntra .25s ease both;
+  transition: opacity .35s ease, transform .35s ease, max-height .35s ease, margin .35s ease, padding .35s ease;
+  overflow: hidden;
 }
+@keyframes pqAlertaEntra { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.pq-alerta.pq-alerta-saliendo { opacity: 0; transform: translateY(-6px); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
 .pq-alerta-ok {
   background: #EAF6EF;
   border-color: #BFE3CE;
@@ -286,6 +310,25 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   transition: box-shadow .15s ease, transform .15s ease;
 }
 .pq-card-borde:hover { box-shadow: var(--sombra-media); transform: translateY(-1px); }
+
+/* entrada escalonada de listas (pedidos, citas, clientes del copiloto...):
+   cada tarjeta aparece un pelín después de la anterior en vez de saltar
+   todas de golpe. Cubre hasta 10 por nth-child; de ahí en adelante
+   entran junto con la última — no hace falta más, nadie mira la 11. */
+.pq-stack > .pq-card-borde,
+.pq-stack > .pq-lead {
+  animation: pqListaEntra .3s ease both;
+}
+@keyframes pqListaEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.pq-stack > .pq-card-borde:nth-child(1), .pq-stack > .pq-lead:nth-child(1) { animation-delay: 0ms; }
+.pq-stack > .pq-card-borde:nth-child(2), .pq-stack > .pq-lead:nth-child(2) { animation-delay: 35ms; }
+.pq-stack > .pq-card-borde:nth-child(3), .pq-stack > .pq-lead:nth-child(3) { animation-delay: 70ms; }
+.pq-stack > .pq-card-borde:nth-child(4), .pq-stack > .pq-lead:nth-child(4) { animation-delay: 105ms; }
+.pq-stack > .pq-card-borde:nth-child(5), .pq-stack > .pq-lead:nth-child(5) { animation-delay: 140ms; }
+.pq-stack > .pq-card-borde:nth-child(n+6), .pq-stack > .pq-lead:nth-child(n+6) { animation-delay: 175ms; }
+@media (prefers-reduced-motion: reduce) {
+  .pq-stack > .pq-card-borde, .pq-stack > .pq-lead { animation: none; }
+}
 
 .pq-paso {
   display: flex;
@@ -352,6 +395,50 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   font-weight: 600;
 }
 .pq-stat-label { font-size: 11px; color: var(--gris-texto); }
+
+/* ---------- compartir el enlace de la tienda ---------- */
+
+.pq-compartir {
+  margin-top: 14px;
+  background: var(--tinte-sello);
+  border: 1.5px dashed var(--sello);
+  border-radius: 12px;
+  padding: 10px 10px 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pq-compartir-url {
+  flex-grow: 1;
+  min-width: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--sello);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pq-compartir-botones { display: flex; gap: 6px; flex-shrink: 0; }
+.pq-btn-icono {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--tiquete);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sello);
+  box-shadow: var(--sombra-suave);
+  transition: transform .15s ease, background .15s ease, color .15s ease;
+  flex-shrink: 0;
+}
+.pq-btn-icono svg { width: 16px; height: 16px; }
+.pq-btn-icono:hover { transform: translateY(-1px) scale(1.05); }
+.pq-btn-icono.pq-copiado { background: var(--caja); color: #fff; }
+.pq-btn-icono.pq-copiado svg { animation: pqCheckPop .3s ease; }
+@keyframes pqCheckPop { from { transform: scale(.5); opacity: .4; } to { transform: scale(1); opacity: 1; } }
 
 /* ---------- copiloto ---------- */
 
