@@ -62,7 +62,12 @@
           <label class="pq-opcion-entrega">
             <input type="radio" name="tipo_entrega" value="recoger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
-            Recoger en el local
+            Recoger
+          </label>
+          <label class="pq-opcion-entrega">
+            <input type="radio" name="tipo_entrega" value="mesa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+            Comer aquí
           </label>
         </div>
       </div>
@@ -70,6 +75,16 @@
       <div class="pq-campo" data-mostrar-si="tipo_entrega=domicilio">
         <label class="pq-label" for="direccion">Dirección de entrega</label>
         <textarea class="pq-input" id="direccion" name="direccion" rows="2" placeholder="Calle, número, barrio, referencia..." data-requerido-si-visible></textarea>
+      </div>
+
+      <div class="pq-campo" data-mostrar-si="tipo_entrega=mesa">
+        <label class="pq-label" for="mesa">Número de mesa</label>
+        <input class="pq-input" type="text" id="mesa" name="mesa" placeholder="Ej. 4" maxlength="20" data-requerido-si-visible>
+      </div>
+
+      <div class="pq-campo">
+        <label class="pq-label" for="notas">Notas del pedido (opcional)</label>
+        <textarea class="pq-input" id="notas" name="notas" rows="2" placeholder="Sin cebolla, poca sal, etc." maxlength="255"></textarea>
       </div>
 
       <div class="pq-campo">

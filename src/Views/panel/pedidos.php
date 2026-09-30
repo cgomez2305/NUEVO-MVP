@@ -17,9 +17,27 @@ $etiquetasEstado = [
 ];
 
 $iconoEntrega = static function (string $tipo): string {
-    return $tipo === 'recoger'
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg>';
+    return match ($tipo) {
+        'recoger' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>',
+        'mesa'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
+        default   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg>',
+    };
+};
+
+$etiquetaEntregaCorta = static function (array $pedido): string {
+    return match ($pedido['tipo_entrega']) {
+        'recoger' => 'Recoge',
+        'mesa'    => 'Mesa ' . $pedido['mesa'],
+        default   => 'Domicilio',
+    };
+};
+
+$etiquetaEntregaLarga = static function (array $pedido): string {
+    return match ($pedido['tipo_entrega']) {
+        'recoger' => 'Recoge en el local',
+        'mesa'    => 'Come en el local · Mesa ' . $pedido['mesa'],
+        default   => $pedido['direccion'] ?? 'Domicilio',
+    };
 };
 
 // Tablero por columnas (solo desktop, ver .pq-kanban en app.css): agrupa
@@ -71,10 +89,13 @@ unset($columna);
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
                 <span class="pq-tiempo-espera" style="color: var(--gris-texto)">
                   <?= $iconoEntrega($pedido['tipo_entrega']) ?>
-                  <?= $pedido['tipo_entrega'] === 'recoger' ? 'Recoge' : 'Domicilio' ?>
+                  <?= e($etiquetaEntregaCorta($pedido)) ?>
                 </span>
                 <span class="pq-mono" style="font-size: 12px; font-weight: 600; flex-shrink: 0"><?= pesos((int) $pedido['total']) ?></span>
               </div>
+              <?php if (!empty($pedido['notas'])): ?>
+                <span class="pq-ayuda" style="font-size: 11px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">"<?= e($pedido['notas']) ?>"</span>
+              <?php endif; ?>
               <?php if ($activo): ?>
                 <span class="pq-tiempo-espera">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
@@ -132,8 +153,11 @@ unset($columna);
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?> · <?= e(strtoupper($pedido['metodo_pago'])) ?></span>
             <span class="pq-tiempo-espera" style="color: var(--gris-texto); white-space: normal; align-items: flex-start">
               <?= $iconoEntrega($pedido['tipo_entrega']) ?>
-              <?= $pedido['tipo_entrega'] === 'recoger' ? 'Recoge en el local' : e($pedido['direccion'] ?? 'Domicilio') ?>
+              <?= e($etiquetaEntregaLarga($pedido)) ?>
             </span>
+            <?php if (!empty($pedido['notas'])): ?>
+              <span class="pq-ayuda" style="font-style: italic">"<?= e($pedido['notas']) ?>"</span>
+            <?php endif; ?>
           </div>
           <div class="pq-stack" style="align-items: flex-end; gap: 3px">
             <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $pedido['total']) ?></span>

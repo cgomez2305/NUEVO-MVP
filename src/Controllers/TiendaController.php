@@ -346,8 +346,10 @@ class TiendaController
         $metodoPago = (string) ($_POST['metodo_pago'] ?? 'breb');
         $tipoEntrega = (string) ($_POST['tipo_entrega'] ?? 'domicilio');
         $direccion = trim((string) ($_POST['direccion'] ?? ''));
+        $mesa = trim((string) ($_POST['mesa'] ?? ''));
+        $notas = trim((string) ($_POST['notas'] ?? ''));
 
-        if (!in_array($tipoEntrega, ['domicilio', 'recoger'], true)) {
+        if (!in_array($tipoEntrega, ['domicilio', 'recoger', 'mesa'], true)) {
             $tipoEntrega = 'domicilio';
         }
 
@@ -358,6 +360,11 @@ class TiendaController
 
         if ($tipoEntrega === 'domicilio' && $direccion === '') {
             flash_set('error', 'Escribe la dirección donde quieres recibir el domicilio.');
+            redirigir('/t/' . $negocio['slug'] . '/carrito');
+        }
+
+        if ($tipoEntrega === 'mesa' && $mesa === '') {
+            flash_set('error', 'Escribe el número de tu mesa.');
             redirigir('/t/' . $negocio['slug'] . '/carrito');
         }
 
@@ -374,15 +381,19 @@ class TiendaController
             'cantidad'    => $linea['cantidad'],
         ], $carrito['lineas']);
 
-        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion);
+        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas);
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
 
-        $this->guardarCarrito((int) $negocio['id'], []);
+        $etiquetaEntrega = match ($tipoEntrega) {
+            'recoger' => 'recoge en el local',
+            'mesa'    => "mesa {$mesa}",
+            default   => 'domicilio',
+        };
 
         WebPush::notificarSede(
             (int) $negocio['id'],
             'Pedido nuevo',
-            "{$nombre} · " . pesos((int) $pedido['total']) . ($tipoEntrega === 'recoger' ? ' · recoge en el local' : ' · domicilio'),
+            "{$nombre} · " . pesos((int) $pedido['total']) . " · {$etiquetaEntrega}",
             '/panel/pedidos'
         );
 
@@ -391,9 +402,16 @@ class TiendaController
             $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}\n";
         }
         $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']) . "\n";
-        $resumenTexto .= $tipoEntrega === 'recoger'
-            ? 'Recojo en el local'
-            : "Domicilio a: {$direccion}";
+        $resumenTexto .= match ($tipoEntrega) {
+            'recoger' => 'Recojo en el local',
+            'mesa'    => "Para comer en el local, mesa {$mesa}",
+            default   => "Domicilio a: {$direccion}",
+        };
+        if ($notas !== '') {
+            $resumenTexto .= "\nNota: {$notas}";
+        }
+
+        $this->guardarCarrito((int) $negocio['id'], []);
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);

@@ -20,13 +20,26 @@
   </div>
 
   <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
-    <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)"><?= $pedido['tipo_entrega'] === 'recoger' ? 'RECOGES EN EL LOCAL' : 'TE LO LLEVAMOS A' ?></span>
+    <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">
+      <?php if ($pedido['tipo_entrega'] === 'recoger'): ?>RECOGES EN EL LOCAL
+      <?php elseif ($pedido['tipo_entrega'] === 'mesa'): ?>PARA COMER AQUÍ
+      <?php else: ?>TE LO LLEVAMOS A<?php endif; ?>
+    </span>
     <?php if ($pedido['tipo_entrega'] === 'recoger'): ?>
       <span style="font-size: 14px"><?= e($negocio['nombre']) ?></span>
+    <?php elseif ($pedido['tipo_entrega'] === 'mesa'): ?>
+      <span style="font-size: 14px">Mesa <?= e($pedido['mesa']) ?></span>
     <?php else: ?>
       <span style="font-size: 14px"><?= e($pedido['direccion']) ?></span>
     <?php endif; ?>
   </div>
+
+  <?php if (!empty($pedido['notas'])): ?>
+    <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
+      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">NOTA DEL PEDIDO</span>
+      <span style="font-size: 14px"><?= e($pedido['notas']) ?></span>
+    </div>
+  <?php endif; ?>
 
   <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
     <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">PAGA POR <?= strtoupper(e($pedido['metodo_pago'])) ?></span>
