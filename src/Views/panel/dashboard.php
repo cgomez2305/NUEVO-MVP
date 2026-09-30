@@ -105,7 +105,7 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
           <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($cita['cliente_nombre']) ?> · <?= e($cita['nombre_servicio']) ?></span>
-            <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?></span>
+            <span class="pq-ayuda"><?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?></span>
           </div>
           <div class="pq-stack" style="align-items: flex-end">
             <span class="pq-mono pq-precio-suave" style="font-size: 13px"><?= pesos((int) $cita['precio']) ?></span>
@@ -138,7 +138,7 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
           <div class="pq-avatar pq-avatar-chico" style="background: var(--caja)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($pedido['cliente_nombre']) ?></span>
-            <span class="pq-ayuda">Pedido #<?= (int) $pedido['id'] ?> · <?= e($etiquetaEntrega) ?> · <?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?></span>
+            <span class="pq-ayuda">Pedido #<?= (int) $pedido['id'] ?> · <?= e($etiquetaEntrega) ?> · <?= e(fecha_corta((string) $pedido['creado_en'], ', ')) ?></span>
           </div>
           <div class="pq-stack" style="align-items: flex-end">
             <span class="pq-mono pq-precio-suave" style="font-size: 13px"><?= pesos((int) $pedido['total']) ?></span>

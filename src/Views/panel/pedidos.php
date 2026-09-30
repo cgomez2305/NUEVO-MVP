@@ -38,7 +38,7 @@ $objetivoMin = 20;
 // patrón de tarjetas grandes que el tablero operativo.
 $columnasKanban = [
     ['clave' => 'confirmados', 'titulo' => 'Confirmados',    'estados' => ['pendiente', 'pagado'], 'color' => 'var(--sello)'],
-    ['clave' => 'cocina',      'titulo' => 'Preparación',    'estados' => ['en_cocina'],            'color' => 'var(--aji)'],
+    ['clave' => 'cocina',      'titulo' => 'En preparación', 'estados' => ['en_cocina'],            'color' => 'var(--aji)'],
     ['clave' => 'listo',       'titulo' => 'Listos',         'estados' => ['listo'],                'color' => 'var(--caja)'],
     ['clave' => 'camino',      'titulo' => 'En camino',      'estados' => ['en_camino'],            'color' => '#8a5a00'],
 ];
@@ -48,6 +48,7 @@ foreach ($columnasKanban as &$columna) {
 unset($columna);
 ?>
 
+<?php if ($activos !== []): ?>
 <div class="pq-kanban">
   <?php foreach ($columnasKanban as $columna): ?>
     <div class="pq-kanban-col">
@@ -96,8 +97,7 @@ unset($columna);
     </div>
   <?php endforeach; ?>
 </div>
-
-<?php if ($activos === []): ?>
+<?php else: ?>
   <div class="pq-kanban-vacio">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
     Todo al día. No tienes pedidos pendientes.
@@ -128,12 +128,19 @@ unset($columna);
     <input class="pq-input" type="date" name="desde" value="<?= e($desdePersonalizado) ?>" aria-label="Desde">
     <input class="pq-input" type="date" name="hasta" value="<?= e($hastaPersonalizado) ?>" aria-label="Hasta">
   </span>
-  <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico" style="width: auto">Buscar</button>
+  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Buscar</button>
 </form>
 
+<?php
+$desdeIdx = $historial === [] ? 0 : (($pagina - 1) * $porPagina) + 1;
+$hastaIdx = min($pagina * $porPagina, $historialTotal);
+?>
 <p class="pq-historial-resumen">
   <strong><?= $historialTotal ?></strong> pedido<?= $historialTotal === 1 ? '' : 's' ?> · <strong><?= pesos($historialSuma) ?></strong> vendidos
   <?= $filtro !== '' || $busqueda !== '' || $rango !== '' ? ' con este filtro' : '' ?>
+  <?php if ($historialTotal > $porPagina): ?>
+    · mostrando <?= $desdeIdx ?>–<?= $hastaIdx ?>
+  <?php endif; ?>
 </p>
 
 <?php if ($historial === []): ?>
@@ -153,8 +160,13 @@ unset($columna);
           <tr data-href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">
             <td class="pq-mono" style="font-weight: 700">#<?= (int) $pedido['id'] ?></td>
             <td style="font-weight: 600"><?= e($pedido['cliente_nombre']) ?></td>
-            <td style="color: var(--gris-texto)"><?= e($etiquetaEntregaCorta($pedido)) ?></td>
-            <td style="color: var(--gris-texto); white-space: nowrap"><?= e(date('d M · g:i a', strtotime((string) $pedido['creado_en']))) ?></td>
+            <td style="color: var(--gris-texto)">
+              <span style="display: inline-flex; align-items: center; gap: 5px">
+                <span style="width: 14px; height: 14px; flex-shrink: 0; display: inline-flex"><?= $iconoEntrega($pedido['tipo_entrega']) ?></span>
+                <?= e($etiquetaEntregaCorta($pedido)) ?>
+              </span>
+            </td>
+            <td style="color: var(--gris-texto); white-space: nowrap"><?= e(fecha_corta((string) $pedido['creado_en'])) ?></td>
             <td><span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']]) ?></span></td>
             <td class="pq-mono" style="font-weight: 700"><?= pesos((int) $pedido['total']) ?></td>
             <td><a class="pq-fila-ver" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" aria-label="Ver pedido #<?= (int) $pedido['id'] ?>">›</a></td>

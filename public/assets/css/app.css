@@ -775,16 +775,27 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 .pq-historial-resumen { font-size: 13px; color: var(--gris-texto); margin-top: 12px; }
 .pq-historial-resumen strong { color: var(--carbon); }
 
+/* max-height + overflow-y:auto (no overflow:hidden) es a propósito: le da a
+   la tabla su PROPIO contenedor de scroll, así "thead th { position:
+   sticky }" se engancha a ESE scroll en vez de depender del scroll de toda
+   la página — evita el mismo problema que ya tuvo el sidebar de escritorio
+   (ver el comentario sobre overflow:hidden más abajo en este archivo) sin
+   tener que coordinar el offset con la topbar fija de celular ni con el
+   selector de sede fijo de escritorio. */
 .pq-tabla-wrap {
   margin-top: 10px;
   background: var(--tiquete);
   border: 1px solid var(--recibo);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: auto;
+  max-height: 68vh;
   box-shadow: var(--sombra-suave);
 }
 .pq-tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .pq-tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   text-align: left;
   font-size: 11px;
   font-weight: 700;

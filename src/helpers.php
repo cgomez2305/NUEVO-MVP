@@ -148,6 +148,24 @@ function strftime_es(): string
     return mb_strtoupper("{$dia} " . date('j') . " {$mes}");
 }
 
+/**
+ * "29 Sep · 12:00 p. m." — fecha+hora corta en español (meses abreviados
+ * reales, no el "Dec"/"Abr"→"Apr" que da el locale en inglés de date()), con
+ * el año solo si no es el actual. Reemplaza el date('d M, g:i a', ...) que
+ * se repetía —en inglés— en pedidos, citas y recordatorios.
+ */
+function fecha_corta(string $fechaHora, string $separador = ' · '): string
+{
+    $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    $ts = strtotime($fechaHora);
+
+    $mes = ucfirst($meses[(int) date('n', $ts) - 1]);
+    $fecha = date('j', $ts) . ' ' . $mes . ((int) date('Y', $ts) !== (int) date('Y') ? ' ' . date('Y', $ts) : '');
+    $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
+
+    return $fecha . $separador . date('g:i', $ts) . ' ' . $meridiano;
+}
+
 function chip_estado(string $estado): string
 {
     return match ($estado) {

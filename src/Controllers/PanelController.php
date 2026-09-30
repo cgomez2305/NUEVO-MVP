@@ -97,6 +97,7 @@ class PanelController
             'historialSuma'  => $resultado['suma'],
             'pagina'       => $pagina,
             'totalPaginas' => $totalPaginas,
+            'porPagina'    => $porPagina,
         ], 'panel');
     }
 

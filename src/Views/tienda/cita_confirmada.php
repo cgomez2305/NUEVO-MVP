@@ -13,7 +13,7 @@
     </div>
     <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #C9BFA4">
       <span>Cuándo</span>
-      <span class="pq-mono"><?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?></span>
+      <span class="pq-mono"><?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?></span>
     </div>
   </div>
 

@@ -24,7 +24,7 @@ $nivel = nivel_espera($minutosEspera, 20);
     </div>
     <div>
       <span class="pq-serif" style="font-size: 22px; display: block; line-height: 1">#<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?></span>
-      <span class="pq-ayuda"><?= e($pedido['cliente_telefono']) ?> · <?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?></span>
+      <span class="pq-ayuda"><?= e($pedido['cliente_telefono']) ?> · <?= e(fecha_corta((string) $pedido['creado_en'], ', ')) ?></span>
     </div>
   </div>
   <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']] ?? $pedido['estado']) ?></span>

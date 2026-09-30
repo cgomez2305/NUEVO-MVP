@@ -23,7 +23,7 @@
         </div>
         <div class="pq-stack" style="flex-grow: 1">
           <span style="font-size: 14px; font-weight: 600"><?= e($cita['cliente_nombre']) ?></span>
-          <span class="pq-ayuda"><?= e($cita['nombre_servicio']) ?> · <?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?></span>
+          <span class="pq-ayuda"><?= e($cita['nombre_servicio']) ?> · <?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?></span>
         </div>
         <a href="<?= e(base_url('/panel/recordatorios/' . $cita['id'] . '/mensaje')) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Enviar</a>
       </div>

@@ -56,7 +56,7 @@
           <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600">
-              <?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?> · <?= e($cita['cliente_nombre']) ?>
+              <?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?> · <?= e($cita['cliente_nombre']) ?>
             </span>
             <span class="pq-ayuda">
               <?= e($cita['nombre_servicio']) ?> · <?= (int) $cita['duracion_min'] ?> min
