@@ -71,7 +71,7 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
   <?php else: ?>
     <div style="margin-top: 16px">
       <?php foreach ($lista as $fila): $cliente = $fila['cliente']; $segmentoEfectivo = $filtro === 'todos' ? $fila['tags'][0] : $filtro; ?>
-        <div class="pq-lead" style="align-items: flex-start">
+        <div class="pq-fila-cliente" style="align-items: flex-start">
           <div class="pq-avatar" style="background: var(--aji)">
             <?= e(mb_strtoupper(mb_substr($cliente['nombre'], 0, 1))) ?>
           </div>

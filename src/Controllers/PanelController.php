@@ -52,6 +52,7 @@ class PanelController
             'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorSede($sedeId), 0, 5),
             'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($sedeId), 0, 5) : [],
             'listaEsperaCount' => $esReservas ? ListaEspera::contarPendientesPorSede($sedeId) : 0,
+            'resumenSemana'   => $esReservas ? Cita::resumenSemana($sedeId) : Pedido::resumenSemana($sedeId),
         ], 'panel');
     }
 

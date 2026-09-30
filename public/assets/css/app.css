@@ -453,18 +453,18 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
    todas de golpe. Cubre hasta 10 por nth-child; de ahí en adelante
    entran junto con la última — no hace falta más, nadie mira la 11. */
 .pq-stack > .pq-card-borde,
-.pq-stack > .pq-lead {
+.pq-stack > .pq-fila-cliente {
   animation: pqListaEntra .3s ease both;
 }
 @keyframes pqListaEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.pq-stack > .pq-card-borde:nth-child(1), .pq-stack > .pq-lead:nth-child(1) { animation-delay: 0ms; }
-.pq-stack > .pq-card-borde:nth-child(2), .pq-stack > .pq-lead:nth-child(2) { animation-delay: 35ms; }
-.pq-stack > .pq-card-borde:nth-child(3), .pq-stack > .pq-lead:nth-child(3) { animation-delay: 70ms; }
-.pq-stack > .pq-card-borde:nth-child(4), .pq-stack > .pq-lead:nth-child(4) { animation-delay: 105ms; }
-.pq-stack > .pq-card-borde:nth-child(5), .pq-stack > .pq-lead:nth-child(5) { animation-delay: 140ms; }
-.pq-stack > .pq-card-borde:nth-child(n+6), .pq-stack > .pq-lead:nth-child(n+6) { animation-delay: 175ms; }
+.pq-stack > .pq-card-borde:nth-child(1), .pq-stack > .pq-fila-cliente:nth-child(1) { animation-delay: 0ms; }
+.pq-stack > .pq-card-borde:nth-child(2), .pq-stack > .pq-fila-cliente:nth-child(2) { animation-delay: 35ms; }
+.pq-stack > .pq-card-borde:nth-child(3), .pq-stack > .pq-fila-cliente:nth-child(3) { animation-delay: 70ms; }
+.pq-stack > .pq-card-borde:nth-child(4), .pq-stack > .pq-fila-cliente:nth-child(4) { animation-delay: 105ms; }
+.pq-stack > .pq-card-borde:nth-child(5), .pq-stack > .pq-fila-cliente:nth-child(5) { animation-delay: 140ms; }
+.pq-stack > .pq-card-borde:nth-child(n+6), .pq-stack > .pq-fila-cliente:nth-child(n+6) { animation-delay: 175ms; }
 @media (prefers-reduced-motion: reduce) {
-  .pq-stack > .pq-card-borde, .pq-stack > .pq-lead { animation: none; }
+  .pq-stack > .pq-card-borde, .pq-stack > .pq-fila-cliente { animation: none; }
 }
 
 /* Pedido sin resolver o cita sin confirmar que lleva demasiado tiempo
@@ -608,7 +608,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   border: 1px solid transparent;
   transition: transform .15s ease, box-shadow .15s ease;
 }
@@ -627,10 +627,12 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 .pq-stat:has(.pq-stat-valor[style*="aji"]) .pq-stat-icono { background: rgba(232,69,44,.16); color: var(--aji); }
 .pq-stat-valor {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.1;
 }
-.pq-stat-label { font-size: 11px; color: var(--gris-texto); }
+.pq-stat-label { font-size: 11.5px; font-weight: 600; color: var(--carbon); }
+.pq-stat-sublabel { font-size: 10px; color: var(--gris-suave); margin-top: -2px; }
 
 /* ---------- compartir el enlace de la tienda ---------- */
 
@@ -680,8 +682,8 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 
 .pq-recomendacion {
   margin-top: 14px;
-  background: var(--tinte-sello);
-  border: 1px solid var(--sello);
+  background: #F4F1E9;
+  border: 1px solid var(--recibo);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -690,6 +692,18 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   gap: 14px;
   flex-wrap: wrap;
 }
+.pq-recomendacion-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--sello);
+  margin-bottom: 4px;
+}
+.pq-recomendacion-eyebrow svg { width: 13px; height: 13px; }
 .pq-recomendacion-texto strong { display: block; font-size: 14px; font-weight: 700; color: var(--carbon); }
 .pq-recomendacion-texto span { font-size: 12.5px; color: var(--gris-texto); }
 
@@ -706,8 +720,28 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
 }
 .pq-fila-pedido:hover { box-shadow: var(--sombra-suave); transform: translateY(-1px); border-color: var(--sello); }
+.pq-fila-pedido-chevron { color: var(--gris-suave); font-size: 18px; flex-shrink: 0; transition: transform .15s ease, color .15s ease; }
+.pq-fila-pedido:hover .pq-fila-pedido-chevron { color: var(--sello); transform: translateX(2px); }
 
 .pq-acciones-rapidas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.pq-acciones-rapidas .pq-btn svg { width: 14px; height: 14px; }
+
+/* ---------- resumen compacto de la semana (dashboard) ---------- */
+.pq-resumen-semana {
+  margin-top: 28px;
+  background: #F4F1E9;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.pq-resumen-semana-fila {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.pq-resumen-semana-dato { display: flex; align-items: baseline; gap: 5px; }
+.pq-resumen-semana-dato strong { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--carbon); }
+.pq-resumen-semana-dato span { font-size: 12.5px; color: var(--gris-texto); }
 
 /* ---------- historial de pedidos: filtros, tabla, paginación ---------- */
 
@@ -813,7 +847,14 @@ a.pq-stat:hover { border-color: var(--sello); }
 
 /* ---------- copiloto ---------- */
 
-.pq-lead {
+/* Fila-tarjeta de cliente (copiloto, recordatorios): antes se llamaba
+   .pq-lead, pero ese nombre también lo usa p.pq-lead (subtítulos de texto
+   plano en toda la app) para otras propiedades. No pisaban las mismas
+   reglas, así que el choque era silencioso: cualquier <p class="pq-lead">
+   heredaba sin querer este fondo/borde/padding de tarjeta (se notaba en
+   el subtítulo del dashboard, que parecía un input). Nombre propio para
+   evitarlo del todo. */
+.pq-fila-cliente {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -825,7 +866,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   box-shadow: var(--sombra-suave);
   transition: box-shadow .15s ease, transform .15s ease;
 }
-.pq-lead:hover { box-shadow: var(--sombra-media); transform: translateY(-1px); }
+.pq-fila-cliente:hover { box-shadow: var(--sombra-media); transform: translateY(-1px); }
 .pq-avatar {
   width: 42px;
   height: 42px;

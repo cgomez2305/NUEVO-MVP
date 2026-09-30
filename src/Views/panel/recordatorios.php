@@ -17,7 +17,7 @@
 <?php else: ?>
   <div class="pq-stack" style="gap: 10px; margin-top: 20px">
     <?php foreach ($citas as $cita): ?>
-      <div class="pq-lead">
+      <div class="pq-fila-cliente">
         <div class="pq-avatar" style="background: var(--aji)">
           <?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?>
         </div>

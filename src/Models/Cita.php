@@ -241,6 +241,38 @@ class Cita
     }
 
     /**
+     * Resumen de los últimos 7 días para el dashboard: citas, lo vendido
+     * (sin canceladas) y cuántos de esos clientes ya habían reservado antes.
+     *
+     * @return array{pedidos: int, ventas: int, recurrentes: int}
+     */
+    public static function resumenSemana(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT
+                COUNT(*) AS citas,
+                COALESCE(SUM(c.precio), 0) AS ventas,
+                COUNT(DISTINCT CASE WHEN historico.total_citas >= 2 THEN c.cliente_id END) AS recurrentes
+             FROM citas c
+             JOIN (SELECT cliente_id, COUNT(*) AS total_citas FROM citas WHERE sede_id = :sede_id_h GROUP BY cliente_id) historico
+               ON historico.cliente_id = c.cliente_id
+             WHERE c.sede_id = :sede_id AND c.creado_en >= :desde AND c.estado != "cancelada"'
+        );
+        $stmt->execute([
+            'sede_id_h' => $sedeId,
+            'sede_id'   => $sedeId,
+            'desde'     => (new \DateTimeImmutable('-6 days midnight'))->format('Y-m-d H:i:s'),
+        ]);
+        $fila = $stmt->fetch();
+
+        return [
+            'pedidos'     => (int) $fila['citas'],
+            'ventas'      => (int) $fila['ventas'],
+            'recurrentes' => (int) $fila['recurrentes'],
+        ];
+    }
+
+    /**
      * Bloques ya ocupados ese día (para no dejar reservar encima de otra cita).
      * @return array<int, array{inicio:string, duracion_min:int}>
      */

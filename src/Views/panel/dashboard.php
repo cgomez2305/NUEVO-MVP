@@ -10,44 +10,53 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
   <div class="pq-stat">
     <span class="pq-stat-icono" style="background: rgba(59,76,202,.16); color: var(--sello)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--sello)"><?= $pedidosHoy ?></span>
-    <span class="pq-stat-label"><?= e($sustantivo) ?> hoy</span>
+    <span class="pq-stat-label"><?= e(ucfirst($sustantivo)) ?> hoy</span>
   </div>
   <div class="pq-stat">
     <span class="pq-stat-icono" style="background: rgba(22,163,106,.18); color: var(--caja)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--caja)"><?= pesos($ventasHoy) ?></span>
-    <span class="pq-stat-label">ventas de hoy</span>
+    <span class="pq-stat-label">Ventas hoy</span>
   </div>
   <div class="pq-stat">
     <span class="pq-stat-icono" style="background: rgba(59,76,202,.16); color: var(--sello)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1 21 6l-4 4"/><path d="M3 12v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9 3 18l4-4"/><path d="M21 12v1a4 4 0 0 1-4 4H3"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--sello)"><?= $recompraPct ?>%</span>
-    <span class="pq-stat-label">recurrentes · este mes</span>
+    <span class="pq-stat-label">Clientes recurrentes</span>
+    <span class="pq-stat-sublabel">Este mes</span>
   </div>
   <?php if ($aReactivar > 0): ?>
     <a href="<?= e(base_url('/panel/copiloto') . '?segmento=inactivo') ?>" class="pq-stat">
       <span class="pq-stat-icono" style="background: rgba(232,69,44,.16); color: var(--aji)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 16.5h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
       <span class="pq-stat-valor" style="color: var(--aji)"><?= $aReactivar ?></span>
-      <span class="pq-stat-label">por reactivar</span>
+      <span class="pq-stat-label">Por reactivar</span>
     </a>
   <?php else: ?>
     <div class="pq-stat">
       <span class="pq-stat-icono" style="background: rgba(232,69,44,.16); color: var(--aji)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 16.5h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
       <span class="pq-stat-valor" style="color: var(--aji)">0</span>
-      <span class="pq-stat-label">por reactivar</span>
+      <span class="pq-stat-label">Por reactivar</span>
     </div>
   <?php endif; ?>
 </div>
 
 <?php if ($pedidosHoy === 0 && $ventasHoy === 0): ?>
   <p class="pq-ayuda" style="margin-top: 12px">
-    Tu <?= $esReservas ? 'agenda' : 'tienda' ?> está tranquila por ahora. Comparte tu enlace para empezar a recibir <?= e($sustantivo) ?>.
+    Tu <?= $esReservas ? 'agenda' : 'tienda' ?> está tranquila por ahora.
+    <?php if ((int) $negocio['publicada'] === 1): ?>
+      <a href="#tienda-online" style="font-weight: 600">Comparte tu enlace</a> para empezar a recibir <?= e($sustantivo) ?>.
+    <?php else: ?>
+      Comparte tu enlace para empezar a recibir <?= e($sustantivo) ?>.
+    <?php endif; ?>
   </p>
 <?php endif; ?>
 
 <?php if ($aReactivar > 0): ?>
   <div class="pq-recomendacion">
     <div class="pq-recomendacion-texto">
-      <strong><?= $aReactivar === 1 ? 'Hay 1 cliente que podrías recuperar hoy' : "Hay {$aReactivar} clientes que podrías recuperar hoy" ?></strong>
-      <span>Hace más de 30 días que no compran</span>
+      <span class="pq-recomendacion-eyebrow">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2Z"/></svg>
+        Oportunidad de hoy
+      </span>
+      <strong><?= $aReactivar === 1 ? '1 cliente lleva más de 30 días sin comprar' : "{$aReactivar} clientes llevan más de 30 días sin comprar" ?></strong>
     </div>
     <a href="<?= e(base_url('/panel/copiloto') . '?segmento=inactivo') ?>" class="pq-btn pq-btn-sello pq-btn-chico" style="width: auto">Ver clientes →</a>
   </div>
@@ -65,17 +74,13 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
 
 <?php if ((int) $negocio['publicada'] === 1): ?>
   <?php $urlTienda = url_publica('/t/' . $negocio['slug']); ?>
-  <div style="margin-top: 20px">
+  <div id="tienda-online" style="margin-top: 20px; scroll-margin-top: 20px">
     <span class="pq-seccion-titulo">Tu <?= $esReservas ? 'agenda' : 'tienda' ?> online</span>
     <div class="pq-compartir pq-compartir-secundario" style="margin-top: 8px">
       <a href="<?= e($urlTienda) ?>" target="_blank" rel="noopener" class="pq-compartir-url"><?= e($urlTienda) ?></a>
       <div class="pq-compartir-botones">
-        <button type="button" class="pq-btn-icono" data-copiar="<?= e($urlTienda) ?>" title="Copiar enlace" aria-label="Copiar enlace">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
-        </button>
-        <a class="pq-btn-icono" href="https://wa.me/?text=<?= rawurlencode('Mira mi tienda: ' . $urlTienda) ?>" target="_blank" rel="noopener" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">
-          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-        </a>
+        <button type="button" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto" data-copiar="<?= e($urlTienda) ?>">Copiar</button>
+        <a class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto" href="https://wa.me/?text=<?= rawurlencode('Mira mi tienda: ' . $urlTienda) ?>" target="_blank" rel="noopener">WhatsApp</a>
       </div>
     </div>
   </div>
@@ -139,6 +144,7 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
             <span class="pq-mono pq-precio-suave" style="font-size: 13px"><?= pesos((int) $pedido['total']) ?></span>
             <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e(etiqueta_estado_pedido($pedido['estado'])) ?></span>
           </div>
+          <span class="pq-fila-pedido-chevron">›</span>
         </a>
       <?php endforeach; ?>
     </div>
@@ -150,13 +156,34 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
 <div style="margin-top: 28px">
   <span class="pq-seccion-titulo">Acciones rápidas</span>
   <div class="pq-acciones-rapidas">
-    <a href="<?= e(base_url($esReservas ? '/panel/citas' : '/panel/pedidos')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Ver <?= e($sustantivo) ?></a>
-    <a href="<?= e(base_url($esReservas ? '/panel/servicios' : '/panel/productos')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Agregar <?= $esReservas ? 'servicio' : 'producto' ?></a>
+    <a href="<?= e(base_url($esReservas ? '/panel/servicios' : '/panel/productos')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+      Agregar <?= $esReservas ? 'servicio' : 'producto' ?>
+    </a>
     <?php if ((int) $negocio['publicada'] === 1): ?>
-      <button type="button" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto" data-copiar="<?= e(url_publica('/t/' . $negocio['slug'])) ?>">Compartir <?= $esReservas ? 'agenda' : 'tienda' ?></button>
+      <button type="button" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto" data-copiar="<?= e(url_publica('/t/' . $negocio['slug'])) ?>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+        Compartir <?= $esReservas ? 'agenda' : 'tienda' ?>
+      </button>
     <?php endif; ?>
+    <a href="<?= e(base_url($esReservas ? '/panel/citas' : '/panel/pedidos')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      Ver <?= e($sustantivo) ?>
+    </a>
     <?php if ($negocio['rol'] === 'dueno'): ?>
-      <a href="<?= e(base_url('/panel/copiloto')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Contactar clientes</a>
+      <a href="<?= e(base_url('/panel/copiloto')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg>
+        Contactar clientes
+      </a>
     <?php endif; ?>
+  </div>
+</div>
+
+<div class="pq-resumen-semana">
+  <span class="pq-seccion-titulo">Resumen de esta semana</span>
+  <div class="pq-resumen-semana-fila">
+    <span class="pq-resumen-semana-dato"><strong><?= (int) $resumenSemana['pedidos'] ?></strong> <span><?= e($sustantivo) ?></span></span>
+    <span class="pq-resumen-semana-dato"><strong><?= pesos($resumenSemana['ventas']) ?></strong> <span>vendidos</span></span>
+    <span class="pq-resumen-semana-dato"><strong><?= (int) $resumenSemana['recurrentes'] ?></strong> <span>clientes recurrentes</span></span>
   </div>
 </div>

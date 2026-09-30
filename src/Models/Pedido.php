@@ -283,4 +283,38 @@ class Pedido
         $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
     }
+
+    /**
+     * Resumen de los últimos 7 días para el dashboard: pedidos, lo vendido
+     * (sin cancelados) y cuántos de esos clientes ya habían pedido antes
+     * (recurrentes, no nuevos) — todo en una sola consulta con subquery en
+     * vez de traer los pedidos a PHP para contarlos.
+     *
+     * @return array{pedidos: int, ventas: int, recurrentes: int}
+     */
+    public static function resumenSemana(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT
+                COUNT(*) AS pedidos,
+                COALESCE(SUM(p.total), 0) AS ventas,
+                COUNT(DISTINCT CASE WHEN historico.total_compras >= 2 THEN p.cliente_id END) AS recurrentes
+             FROM pedidos p
+             JOIN (SELECT cliente_id, COUNT(*) AS total_compras FROM pedidos WHERE sede_id = :sede_id_h GROUP BY cliente_id) historico
+               ON historico.cliente_id = p.cliente_id
+             WHERE p.sede_id = :sede_id AND p.creado_en >= :desde AND p.estado != 'cancelado'"
+        );
+        $stmt->execute([
+            'sede_id_h' => $sedeId,
+            'sede_id'   => $sedeId,
+            'desde'     => (new \DateTimeImmutable('-6 days midnight'))->format('Y-m-d H:i:s'),
+        ]);
+        $fila = $stmt->fetch();
+
+        return [
+            'pedidos'     => (int) $fila['pedidos'],
+            'ventas'      => (int) $fila['ventas'],
+            'recurrentes' => (int) $fila['recurrentes'],
+        ];
+    }
 }
