@@ -165,4 +165,15 @@ class Pedido
         $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
     }
+
+    /** Suma de pedidos de hoy, sin contar los cancelados (no son venta real). */
+    public static function ventasHoy(int $sedeId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT COALESCE(SUM(total), 0) AS total FROM pedidos
+             WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE() AND estado != 'cancelado'"
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        return (int) $stmt->fetch()['total'];
+    }
 }

@@ -46,6 +46,7 @@ class PanelController
             'negocio'         => $negocio,
             'esReservas'      => $esReservas,
             'pedidosHoy'      => $esReservas ? Cita::contarHoy($sedeId) : Pedido::contarHoy($sedeId),
+            'ventasHoy'       => $esReservas ? Cita::ventasHoy($sedeId) : Pedido::ventasHoy($sedeId),
             'recompraPct'     => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
             'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio'])),
             'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorSede($sedeId), 0, 5),

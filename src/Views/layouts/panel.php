@@ -37,13 +37,11 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
         <img src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
       </a>
       <nav class="pq-topbar-links">
+        <span class="pq-nav-grupo">Operación</span>
         <a href="<?= e(base_url('/panel')) ?>" class="<?= ($activo ?? '') === 'panel' ? 'activo' : '' ?>"><?= $pqIcono('panel') ?>Panel</a>
         <?php if (($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas'): ?>
           <a href="<?= e(base_url('/panel/citas')) ?>" class="<?= ($activo ?? '') === 'citas' ? 'activo' : '' ?>"><?= $pqIcono('citas') ?>Agenda</a>
           <a href="<?= e(base_url('/panel/recordatorios')) ?>" class="<?= ($activo ?? '') === 'recordatorios' ? 'activo' : '' ?>"><?= $pqIcono('recordatorios') ?>Recordatorios</a>
-          <?php if ($negocio['rol'] === 'dueno'): ?>
-            <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>"><?= $pqIcono('copiloto') ?>Copiloto</a>
-          <?php endif; ?>
           <a href="<?= e(base_url('/panel/servicios')) ?>" class="<?= ($activo ?? '') === 'servicios' ? 'activo' : '' ?>"><?= $pqIcono('servicios') ?>Servicios</a>
           <?php if ($negocio['rol'] === 'dueno'): ?>
             <a href="<?= e(base_url('/panel/empleados')) ?>" class="<?= ($activo ?? '') === 'empleados' ? 'activo' : '' ?>"><?= $pqIcono('empleados') ?>Empleados</a>
@@ -51,11 +49,15 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
           <?php endif; ?>
         <?php else: ?>
           <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>"><?= $pqIcono('pedidos') ?>Pedidos</a>
-          <?php if ($negocio['rol'] === 'dueno'): ?>
-            <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>"><?= $pqIcono('copiloto') ?>Copiloto</a>
-          <?php endif; ?>
           <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>"><?= $pqIcono('productos') ?>Menú</a>
         <?php endif; ?>
+
+        <?php if ($negocio['rol'] === 'dueno'): ?>
+          <span class="pq-nav-grupo">Crecimiento</span>
+          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>"><?= $pqIcono('copiloto') ?>Copiloto</a>
+        <?php endif; ?>
+
+        <span class="pq-nav-grupo">Configuración</span>
         <a href="<?= e(base_url('/panel/sedes')) ?>" class="<?= ($activo ?? '') === 'sedes' ? 'activo' : '' ?>"><?= $pqIcono('sedes') ?>Sedes</a>
         <?php if ($negocio['rol'] === 'dueno'): ?>
           <a href="<?= e(base_url('/panel/colaboradores')) ?>" class="<?= ($activo ?? '') === 'colaboradores' ? 'activo' : '' ?>"><?= $pqIcono('colaboradores') ?>Colaboradores</a>
@@ -83,15 +85,10 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
       <?= $contenido ?>
     </div>
 
-    <div style="padding: 0 20px 12px">
+    <div style="padding: 0 20px 24px">
       <button type="button" id="push-boton" class="pq-btn pq-btn-ghost pq-btn-chico" data-csrf="<?= e(csrf_token()) ?>">Activar notificaciones</button>
       <p id="push-estado" class="pq-ayuda" style="margin-top: 6px"></p>
     </div>
-
-    <form method="post" action="<?= e(base_url('/logout')) ?>" style="padding: 0 20px 24px">
-      <?= csrf_campo() ?>
-      <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión</button>
-    </form>
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/interacciones.js')) ?>" defer></script>

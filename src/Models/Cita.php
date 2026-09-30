@@ -229,6 +229,17 @@ class Cita
         return (int) $stmt->fetch()['total'];
     }
 
+    /** Suma de las citas de hoy, sin contar las canceladas (no son venta real). */
+    public static function ventasHoy(int $sedeId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COALESCE(SUM(precio), 0) AS total FROM citas
+             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        return (int) $stmt->fetch()['total'];
+    }
+
     /**
      * Bloques ya ocupados ese día (para no dejar reservar encima de otra cita).
      * @return array<int, array{inicio:string, duracion_min:int}>

@@ -23,3 +23,8 @@
   <input class="pq-input" type="password" name="password_nueva" placeholder="Nueva (mínimo 6 caracteres)" required minlength="6">
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cambiar contraseña</button>
 </form>
+
+<form method="post" action="<?= e(base_url('/logout')) ?>" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--borde)">
+  <?= csrf_campo() ?>
+  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión</button>
+</form>

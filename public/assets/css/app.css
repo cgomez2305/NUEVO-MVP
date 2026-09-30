@@ -126,6 +126,10 @@ button { font-family: inherit; }
 .pq-topbar-links a:hover { background: var(--recibo); color: var(--carbon); }
 .pq-topbar-links a.activo { color: var(--sello); background: var(--tinte-sello); font-weight: 600; }
 .pq-topbar-links a.activo svg { opacity: 1; }
+/* Etiquetas de grupo (Operación / Crecimiento / Configuración): solo
+   tienen sentido en el sidebar vertical de escritorio — en el celular la
+   nav es una tira horizontal de chips y una etiqueta ahí solo estorbaría. */
+.pq-nav-grupo { display: none; }
 
 .pq-content { padding: 24px 20px 40px; flex-grow: 1; }
 .pq-content-tienda { padding: 0 20px 120px; flex-grow: 1; }
@@ -576,6 +580,62 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   white-space: nowrap;
 }
 .pq-compartir-botones { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Versión atenuada del bloque de compartir, para cuando no es la acción
+   principal de la pantalla (ver dashboard): mismo contenido, sin el
+   borde punteado azul que le daba demasiado protagonismo. */
+.pq-compartir-secundario {
+  margin-top: 0;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 12px;
+  padding: 12px 12px 12px 14px;
+}
+.pq-compartir-secundario .pq-compartir-url { color: var(--gris-texto); }
+.pq-compartir-secundario .pq-btn-icono { box-shadow: none; border: 1px solid var(--recibo); }
+
+/* ---------- panel: recomendación accionable y filas de actividad ---------- */
+
+.pq-seccion-titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--carbon);
+  display: block;
+}
+
+.pq-recomendacion {
+  margin-top: 14px;
+  background: var(--tinte-sello);
+  border: 1px solid var(--sello);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.pq-recomendacion-texto strong { display: block; font-size: 14px; font-weight: 700; color: var(--carbon); }
+.pq-recomendacion-texto span { font-size: 12.5px; color: var(--gris-texto); }
+
+.pq-fila-pedido {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--recibo);
+  background: var(--tiquete);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.pq-fila-pedido:hover { box-shadow: var(--sombra-suave); transform: translateY(-1px); border-color: var(--sello); }
+
+.pq-acciones-rapidas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+a.pq-stat { text-decoration: none; display: flex; }
+a.pq-stat:hover { border-color: var(--sello); }
 .pq-btn-icono {
   width: 34px;
   height: 34px;
@@ -847,8 +907,8 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
     align-self: start;
     height: calc(100vh - 64px);
   }
-  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand { padding: 0 6px; }
-  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 26px; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand { padding: 0 6px 6px; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 30px; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links {
     flex-direction: column;
     align-items: stretch;
@@ -857,6 +917,17 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
     mask-image: none;
     -webkit-mask-image: none;
   }
+  .pq-shell:has(.pq-topbar-links) .pq-nav-grupo {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--gris-suave);
+    padding: 14px 12px 4px;
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-nav-grupo:first-child { padding-top: 0; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a {
     padding: 10px 12px;
     font-size: 13px;
@@ -869,9 +940,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 
   .pq-shell:has(.pq-topbar-links) .pq-sede-switcher { grid-column: 2; padding: 22px 32px 0; margin: 0; }
   .pq-shell:has(.pq-topbar-links) .pq-content { grid-column: 2; padding: 24px 32px 40px; max-width: 760px; }
-  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 12px"],
-  .pq-shell:has(.pq-topbar-links) > form { grid-column: 2; padding-left: 32px; padding-right: 32px; }
-  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 12px"] { padding-top: 8px; }
+  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 24px"] { grid-column: 2; padding-left: 32px; padding-right: 32px; padding-top: 8px; }
 
   .pq-stats { max-width: 480px; }
 }
