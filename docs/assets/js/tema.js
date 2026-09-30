@@ -49,12 +49,36 @@
       });
     });
 
-    // Hamburguesa: abre/cierra el panel de navegación en mobile.
+    // Hamburguesa: abre/cierra el panel de navegación en mobile, y el ícono
+    // se convierte en una X (las tres líneas del SVG, ver site.css) en vez
+    // de quedarse como hamburguesa con el menú ya abierto.
     document.querySelectorAll('.btn-hamburguesa').forEach(function (boton) {
       boton.addEventListener('click', function () {
         var nav = boton.closest('nav');
         var links = nav ? nav.querySelector('.nav-links') : null;
-        if (links) links.classList.toggle('abierto');
+        if (!links) return;
+        var abierto = links.classList.toggle('abierto');
+        boton.classList.toggle('abierto', abierto);
+        boton.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
+        boton.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+        document.body.classList.toggle('menu-abierto', abierto);
+      });
+    });
+
+    // Cerrar el menú mobile al elegir un enlace (evita quedarse con el
+    // panel abierto y el scroll bloqueado después de navegar).
+    document.querySelectorAll('.nav-links').forEach(function (links) {
+      links.querySelectorAll('a:not(.nav-trigger)').forEach(function (enlace) {
+        enlace.addEventListener('click', function () {
+          links.classList.remove('abierto');
+          document.body.classList.remove('menu-abierto');
+          var boton = links.closest('nav').querySelector('.btn-hamburguesa');
+          if (boton) {
+            boton.classList.remove('abierto');
+            boton.setAttribute('aria-label', 'Abrir menú');
+            boton.setAttribute('aria-expanded', 'false');
+          }
+        });
       });
     });
 

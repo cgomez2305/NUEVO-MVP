@@ -73,7 +73,7 @@
         <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       </button>
       <button type="button" class="btn-hamburguesa" aria-label="Abrir menú">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line class="linea linea-arriba" x1="4" y1="7" x2="20" y2="7"/><line class="linea linea-medio" x1="4" y1="12" x2="20" y2="12"/><line class="linea linea-abajo" x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       </div>
     </nav>
@@ -136,22 +136,22 @@
 
           <div class="demo-productos">
             <div class="demo-producto" data-id="1" data-nombre="Bandeja paisa" data-precio="28000">
-              <div class="foto" style="background:#E8452C"></div>
+              <div class="foto" style="background:#E8452C" data-emoji="🍲"></div>
               <strong>Bandeja paisa</strong>
               <div class="fila"><span class="precio mono">$28.000</span><button type="button" class="demo-add" data-add aria-label="Agregar Bandeja paisa">+</button></div>
             </div>
             <div class="demo-producto" data-id="2" data-nombre="Arepa con queso" data-precio="6000">
-              <div class="foto" style="background:#F2B632"></div>
+              <div class="foto" style="background:#F2B632" data-emoji="🫓"></div>
               <strong>Arepa con queso</strong>
               <div class="fila"><span class="precio mono">$6.000</span><button type="button" class="demo-add" data-add aria-label="Agregar Arepa con queso">+</button></div>
             </div>
             <div class="demo-producto" data-id="3" data-nombre="Jugo natural" data-precio="5000">
-              <div class="foto" style="background:#5B7F3A"></div>
+              <div class="foto" style="background:#5B7F3A" data-emoji="🥤"></div>
               <strong>Jugo natural</strong>
               <div class="fila"><span class="precio mono">$5.000</span><button type="button" class="demo-add" data-add aria-label="Agregar Jugo natural">+</button></div>
             </div>
             <div class="demo-producto" data-id="4" data-nombre="Café tinto" data-precio="2500">
-              <div class="foto" style="background:#1B1A17"></div>
+              <div class="foto" style="background:#1B1A17" data-emoji="☕"></div>
               <strong>Café tinto</strong>
               <div class="fila"><span class="precio mono">$2.500</span><button type="button" class="demo-add" data-add aria-label="Agregar Café tinto">+</button></div>
             </div>
@@ -213,11 +213,18 @@
 
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
-          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
-          <h3>Así de simple llega tu pedido</h3>
-          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
-          <div class="demo-exito-mensaje"></div>
-          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          <div class="demo-chat-header">
+            <button type="button" class="demo-exito-cerrar" aria-label="Cerrar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="demo-chat-avatar"></div>
+            <div class="demo-chat-info"><strong></strong><span>en línea</span></div>
+          </div>
+          <div class="demo-chat-cuerpo"></div>
+          <div class="demo-exito-pie">
+            <p class="demo-exito-nota">Así llegaría, ya escrito, al WhatsApp del negocio.</p>
+            <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -246,22 +253,22 @@
 
           <div class="demo-productos">
             <div class="demo-producto" data-id="1" data-nombre="Arroz x libra" data-precio="3200">
-              <div class="foto" style="background:#F2B632"></div>
+              <div class="foto" style="background:#F2B632" data-emoji="🍚"></div>
               <strong>Arroz x libra</strong>
               <div class="fila"><span class="precio mono">$3.200</span><button type="button" class="demo-add" data-add aria-label="Agregar Arroz x libra">+</button></div>
             </div>
             <div class="demo-producto" data-id="2" data-nombre="Aceite 1L" data-precio="9800">
-              <div class="foto" style="background:#5B7F3A"></div>
+              <div class="foto" style="background:#5B7F3A" data-emoji="🫙"></div>
               <strong>Aceite 1L</strong>
               <div class="fila"><span class="precio mono">$9.800</span><button type="button" class="demo-add" data-add aria-label="Agregar Aceite 1L">+</button></div>
             </div>
             <div class="demo-producto" data-id="3" data-nombre="Huevos x30" data-precio="16500">
-              <div class="foto" style="background:#E8452C"></div>
+              <div class="foto" style="background:#E8452C" data-emoji="🥚"></div>
               <strong>Huevos x30</strong>
               <div class="fila"><span class="precio mono">$16.500</span><button type="button" class="demo-add" data-add aria-label="Agregar Huevos x30">+</button></div>
             </div>
             <div class="demo-producto" data-id="4" data-nombre="Leche 1L" data-precio="4200">
-              <div class="foto" style="background:#3B4CCA"></div>
+              <div class="foto" style="background:#3B4CCA" data-emoji="🥛"></div>
               <strong>Leche 1L</strong>
               <div class="fila"><span class="precio mono">$4.200</span><button type="button" class="demo-add" data-add aria-label="Agregar Leche 1L">+</button></div>
             </div>
@@ -323,11 +330,18 @@
 
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
-          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
-          <h3>Así de simple llega tu pedido</h3>
-          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
-          <div class="demo-exito-mensaje"></div>
-          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          <div class="demo-chat-header">
+            <button type="button" class="demo-exito-cerrar" aria-label="Cerrar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="demo-chat-avatar"></div>
+            <div class="demo-chat-info"><strong></strong><span>en línea</span></div>
+          </div>
+          <div class="demo-chat-cuerpo"></div>
+          <div class="demo-exito-pie">
+            <p class="demo-exito-nota">Así llegaría, ya escrito, al WhatsApp del negocio.</p>
+            <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -426,11 +440,18 @@
 
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
-          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
-          <h3>Así de simple llega tu reserva</h3>
-          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
-          <div class="demo-exito-mensaje"></div>
-          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          <div class="demo-chat-header">
+            <button type="button" class="demo-exito-cerrar" aria-label="Cerrar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="demo-chat-avatar"></div>
+            <div class="demo-chat-info"><strong></strong><span>en línea</span></div>
+          </div>
+          <div class="demo-chat-cuerpo"></div>
+          <div class="demo-exito-pie">
+            <p class="demo-exito-nota">Así llegaría, ya escrito, al WhatsApp del negocio.</p>
+            <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -529,11 +550,18 @@
 
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
-          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
-          <h3>Así de simple llega tu reserva</h3>
-          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
-          <div class="demo-exito-mensaje"></div>
-          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          <div class="demo-chat-header">
+            <button type="button" class="demo-exito-cerrar" aria-label="Cerrar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="demo-chat-avatar"></div>
+            <div class="demo-chat-info"><strong></strong><span>en línea</span></div>
+          </div>
+          <div class="demo-chat-cuerpo"></div>
+          <div class="demo-exito-pie">
+            <p class="demo-exito-nota">Así llegaría, ya escrito, al WhatsApp del negocio.</p>
+            <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -632,11 +660,18 @@
 
       <div class="demo-exito">
         <div class="demo-exito-tarjeta">
-          <div class="demo-exito-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></div>
-          <h3>Así de simple llega tu reserva</h3>
-          <p class="demo-exito-nota">Este es el mensaje que le llegaría al WhatsApp del negocio, ya escrito:</p>
-          <div class="demo-exito-mensaje"></div>
-          <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          <div class="demo-chat-header">
+            <button type="button" class="demo-exito-cerrar" aria-label="Cerrar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="demo-chat-avatar"></div>
+            <div class="demo-chat-info"><strong></strong><span>en línea</span></div>
+          </div>
+          <div class="demo-chat-cuerpo"></div>
+          <div class="demo-exito-pie">
+            <p class="demo-exito-nota">Así llegaría, ya escrito, al WhatsApp del negocio.</p>
+            <button type="button" class="btn btn-ghost-oscuro demo-exito-cerrar">Probar de nuevo</button>
+          </div>
         </div>
       </div>
     </div>
