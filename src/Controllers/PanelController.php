@@ -194,14 +194,55 @@ class PanelController
     public function productos(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $sedeId = (int) $negocio['id'];
+
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $categoriaFiltro = trim((string) ($_GET['categoria'] ?? ''));
+        $disponibilidad = (string) ($_GET['disponibilidad'] ?? '');
+        $orden = (string) ($_GET['orden'] ?? '');
 
         ver('panel/productos', [
-            'titulo'     => 'Tu menú · Veci',
+            'titulo'          => 'Tu menú · Veci',
+            'activo'          => 'productos',
+            'negocio'         => $negocio,
+            'productos'       => $this->filtrarCatalogo(Producto::listarPorSede($sedeId), $busqueda, $disponibilidad, $orden, $categoriaFiltro),
+            'categorias'      => Producto::categoriasPorSede($sedeId),
+            'busqueda'        => $busqueda,
+            'categoriaFiltro' => $categoriaFiltro,
+            'disponibilidad'  => $disponibilidad,
+            'orden'           => $orden,
+            'ok'              => flash_obtener('ok'),
+            'volver'          => '/panel/productos',
+        ], 'panel');
+    }
+
+    public function nuevoProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/producto_form', [
+            'titulo'     => 'Nuevo producto · Veci',
             'activo'     => 'productos',
             'negocio'    => $negocio,
-            'productos'  => Producto::listarPorSede((int) $negocio['id']),
+            'producto'   => null,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
-            'volver'     => '/panel/productos',
+        ], 'panel');
+    }
+
+    public function editarProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $producto = Producto::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($producto === null) {
+            redirigir('/panel/productos');
+        }
+
+        ver('panel/producto_form', [
+            'titulo'     => 'Editar ' . $producto['nombre'] . ' · Veci',
+            'activo'     => 'productos',
+            'negocio'    => $negocio,
+            'producto'   => $producto,
+            'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
         ], 'panel');
     }
 
@@ -225,6 +266,7 @@ class PanelController
             if ($imagen !== null) {
                 Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
             }
+            flash_set('ok', 'Producto creado.');
         }
 
         redirigir($volver);
@@ -251,6 +293,7 @@ class PanelController
             if ($imagen !== null) {
                 Producto::actualizarImagen($id, (int) $negocio['id'], $imagen);
             }
+            flash_set('ok', 'Producto actualizado.');
         }
 
         redirigir($volver);
@@ -294,6 +337,7 @@ class PanelController
 
         if (csrf_verificar()) {
             Producto::eliminar((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Producto eliminado.');
         }
 
         redirigir($volver);
@@ -314,13 +358,50 @@ class PanelController
     public function servicios(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $sedeId = (int) $negocio['id'];
+
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $disponibilidad = (string) ($_GET['disponibilidad'] ?? '');
+        $orden = (string) ($_GET['orden'] ?? '');
 
         ver('panel/servicios', [
-            'titulo'    => 'Tus servicios · Veci',
-            'activo'    => 'servicios',
-            'negocio'   => $negocio,
-            'servicios' => Servicio::listarPorSede((int) $negocio['id']),
-            'volver'    => '/panel/servicios',
+            'titulo'         => 'Tus servicios · Veci',
+            'activo'         => 'servicios',
+            'negocio'        => $negocio,
+            'servicios'      => $this->filtrarCatalogo(Servicio::listarPorSede($sedeId), $busqueda, $disponibilidad, $orden),
+            'busqueda'       => $busqueda,
+            'disponibilidad' => $disponibilidad,
+            'orden'          => $orden,
+            'ok'             => flash_obtener('ok'),
+            'volver'         => '/panel/servicios',
+        ], 'panel');
+    }
+
+    public function nuevoServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        ver('panel/servicio_form', [
+            'titulo'   => 'Nuevo servicio · Veci',
+            'activo'   => 'servicios',
+            'negocio'  => $negocio,
+            'servicio' => null,
+        ], 'panel');
+    }
+
+    public function editarServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $servicio = Servicio::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($servicio === null) {
+            redirigir('/panel/servicios');
+        }
+
+        ver('panel/servicio_form', [
+            'titulo'   => 'Editar ' . $servicio['nombre'] . ' · Veci',
+            'activo'   => 'servicios',
+            'negocio'  => $negocio,
+            'servicio' => $servicio,
         ], 'panel');
     }
 
@@ -339,6 +420,7 @@ class PanelController
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::crear((int) $negocio['id'], $nombre, $precio, $duracion);
+            flash_set('ok', 'Servicio creado.');
         }
 
         redirigir($volver);
@@ -359,6 +441,7 @@ class PanelController
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
+            flash_set('ok', 'Servicio actualizado.');
         }
 
         redirigir($volver);
@@ -371,6 +454,7 @@ class PanelController
 
         if (csrf_verificar()) {
             Servicio::eliminar((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Servicio eliminado.');
         }
 
         redirigir($volver);
@@ -398,6 +482,7 @@ class PanelController
             $tipo = (string) ($_POST['deposito_tipo'] ?? 'ninguno');
             $valor = (int) ($_POST['deposito_valor'] ?? 0);
             Servicio::actualizarDeposito((int) $parametros['id'], (int) $negocio['id'], $tipo, $valor);
+            flash_set('ok', 'Anticipo actualizado.');
         }
 
         redirigir($volver);
@@ -1043,6 +1128,44 @@ class PanelController
     private function segmentoValido(mixed $segmento): string
     {
         return in_array($segmento, ['vip', 'nuevo', 'inactivo', 'recurrente'], true) ? $segmento : 'inactivo';
+    }
+
+    /**
+     * Filtra y ordena el catálogo de productos o servicios según lo que
+     * venga en la URL (?q=&categoria=&disponibilidad=&orden=). Se hace en
+     * PHP y no en SQL porque estas listas son chicas (decenas de filas, no
+     * miles): un solo método sirve para las dos tablas sin duplicar
+     * consultas ni columnas que no comparten (categoria solo existe en
+     * productos, por eso llega vacía cuando se llama desde servicios()).
+     */
+    private function filtrarCatalogo(array $items, string $busqueda, string $disponibilidad, string $orden, string $categoria = ''): array
+    {
+        if ($busqueda !== '') {
+            $items = array_values(array_filter(
+                $items,
+                fn (array $item) => mb_stripos($item['nombre'], $busqueda) !== false
+            ));
+        }
+
+        if ($categoria !== '') {
+            $items = array_values(array_filter($items, fn (array $item) => $item['categoria'] === $categoria));
+        }
+
+        if ($disponibilidad === 'disponibles') {
+            $items = array_values(array_filter($items, fn (array $item) => (int) $item['agotado'] === 0));
+        } elseif ($disponibilidad === 'agotados') {
+            $items = array_values(array_filter($items, fn (array $item) => (int) $item['agotado'] === 1));
+        }
+
+        match ($orden) {
+            'nombre'      => usort($items, fn (array $a, array $b) => strcasecmp($a['nombre'], $b['nombre'])),
+            'precio_asc'  => usort($items, fn (array $a, array $b) => $a['precio'] <=> $b['precio']),
+            'precio_desc' => usort($items, fn (array $a, array $b) => $b['precio'] <=> $a['precio']),
+            'duracion'    => usort($items, fn (array $a, array $b) => ($a['duracion_min'] ?? 0) <=> ($b['duracion_min'] ?? 0)),
+            default       => null, // se queda en el orden manual que ya trae listarPorSede()
+        };
+
+        return $items;
     }
 
     /** Solo deja volver a rutas propias del panel, nunca a una URL externa. */

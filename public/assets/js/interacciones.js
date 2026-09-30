@@ -103,4 +103,24 @@
   }
   document.addEventListener('change', actualizarCamposCondicionales);
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
+
+  // ---------------------------------------------------------------------
+  // Menú "⋮" del catálogo (productos/servicios): <details class="pq-menu">
+  // sin JS para abrir/cerrar al hacer clic en su propio summary, pero
+  // <details> nativo no se cierra solo con un clic afuera ni cuando se
+  // abre otro — eso sí hace falta resolverlo aquí, para que nunca queden
+  // dos menús abiertos a la vez en la misma tarjeta de catálogo.
+  // ---------------------------------------------------------------------
+  document.addEventListener('click', function (evento) {
+    document.querySelectorAll('details.pq-menu[open]').forEach(function (menu) {
+      if (!menu.contains(evento.target)) menu.removeAttribute('open');
+    });
+  });
+  document.addEventListener('toggle', function (evento) {
+    var menu = evento.target;
+    if (!menu.matches || !menu.matches('details.pq-menu[open]')) return;
+    document.querySelectorAll('details.pq-menu[open]').forEach(function (otro) {
+      if (otro !== menu) otro.removeAttribute('open');
+    });
+  }, true);
 })();
