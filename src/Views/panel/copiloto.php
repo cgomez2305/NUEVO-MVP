@@ -69,6 +69,10 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
             <span class="pq-ayuda"><?= e($fila['motivo']) ?></span>
           </div>
           <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje') . '?segmento=' . $segmentoEfectivo) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Enviar</a>
+          <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/eliminar')) ?>" onsubmit="return confirm('¿Eliminar todos los datos de ' + <?= json_encode($cliente['nombre']) ?> + ' (incluye su historial de pedidos/citas)? Esta acción no se puede deshacer.')">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 10px; cursor: pointer; padding: 0; margin-left: 8px" title="Eliminar sus datos (habeas data)">eliminar datos</button>
+          </form>
         </div>
       <?php endforeach; ?>
     </div>

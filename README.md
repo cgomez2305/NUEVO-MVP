@@ -148,6 +148,37 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    partir con datos ya cargados, entra con la cuenta de demostración
    (`3001234567` / `veci123`) si importaste `seed.sql`.
 
+## Recuperación de contraseña, panel interno y legal
+
+Tres piezas pensadas para operar Veci en producción, no solo para que un
+negocio use la app:
+
+- **Recuperación de contraseña**: desde `/olvide-password`, si el dueño
+  guardó un correo en "Mi cuenta" y configuraste `smtp` en
+  `config/config.php`, se le manda un enlace de un solo uso (vence en 1
+  hora). Sin SMTP configurado o sin correo guardado, la cuenta se recupera
+  a mano desde el panel interno (ver abajo). El cliente SMTP
+  (`src/Services/Correo.php`) habla STARTTLS + AUTH LOGIN por sockets,
+  sin dependencias — sirve cualquier proveedor (Gmail con contraseña de
+  aplicación, SendGrid, Zoho...).
+- **Panel interno (`/admin`)**: para el equipo de Veci, no para un negocio.
+  Lista todos los negocios, deja suspender/reactivar una cuenta (bloquea
+  login y tienda pública) y generar un enlace de recuperación de
+  contraseña a mano para cualquier usuario. No hay registro público: se
+  crea la primera cuenta con:
+
+  ```bash
+  php bin/crear_admin.php "Tu nombre" tu@correo.com "una-contraseña-larga"
+  ```
+
+- **Legal y hábeas data**: política de privacidad y términos de servicio
+  en `docs/privacidad.html` y `docs/terminos.html` (enlazadas desde el
+  registro, el checkout público y el footer de todo el sitio). El derecho
+  de eliminación de datos (Ley 1581 de 2012) tiene un camino concreto: el
+  dueño borra a un cliente y todo su historial con un botón en
+  `/panel/copiloto`, y si el negocio no responde, `soporte@tuveci.co` lo
+  hace directamente.
+
 ## Estructura
 
 ```

@@ -39,11 +39,79 @@ class Usuario
         return (int) $pdo->lastInsertId();
     }
 
+    /** Incluye negocios.suspendido, para que Auth pueda bloquear el login de una cuenta suspendida. */
     public static function buscarPorWhatsapp(string $whatsapp): ?array
     {
-        $stmt = Database::conexion()->prepare('SELECT * FROM usuarios WHERE whatsapp = :whatsapp');
+        $stmt = Database::conexion()->prepare(
+            'SELECT u.*, n.suspendido AS negocio_suspendido FROM usuarios u
+             JOIN negocios n ON n.id = u.negocio_id
+             WHERE u.whatsapp = :whatsapp'
+        );
         $stmt->execute(['whatsapp' => $whatsapp]);
         return $stmt->fetch() ?: null;
+    }
+
+    public static function buscarPorCorreo(string $correo): ?array
+    {
+        $stmt = Database::conexion()->prepare('SELECT * FROM usuarios WHERE correo = :correo');
+        $stmt->execute(['correo' => $correo]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function guardarCorreo(int $id, ?string $correo): bool
+    {
+        try {
+            $stmt = Database::conexion()->prepare('UPDATE usuarios SET correo = :correo WHERE id = :id');
+            $stmt->execute(['correo' => $correo === '' ? null : $correo, 'id' => $id]);
+            return true;
+        } catch (\PDOException $e) {
+            return false; // correo duplicado (uniq_usuarios_correo)
+        }
+    }
+
+    public static function cambiarPassword(int $id, string $password): void
+    {
+        $stmt = Database::conexion()->prepare('UPDATE usuarios SET password_hash = :hash WHERE id = :id');
+        $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
+    }
+
+    /** Genera un token de recuperación de contraseña válido por 1 hora y lo devuelve (sin hashear: va en el enlace). */
+    public static function generarTokenReset(int $id): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $stmt = Database::conexion()->prepare(
+            'UPDATE usuarios SET reset_token = :token, reset_token_expira = :expira WHERE id = :id'
+        );
+        $stmt->execute([
+            'token'  => $token,
+            'expira' => date('Y-m-d H:i:s', time() + 3600),
+            'id'     => $id,
+        ]);
+        return $token;
+    }
+
+    /**
+     * Compara contra date('Y-m-d H:i:s') en PHP, no NOW() de SQL: el server
+     * de la app corre en America/Bogota (ver src/bootstrap.php) pero MySQL
+     * suele correr en UTC, así que NOW() desfasaría la expiración 5 horas.
+     * Mismo patrón que bloqueado() más abajo.
+     */
+    public static function buscarPorTokenReset(string $token): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT * FROM usuarios WHERE reset_token = :token AND reset_token_expira > :ahora'
+        );
+        $stmt->execute(['token' => $token, 'ahora' => date('Y-m-d H:i:s')]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function restablecerPassword(int $id, string $password): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE usuarios SET password_hash = :hash, reset_token = NULL, reset_token_expira = NULL,
+             intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = :id'
+        );
+        $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
     }
 
     public static function buscarPorId(int $id): ?array

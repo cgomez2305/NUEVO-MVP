@@ -22,7 +22,11 @@
   <button type="submit" class="pq-btn pq-btn-sello">Entrar →</button>
 </form>
 
-<p class="pq-lead pq-centro" style="margin-top: 20px">
+<p class="pq-lead pq-centro" style="margin-top: 16px">
+  <a href="<?= e(base_url('/olvide-password')) ?>" style="color: var(--gris-suave)">¿Olvidaste tu contraseña?</a>
+</p>
+
+<p class="pq-lead pq-centro" style="margin-top: 8px">
   ¿Aún no tienes tienda? <a href="<?= e(base_url('/registro')) ?>" style="color: var(--sello); font-weight: 600">Créala gratis</a>
 </p>
 

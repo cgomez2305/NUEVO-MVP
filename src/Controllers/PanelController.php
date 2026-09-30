@@ -815,6 +815,83 @@ class PanelController
         redirigir('/panel/colaboradores');
     }
 
+    /** Correo (para recuperar contraseña) y cambio de contraseña del usuario de la sesión. Cualquier rol puede entrar. */
+    public function cuenta(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $usuario = Usuario::buscarPorId((int) $negocio['usuario_id']);
+
+        ver('panel/cuenta', [
+            'titulo'  => 'Mi cuenta · Veci',
+            'activo'  => 'cuenta',
+            'negocio' => $negocio,
+            'usuario' => $usuario,
+            'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function actualizarCorreo(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $correo = trim((string) ($_POST['correo'] ?? ''));
+
+            if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                flash_set('error', 'Ese correo no es válido.');
+                redirigir('/panel/cuenta');
+            }
+
+            if (Usuario::guardarCorreo((int) $negocio['usuario_id'], $correo === '' ? null : $correo)) {
+                flash_set('ok', $correo === '' ? 'Correo eliminado de tu cuenta.' : 'Correo guardado. Ya puedes recuperar tu contraseña con él.');
+            } else {
+                flash_set('error', 'Ese correo ya está en uso por otra cuenta.');
+            }
+        }
+
+        redirigir('/panel/cuenta');
+    }
+
+    public function actualizarPasswordCuenta(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $actual = (string) ($_POST['password_actual'] ?? '');
+            $nueva = (string) ($_POST['password_nueva'] ?? '');
+            $usuario = Usuario::buscarPorId((int) $negocio['usuario_id']);
+
+            if ($usuario === null || !password_verify($actual, $usuario['password_hash'])) {
+                flash_set('error', 'Tu contraseña actual no coincide.');
+            } elseif (strlen($nueva) < 6) {
+                flash_set('error', 'La contraseña nueva debe tener al menos 6 caracteres.');
+            } else {
+                Usuario::cambiarPassword((int) $negocio['usuario_id'], $nueva);
+                flash_set('ok', 'Contraseña actualizada.');
+            }
+        }
+
+        redirigir('/panel/cuenta');
+    }
+
+    /** Derecho de eliminación de datos (habeas data): borra al cliente y todo su historial. Solo el dueño. */
+    public function eliminarCliente(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar()) {
+            $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
+            if ($cliente !== null) {
+                Cliente::eliminar((int) $cliente['id'], (int) $negocio['negocio_id']);
+                flash_set('ok', 'Se eliminaron los datos de ' . $cliente['nombre'] . ' y todo su historial.');
+            }
+        }
+
+        redirigir('/panel/copiloto');
+    }
+
     /** Valida el segmento recibido por GET/POST antes de usarlo para elegir plantilla de mensaje. */
     private function segmentoValido(mixed $segmento): string
     {

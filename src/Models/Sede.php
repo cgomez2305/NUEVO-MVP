@@ -70,7 +70,7 @@ class Sede
         $stmt = Database::conexion()->prepare(
             'SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre
              FROM sedes s JOIN negocios n ON n.id = s.negocio_id
-             WHERE s.slug = :slug AND s.publicada = 1'
+             WHERE s.slug = :slug AND s.publicada = 1 AND n.suspendido = 0'
         );
         $stmt->execute(['slug' => $slug]);
         return $stmt->fetch() ?: null;

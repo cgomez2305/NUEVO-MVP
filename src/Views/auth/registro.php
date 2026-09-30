@@ -44,7 +44,17 @@
     <input class="pq-input" type="password" id="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
   </div>
 
+  <div class="pq-campo">
+    <label class="pq-label" for="correo">Tu correo (opcional)</label>
+    <input class="pq-input" type="email" id="correo" name="correo" placeholder="para recuperar tu contraseña si la olvidas" maxlength="160">
+  </div>
+
   <button type="submit" class="pq-btn pq-btn-sello">Crear mi tienda →</button>
+
+  <p class="pq-ayuda pq-centro" style="margin-top: 12px">
+    Al crear tu tienda aceptas los <a href="https://tuveci.co/terminos.html" target="_blank" rel="noopener" style="color: var(--sello)">términos de servicio</a>
+    y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: var(--sello)">política de privacidad</a>.
+  </p>
 </form>
 
 <p class="pq-lead pq-centro" style="margin-top: 20px">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../src/bootstrap.php';
 
+use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\HomeController;
 use App\Controllers\OnboardingController;
@@ -20,6 +21,7 @@ $onboarding = new OnboardingController();
 $panel = new PanelController();
 $tienda = new TiendaController();
 $webhook = new WebhookController();
+$admin = new AdminController();
 
 // --- Público ---------------------------------------------------------
 $router->get('/', [$home, 'index']);
@@ -29,6 +31,10 @@ $router->post('/registro', [$auth, 'registrar']);
 $router->get('/login', [$auth, 'formularioLogin']);
 $router->post('/login', [$auth, 'iniciarSesion']);
 $router->post('/logout', [$auth, 'cerrarSesion']);
+$router->get('/olvide-password', [$auth, 'formularioOlvide']);
+$router->post('/olvide-password', [$auth, 'solicitarReset']);
+$router->get('/reset-password/{token}', [$auth, 'formularioReset']);
+$router->post('/reset-password/{token}', [$auth, 'restablecer']);
 
 // --- Alta del comerciante (flujo A de la maqueta) ---------------------
 $router->get('/panel/onboarding/foto', [$onboarding, 'mostrarFoto']);
@@ -86,6 +92,10 @@ $router->get('/panel/colaboradores', [$panel, 'colaboradores']);
 $router->post('/panel/colaboradores', [$panel, 'crearColaborador']);
 $router->post('/panel/colaboradores/{id}/sedes', [$panel, 'actualizarSedesColaborador']);
 $router->post('/panel/colaboradores/{id}/eliminar', [$panel, 'eliminarColaborador']);
+$router->get('/panel/cuenta', [$panel, 'cuenta']);
+$router->post('/panel/cuenta/correo', [$panel, 'actualizarCorreo']);
+$router->post('/panel/cuenta/password', [$panel, 'actualizarPasswordCuenta']);
+$router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente']);
 
 // --- Tienda pública del cliente (flujo B de la maqueta) ----------------
 $router->get('/t/{slug}', [$tienda, 'mostrar']);
@@ -106,5 +116,15 @@ $router->post('/cita/{token}/reprogramar', [$tienda, 'guardarReprogramacion']);
 
 // --- Webhooks de proveedores externos -----------------------------------
 $router->post('/webhooks/breb', [$webhook, 'breb']);
+
+// --- Panel interno del equipo de Veci (no de un negocio) ---------------
+$router->get('/admin/login', [$admin, 'formularioLogin']);
+$router->post('/admin/login', [$admin, 'iniciarSesion']);
+$router->post('/admin/logout', [$admin, 'cerrarSesion']);
+$router->get('/admin', [$admin, 'dashboard']);
+$router->get('/admin/negocios/{id}', [$admin, 'verNegocio']);
+$router->post('/admin/negocios/{id}/suspender', [$admin, 'suspender']);
+$router->post('/admin/negocios/{id}/reactivar', [$admin, 'reactivar']);
+$router->post('/admin/usuarios/{usuario}/generar-reset', [$admin, 'generarReset']);
 
 $router->despachar($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

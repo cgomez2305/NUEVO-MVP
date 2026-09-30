@@ -34,6 +34,7 @@
         <?php if ($negocio['rol'] === 'dueno'): ?>
           <a href="<?= e(base_url('/panel/colaboradores')) ?>" class="<?= ($activo ?? '') === 'colaboradores' ? 'activo' : '' ?>">Colaboradores</a>
         <?php endif; ?>
+        <a href="<?= e(base_url('/panel/cuenta')) ?>" class="<?= ($activo ?? '') === 'cuenta' ? 'activo' : '' ?>">Mi cuenta</a>
       </nav>
     </div>
 

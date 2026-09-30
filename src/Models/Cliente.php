@@ -58,4 +58,17 @@ class Cliente
         $stmt->execute(['negocio_id' => $negocioId]);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Derecho de suprimir datos (Ley 1581 de 2012): borra al cliente y, por
+     * el ON DELETE CASCADE del esquema, todo su historial (pedidos, citas,
+     * mensajes del copiloto). Es definitivo.
+     */
+    public static function eliminar(int $id, int $negocioId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'DELETE FROM clientes WHERE id = :id AND negocio_id = :negocio_id'
+        );
+        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+    }
 }

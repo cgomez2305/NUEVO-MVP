@@ -1,0 +1,150 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\AdminAuth;
+use App\Database;
+use App\Models\Negocio;
+use App\Models\Sede;
+use App\Models\Usuario;
+
+/**
+ * Panel interno del equipo de Veci (no de un negocio): ver todos los
+ * negocios, suspender/reactivar cuentas y generar un enlace de
+ * recuperación de contraseña a mano cuando alguien se queda bloqueado y
+ * no tiene correo (o no llega el correo). Requiere AdminAuth, que es una
+ * sesión completamente separada de la de un negocio (App\Auth).
+ */
+class AdminController
+{
+    public function formularioLogin(array $parametros): void
+    {
+        if (AdminAuth::adminActual() !== null) {
+            redirigir('/admin');
+        }
+
+        ver('admin/login', [
+            'titulo' => 'Panel interno · Veci',
+            'error'  => flash_obtener('error'),
+        ], 'auth');
+    }
+
+    public function iniciarSesion(array $parametros): void
+    {
+        if (!csrf_verificar()) {
+            flash_set('error', 'El formulario expiró, intenta de nuevo.');
+            redirigir('/admin/login');
+        }
+
+        $correo = trim((string) ($_POST['correo'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+
+        if (!AdminAuth::intentarLogin($correo, $password)) {
+            flash_set('error', 'Correo o contraseña incorrectos.');
+            redirigir('/admin/login');
+        }
+
+        redirigir('/admin');
+    }
+
+    public function cerrarSesion(array $parametros): void
+    {
+        if (csrf_verificar()) {
+            AdminAuth::cerrarSesion();
+        }
+        redirigir('/admin/login');
+    }
+
+    public function dashboard(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+
+        ver('admin/dashboard', [
+            'titulo'   => 'Negocios · Panel interno · Veci',
+            'admin'    => $admin,
+            'negocios' => Negocio::listarTodos($busqueda),
+            'busqueda' => $busqueda,
+        ], 'admin');
+    }
+
+    public function verNegocio(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $negocio = Negocio::buscarPorId((int) $parametros['id']);
+
+        if ($negocio === null) {
+            flash_set('error', 'Ese negocio no existe.');
+            redirigir('/admin');
+        }
+
+        $stmtNegocioId = (int) $negocio['id'];
+
+        ver('admin/negocio', [
+            'titulo'       => $negocio['nombre'] . ' · Panel interno · Veci',
+            'admin'        => $admin,
+            'negocio'      => $negocio,
+            'sedes'        => Sede::listarPorNegocio($stmtNegocioId),
+            'usuarios'     => $this->usuariosDelNegocio($stmtNegocioId),
+            'ok'           => flash_obtener('ok'),
+            'error'        => flash_obtener('error'),
+            'resetEnlace'  => flash_obtener('reset_enlace'),
+            'resetUsuario' => flash_obtener('reset_usuario'),
+        ], 'admin');
+    }
+
+    public function suspender(array $parametros): void
+    {
+        AdminAuth::exigirSesion();
+
+        if (csrf_verificar()) {
+            Negocio::suspender((int) $parametros['id']);
+            flash_set('ok', 'Cuenta suspendida. Nadie de ese negocio puede entrar ni su tienda pública responde.');
+        }
+
+        redirigir('/admin/negocios/' . (int) $parametros['id']);
+    }
+
+    public function reactivar(array $parametros): void
+    {
+        AdminAuth::exigirSesion();
+
+        if (csrf_verificar()) {
+            Negocio::reactivar((int) $parametros['id']);
+            flash_set('ok', 'Cuenta reactivada.');
+        }
+
+        redirigir('/admin/negocios/' . (int) $parametros['id']);
+    }
+
+    /** Genera un enlace de recuperación de contraseña para un usuario y lo muestra una sola vez, para que el admin lo copie y lo mande por WhatsApp. */
+    public function generarReset(array $parametros): void
+    {
+        AdminAuth::exigirSesion();
+        $usuario = Usuario::buscarPorId((int) $parametros['usuario']);
+
+        if ($usuario === null) {
+            redirigir('/admin');
+        }
+
+        if (csrf_verificar()) {
+            $token = Usuario::generarTokenReset((int) $usuario['id']);
+            flash_set('reset_enlace', url_publica('/reset-password/' . $token));
+            flash_set('reset_usuario', $usuario['nombre'] . ' (' . $usuario['whatsapp'] . ')');
+        }
+
+        redirigir('/admin/negocios/' . (int) $usuario['negocio_id']);
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function usuariosDelNegocio(int $negocioId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT * FROM usuarios WHERE negocio_id = :negocio_id ORDER BY rol ASC, nombre ASC'
+        );
+        $stmt->execute(['negocio_id' => $negocioId]);
+        return $stmt->fetchAll();
+    }
+}

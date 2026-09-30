@@ -17,11 +17,16 @@ SET NAMES utf8mb4;
 -- vive en `sedes`: un negocio puede tener una sola sede (el caso normal,
 -- no se nota que existe el concepto) o varias.
 CREATE TABLE IF NOT EXISTS negocios (
-  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  nombre       VARCHAR(120) NOT NULL,
-  color_marca  CHAR(7)      DEFAULT '#E8452C',
-  tipo_negocio ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
-  creado_en    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre        VARCHAR(120) NOT NULL,
+  color_marca   CHAR(7)      DEFAULT '#E8452C',
+  tipo_negocio  ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
+  -- El equipo de Veci suspende una cuenta desde el panel interno (mora,
+  -- abuso, solicitud del dueño). Suspendida: nadie de ese negocio puede
+  -- iniciar sesión y sus tiendas públicas dejan de responder.
+  suspendido    TINYINT(1)   NOT NULL DEFAULT 0,
+  suspendido_en DATETIME     DEFAULT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- Quién entra al panel. 'dueno' ve y administra TODAS las sedes de su
@@ -29,16 +34,25 @@ CREATE TABLE IF NOT EXISTS negocios (
 -- entra a las sedes que se le asignen en usuario_sedes, y no ve ajustes
 -- de negocio (sedes, colaboradores, horario, depósitos, exportar, push).
 CREATE TABLE IF NOT EXISTS usuarios (
-  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  negocio_id        INT UNSIGNED NOT NULL,
-  nombre            VARCHAR(120) NOT NULL,
-  whatsapp          VARCHAR(20)  NOT NULL UNIQUE,
-  password_hash     VARCHAR(255) NOT NULL,
-  rol               ENUM('dueno','colaborador') NOT NULL DEFAULT 'dueno',
-  intentos_fallidos TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  bloqueado_hasta   DATETIME     DEFAULT NULL,
-  creado_en         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE
+  id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id         INT UNSIGNED NOT NULL,
+  nombre             VARCHAR(120) NOT NULL,
+  whatsapp           VARCHAR(20)  NOT NULL UNIQUE,
+  password_hash      VARCHAR(255) NOT NULL,
+  rol                ENUM('dueno','colaborador') NOT NULL DEFAULT 'dueno',
+  intentos_fallidos  TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  bloqueado_hasta    DATETIME     DEFAULT NULL,
+  -- Correo opcional: solo sirve para poder recuperar la contraseña por ese
+  -- canal (ver src/Controllers/AuthController.php). Sin correo, la única
+  -- salida si se pierde el acceso es que el equipo de Veci genere un
+  -- enlace de recuperación desde el panel interno.
+  correo             VARCHAR(160) DEFAULT NULL,
+  reset_token        CHAR(64)     DEFAULT NULL,
+  reset_token_expira DATETIME     DEFAULT NULL,
+  creado_en          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_usuarios_correo (correo),
+  UNIQUE KEY uniq_usuarios_reset_token (reset_token)
 ) ENGINE=InnoDB;
 
 -- Una sede = un punto de atención físico con su propia tienda pública
@@ -218,6 +232,18 @@ CREATE TABLE IF NOT EXISTS citas (
   FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE SET NULL,
   INDEX idx_citas_sede_fecha (sede_id, fecha_hora),
   UNIQUE KEY uniq_citas_token (token_gestion)
+) ENGINE=InnoDB;
+
+-- Quién del equipo de Veci puede entrar al panel interno (/admin): ver
+-- todos los negocios, suspenderlos y generar enlaces de recuperación de
+-- contraseña para soporte. Completamente aparte de `usuarios`: no hay
+-- registro público, solo se crea con bin/crear_admin.php.
+CREATE TABLE IF NOT EXISTS admins (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre        VARCHAR(120) NOT NULL,
+  correo        VARCHAR(160) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- Suscripciones de Web Push de cada USUARIO del panel (no por sede: un

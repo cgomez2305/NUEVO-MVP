@@ -17,7 +17,7 @@ class Auth
     public static function intentarLogin(string $whatsapp, string $password): bool
     {
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
-        if ($usuario === null || Usuario::bloqueado($usuario)) {
+        if ($usuario === null || Usuario::bloqueado($usuario) || (int) $usuario['negocio_suspendido'] === 1) {
             return false;
         }
 
@@ -39,6 +39,13 @@ class Auth
     {
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
         return $usuario !== null && Usuario::bloqueado($usuario);
+    }
+
+    /** El negocio de esa cuenta fue suspendido por el equipo de Veci (ver AdminController). */
+    public static function estaSuspendido(string $whatsapp): bool
+    {
+        $usuario = Usuario::buscarPorWhatsapp($whatsapp);
+        return $usuario !== null && (int) $usuario['negocio_suspendido'] === 1;
     }
 
     public static function cerrarSesion(): void

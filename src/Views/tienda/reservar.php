@@ -96,7 +96,7 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
 
         <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); margin-bottom: 20px; line-height: 1.5">
           <input type="checkbox" name="autorizo_datos" value="1" required style="margin-top: 3px">
-          Autorizo a <?= e($negocio['nombre']) ?> a guardar mi nombre y WhatsApp para procesar esta reserva, según la Ley 1581 de 2012.
+          Autorizo a <?= e($negocio['nombre']) ?> a guardar mi nombre y WhatsApp para procesar esta reserva, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
         </label>
 
         <button type="submit" class="pq-btn pq-btn-whatsapp">

@@ -50,4 +50,20 @@ return [
         'private_key' => null,
         'subject'     => 'mailto:soporte@tuveci.co',
     ],
+
+    // Opcional. Credenciales SMTP para enviar el correo de "recuperar mi
+    // contraseña" (el dueño tiene que haber guardado un correo en
+    // "Mi cuenta" primero). Sirve cualquier proveedor con AUTH LOGIN +
+    // STARTTLS (Gmail con contraseña de aplicación, SendGrid, Zoho...).
+    // Sin esto, la solicitud de recuperación queda pendiente para que el
+    // equipo de Veci genere el enlace a mano desde /admin.
+    // Ver src/Services/Correo.php.
+    'smtp' => [
+        'host'             => null,
+        'port'             => 587,
+        'usuario'          => null,
+        'password'         => null,
+        'remitente'        => null, // si es null, usa 'usuario'
+        'remitente_nombre' => 'Veci',
+    ],
 ];
