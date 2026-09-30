@@ -45,4 +45,18 @@
       window.location.href = fila.getAttribute('data-href');
     }
   });
+
+  // Los desplegables del panel (selector de sede, menús ⋮, "Más" del
+  // celular, "+ Nueva sede") son todos <details> nativos: se abren con un
+  // clic sin JS, pero el navegador no los cierra solo con Escape como sí
+  // hace con un <dialog>. Se agrega ese único comportamiento que falta,
+  // para cualquier <details> del panel, sin tocar cuáles existen.
+  document.addEventListener('keydown', function (evento) {
+    if (evento.key !== 'Escape') return;
+    var abierto = document.querySelector('.pq-shell details[open]');
+    if (!abierto) return;
+    abierto.removeAttribute('open');
+    var resumen = abierto.querySelector('summary');
+    if (resumen) resumen.focus();
+  });
 })();

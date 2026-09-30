@@ -91,14 +91,14 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
   <script src="<?= e(base_url('assets/js/panel-sidebar-bootstrap.js')) ?>"></script>
   <div class="pq-shell">
     <div class="pq-topbar">
+      <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
       <div class="pq-topbar-brand-fila">
         <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">
           <img class="pq-topbar-brand-completo" src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
           <img class="pq-topbar-brand-isotipo" src="<?= e(base_url('assets/img/icon-192.png')) ?>" alt="Veci" width="28" height="28">
         </a>
-        <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-        </button>
       </div>
       <nav class="pq-topbar-links">
         <span class="pq-nav-grupo">Operación</span>
@@ -117,7 +117,14 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
         <?php foreach ($navConfiguracion as [$clave, $etiqueta, $href]): ?>
           <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
         <?php endforeach; ?>
+      </nav>
 
+      <!-- Empuja la cuenta al fondo del sidebar (flex column) en vez de
+           dejarla flotando justo debajo de Configuración cuando el menú no
+           llena la altura disponible. -->
+      <div class="pq-topbar-spacer"></div>
+
+      <nav class="pq-topbar-links pq-topbar-links-cuenta">
         <span class="pq-nav-separador" role="separator"></span>
         <?php foreach ($navCuenta as [$clave, $etiqueta, $href]): ?>
           <?= $pqLinkSidebar($clave, $etiqueta, $href) ?>
@@ -140,20 +147,58 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
     </nav>
 
     <div class="pq-shell-main">
-      <?php $sedesAcceso = \App\Auth::sedesAccesibles($negocio); ?>
-      <?php if (count($sedesAcceso) > 1): ?>
-        <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>" class="pq-sede-switcher">
-          <?= csrf_campo() ?>
-          <input type="hidden" name="volver" value="<?= e($_SERVER['REQUEST_URI'] ?? base_url('/panel')) ?>">
-          <select class="pq-select" name="sede_id" data-autoenviar>
-            <?php foreach ($sedesAcceso as $s): ?>
-              <option value="<?= (int) $s['id'] ?>" <?= (int) $s['id'] === (int) $negocio['id'] ? 'selected' : '' ?>>
-                <?= e($s['nombre']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </form>
-      <?php endif; ?>
+      <?php
+      $sedesAcceso = \App\Auth::sedesAccesibles($negocio);
+      $inicialSede = static fn (array $s): string => mb_strtoupper(mb_substr((string) ($s['inicial'] ?? $s['nombre']), 0, 1));
+      ?>
+      <header class="pq-header">
+        <div class="pq-header-espacio"></div>
+        <?php if (count($sedesAcceso) > 1): ?>
+          <details class="pq-switcher">
+            <summary class="pq-switcher-boton" aria-haspopup="true">
+              <span class="pq-switcher-avatar"><?= e($inicialSede($negocio)) ?></span>
+              <span class="pq-switcher-texto">
+                <span class="pq-switcher-nombre"><?= e($negocio['nombre']) ?></span>
+                <span class="pq-switcher-sub">Sede activa</span>
+              </span>
+              <svg class="pq-switcher-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="pq-switcher-panel" role="menu">
+              <span class="pq-switcher-panel-titulo">Cambiar sede</span>
+              <?php foreach ($sedesAcceso as $s): ?>
+                <?php $esActiva = (int) $s['id'] === (int) $negocio['id']; ?>
+                <?php if ($esActiva): ?>
+                  <div class="pq-switcher-item pq-switcher-item-activa">
+                    <span class="pq-switcher-avatar pq-switcher-avatar-chico"><?= e($inicialSede($s)) ?></span>
+                    <span class="pq-switcher-item-nombre"><?= e($s['nombre']) ?></span>
+                    <svg class="pq-switcher-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                  </div>
+                <?php else: ?>
+                  <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>">
+                    <?= csrf_campo() ?>
+                    <input type="hidden" name="sede_id" value="<?= (int) $s['id'] ?>">
+                    <input type="hidden" name="volver" value="<?= e($_SERVER['REQUEST_URI'] ?? base_url('/panel')) ?>">
+                    <button type="submit" class="pq-switcher-item" role="menuitem">
+                      <span class="pq-switcher-avatar pq-switcher-avatar-chico"><?= e($inicialSede($s)) ?></span>
+                      <span class="pq-switcher-item-nombre"><?= e($s['nombre']) ?></span>
+                    </button>
+                  </form>
+                <?php endif; ?>
+              <?php endforeach; ?>
+              <span class="pq-switcher-divisor" role="separator"></span>
+              <a href="<?= e(base_url('/panel/sedes')) ?>" class="pq-switcher-admin">+ Administrar sedes</a>
+            </div>
+          </details>
+        <?php else: ?>
+          <div class="pq-switcher-boton pq-switcher-boton-estatico">
+            <span class="pq-switcher-avatar"><?= e($inicialSede($negocio)) ?></span>
+            <span class="pq-switcher-texto">
+              <span class="pq-switcher-nombre"><?= e($negocio['nombre']) ?></span>
+              <span class="pq-switcher-sub">Sede activa</span>
+            </span>
+          </div>
+        <?php endif; ?>
+      </header>
 
       <div class="pq-content">
         <?= $contenido ?>
