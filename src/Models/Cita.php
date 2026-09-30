@@ -19,14 +19,16 @@ class Cita
         string $fechaHora,
         int $duracionMin,
         ?string $notas = null,
-        ?int $empleadoId = null
+        ?int $empleadoId = null,
+        int $anticipoMonto = 0
     ): int {
         $pdo = Database::conexion();
         $token = bin2hex(random_bytes(16));
+        $anticipoEstado = $anticipoMonto > 0 ? 'pendiente' : 'no_requerido';
 
         $stmt = $pdo->prepare(
-            'INSERT INTO citas (negocio_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, fecha_hora, duracion_min, estado, notas, token_gestion)
-             VALUES (:negocio_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :fecha_hora, :duracion_min, :pendiente, :notas, :token)'
+            'INSERT INTO citas (negocio_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
+             VALUES (:negocio_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
         );
         $stmt->execute([
             'negocio_id'      => $negocioId,
@@ -40,6 +42,8 @@ class Cita
             'pendiente'       => 'pendiente',
             'notas'           => $notas,
             'token'           => $token,
+            'anticipo_monto'  => $anticipoMonto,
+            'anticipo_estado' => $anticipoEstado,
         ]);
 
         return (int) $pdo->lastInsertId();
@@ -155,6 +159,19 @@ class Cita
     {
         $stmt = Database::conexion()->prepare(
             'UPDATE citas SET recordatorio_enviado = 1 WHERE id = :id AND negocio_id = :negocio_id'
+        );
+        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+    }
+
+    /**
+     * El dueño confirma a mano que recibió el anticipo (p. ej. vio el
+     * comprobante por WhatsApp). El webhook de Bre-B hace lo mismo
+     * automáticamente cuando hay un pago real conectado.
+     */
+    public static function marcarAnticipoPagado(int $id, int $negocioId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            "UPDATE citas SET anticipo_estado = 'pagado' WHERE id = :id AND negocio_id = :negocio_id AND anticipo_estado = 'pendiente'"
         );
         $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
     }

@@ -24,5 +24,6 @@
 
 <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/enviar')) ?>" style="margin-top: 10px">
   <?= csrf_campo() ?>
+  <input type="hidden" name="segmento" value="<?= e($segmento) ?>">
   <button type="submit" class="pq-btn pq-btn-ghost">Ya lo envié</button>
 </form>

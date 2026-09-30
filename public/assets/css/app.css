@@ -196,6 +196,11 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   border-color: #BFE3CE;
   color: #16603f;
 }
+.pq-alerta-aviso {
+  background: #FDF1DA;
+  border-color: #F0D9A6;
+  color: #8a5a00;
+}
 
 /* ---------- tarjetas / listas ---------- */
 

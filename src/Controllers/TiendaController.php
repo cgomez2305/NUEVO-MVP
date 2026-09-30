@@ -112,6 +112,7 @@ class TiendaController
             'titulo'            => 'Reservar ' . $servicio['nombre'] . ' · ' . $negocio['nombre'],
             'negocio'           => $negocio,
             'servicio'          => $servicio,
+            'anticipo'          => Servicio::calcularAnticipo($servicio),
             'fecha'             => $fecha,
             'fechasDisponibles' => $fechasDisponibles,
             'empleados'         => $empleados,
@@ -191,6 +192,7 @@ class TiendaController
         }
 
         $clienteId = Cliente::buscarOCrear((int) $negocio['id'], $nombre, $telefono, true);
+        $anticipo = Servicio::calcularAnticipo($servicio);
 
         $citaId = Cita::crear(
             (int) $negocio['id'],
@@ -202,12 +204,14 @@ class TiendaController
             (int) $servicio['duracion_min'],
             null,
             $empleadoId,
+            $anticipo,
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
 
         $resumenTexto = "Reserva nueva de {$nombre}:\n"
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
-            . 'Valor: ' . pesos((int) $servicio['precio']);
+            . 'Valor: ' . pesos((int) $servicio['precio'])
+            . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '');
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);

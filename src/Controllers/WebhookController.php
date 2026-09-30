@@ -105,5 +105,6 @@ class WebhookController
         }
 
         Cita::actualizarEstado($citaId, (int) $cita['negocio_id'], 'confirmada');
+        Cita::marcarAnticipoPagado($citaId, (int) $cita['negocio_id']);
     }
 }

@@ -9,6 +9,11 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
   <span class="pq-tienda-desc"><?= e($negocio['nombre']) ?> · <?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
+  <?php if ($anticipo > 0): ?>
+    <div class="pq-alerta pq-alerta-aviso" style="margin-top: 12px">
+      Este servicio pide un anticipo de <strong><?= pesos($anticipo) ?></strong> para confirmar la reserva.
+    </div>
+  <?php endif; ?>
 
   <?php if (!empty($error)): ?>
     <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
@@ -66,6 +71,9 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
       <p class="pq-ayuda" style="margin-top: 4px">
         <?= e($servicio['nombre']) ?> el <?= e(date('d M', strtotime($fecha))) ?> a las <?= e($horaElegida) ?>
       </p>
+      <?php if ($anticipo > 0): ?>
+        <p class="pq-ayuda" style="margin-top: 4px; color: #8a5a00">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>
+      <?php endif; ?>
 
       <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/cita')) ?>" style="margin-top: 16px">
         <?= csrf_campo() ?>

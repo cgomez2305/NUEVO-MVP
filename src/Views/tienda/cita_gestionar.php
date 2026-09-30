@@ -27,6 +27,14 @@ $estadoLegible = ['pendiente' => 'Pendiente', 'confirmada' => 'Confirmada', 'com
       <span>Estado</span>
       <span class="pq-chip <?= chip_estado($cita['estado']) ?>"><?= e($estadoLegible[$cita['estado']] ?? $cita['estado']) ?></span>
     </div>
+    <?php if ((int) $cita['anticipo_monto'] > 0): ?>
+      <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 8px">
+        <span>Anticipo (<?= pesos((int) $cita['anticipo_monto']) ?>)</span>
+        <span class="pq-chip <?= $cita['anticipo_estado'] === 'pagado' ? 'pq-chip-caja' : 'pq-chip-pendiente' ?>">
+          <?= $cita['anticipo_estado'] === 'pagado' ? 'Pagado' : 'Pendiente' ?>
+        </span>
+      </div>
+    <?php endif; ?>
   </div>
 
   <?php if (!in_array($cita['estado'], ['cancelada', 'completada'], true)): ?>

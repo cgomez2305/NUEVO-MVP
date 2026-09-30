@@ -6,6 +6,10 @@
   <a href="<?= e(base_url('/panel/citas/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
 </div>
 
+<?php if (!empty($ok)): ?>
+  <div class="pq-alerta pq-alerta-ok" style="margin-top: 16px"><?= e($ok) ?></div>
+<?php endif; ?>
+
 <?php if ($citas === []): ?>
   <p class="pq-lead" style="margin-top: 16px">Todavía no tienes citas reservadas.</p>
 <?php else: ?>
@@ -24,6 +28,20 @@
           </div>
           <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $cita['precio']) ?></span>
         </div>
+
+        <?php if ((int) $cita['anticipo_monto'] > 0): ?>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px">
+            <span class="pq-ayuda">Anticipo: <?= pesos((int) $cita['anticipo_monto']) ?></span>
+            <?php if ($cita['anticipo_estado'] === 'pagado'): ?>
+              <span class="pq-chip pq-chip-caja">Anticipo pagado</span>
+            <?php else: ?>
+              <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/anticipo')) ?>">
+                <?= csrf_campo() ?>
+                <button type="submit" class="pq-chip pq-chip-pendiente" style="border: none; cursor: pointer">Marcar anticipo pagado</button>
+              </form>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
 
         <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/estado')) ?>"
               style="display: flex; gap: 8px; margin-top: 12px">

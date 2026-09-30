@@ -237,6 +237,32 @@ class PanelController
         redirigir($volver);
     }
 
+    public function actualizarDepositoServicio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (csrf_verificar()) {
+            $tipo = (string) ($_POST['deposito_tipo'] ?? 'ninguno');
+            $valor = (int) ($_POST['deposito_valor'] ?? 0);
+            Servicio::actualizarDeposito((int) $parametros['id'], (int) $negocio['id'], $tipo, $valor);
+        }
+
+        redirigir($volver);
+    }
+
+    public function marcarAnticipoPagado(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            Cita::marcarAnticipoPagado((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Anticipo marcado como pagado.');
+        }
+
+        redirigir('/panel/citas');
+    }
+
     public function citas(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
@@ -246,6 +272,7 @@ class PanelController
             'activo'  => 'citas',
             'negocio' => $negocio,
             'citas'   => Cita::listarProximas((int) $negocio['id']),
+            'ok'      => flash_obtener('ok'),
         ], 'panel');
     }
 
@@ -267,7 +294,7 @@ class PanelController
         $citas = Cita::listarPorNegocio((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
-        fputcsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado']);
+        fputcsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
         foreach ($citas as $cita) {
             fputcsv($salida, [
                 $cita['id'],
@@ -279,6 +306,8 @@ class PanelController
                 $cita['precio'],
                 $cita['duracion_min'],
                 $cita['estado'],
+                $cita['anticipo_monto'],
+                $cita['anticipo_estado'],
             ]);
         }
         fclose($salida);
@@ -499,11 +528,30 @@ class PanelController
         $negocioId = (int) $negocio['id'];
         $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
+        $segmentos = Copiloto::segmentar($negocioId, $negocio['tipo_negocio']);
+        $conteos = ['inactivo' => 0, 'vip' => 0, 'nuevo' => 0, 'recurrente' => 0];
+        foreach ($segmentos as $fila) {
+            foreach ($fila['tags'] as $tag) {
+                $conteos[$tag]++;
+            }
+        }
+
+        $filtro = (string) ($_GET['segmento'] ?? 'inactivo');
+        if (!array_key_exists($filtro, $conteos) && $filtro !== 'todos') {
+            $filtro = 'inactivo';
+        }
+
+        $lista = $filtro === 'todos'
+            ? $segmentos
+            : array_values(array_filter($segmentos, fn ($fila) => in_array($filtro, $fila['tags'], true)));
+
         ver('panel/copiloto', [
             'titulo'      => 'Copiloto de recompra · Veci',
             'activo'      => 'copiloto',
             'negocio'     => $negocio,
-            'lista'       => Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio']),
+            'lista'       => $lista,
+            'filtro'      => $filtro,
+            'conteos'     => $conteos,
             'pedidosHoy'  => $esReservas ? Cita::contarHoy($negocioId) : Pedido::contarHoy($negocioId),
             'recompraPct' => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
         ], 'panel');
@@ -518,7 +566,8 @@ class PanelController
             redirigir('/panel/copiloto');
         }
 
-        $mensaje = Copiloto::mensajeSugerido($cliente);
+        $segmento = $this->segmentoValido($_GET['segmento'] ?? null);
+        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($mensaje);
 
@@ -527,6 +576,7 @@ class PanelController
             'activo'         => 'copiloto',
             'negocio'        => $negocio,
             'cliente'        => $cliente,
+            'segmento'       => $segmento,
             'mensaje'        => $mensaje,
             'enlaceWhatsapp' => $enlaceWhatsapp,
         ], 'panel');
@@ -539,16 +589,23 @@ class PanelController
         if (csrf_verificar()) {
             $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['id']);
             if ($cliente !== null) {
+                $segmento = $this->segmentoValido($_POST['segmento'] ?? null);
                 Copiloto::registrarEnvio(
                     (int) $negocio['id'],
                     (int) $cliente['id'],
-                    Copiloto::mensajeSugerido($cliente)
+                    Copiloto::mensajeSugerido($cliente, $segmento)
                 );
                 flash_set('ok', 'Mensaje marcado como enviado a ' . $cliente['nombre'] . '.');
             }
         }
 
         redirigir('/panel/copiloto');
+    }
+
+    /** Valida el segmento recibido por GET/POST antes de usarlo para elegir plantilla de mensaje. */
+    private function segmentoValido(mixed $segmento): string
+    {
+        return in_array($segmento, ['vip', 'nuevo', 'inactivo', 'recurrente'], true) ? $segmento : 'inactivo';
     }
 
     /** Solo deja volver a rutas propias del panel, nunca a una URL externa. */

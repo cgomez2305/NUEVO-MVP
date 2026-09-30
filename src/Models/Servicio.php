@@ -89,6 +89,35 @@ class Servicio
         $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
     }
 
+    public static function actualizarDeposito(int $id, int $negocioId, string $tipo, int $valor): void
+    {
+        if (!in_array($tipo, ['ninguno', 'porcentaje', 'monto_fijo'], true)) {
+            $tipo = 'ninguno';
+        }
+        if ($tipo === 'ninguno') {
+            $valor = 0;
+        } elseif ($tipo === 'porcentaje') {
+            $valor = max(1, min(100, $valor));
+        } else {
+            $valor = max(1, $valor);
+        }
+
+        $stmt = Database::conexion()->prepare(
+            'UPDATE servicios SET deposito_tipo = :tipo, deposito_valor = :valor WHERE id = :id AND negocio_id = :negocio_id'
+        );
+        $stmt->execute(['tipo' => $tipo, 'valor' => $valor, 'id' => $id, 'negocio_id' => $negocioId]);
+    }
+
+    /** Cuánto anticipo hay que pagar en pesos para un servicio, dado su precio actual. 0 si no pide anticipo. */
+    public static function calcularAnticipo(array $servicio): int
+    {
+        return match ($servicio['deposito_tipo']) {
+            'porcentaje'  => (int) round((int) $servicio['precio'] * ((int) $servicio['deposito_valor'] / 100)),
+            'monto_fijo'  => min((int) $servicio['deposito_valor'], (int) $servicio['precio']),
+            default       => 0,
+        };
+    }
+
     public static function contarPorNegocio(int $negocioId): int
     {
         $stmt = Database::conexion()->prepare(

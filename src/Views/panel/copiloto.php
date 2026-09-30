@@ -23,23 +23,52 @@
   </div>
 </div>
 
+<?php
+$etiquetas = [
+    'inactivo'   => 'Inactivos',
+    'vip'        => 'VIP',
+    'nuevo'      => 'Nuevos',
+    'recurrente' => 'Recurrentes',
+    'todos'      => 'Todos',
+];
+$vacio = [
+    'inactivo'   => 'Nadie se está quedando atrás por ahora. Vuelve a revisar mañana.',
+    'vip'        => 'Todavía no tienes clientes VIP (se necesitan al menos 3 compras).',
+    'nuevo'      => 'No tienes clientes con una primera compra en los últimos 30 días.',
+    'recurrente' => 'No tienes clientes en este grupo por ahora.',
+    'todos'      => 'Todavía no tienes clientes con compras registradas.',
+];
+$colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo' => 'pq-chip-cancelado', 'recurrente' => 'pq-chip'];
+?>
 <div style="margin-top: 24px">
-  <span style="font-size: 13px; font-weight: 600; color: var(--gris-texto)">A quién escribirle hoy</span>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+    <?php foreach ($etiquetas as $clave => $texto): ?>
+      <a href="<?= e(base_url('/panel/copiloto') . '?segmento=' . $clave) ?>"
+         class="pq-chip <?= $filtro === $clave ? 'pq-chip-caja' : '' ?>" style="text-decoration: none">
+        <?= e($texto) ?><?php if ($clave !== 'todos'): ?> · <?= (int) $conteos[$clave] ?><?php endif; ?>
+      </a>
+    <?php endforeach; ?>
+  </div>
 
   <?php if ($lista === []): ?>
-    <p class="pq-ayuda" style="margin-top: 10px">Nadie se está quedando atrás por ahora. Vuelve a revisar mañana.</p>
+    <p class="pq-ayuda" style="margin-top: 16px"><?= e($vacio[$filtro]) ?></p>
   <?php else: ?>
-    <div style="margin-top: 12px">
-      <?php foreach ($lista as $fila): $cliente = $fila['cliente']; ?>
+    <div style="margin-top: 16px">
+      <?php foreach ($lista as $fila): $cliente = $fila['cliente']; $segmentoEfectivo = $filtro === 'todos' ? $fila['tags'][0] : $filtro; ?>
         <div class="pq-lead">
           <div class="pq-avatar" style="background: var(--aji)">
             <?= e(mb_strtoupper(mb_substr($cliente['nombre'], 0, 1))) ?>
           </div>
           <div class="pq-stack" style="flex-grow: 1">
-            <span style="font-size: 14px; font-weight: 600"><?= e($cliente['nombre']) ?></span>
+            <span style="font-size: 14px; font-weight: 600">
+              <?= e($cliente['nombre']) ?>
+              <?php foreach ($fila['tags'] as $tag): ?>
+                <span class="pq-chip <?= $colorTag[$tag] ?? 'pq-chip' ?>" style="font-size: 10px; padding: 2px 7px; margin-left: 4px"><?= e($etiquetas[$tag]) ?></span>
+              <?php endforeach; ?>
+            </span>
             <span class="pq-ayuda"><?= e($fila['motivo']) ?></span>
           </div>
-          <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje')) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Enviar</a>
+          <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje') . '?segmento=' . $segmentoEfectivo) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Enviar</a>
         </div>
       <?php endforeach; ?>
     </div>

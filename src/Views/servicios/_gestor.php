@@ -24,6 +24,22 @@
         </div>
         <span class="pq-ayuda">Duración en minutos</span>
       </form>
+
+      <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/deposito')) ?>" style="display: flex; gap: 8px; align-items: center">
+        <?= csrf_campo() ?>
+        <input type="hidden" name="volver" value="<?= e($volver) ?>">
+        <select class="pq-select" name="deposito_tipo" style="flex-grow: 1; font-size: 12px">
+          <option value="ninguno" <?= $servicio['deposito_tipo'] === 'ninguno' ? 'selected' : '' ?>>Sin anticipo</option>
+          <option value="porcentaje" <?= $servicio['deposito_tipo'] === 'porcentaje' ? 'selected' : '' ?>>% del precio</option>
+          <option value="monto_fijo" <?= $servicio['deposito_tipo'] === 'monto_fijo' ? 'selected' : '' ?>>Monto fijo</option>
+        </select>
+        <input class="pq-input pq-mono" style="width: 90px" type="number" name="deposito_valor" value="<?= (int) $servicio['deposito_valor'] ?>" min="0" placeholder="0">
+        <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Guardar</button>
+      </form>
+      <?php if ($servicio['deposito_tipo'] !== 'ninguno'): ?>
+        <span class="pq-ayuda">Anticipo actual: <?= pesos(\App\Models\Servicio::calcularAnticipo($servicio)) ?> para confirmar la cita</span>
+      <?php endif; ?>
+
       <div style="display: flex; gap: 16px; align-items: center; align-self: flex-end">
         <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/agotado')) ?>">
           <?= csrf_campo() ?>

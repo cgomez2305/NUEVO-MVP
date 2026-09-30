@@ -17,10 +17,24 @@
     </div>
   </div>
 
-  <?php if (!empty($negocio['llave_breb_valor'])): ?>
+  <?php if ((int) $cita['anticipo_monto'] > 0): ?>
+    <div class="pq-alerta pq-alerta-aviso" style="margin-top: 14px">
+      Esta cita necesita un anticipo de <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong> para quedar confirmada.
+      <?php if ($cita['anticipo_estado'] === 'pagado'): ?>
+        <strong>· Ya lo registramos, ¡gracias!</strong>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] !== 'pagado'): ?>
     <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
-      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">PAGA POR BRE-B (OPCIONAL)</span>
+      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">
+        PAGA POR BRE-B<?= (int) $cita['anticipo_monto'] === 0 ? ' (OPCIONAL)' : '' ?>
+      </span>
       <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor']) ?></strong></span>
+      <?php if ((int) $cita['anticipo_monto'] > 0): ?>
+        <span style="font-size: 14px">Monto del anticipo: <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong></span>
+      <?php endif; ?>
       <span class="pq-ayuda">Incluye este código en el concepto de tu transferencia: <strong class="pq-mono">VECI-C<?= (int) $cita['id'] ?></strong></span>
     </div>
   <?php endif; ?>
