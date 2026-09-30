@@ -330,6 +330,20 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   .pq-stack > .pq-card-borde, .pq-stack > .pq-lead { animation: none; }
 }
 
+/* Pedido sin resolver o cita sin confirmar que lleva demasiado tiempo
+   esperando: se resalta en rojo para que no se pierda entre los demás. */
+.pq-card-demorado { border-color: var(--aji); background: rgba(232, 69, 44, .05); }
+.pq-tiempo-espera {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--gris-texto);
+  white-space: nowrap;
+}
+.pq-tiempo-espera svg { width: 12px; height: 12px; flex-shrink: 0; }
+.pq-card-demorado .pq-tiempo-espera { color: var(--aji); font-weight: 600; }
+
 .pq-paso {
   display: flex;
   align-items: baseline;

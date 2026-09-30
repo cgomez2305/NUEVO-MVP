@@ -52,7 +52,8 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($proximasCitas as $cita): ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 12px">
+        <?php $citaDemorada = $cita['estado'] === 'pendiente' && minutos_desde((string) $cita['creado_en']) >= 15; ?>
+        <div class="pq-card-borde<?= $citaDemorada ? ' pq-card-demorado' : '' ?>" style="display: flex; align-items: center; gap: 12px">
           <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($cita['cliente_nombre']) ?> · <?= e($cita['nombre_servicio']) ?></span>
@@ -77,7 +78,8 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($ultimosPedidos as $pedido): ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 12px">
+        <?php $pedidoDemorado = !in_array($pedido['estado'], ['entregado', 'cancelado'], true) && minutos_desde((string) $pedido['creado_en']) >= 15; ?>
+        <div class="pq-card-borde<?= $pedidoDemorado ? ' pq-card-demorado' : '' ?>" style="display: flex; align-items: center; gap: 12px">
           <div class="pq-avatar pq-avatar-chico" style="background: var(--caja)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($pedido['cliente_nombre']) ?></span>

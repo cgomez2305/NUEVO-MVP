@@ -34,7 +34,12 @@ $etiquetasEstado = [
 <?php else: ?>
   <div class="pq-stack" style="gap: 10px; margin-top: 20px">
     <?php foreach ($pedidos as $pedido): ?>
-      <div class="pq-card-borde">
+      <?php
+      $pedidoActivo = !in_array($pedido['estado'], ['entregado', 'cancelado'], true);
+      $minutosEspera = minutos_desde((string) $pedido['creado_en']);
+      $demorado = $pedidoActivo && $minutosEspera >= 15;
+      ?>
+      <div class="pq-card-borde<?= $demorado ? ' pq-card-demorado' : '' ?>">
         <div style="display: flex; align-items: center; gap: 12px">
           <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
           <div class="pq-stack" style="flex-grow: 1">
@@ -43,7 +48,15 @@ $etiquetasEstado = [
             </span>
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?> · <?= e(strtoupper($pedido['metodo_pago'])) ?></span>
           </div>
-          <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $pedido['total']) ?></span>
+          <div class="pq-stack" style="align-items: flex-end; gap: 3px">
+            <span class="pq-mono" style="font-size: 14px; font-weight: 600"><?= pesos((int) $pedido['total']) ?></span>
+            <?php if ($pedidoActivo): ?>
+              <span class="pq-tiempo-espera">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                <?= e(texto_espera($minutosEspera)) ?>
+              </span>
+            <?php endif; ?>
+          </div>
         </div>
 
         <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>"

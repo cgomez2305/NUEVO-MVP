@@ -156,3 +156,19 @@ function chip_estado(string $estado): string
         default => 'pq-chip-pendiente',
     };
 }
+
+/** Minutos transcurridos desde una fecha DATETIME hasta ahora. */
+function minutos_desde(string $fechaHora): int
+{
+    return (int) max(0, floor((time() - strtotime($fechaHora)) / 60));
+}
+
+/** "5 min esperando" / "2 horas esperando": para pedidos y citas sin resolver. */
+function texto_espera(int $minutos): string
+{
+    if ($minutos < 60) {
+        return $minutos . ' min esperando';
+    }
+    $horas = intdiv($minutos, 60);
+    return $horas . ($horas === 1 ? ' hora esperando' : ' horas esperando');
+}
