@@ -16,14 +16,16 @@ $porDefecto = ['08:00', '18:00'];
   <div class="pq-stack" style="gap: 10px">
     <?php foreach ($dias as $num => $nombre): ?>
       <?php $abierto = isset($horario[(string) $num]); $rango = $horario[(string) $num] ?? $porDefecto; ?>
-      <div class="pq-card-borde" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-        <label style="display: flex; align-items: center; gap: 8px; width: 110px; font-size: 13px; font-weight: 600">
+      <div class="pq-card-borde" style="display: flex; flex-direction: column; gap: 10px">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600">
           <input type="checkbox" name="abierto_<?= $num ?>" value="1" <?= $abierto ? 'checked' : '' ?>>
           <?= e($nombre) ?>
         </label>
-        <input class="pq-input pq-mono" style="width: 110px" type="time" name="inicio_<?= $num ?>" value="<?= e($rango[0]) ?>">
-        <span class="pq-ayuda">a</span>
-        <input class="pq-input pq-mono" style="width: 110px" type="time" name="fin_<?= $num ?>" value="<?= e($rango[1]) ?>">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <input class="pq-input pq-mono" style="flex: 1; min-width: 0" type="time" name="inicio_<?= $num ?>" value="<?= e($rango[0]) ?>">
+          <span class="pq-ayuda" style="flex-shrink: 0">a</span>
+          <input class="pq-input pq-mono" style="flex: 1; min-width: 0" type="time" name="fin_<?= $num ?>" value="<?= e($rango[1]) ?>">
+        </div>
       </div>
     <?php endforeach; ?>
   </div>

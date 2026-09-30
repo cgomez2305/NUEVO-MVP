@@ -186,6 +186,22 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 /* ---------- formularios ---------- */
 
 .pq-campo { margin-bottom: 16px; }
+
+/* precio con "$" fijo a la izquierda, para no tener que adivinar cuántos
+   ceros lleva un número suelto — envuelve el <input type=number>. */
+.pq-campo-dinero { position: relative; flex-grow: 1; min-width: 0; }
+.pq-campo-dinero::before {
+  content: "$";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gris-suave);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  pointer-events: none;
+}
+.pq-campo-dinero > input { padding-left: 24px; width: 100%; }
 .pq-label {
   font-size: 13px;
   font-weight: 600;

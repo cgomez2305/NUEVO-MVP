@@ -6,7 +6,7 @@
   <?php foreach ($empleados as $empleado): ?>
     <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
       <span style="font-size: 14px; font-weight: 600"><?= e($empleado['nombre']) ?></span>
-      <form method="post" action="<?= e(base_url('/panel/empleados/' . $empleado['id'] . '/eliminar')) ?>">
+      <form method="post" action="<?= e(base_url('/panel/empleados/' . $empleado['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar a <?= e($empleado['nombre']) ?>? Sus citas futuras quedarán sin empleado asignado.">
         <?= csrf_campo() ?>
         <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">eliminar</button>
       </form>

@@ -21,5 +21,6 @@
       <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión (<?= e($admin['nombre']) ?>)</button>
     </form>
   </div>
+  <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
 </body>
 </html>

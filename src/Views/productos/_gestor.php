@@ -19,7 +19,9 @@
           <?php if ($agotado): ?><span class="pq-chip pq-chip-cancelado">Agotado</span><?php endif; ?>
         </div>
         <div style="display: flex; gap: 8px">
-          <input class="pq-input pq-mono" style="flex-grow: 1" type="number" name="precio" value="<?= (int) $producto['precio'] ?>" min="0" step="500" required>
+          <div class="pq-campo-dinero">
+            <input class="pq-input pq-mono" type="number" name="precio" value="<?= (int) $producto['precio'] ?>" min="0" step="500" required>
+          </div>
           <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Guardar</button>
         </div>
       </form>
@@ -31,7 +33,7 @@
             <?= $agotado ? 'marcar disponible' : 'marcar agotado' ?>
           </button>
         </form>
-        <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/eliminar')) ?>">
+        <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar «<?= e($producto['nombre']) ?>» de tu catálogo? No se puede deshacer.">
           <?= csrf_campo() ?>
           <input type="hidden" name="volver" value="<?= e($volver) ?>">
           <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">eliminar</button>
@@ -50,7 +52,9 @@
   <input type="hidden" name="volver" value="<?= e($volver) ?>">
   <input class="pq-input" type="text" name="nombre" placeholder="Nuevo producto" required maxlength="120">
   <div style="display: flex; gap: 8px">
-    <input class="pq-input pq-mono" style="flex-grow: 1" type="number" name="precio" placeholder="Precio" min="0" step="500" required>
+    <div class="pq-campo-dinero">
+      <input class="pq-input pq-mono" type="number" name="precio" placeholder="0" min="0" step="500" required>
+    </div>
     <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
   </div>
 </form>

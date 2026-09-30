@@ -55,12 +55,28 @@ class PanelController
     public function pedidos(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $todos = Pedido::listarPorSede((int) $negocio['id']);
+
+        $conteos = [];
+        foreach ($todos as $pedido) {
+            $conteos[$pedido['estado']] = ($conteos[$pedido['estado']] ?? 0) + 1;
+        }
+
+        $filtro = (string) ($_GET['estado'] ?? '');
+        $estadosValidos = ['pendiente', 'pagado', 'en_cocina', 'en_camino', 'entregado', 'cancelado'];
+        if (!in_array($filtro, $estadosValidos, true)) {
+            $filtro = '';
+        }
+        $pedidos = $filtro === '' ? $todos : array_values(array_filter($todos, fn ($p) => $p['estado'] === $filtro));
 
         ver('panel/pedidos', [
             'titulo'  => 'Pedidos · Veci',
             'activo'  => 'pedidos',
             'negocio' => $negocio,
-            'pedidos' => Pedido::listarPorSede((int) $negocio['id']),
+            'pedidos' => $pedidos,
+            'total'   => count($todos),
+            'conteos' => $conteos,
+            'filtro'  => $filtro,
         ], 'panel');
     }
 
@@ -901,7 +917,7 @@ class PanelController
     /** Solo deja volver a rutas propias del panel, nunca a una URL externa. */
     private function destinoSeguro(mixed $ruta): string
     {
-        if (!is_string($ruta) || !str_starts_with($ruta, '/panel/')) {
+        if (!is_string($ruta) || ($ruta !== '/panel' && !str_starts_with($ruta, '/panel/'))) {
             return '/panel/productos';
         }
         return $ruta;

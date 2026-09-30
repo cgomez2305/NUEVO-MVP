@@ -6,8 +6,31 @@
   <a href="<?= e(base_url('/panel/pedidos/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
 </div>
 
-<?php if ($pedidos === []): ?>
+<?php
+$etiquetasEstado = [
+    'pendiente'  => 'Pendiente',
+    'pagado'     => 'Pagado',
+    'en_cocina'  => 'En cocina',
+    'en_camino'  => 'En camino',
+    'entregado'  => 'Entregado',
+    'cancelado'  => 'Cancelado',
+];
+?>
+<?php if ($total > 0): ?>
+  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px">
+    <a href="<?= e(base_url('/panel/pedidos')) ?>" class="pq-chip <?= $filtro === '' ? 'pq-chip-caja' : '' ?>" style="text-decoration: none">Todos · <?= $total ?></a>
+    <?php foreach ($etiquetasEstado as $clave => $texto): ?>
+      <?php if (($conteos[$clave] ?? 0) > 0): ?>
+        <a href="<?= e(base_url('/panel/pedidos') . '?estado=' . $clave) ?>" class="pq-chip <?= $filtro === $clave ? 'pq-chip-caja' : '' ?>" style="text-decoration: none"><?= e($texto) ?> · <?= $conteos[$clave] ?></a>
+      <?php endif; ?>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
+
+<?php if ($pedidos === [] && $total === 0): ?>
   <p class="pq-lead" style="margin-top: 16px">Todavía no te han hecho pedidos.</p>
+<?php elseif ($pedidos === []): ?>
+  <p class="pq-lead" style="margin-top: 16px">No tienes pedidos en estado «<?= e($etiquetasEstado[$filtro] ?? $filtro) ?>».</p>
 <?php else: ?>
   <div class="pq-stack" style="gap: 10px; margin-top: 20px">
     <?php foreach ($pedidos as $pedido): ?>

@@ -42,7 +42,7 @@ $estadoLegible = ['pendiente' => 'Pendiente', 'confirmada' => 'Confirmada', 'com
       <a href="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/reprogramar')) ?>" class="pq-btn pq-btn-oscuro" style="flex-grow: 1">Reprogramar</a>
     </div>
 
-    <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" style="margin-top: 10px" onsubmit="return confirm('¿Seguro que quieres cancelar tu cita?')">
+    <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" style="margin-top: 10px" data-confirmar="¿Seguro que quieres cancelar tu cita?">
       <?= csrf_campo() ?>
       <button type="submit" class="pq-mono pq-centro" style="display: block; width: 100%; background: none; border: none; color: #9c2c17; font-size: 13px; cursor: pointer; padding: 10px">Cancelar cita</button>
     </form>

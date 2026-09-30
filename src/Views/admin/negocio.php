@@ -17,7 +17,7 @@
       <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Reactivar cuenta</button>
     </form>
   <?php else: ?>
-    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/suspender')) ?>" onsubmit="return confirm('¿Suspender esta cuenta? Nadie de este negocio podrá entrar ni su tienda pública responderá.')">
+    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/suspender')) ?>" data-confirmar="¿Suspender esta cuenta? Nadie de este negocio podrá entrar ni su tienda pública responderá.">
       <?= csrf_campo() ?>
       <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Suspender cuenta</button>
     </form>
@@ -35,7 +35,7 @@
   <div class="pq-card" style="margin-top: 16px; border: 1px solid var(--sello)">
     <span style="font-size: 13px; font-weight: 600">Enlace de recuperación para <?= e($resetUsuario) ?></span>
     <p class="pq-ayuda" style="margin-top: 6px">Válido por 1 hora, un solo uso. Cópialo y mándalo por WhatsApp — no se va a volver a mostrar.</p>
-    <input class="pq-input pq-mono" style="margin-top: 8px; font-size: 11px" type="text" readonly onclick="this.select()" value="<?= e($resetEnlace) ?>">
+    <input class="pq-input pq-mono" style="margin-top: 8px; font-size: 11px" type="text" readonly data-seleccionar-al-tocar value="<?= e($resetEnlace) ?>">
   </div>
 <?php endif; ?>
 

@@ -68,8 +68,8 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
     <?php if (count($sedesAcceso) > 1): ?>
       <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>" class="pq-sede-switcher">
         <?= csrf_campo() ?>
-        <input type="hidden" name="volver" value="<?= e(base_url('/panel')) ?>">
-        <select class="pq-select" name="sede_id" onchange="this.form.submit()">
+        <input type="hidden" name="volver" value="<?= e($_SERVER['REQUEST_URI'] ?? base_url('/panel')) ?>">
+        <select class="pq-select" name="sede_id" data-autoenviar>
           <?php foreach ($sedesAcceso as $s): ?>
             <option value="<?= (int) $s['id'] ?>" <?= (int) $s['id'] === (int) $negocio['id'] ? 'selected' : '' ?>>
               <?= e($s['nombre']) ?>
@@ -93,6 +93,7 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
       <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión</button>
     </form>
   </div>
+  <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-notificaciones.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-push.js')) ?>" defer></script>
 </body>

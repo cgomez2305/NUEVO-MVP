@@ -7,5 +7,6 @@
   <div class="pq-shell">
     <?= $contenido ?>
   </div>
+  <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>
 </body>
 </html>

@@ -26,7 +26,7 @@
           <span class="pq-ayuda"><?= e($fecha['motivo']) ?></span>
         <?php endif; ?>
       </div>
-      <form method="post" action="<?= e(base_url('/panel/horario/fechas/' . $fecha['id'] . '/eliminar')) ?>">
+      <form method="post" action="<?= e(base_url('/panel/horario/fechas/' . $fecha['id'] . '/eliminar')) ?>" data-confirmar="¿Destrabar el <?= e(date('d M Y', strtotime((string) $fecha['fecha']))) ?>? Volverá a verse disponible en tu tienda.">
         <?= csrf_campo() ?>
         <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">quitar</button>
       </form>

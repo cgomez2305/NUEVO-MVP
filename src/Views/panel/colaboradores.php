@@ -29,7 +29,7 @@
         <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Guardar sedes</button>
       </form>
 
-      <form method="post" action="<?= e(base_url('/panel/colaboradores/' . $colaborador['id'] . '/eliminar')) ?>" style="align-self: flex-end" onsubmit="return confirm('¿Quitar a este colaborador?')">
+      <form method="post" action="<?= e(base_url('/panel/colaboradores/' . $colaborador['id'] . '/eliminar')) ?>" style="align-self: flex-end" data-confirmar="¿Quitar a <?= e($colaborador['nombre']) ?> del equipo?">
         <?= csrf_campo() ?>
         <button type="submit" class="pq-mono" style="background: none; border: none; color: var(--gris-suave); font-size: 11px; cursor: pointer; padding: 0">eliminar</button>
       </form>
