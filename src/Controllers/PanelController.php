@@ -971,7 +971,48 @@ class PanelController
             if ($nombre !== '' && $whatsapp !== '') {
                 $nuevaSedeId = Sede::crear((int) $negocio['negocio_id'], $nombre, $whatsapp);
                 Auth::cambiarSede($nuevaSedeId);
-                flash_set('ok', 'Sede creada. Termina de configurarla: catálogo, horario y Bre-B.');
+                flash_set('ok', 'Sede creada correctamente. Termina de configurarla: catálogo, horario y Bre-B.');
+            }
+        }
+
+        redirigir('/panel/sedes');
+    }
+
+    public function editarSede(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        $sede = Sede::buscarPorIdYNegocio((int) $parametros['sede'], (int) $negocio['negocio_id']);
+        if ($sede === null) {
+            redirigir('/panel/sedes');
+        }
+
+        ver('panel/sede_editar', [
+            'titulo'  => 'Editar sede · Veci',
+            'activo'  => 'sedes',
+            'negocio' => $negocio,
+            'sede'    => $sede,
+        ], 'panel');
+    }
+
+    public function actualizarSede(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        $sede = Sede::buscarPorIdYNegocio((int) $parametros['sede'], (int) $negocio['negocio_id']);
+        if ($sede === null) {
+            redirigir('/panel/sedes');
+        }
+
+        if (csrf_verificar()) {
+            $nombre = trim((string) ($_POST['nombre'] ?? ''));
+            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+
+            if ($nombre !== '' && $whatsapp !== '') {
+                Sede::actualizar((int) $sede['id'], $nombre, $whatsapp);
+                flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }
         }
 

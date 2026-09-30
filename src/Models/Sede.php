@@ -34,6 +34,12 @@ class Sede
         return (int) $pdo->lastInsertId();
     }
 
+    public static function actualizar(int $id, string $nombre, string $whatsapp): void
+    {
+        $stmt = Database::conexion()->prepare('UPDATE sedes SET nombre = :nombre, whatsapp = :whatsapp WHERE id = :id');
+        $stmt->execute(['nombre' => $nombre, 'whatsapp' => $whatsapp, 'id' => $id]);
+    }
+
     /** @return array<int, array<string, mixed>> */
     public static function listarPorNegocio(int $negocioId): array
     {

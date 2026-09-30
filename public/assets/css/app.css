@@ -1243,6 +1243,36 @@ a.pq-stat:hover { border-color: var(--sello); }
 
 .pq-contador-caracteres { display: block; text-align: right; font-size: 11px; color: var(--gris-suave); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
+/* ---------- Sedes ---------- */
+
+.pq-sede-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap }
+.pq-sede-card-info { display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.pq-sede-card-acciones { display: flex; align-items: center; gap: 6px; flex-shrink: 0 }
+.pq-sede-card-acciones form { display: contents }
+
+/* "+ Nueva sede" como acción secundaria de la cabecera, no un formulario
+   siempre visible: crear una sede es poco frecuente, así que no merece
+   ocupar espacio permanente en una pantalla que se visita seguido. */
+.pq-nueva-sede { position: relative }
+.pq-nueva-sede > summary { list-style: none; cursor: pointer }
+.pq-nueva-sede > summary::-webkit-details-marker { display: none }
+.pq-nueva-sede-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  max-width: calc(100vw - 40px);
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 14px;
+  box-shadow: var(--sombra-media);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 30;
+}
+
 /* ---------- toast de confirmación ---------- */
 
 .pq-toast {
