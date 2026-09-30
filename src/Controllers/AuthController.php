@@ -6,12 +6,14 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Negocio;
+use App\Models\Sede;
+use App\Models\Usuario;
 
 class AuthController
 {
     public function formularioRegistro(array $parametros): void
     {
-        if (Auth::negocioActual() !== null) {
+        if (Auth::usuarioActual() !== null) {
             redirigir('/panel');
         }
 
@@ -38,21 +40,29 @@ class AuthController
             redirigir('/registro');
         }
 
-        if (Negocio::buscarPorWhatsapp($whatsapp) !== null) {
+        if (Usuario::buscarPorWhatsapp($whatsapp) !== null) {
             flash_set('error', 'Ya existe una cuenta con ese número de WhatsApp. Inicia sesión.');
             redirigir('/login');
         }
 
-        $id = Negocio::crear($nombre, $whatsapp, $password, $tipoNegocio);
+        // Una cuenta nueva es: un negocio (la marca) + su primera sede (el
+        // punto de venta, con el mismo nombre y WhatsApp) + un usuario dueño.
+        // Así nadie tiene que enterarse de que existen "sedes" hasta que de
+        // verdad abra una segunda.
+        $negocioId = Negocio::crear($nombre, $tipoNegocio);
+        $sedeId = Sede::crear($negocioId, $nombre, $whatsapp);
+        $usuarioId = Usuario::crear($negocioId, $nombre, $whatsapp, $password, 'dueno');
+
         session_regenerate_id(true);
-        $_SESSION['negocio_id'] = $id;
+        $_SESSION['usuario_id'] = $usuarioId;
+        $_SESSION['sede_id'] = $sedeId;
 
         redirigir('/panel/onboarding/foto');
     }
 
     public function formularioLogin(array $parametros): void
     {
-        if (Auth::negocioActual() !== null) {
+        if (Auth::usuarioActual() !== null) {
             redirigir('/panel');
         }
 

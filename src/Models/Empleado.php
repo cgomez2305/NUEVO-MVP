@@ -15,58 +15,58 @@ use App\Database;
  */
 class Empleado
 {
-    public static function crear(int $negocioId, string $nombre): int
+    public static function crear(int $sedeId, string $nombre): int
     {
         $pdo = Database::conexion();
-        $orden = self::contarPorNegocio($negocioId);
+        $orden = self::contarPorSede($sedeId);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO empleados (negocio_id, nombre, orden) VALUES (:negocio_id, :nombre, :orden)'
+            'INSERT INTO empleados (sede_id, nombre, orden) VALUES (:sede_id, :nombre, :orden)'
         );
-        $stmt->execute(['negocio_id' => $negocioId, 'nombre' => $nombre, 'orden' => $orden]);
+        $stmt->execute(['sede_id' => $sedeId, 'nombre' => $nombre, 'orden' => $orden]);
 
         return (int) $pdo->lastInsertId();
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function listarPorNegocio(int $negocioId, bool $soloActivos = false): array
+    public static function listarPorSede(int $sedeId, bool $soloActivos = false): array
     {
-        $sql = 'SELECT * FROM empleados WHERE negocio_id = :negocio_id';
+        $sql = 'SELECT * FROM empleados WHERE sede_id = :sede_id';
         if ($soloActivos) {
             $sql .= ' AND activo = 1';
         }
         $sql .= ' ORDER BY orden ASC, id ASC';
 
         $stmt = Database::conexion()->prepare($sql);
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt->execute(['sede_id' => $sedeId]);
 
         return $stmt->fetchAll();
     }
 
-    public static function buscar(int $id, int $negocioId): ?array
+    public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT * FROM empleados WHERE id = :id AND negocio_id = :negocio_id'
+            'SELECT * FROM empleados WHERE id = :id AND sede_id = :sede_id'
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
 
         return $stmt->fetch() ?: null;
     }
 
-    public static function eliminar(int $id, int $negocioId): void
+    public static function eliminar(int $id, int $sedeId): void
     {
         $stmt = Database::conexion()->prepare(
-            'DELETE FROM empleados WHERE id = :id AND negocio_id = :negocio_id'
+            'DELETE FROM empleados WHERE id = :id AND sede_id = :sede_id'
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
-    public static function contarPorNegocio(int $negocioId): int
+    public static function contarPorSede(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT COUNT(*) AS total FROM empleados WHERE negocio_id = :negocio_id'
+            'SELECT COUNT(*) AS total FROM empleados WHERE sede_id = :sede_id'
         );
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt->execute(['sede_id' => $sedeId]);
 
         return (int) $stmt->fetch()['total'];
     }

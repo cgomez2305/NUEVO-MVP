@@ -10,19 +10,33 @@ use App\Models\Cliente;
 use App\Models\Copiloto;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
-use App\Models\Negocio;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\PushSubscripcion;
+use App\Models\Sede;
 use App\Models\Servicio;
+use App\Models\Usuario;
 use App\Services\RecordatorioWhatsapp;
 
+/**
+ * $negocio, en todos los métodos de abajo, es el contexto que devuelve
+ * Auth::exigirSesion(): la SEDE activa de la sesión (con id = sede_id),
+ * más tres llaves extra fundidas en el mismo arreglo: negocio_id (la
+ * marca, para todo lo que es de negocio entero: clientes, copiloto,
+ * sedes, colaboradores), usuario_id (para push) y rol ('dueno' o
+ * 'colaborador'). Todo lo que antes se guardaba "por negocio" (catálogo,
+ * horario, pedidos, citas, empleados, fechas bloqueadas) ahora es "por
+ * sede", así que $negocio['id'] sigue siendo la llave correcta para esas
+ * consultas. Donde se necesita el negocio real (marca) se usa
+ * $negocio['negocio_id'] explícitamente.
+ */
 class PanelController
 {
     public function dashboard(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $negocioId = (int) $negocio['id'];
+        $sedeId = (int) $negocio['id'];
+        $negocioId = (int) $negocio['negocio_id'];
         $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
         ver('panel/dashboard', [
@@ -30,11 +44,11 @@ class PanelController
             'activo'          => 'panel',
             'negocio'         => $negocio,
             'esReservas'      => $esReservas,
-            'pedidosHoy'      => $esReservas ? Cita::contarHoy($negocioId) : Pedido::contarHoy($negocioId),
+            'pedidosHoy'      => $esReservas ? Cita::contarHoy($sedeId) : Pedido::contarHoy($sedeId),
             'recompraPct'     => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
             'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio'])),
-            'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorNegocio($negocioId), 0, 5),
-            'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($negocioId), 0, 5) : [],
+            'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorSede($sedeId), 0, 5),
+            'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($sedeId), 0, 5) : [],
         ], 'panel');
     }
 
@@ -46,7 +60,7 @@ class PanelController
             'titulo'  => 'Pedidos · Veci',
             'activo'  => 'pedidos',
             'negocio' => $negocio,
-            'pedidos' => Pedido::listarPorNegocio((int) $negocio['id']),
+            'pedidos' => Pedido::listarPorSede((int) $negocio['id']),
         ], 'panel');
     }
 
@@ -65,7 +79,8 @@ class PanelController
     public function exportarPedidosCsv(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $pedidos = Pedido::listarPorNegocio((int) $negocio['id'], 100000);
+        Auth::exigirDueno($negocio);
+        $pedidos = Pedido::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('pedidos');
         fputcsv($salida, ['ID', 'Fecha', 'Cliente', 'Teléfono', 'Total', 'Método de pago', 'Estado']);
@@ -92,7 +107,7 @@ class PanelController
             'titulo'    => 'Tu menú · Veci',
             'activo'    => 'productos',
             'negocio'   => $negocio,
-            'productos' => Producto::listarPorNegocio((int) $negocio['id']),
+            'productos' => Producto::listarPorSede((int) $negocio['id']),
             'volver'    => '/panel/productos',
         ], 'panel');
     }
@@ -169,7 +184,7 @@ class PanelController
             'titulo'    => 'Tus servicios · Veci',
             'activo'    => 'servicios',
             'negocio'   => $negocio,
-            'servicios' => Servicio::listarPorNegocio((int) $negocio['id']),
+            'servicios' => Servicio::listarPorSede((int) $negocio['id']),
             'volver'    => '/panel/servicios',
         ], 'panel');
     }
@@ -241,6 +256,7 @@ class PanelController
     public function actualizarDepositoServicio(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
         $volver = $this->destinoSeguro($_POST['volver'] ?? null);
 
         if (csrf_verificar()) {
@@ -292,7 +308,8 @@ class PanelController
     public function exportarCitasCsv(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $citas = Cita::listarPorNegocio((int) $negocio['id'], 100000);
+        Auth::exigirDueno($negocio);
+        $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
         fputcsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
@@ -318,7 +335,8 @@ class PanelController
     public function exportarClientesCsv(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $clientes = Cliente::listarPorNegocio((int) $negocio['id']);
+        Auth::exigirDueno($negocio);
+        $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
         $salida = $this->abrirDescargaCsv('clientes');
         fputcsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Cliente desde']);
@@ -338,12 +356,13 @@ class PanelController
     public function horario(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         ver('panel/horario', [
             'titulo'  => 'Horario de atención · Veci',
             'activo'  => 'horario',
             'negocio' => $negocio,
-            'horario' => Negocio::horario($negocio),
+            'horario' => Sede::horario($negocio),
             'ok'      => flash_obtener('ok'),
         ], 'panel');
     }
@@ -351,12 +370,13 @@ class PanelController
     public function guardarHorario(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
-            Negocio::guardarHorario(
+            Sede::guardarHorario(
                 (int) $negocio['id'],
-                Negocio::horarioDesdePost($_POST),
-                Negocio::intervaloDesdePost($_POST)
+                Sede::horarioDesdePost($_POST),
+                Sede::intervaloDesdePost($_POST)
             );
             flash_set('ok', 'Horario actualizado.');
         }
@@ -367,18 +387,20 @@ class PanelController
     public function empleados(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         ver('panel/empleados', [
             'titulo'    => 'Empleados · Veci',
             'activo'    => 'empleados',
             'negocio'   => $negocio,
-            'empleados' => Empleado::listarPorNegocio((int) $negocio['id']),
+            'empleados' => Empleado::listarPorSede((int) $negocio['id']),
         ], 'panel');
     }
 
     public function crearEmpleado(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
             $nombre = trim((string) ($_POST['nombre'] ?? ''));
@@ -393,6 +415,7 @@ class PanelController
     public function eliminarEmpleado(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
             Empleado::eliminar((int) $parametros['id'], (int) $negocio['id']);
@@ -404,18 +427,20 @@ class PanelController
     public function fechasBloqueadas(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         ver('panel/fechas_bloqueadas', [
-            'titulo'    => 'Días no disponibles · Veci',
-            'activo'    => 'fechas_bloqueadas',
-            'negocio'   => $negocio,
-            'fechas'    => FechaBloqueada::listarPorNegocio((int) $negocio['id']),
+            'titulo'  => 'Días no disponibles · Veci',
+            'activo'  => 'fechas_bloqueadas',
+            'negocio' => $negocio,
+            'fechas'  => FechaBloqueada::listarPorSede((int) $negocio['id']),
         ], 'panel');
     }
 
     public function crearFechaBloqueada(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
             $fecha = (string) ($_POST['fecha'] ?? '');
@@ -432,6 +457,7 @@ class PanelController
     public function eliminarFechaBloqueada(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
             FechaBloqueada::eliminar((int) $parametros['id'], (int) $negocio['id']);
@@ -449,13 +475,13 @@ class PanelController
     public function notificacionesNuevas(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $negocioId = (int) $negocio['id'];
+        $sedeId = (int) $negocio['id'];
 
         $desdePedido = (int) ($_GET['desde_pedido'] ?? 0);
         $desdeCita = (int) ($_GET['desde_cita'] ?? 0);
 
-        $pedidos = $negocio['tipo_negocio'] === 'pedidos' ? Pedido::nuevosDesde($negocioId, $desdePedido) : [];
-        $citas = $negocio['tipo_negocio'] === 'reservas' ? Cita::nuevasDesde($negocioId, $desdeCita) : [];
+        $pedidos = $negocio['tipo_negocio'] === 'pedidos' ? Pedido::nuevosDesde($sedeId, $desdePedido) : [];
+        $citas = $negocio['tipo_negocio'] === 'reservas' ? Cita::nuevasDesde($sedeId, $desdeCita) : [];
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -492,7 +518,7 @@ class PanelController
             $auth = (string) ($_POST['auth'] ?? '');
 
             if ($endpoint !== '' && $p256dh !== '' && $auth !== '') {
-                PushSubscripcion::guardar((int) $negocio['id'], $endpoint, $p256dh, $auth);
+                PushSubscripcion::guardar((int) $negocio['usuario_id'], $endpoint, $p256dh, $auth);
             }
         }
 
@@ -508,7 +534,7 @@ class PanelController
         if (csrf_verificar()) {
             $endpoint = (string) ($_POST['endpoint'] ?? '');
             if ($endpoint !== '') {
-                PushSubscripcion::eliminarPorEndpointYNegocio($endpoint, (int) $negocio['id']);
+                PushSubscripcion::eliminarPorEndpointYUsuario($endpoint, (int) $negocio['usuario_id']);
             }
         }
 
@@ -522,12 +548,12 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         ver('panel/recordatorios', [
-            'titulo'        => 'Recordatorios de cita · Veci',
-            'activo'        => 'recordatorios',
-            'negocio'       => $negocio,
-            'citas'         => Cita::pendientesDeRecordatorio((int) $negocio['id']),
-            'apiConectada'  => RecordatorioWhatsapp::disponible(),
-            'ok'            => flash_obtener('ok'),
+            'titulo'       => 'Recordatorios de cita · Veci',
+            'activo'       => 'recordatorios',
+            'negocio'      => $negocio,
+            'citas'        => Cita::pendientesDeRecordatorio((int) $negocio['id']),
+            'apiConectada' => RecordatorioWhatsapp::disponible(),
+            'ok'           => flash_obtener('ok'),
         ], 'panel');
     }
 
@@ -572,7 +598,8 @@ class PanelController
     public function copiloto(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $negocioId = (int) $negocio['id'];
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
         $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
         $segmentos = Copiloto::segmentar($negocioId, $negocio['tipo_negocio']);
@@ -599,7 +626,7 @@ class PanelController
             'lista'       => $lista,
             'filtro'      => $filtro,
             'conteos'     => $conteos,
-            'pedidosHoy'  => $esReservas ? Cita::contarHoy($negocioId) : Pedido::contarHoy($negocioId),
+            'pedidosHoy'  => $esReservas ? Cita::contarHoy((int) $negocio['id']) : Pedido::contarHoy((int) $negocio['id']),
             'recompraPct' => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
         ], 'panel');
     }
@@ -607,7 +634,8 @@ class PanelController
     public function mensajeCopiloto(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['id']);
+        Auth::exigirDueno($negocio);
+        $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
 
         if ($cliente === null) {
             redirigir('/panel/copiloto');
@@ -632,13 +660,14 @@ class PanelController
     public function registrarEnvioCopiloto(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
-            $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['id']);
+            $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
             if ($cliente !== null) {
                 $segmento = $this->segmentoValido($_POST['segmento'] ?? null);
                 Copiloto::registrarEnvio(
-                    (int) $negocio['id'],
+                    (int) $negocio['negocio_id'],
                     (int) $cliente['id'],
                     Copiloto::mensajeSugerido($cliente, $segmento)
                 );
@@ -647,6 +676,143 @@ class PanelController
         }
 
         redirigir('/panel/copiloto');
+    }
+
+    /** Todas las sedes del negocio, con el botón para cambiar de una a otra. Cualquier rol puede entrar. */
+    public function sedes(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $todas = Sede::listarPorNegocio((int) $negocio['negocio_id']);
+
+        $sedesVisibles = $negocio['rol'] === 'dueno'
+            ? $todas
+            : array_values(array_filter($todas, fn ($s) => in_array((int) $s['id'], Usuario::sedeIdsAsignadas((int) $negocio['usuario_id']), true)));
+
+        ver('panel/sedes', [
+            'titulo'  => 'Sedes · Veci',
+            'activo'  => 'sedes',
+            'negocio' => $negocio,
+            'sedes'   => $sedesVisibles,
+            'ok'      => flash_obtener('ok'),
+        ], 'panel');
+    }
+
+    public function cambiarSede(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $sedeId = (int) ($_POST['sede_id'] ?? 0);
+            Auth::cambiarSede($sedeId);
+        }
+
+        redirigir($this->destinoSeguro($_POST['volver'] ?? null));
+    }
+
+    public function crearSede(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar()) {
+            $nombre = trim((string) ($_POST['nombre'] ?? ''));
+            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+
+            if ($nombre !== '' && $whatsapp !== '') {
+                $nuevaSedeId = Sede::crear((int) $negocio['negocio_id'], $nombre, $whatsapp);
+                Auth::cambiarSede($nuevaSedeId);
+                flash_set('ok', 'Sede creada. Termina de configurarla: catálogo, horario y Bre-B.');
+            }
+        }
+
+        redirigir('/panel/sedes');
+    }
+
+    /** Colaboradores del negocio y a qué sedes tiene acceso cada uno. Solo el dueño. */
+    public function colaboradores(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        $colaboradores = Usuario::listarColaboradores((int) $negocio['negocio_id']);
+        foreach ($colaboradores as &$colaborador) {
+            $colaborador['sede_ids'] = Usuario::sedeIdsAsignadas((int) $colaborador['id']);
+        }
+        unset($colaborador);
+
+        ver('panel/colaboradores', [
+            'titulo'        => 'Colaboradores · Veci',
+            'activo'        => 'colaboradores',
+            'negocio'       => $negocio,
+            'colaboradores' => $colaboradores,
+            'sedes'         => Sede::listarPorNegocio((int) $negocio['negocio_id']),
+            'ok'            => flash_obtener('ok'),
+            'error'         => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function crearColaborador(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar()) {
+            $nombre = trim((string) ($_POST['nombre'] ?? ''));
+            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+            $password = (string) ($_POST['password'] ?? '');
+            $sedeIds = array_map('intval', (array) ($_POST['sedes'] ?? []));
+
+            if ($nombre === '' || $whatsapp === '' || strlen($password) < 6 || $sedeIds === []) {
+                flash_set('error', 'Completa nombre, WhatsApp, una contraseña de al menos 6 caracteres y elige al menos una sede.');
+                redirigir('/panel/colaboradores');
+            }
+
+            if (Usuario::buscarPorWhatsapp($whatsapp) !== null) {
+                flash_set('error', 'Ya existe una cuenta con ese número de WhatsApp.');
+                redirigir('/panel/colaboradores');
+            }
+
+            // Solo deja asignar sedes que en verdad son de este negocio.
+            $sedesDelNegocio = array_column(Sede::listarPorNegocio((int) $negocio['negocio_id']), 'id');
+            $sedeIds = array_values(array_intersect($sedeIds, array_map('intval', $sedesDelNegocio)));
+
+            $colaboradorId = Usuario::crear((int) $negocio['negocio_id'], $nombre, $whatsapp, $password, 'colaborador');
+            Usuario::asignarSedes($colaboradorId, $sedeIds);
+            flash_set('ok', 'Colaborador creado.');
+        }
+
+        redirigir('/panel/colaboradores');
+    }
+
+    public function actualizarSedesColaborador(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar()) {
+            $colaborador = Usuario::buscarPorIdYNegocio((int) $parametros['id'], (int) $negocio['negocio_id']);
+            if ($colaborador !== null && $colaborador['rol'] === 'colaborador') {
+                $sedesDelNegocio = array_column(Sede::listarPorNegocio((int) $negocio['negocio_id']), 'id');
+                $sedeIds = array_map('intval', (array) ($_POST['sedes'] ?? []));
+                $sedeIds = array_values(array_intersect($sedeIds, array_map('intval', $sedesDelNegocio)));
+                Usuario::asignarSedes((int) $colaborador['id'], $sedeIds);
+                flash_set('ok', 'Sedes actualizadas para ' . $colaborador['nombre'] . '.');
+            }
+        }
+
+        redirigir('/panel/colaboradores');
+    }
+
+    public function eliminarColaborador(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar()) {
+            Usuario::eliminar((int) $parametros['id'], (int) $negocio['negocio_id']);
+        }
+
+        redirigir('/panel/colaboradores');
     }
 
     /** Valida el segmento recibido por GET/POST antes de usarlo para elegir plantilla de mensaje. */

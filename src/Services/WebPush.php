@@ -86,15 +86,26 @@ class WebPush
         ];
     }
 
-    /** Manda el mismo mensaje a todas las suscripciones de un negocio y borra las que ya no sirven. */
-    public static function notificarNegocio(int $negocioId, string $titulo, string $cuerpo, string $url): void
+    /**
+     * Manda el mismo mensaje a todos los usuarios con acceso a esa sede
+     * (el/los dueño(s) del negocio + los colaboradores asignados a esa
+     * sede específica) y borra las suscripciones que ya no sirven.
+     */
+    public static function notificarSede(int $sedeId, string $titulo, string $cuerpo, string $url): void
     {
         $payload = json_encode(['titulo' => $titulo, 'cuerpo' => $cuerpo, 'url' => $url], JSON_UNESCAPED_UNICODE);
         if ($payload === false) {
             return;
         }
 
-        foreach (\App\Models\PushSubscripcion::listarPorNegocio($negocioId) as $suscripcion) {
+        $suscripciones = [];
+        foreach (\App\Models\Usuario::conAccesoASede($sedeId) as $usuario) {
+            foreach (\App\Models\PushSubscripcion::listarPorUsuario((int) $usuario['id']) as $suscripcion) {
+                $suscripciones[] = $suscripcion;
+            }
+        }
+
+        foreach ($suscripciones as $suscripcion) {
             try {
                 $resultado = self::enviar($suscripcion, $payload);
                 if ($resultado['expirada']) {

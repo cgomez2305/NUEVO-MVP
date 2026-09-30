@@ -8,7 +8,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
-use App\Models\Negocio;
+use App\Models\Sede;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Servicio;
@@ -34,14 +34,14 @@ class TiendaController
             ver('tienda/servicios', [
                 'titulo'          => $negocio['nombre'] . ' · Veci',
                 'negocio'         => $negocio,
-                'servicios'       => Servicio::listarPorNegocio((int) $negocio['id'], true),
+                'servicios'       => Servicio::listarPorSede((int) $negocio['id'], true),
                 'metaDescripcion' => $metaDescripcion,
                 'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
             return;
         }
 
-        $productos = Producto::listarPorNegocio((int) $negocio['id'], true);
+        $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         ver('tienda/mostrar', [
@@ -74,7 +74,7 @@ class TiendaController
             $fecha = date('Y-m-d');
         }
 
-        $empleados = Empleado::listarPorNegocio((int) $negocio['id'], true);
+        $empleados = Empleado::listarPorSede((int) $negocio['id'], true);
         $empleadoId = (int) ($_GET['empleado'] ?? 0);
         $empleadoElegido = null;
         if ($empleados !== []) {
@@ -86,7 +86,7 @@ class TiendaController
             }
         }
 
-        $horario = Negocio::horario($negocio);
+        $horario = Sede::horario($negocio);
         $intervalo = (int) $negocio['intervalo_citas_min'];
         $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         // Si el negocio tiene empleados registrados, hay que elegir uno antes de ver horarios.
@@ -154,7 +154,7 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
-        $empleados = Empleado::listarPorNegocio((int) $negocio['id'], true);
+        $empleados = Empleado::listarPorSede((int) $negocio['id'], true);
         $empleadoId = null;
         if ($empleados !== []) {
             $empleadoPost = (int) ($_POST['empleado_id'] ?? 0);
@@ -168,7 +168,7 @@ class TiendaController
 
         // Vuelve a calcular disponibilidad justo antes de guardar, por si alguien más
         // tomó ese horario mientras el cliente llenaba el formulario.
-        $horario = Negocio::horario($negocio);
+        $horario = Sede::horario($negocio);
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoId);
         $slots = Cita::calcularDisponibilidad(
             $horario,
@@ -192,7 +192,7 @@ class TiendaController
             redirigir($volverAReservar . '&hora=' . rawurlencode($hora));
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
         $anticipo = Servicio::calcularAnticipo($servicio);
 
         $citaId = Cita::crear(
@@ -209,7 +209,7 @@ class TiendaController
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
 
-        WebPush::notificarNegocio(
+        WebPush::notificarSede(
             (int) $negocio['id'],
             'Cita nueva',
             "{$nombre} · {$servicio['nombre']} el " . date('d M', strtotime($fecha)) . " a las {$hora}",
@@ -267,7 +267,7 @@ class TiendaController
     public function verCarrito(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
-        $productos = Producto::listarPorNegocio((int) $negocio['id'], true);
+        $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         ver('tienda/carrito', [
@@ -281,7 +281,7 @@ class TiendaController
     public function crearPedido(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
-        $productos = Producto::listarPorNegocio((int) $negocio['id'], true);
+        $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         if (!csrf_verificar()) {
@@ -307,7 +307,7 @@ class TiendaController
             $metodoPago = 'breb';
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
 
         $items = array_map(fn ($linea) => [
             'producto_id' => $linea['producto']['id'],
@@ -321,7 +321,7 @@ class TiendaController
 
         $this->guardarCarrito((int) $negocio['id'], []);
 
-        WebPush::notificarNegocio(
+        WebPush::notificarSede(
             (int) $negocio['id'],
             'Pedido nuevo',
             "{$nombre} · " . pesos((int) $pedido['total']),
@@ -369,7 +369,7 @@ class TiendaController
         }
 
         if (csrf_verificar() && $cita['estado'] !== 'cancelada') {
-            Cita::actualizarEstado((int) $cita['id'], (int) $cita['negocio_id'], 'cancelada');
+            Cita::actualizarEstado((int) $cita['id'], (int) $cita['sede_id'], 'cancelada');
             flash_set('ok', 'Tu cita quedó cancelada.');
         }
 
@@ -383,14 +383,14 @@ class TiendaController
             abortar404();
         }
 
-        $negocio = Negocio::buscarPorId((int) $cita['negocio_id']);
+        $negocio = Sede::buscarPorId((int) $cita['sede_id']);
 
         $fecha = (string) ($_GET['fecha'] ?? date('Y-m-d'));
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
             $fecha = date('Y-m-d');
         }
 
-        $horario = Negocio::horario($negocio);
+        $horario = Sede::horario($negocio);
         $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
         $ocupados = $bloqueada ? [] : Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
@@ -420,7 +420,7 @@ class TiendaController
             abortar404();
         }
 
-        $negocio = Negocio::buscarPorId((int) $cita['negocio_id']);
+        $negocio = Sede::buscarPorId((int) $cita['sede_id']);
         $fecha = (string) ($_POST['fecha'] ?? '');
         $hora = (string) ($_POST['hora'] ?? '');
         $volver = '/cita/' . $cita['token_gestion'] . '/reprogramar?fecha=' . rawurlencode($fecha);
@@ -439,7 +439,7 @@ class TiendaController
             redirigir($volver);
         }
 
-        $horario = Negocio::horario($negocio);
+        $horario = Sede::horario($negocio);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
         $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados);
@@ -456,7 +456,7 @@ class TiendaController
 
     private function negocioOAbortar(string $slug): array
     {
-        $negocio = Negocio::buscarPorSlugPublicada($slug);
+        $negocio = Sede::buscarPorSlugPublicada($slug);
         if ($negocio === null) {
             abortar404();
         }

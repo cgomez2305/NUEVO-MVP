@@ -14,14 +14,14 @@ use App\Database;
  */
 class PushSubscripcion
 {
-    public static function guardar(int $negocioId, string $endpoint, string $p256dh, string $auth): void
+    public static function guardar(int $usuarioId, string $endpoint, string $p256dh, string $auth): void
     {
         $stmt = Database::conexion()->prepare(
-            'INSERT INTO push_subscripciones (negocio_id, endpoint, p256dh, auth)
-             VALUES (:negocio_id, :endpoint, :p256dh, :auth)
-             ON DUPLICATE KEY UPDATE p256dh = VALUES(p256dh), auth = VALUES(auth), negocio_id = VALUES(negocio_id)'
+            'INSERT INTO push_subscripciones (usuario_id, endpoint, p256dh, auth)
+             VALUES (:usuario_id, :endpoint, :p256dh, :auth)
+             ON DUPLICATE KEY UPDATE p256dh = VALUES(p256dh), auth = VALUES(auth), usuario_id = VALUES(usuario_id)'
         );
-        $stmt->execute(['negocio_id' => $negocioId, 'endpoint' => $endpoint, 'p256dh' => $p256dh, 'auth' => $auth]);
+        $stmt->execute(['usuario_id' => $usuarioId, 'endpoint' => $endpoint, 'p256dh' => $p256dh, 'auth' => $auth]);
     }
 
     public static function eliminarPorEndpoint(string $endpoint): void
@@ -30,26 +30,26 @@ class PushSubscripcion
         $stmt->execute(['endpoint' => $endpoint]);
     }
 
-    public static function eliminarPorEndpointYNegocio(string $endpoint, int $negocioId): void
+    public static function eliminarPorEndpointYUsuario(string $endpoint, int $usuarioId): void
     {
         $stmt = Database::conexion()->prepare(
-            'DELETE FROM push_subscripciones WHERE endpoint = :endpoint AND negocio_id = :negocio_id'
+            'DELETE FROM push_subscripciones WHERE endpoint = :endpoint AND usuario_id = :usuario_id'
         );
-        $stmt->execute(['endpoint' => $endpoint, 'negocio_id' => $negocioId]);
+        $stmt->execute(['endpoint' => $endpoint, 'usuario_id' => $usuarioId]);
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function listarPorNegocio(int $negocioId): array
+    public static function listarPorUsuario(int $usuarioId): array
     {
-        $stmt = Database::conexion()->prepare('SELECT * FROM push_subscripciones WHERE negocio_id = :negocio_id');
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt = Database::conexion()->prepare('SELECT * FROM push_subscripciones WHERE usuario_id = :usuario_id');
+        $stmt->execute(['usuario_id' => $usuarioId]);
         return $stmt->fetchAll();
     }
 
-    public static function existeParaNegocio(int $negocioId): bool
+    public static function existeParaUsuario(int $usuarioId): bool
     {
-        $stmt = Database::conexion()->prepare('SELECT id FROM push_subscripciones WHERE negocio_id = :negocio_id LIMIT 1');
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt = Database::conexion()->prepare('SELECT id FROM push_subscripciones WHERE usuario_id = :usuario_id LIMIT 1');
+        $stmt->execute(['usuario_id' => $usuarioId]);
         return $stmt->fetch() !== false;
     }
 }

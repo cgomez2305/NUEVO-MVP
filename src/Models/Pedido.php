@@ -13,7 +13,7 @@ class Pedido
     /**
      * @param array<int, array{producto_id:int, nombre:string, precio:int, cantidad:int}> $items
      */
-    public static function crear(int $negocioId, int $clienteId, string $metodoPago, array $items): int
+    public static function crear(int $sedeId, int $clienteId, string $metodoPago, array $items): int
     {
         $pdo = Database::conexion();
         $total = array_sum(array_map(fn ($it) => $it['precio'] * $it['cantidad'], $items));
@@ -22,11 +22,11 @@ class Pedido
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO pedidos (negocio_id, cliente_id, total, metodo_pago, estado)
-                 VALUES (:negocio_id, :cliente_id, :total, :metodo_pago, :pendiente)'
+                'INSERT INTO pedidos (sede_id, cliente_id, total, metodo_pago, estado)
+                 VALUES (:sede_id, :cliente_id, :total, :metodo_pago, :pendiente)'
             );
             $stmt->execute([
-                'negocio_id'  => $negocioId,
+                'sede_id'  => $sedeId,
                 'cliente_id'  => $clienteId,
                 'total'       => $total,
                 'metodo_pago' => $metodoPago,
@@ -57,30 +57,30 @@ class Pedido
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function listarPorNegocio(int $negocioId, int $limite = 50): array
+    public static function listarPorSede(int $sedeId, int $limite = 50): array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
              FROM pedidos p
              JOIN clientes c ON c.id = p.cliente_id
-             WHERE p.negocio_id = :negocio_id
+             WHERE p.sede_id = :sede_id
              ORDER BY p.creado_en DESC
              LIMIT :limite'
         );
-        $stmt->bindValue('negocio_id', $negocioId, \PDO::PARAM_INT);
+        $stmt->bindValue('sede_id', $sedeId, \PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
-    public static function buscar(int $id, int $negocioId): ?array
+    public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
              FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
-             WHERE p.id = :id AND p.negocio_id = :negocio_id'
+             WHERE p.id = :id AND p.sede_id = :sede_id'
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
         return $stmt->fetch() ?: null;
     }
 
@@ -94,38 +94,38 @@ class Pedido
         return $stmt->fetchAll();
     }
 
-    public static function actualizarEstado(int $id, int $negocioId, string $estado): void
+    public static function actualizarEstado(int $id, int $sedeId, string $estado): void
     {
         if (!in_array($estado, self::ESTADOS, true)) {
             return;
         }
         $stmt = Database::conexion()->prepare(
-            'UPDATE pedidos SET estado = :estado WHERE id = :id AND negocio_id = :negocio_id'
+            'UPDATE pedidos SET estado = :estado WHERE id = :id AND sede_id = :sede_id'
         );
-        $stmt->execute(['estado' => $estado, 'id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
     }
 
     /** Pedidos creados después de cierto ID, para el polling de notificaciones del panel. */
-    public static function nuevosDesde(int $negocioId, int $desdeId): array
+    public static function nuevosDesde(int $sedeId, int $desdeId): array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT p.id, p.total, p.creado_en, c.nombre AS cliente_nombre
              FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
-             WHERE p.negocio_id = :negocio_id AND p.id > :desde_id
+             WHERE p.sede_id = :sede_id AND p.id > :desde_id
              ORDER BY p.id ASC
              LIMIT 20'
         );
-        $stmt->execute(['negocio_id' => $negocioId, 'desde_id' => $desdeId]);
+        $stmt->execute(['sede_id' => $sedeId, 'desde_id' => $desdeId]);
         return $stmt->fetchAll();
     }
 
-    public static function contarHoy(int $negocioId): int
+    public static function contarHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
             'SELECT COUNT(*) AS total FROM pedidos
-             WHERE negocio_id = :negocio_id AND DATE(creado_en) = CURDATE()'
+             WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE()'
         );
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
     }
 }

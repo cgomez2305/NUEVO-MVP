@@ -79,6 +79,13 @@ $router->post('/panel/copiloto/{cliente}/enviar', [$panel, 'registrarEnvioCopilo
 $router->get('/panel/recordatorios', [$panel, 'recordatorios']);
 $router->get('/panel/recordatorios/{cita}/mensaje', [$panel, 'mensajeRecordatorio']);
 $router->post('/panel/recordatorios/{cita}/enviar', [$panel, 'registrarEnvioRecordatorio']);
+$router->get('/panel/sedes', [$panel, 'sedes']);
+$router->post('/panel/sedes', [$panel, 'crearSede']);
+$router->post('/panel/sede/cambiar', [$panel, 'cambiarSede']);
+$router->get('/panel/colaboradores', [$panel, 'colaboradores']);
+$router->post('/panel/colaboradores', [$panel, 'crearColaborador']);
+$router->post('/panel/colaboradores/{id}/sedes', [$panel, 'actualizarSedesColaborador']);
+$router->post('/panel/colaboradores/{id}/eliminar', [$panel, 'eliminarColaborador']);
 
 // --- Tienda pública del cliente (flujo B de la maqueta) ----------------
 $router->get('/t/{slug}', [$tienda, 'mostrar']);

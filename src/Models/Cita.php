@@ -11,7 +11,7 @@ class Cita
     public const ESTADOS = ['pendiente', 'confirmada', 'completada', 'cancelada'];
 
     public static function crear(
-        int $negocioId,
+        int $sedeId,
         int $clienteId,
         ?int $servicioId,
         string $nombreServicio,
@@ -27,11 +27,11 @@ class Cita
         $anticipoEstado = $anticipoMonto > 0 ? 'pendiente' : 'no_requerido';
 
         $stmt = $pdo->prepare(
-            'INSERT INTO citas (negocio_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
-             VALUES (:negocio_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
+            'INSERT INTO citas (sede_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
+             VALUES (:sede_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
         );
         $stmt->execute([
-            'negocio_id'      => $negocioId,
+            'sede_id'      => $sedeId,
             'cliente_id'      => $clienteId,
             'servicio_id'     => $servicioId,
             'empleado_id'     => $empleadoId,
@@ -53,70 +53,72 @@ class Cita
     public static function buscarPorToken(string $token): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, n.slug AS negocio_slug, n.nombre AS negocio_nombre
+            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono,
+                    s.slug AS sede_slug, s.nombre AS sede_nombre, n.nombre AS negocio_nombre
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
-             JOIN negocios n ON n.id = c.negocio_id
+             JOIN sedes s ON s.id = c.sede_id
+             JOIN negocios n ON n.id = s.negocio_id
              WHERE c.token_gestion = :token'
         );
         $stmt->execute(['token' => $token]);
         return $stmt->fetch() ?: null;
     }
 
-    public static function reprogramar(int $id, int $negocioId, string $fechaHora): void
+    public static function reprogramar(int $id, int $sedeId, string $fechaHora): void
     {
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET fecha_hora = :fecha_hora, estado = 'pendiente' WHERE id = :id AND negocio_id = :negocio_id"
+            "UPDATE citas SET fecha_hora = :fecha_hora, estado = 'pendiente' WHERE id = :id AND sede_id = :sede_id"
         );
-        $stmt->execute(['fecha_hora' => $fechaHora, 'id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['fecha_hora' => $fechaHora, 'id' => $id, 'sede_id' => $sedeId]);
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function listarPorNegocio(int $negocioId, int $limite = 50): array
+    public static function listarPorSede(int $sedeId, int $limite = 50): array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
-             WHERE c.negocio_id = :negocio_id
+             WHERE c.sede_id = :sede_id
              ORDER BY c.fecha_hora DESC
              LIMIT :limite'
         );
-        $stmt->bindValue('negocio_id', $negocioId, \PDO::PARAM_INT);
+        $stmt->bindValue('sede_id', $sedeId, \PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     /** Próximas citas (hoy en adelante), para la agenda del panel. */
-    public static function listarProximas(int $negocioId, int $limite = 100): array
+    public static function listarProximas(int $sedeId, int $limite = 100): array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
-             WHERE c.negocio_id = :negocio_id
+             WHERE c.sede_id = :sede_id
                AND c.fecha_hora >= DATE(NOW())
                AND c.estado != "cancelada"
              ORDER BY c.fecha_hora ASC
              LIMIT :limite'
         );
-        $stmt->bindValue('negocio_id', $negocioId, \PDO::PARAM_INT);
+        $stmt->bindValue('sede_id', $sedeId, \PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
-    public static function buscar(int $id, int $negocioId): ?array
+    public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
-             WHERE c.id = :id AND c.negocio_id = :negocio_id'
+             WHERE c.id = :id AND c.sede_id = :sede_id'
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
         return $stmt->fetch() ?: null;
     }
 
@@ -125,18 +127,18 @@ class Cita
      * recordatorio enviado. Ventana de 6 horas (no un corte exacto a las 24h)
      * para que un cron que corre cada tanto no se salte ninguna.
      */
-    public static function pendientesDeRecordatorio(int $negocioId): array
+    public static function pendientesDeRecordatorio(int $sedeId): array
     {
         $stmt = Database::conexion()->prepare(
             "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
-             WHERE c.negocio_id = :negocio_id
+             WHERE c.sede_id = :sede_id
                AND c.estado != 'cancelada'
                AND c.recordatorio_enviado = 0
                AND c.fecha_hora BETWEEN DATE_ADD(NOW(), INTERVAL 24 HOUR) AND DATE_ADD(NOW(), INTERVAL 30 HOUR)
              ORDER BY c.fecha_hora ASC"
         );
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt->execute(['sede_id' => $sedeId]);
         return $stmt->fetchAll();
     }
 
@@ -149,18 +151,18 @@ class Cita
              WHERE c.estado != 'cancelada'
                AND c.recordatorio_enviado = 0
                AND c.fecha_hora BETWEEN DATE_ADD(NOW(), INTERVAL 24 HOUR) AND DATE_ADD(NOW(), INTERVAL 30 HOUR)
-             ORDER BY c.negocio_id ASC, c.fecha_hora ASC"
+             ORDER BY c.sede_id ASC, c.fecha_hora ASC"
         );
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
-    public static function marcarRecordatorioEnviado(int $id, int $negocioId): void
+    public static function marcarRecordatorioEnviado(int $id, int $sedeId): void
     {
         $stmt = Database::conexion()->prepare(
-            'UPDATE citas SET recordatorio_enviado = 1 WHERE id = :id AND negocio_id = :negocio_id'
+            'UPDATE citas SET recordatorio_enviado = 1 WHERE id = :id AND sede_id = :sede_id'
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
     /**
@@ -168,46 +170,46 @@ class Cita
      * comprobante por WhatsApp). El webhook de Bre-B hace lo mismo
      * automáticamente cuando hay un pago real conectado.
      */
-    public static function marcarAnticipoPagado(int $id, int $negocioId): void
+    public static function marcarAnticipoPagado(int $id, int $sedeId): void
     {
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET anticipo_estado = 'pagado' WHERE id = :id AND negocio_id = :negocio_id AND anticipo_estado = 'pendiente'"
+            "UPDATE citas SET anticipo_estado = 'pagado' WHERE id = :id AND sede_id = :sede_id AND anticipo_estado = 'pendiente'"
         );
-        $stmt->execute(['id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
-    public static function actualizarEstado(int $id, int $negocioId, string $estado): void
+    public static function actualizarEstado(int $id, int $sedeId, string $estado): void
     {
         if (!in_array($estado, self::ESTADOS, true)) {
             return;
         }
         $stmt = Database::conexion()->prepare(
-            'UPDATE citas SET estado = :estado WHERE id = :id AND negocio_id = :negocio_id'
+            'UPDATE citas SET estado = :estado WHERE id = :id AND sede_id = :sede_id'
         );
-        $stmt->execute(['estado' => $estado, 'id' => $id, 'negocio_id' => $negocioId]);
+        $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
     }
 
     /** Citas creadas después de cierto ID, para el polling de notificaciones del panel. */
-    public static function nuevasDesde(int $negocioId, int $desdeId): array
+    public static function nuevasDesde(int $sedeId, int $desdeId): array
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.id, c.fecha_hora, c.nombre_servicio, c.creado_en, cl.nombre AS cliente_nombre
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
-             WHERE c.negocio_id = :negocio_id AND c.id > :desde_id
+             WHERE c.sede_id = :sede_id AND c.id > :desde_id
              ORDER BY c.id ASC
              LIMIT 20'
         );
-        $stmt->execute(['negocio_id' => $negocioId, 'desde_id' => $desdeId]);
+        $stmt->execute(['sede_id' => $sedeId, 'desde_id' => $desdeId]);
         return $stmt->fetchAll();
     }
 
-    public static function contarHoy(int $negocioId): int
+    public static function contarHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
             'SELECT COUNT(*) AS total FROM citas
-             WHERE negocio_id = :negocio_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
+             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
         );
-        $stmt->execute(['negocio_id' => $negocioId]);
+        $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
     }
 
@@ -221,11 +223,11 @@ class Cita
      * el mismo horario sin chocar). Sin empleado, se mira el negocio entero,
      * como antes de que existieran los empleados.
      */
-    public static function ocupadosEnFecha(int $negocioId, string $fecha, ?int $excluirCitaId = null, ?int $empleadoId = null): array
+    public static function ocupadosEnFecha(int $sedeId, string $fecha, ?int $excluirCitaId = null, ?int $empleadoId = null): array
     {
         $sql = 'SELECT fecha_hora, duracion_min FROM citas
-                WHERE negocio_id = :negocio_id AND DATE(fecha_hora) = :fecha AND estado != "cancelada"';
-        $params = ['negocio_id' => $negocioId, 'fecha' => $fecha];
+                WHERE sede_id = :sede_id AND DATE(fecha_hora) = :fecha AND estado != "cancelada"';
+        $params = ['sede_id' => $sedeId, 'fecha' => $fecha];
 
         if ($excluirCitaId !== null) {
             $sql .= ' AND id != :excluir_id';

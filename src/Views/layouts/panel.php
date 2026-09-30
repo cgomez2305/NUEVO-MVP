@@ -15,17 +15,42 @@
         <?php if (($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas'): ?>
           <a href="<?= e(base_url('/panel/citas')) ?>" class="<?= ($activo ?? '') === 'citas' ? 'activo' : '' ?>">Agenda</a>
           <a href="<?= e(base_url('/panel/recordatorios')) ?>" class="<?= ($activo ?? '') === 'recordatorios' ? 'activo' : '' ?>">Recordatorios</a>
-          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <?php if ($negocio['rol'] === 'dueno'): ?>
+            <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <?php endif; ?>
           <a href="<?= e(base_url('/panel/servicios')) ?>" class="<?= ($activo ?? '') === 'servicios' ? 'activo' : '' ?>">Servicios</a>
-          <a href="<?= e(base_url('/panel/empleados')) ?>" class="<?= ($activo ?? '') === 'empleados' ? 'activo' : '' ?>">Empleados</a>
-          <a href="<?= e(base_url('/panel/horario')) ?>" class="<?= ($activo ?? '') === 'horario' ? 'activo' : '' ?>">Horario</a>
+          <?php if ($negocio['rol'] === 'dueno'): ?>
+            <a href="<?= e(base_url('/panel/empleados')) ?>" class="<?= ($activo ?? '') === 'empleados' ? 'activo' : '' ?>">Empleados</a>
+            <a href="<?= e(base_url('/panel/horario')) ?>" class="<?= ($activo ?? '') === 'horario' ? 'activo' : '' ?>">Horario</a>
+          <?php endif; ?>
         <?php else: ?>
           <a href="<?= e(base_url('/panel/pedidos')) ?>" class="<?= ($activo ?? '') === 'pedidos' ? 'activo' : '' ?>">Pedidos</a>
-          <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <?php if ($negocio['rol'] === 'dueno'): ?>
+            <a href="<?= e(base_url('/panel/copiloto')) ?>" class="<?= ($activo ?? '') === 'copiloto' ? 'activo' : '' ?>">Copiloto</a>
+          <?php endif; ?>
           <a href="<?= e(base_url('/panel/productos')) ?>" class="<?= ($activo ?? '') === 'productos' ? 'activo' : '' ?>">Menú</a>
+        <?php endif; ?>
+        <a href="<?= e(base_url('/panel/sedes')) ?>" class="<?= ($activo ?? '') === 'sedes' ? 'activo' : '' ?>">Sedes</a>
+        <?php if ($negocio['rol'] === 'dueno'): ?>
+          <a href="<?= e(base_url('/panel/colaboradores')) ?>" class="<?= ($activo ?? '') === 'colaboradores' ? 'activo' : '' ?>">Colaboradores</a>
         <?php endif; ?>
       </nav>
     </div>
+
+    <?php $sedesAcceso = \App\Auth::sedesAccesibles($negocio); ?>
+    <?php if (count($sedesAcceso) > 1): ?>
+      <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>" style="padding: 12px 20px 0">
+        <?= csrf_campo() ?>
+        <input type="hidden" name="volver" value="<?= e(base_url('/panel')) ?>">
+        <select class="pq-select" name="sede_id" onchange="this.form.submit()" style="font-size: 12px">
+          <?php foreach ($sedesAcceso as $s): ?>
+            <option value="<?= (int) $s['id'] ?>" <?= (int) $s['id'] === (int) $negocio['id'] ? 'selected' : '' ?>>
+              <?= e($s['nombre']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </form>
+    <?php endif; ?>
 
     <div class="pq-content">
       <?= $contenido ?>

@@ -82,7 +82,7 @@ class WebhookController
     private function confirmarPedido(int $pedidoId): void
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT negocio_id, estado FROM pedidos WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado FROM pedidos WHERE id = :id');
         $stmt->execute(['id' => $pedidoId]);
         $pedido = $stmt->fetch();
 
@@ -90,13 +90,13 @@ class WebhookController
             return; // no existe, o ya se procesó antes (idempotencia).
         }
 
-        Pedido::actualizarEstado($pedidoId, (int) $pedido['negocio_id'], 'pagado');
+        Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado');
     }
 
     private function confirmarCita(int $citaId): void
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT negocio_id, estado FROM citas WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado FROM citas WHERE id = :id');
         $stmt->execute(['id' => $citaId]);
         $cita = $stmt->fetch();
 
@@ -104,7 +104,7 @@ class WebhookController
             return;
         }
 
-        Cita::actualizarEstado($citaId, (int) $cita['negocio_id'], 'confirmada');
-        Cita::marcarAnticipoPagado($citaId, (int) $cita['negocio_id']);
+        Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada');
+        Cita::marcarAnticipoPagado($citaId, (int) $cita['sede_id']);
     }
 }

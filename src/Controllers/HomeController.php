@@ -12,7 +12,7 @@ class HomeController
     {
         ver('home/index', [
             'titulo'  => 'Veci — vende por WhatsApp sin comisión',
-            'negocio' => Auth::negocioActual(),
+            'negocio' => Auth::usuarioActual(),
         ]);
     }
 }

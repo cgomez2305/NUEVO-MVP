@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
-use App\Models\Negocio;
+use App\Models\Sede;
 use App\Models\Producto;
 use App\Models\Servicio;
 use App\Services\ExtractorMenu;
@@ -63,7 +63,7 @@ class OnboardingController
             redirigir('/panel/onboarding/foto');
         }
 
-        Negocio::guardarFotoMenu((int) $negocio['id'], 'uploads/menus/' . $nombreArchivo);
+        Sede::guardarFotoMenu((int) $negocio['id'], 'uploads/menus/' . $nombreArchivo);
 
         redirigir('/panel/onboarding/productos');
     }
@@ -80,7 +80,7 @@ class OnboardingController
             ver('onboarding/servicios', [
                 'titulo'    => 'Revisa tus servicios · Veci',
                 'negocio'   => $negocio,
-                'servicios' => Servicio::listarPorNegocio((int) $negocio['id']),
+                'servicios' => Servicio::listarPorSede((int) $negocio['id']),
                 'volver'    => '/panel/onboarding/productos',
             ], 'onboarding');
             return;
@@ -89,7 +89,7 @@ class OnboardingController
         ver('onboarding/productos', [
             'titulo'    => 'Revisa tu catálogo · Veci',
             'negocio'   => $negocio,
-            'productos' => Producto::listarPorNegocio((int) $negocio['id']),
+            'productos' => Producto::listarPorSede((int) $negocio['id']),
             'volver'    => '/panel/onboarding/productos',
         ], 'onboarding');
     }
@@ -102,20 +102,20 @@ class OnboardingController
             redirigir('/panel/onboarding/productos');
         }
 
-        $negocioId = (int) $negocio['id'];
+        $sedeId = (int) $negocio['id'];
         $rutaImagen = __DIR__ . '/../../public/' . $negocio['menu_foto'];
 
         // Solo analiza si el catálogo todavía está vacío: evita duplicar
         // productos/servicios si el dueño recarga la página después de analizar.
         if ($negocio['tipo_negocio'] === 'reservas') {
-            if (Servicio::contarPorNegocio($negocioId) === 0) {
+            if (Servicio::contarPorSede($sedeId) === 0) {
                 foreach (ExtractorMenu::extraerServicios($rutaImagen) as $servicio) {
-                    Servicio::crear($negocioId, $servicio['nombre'], $servicio['precio'], $servicio['duracion_min']);
+                    Servicio::crear($sedeId, $servicio['nombre'], $servicio['precio'], $servicio['duracion_min']);
                 }
             }
-        } elseif (Producto::contarPorNegocio($negocioId) === 0) {
+        } elseif (Producto::contarPorSede($sedeId) === 0) {
             foreach (ExtractorMenu::extraer($rutaImagen) as $producto) {
-                Producto::crear($negocioId, $producto['nombre'], $producto['precio'], $producto['categoria']);
+                Producto::crear($sedeId, $producto['nombre'], $producto['precio'], $producto['categoria']);
             }
         }
 
@@ -129,14 +129,14 @@ class OnboardingController
         if ($negocio['tipo_negocio'] !== 'reservas') {
             redirigir('/panel/onboarding/pago');
         }
-        if (Servicio::contarPorNegocio((int) $negocio['id']) === 0) {
+        if (Servicio::contarPorSede((int) $negocio['id']) === 0) {
             redirigir('/panel/onboarding/productos');
         }
 
         ver('onboarding/horario', [
             'titulo'  => 'Tu horario de atención · Veci',
             'negocio' => $negocio,
-            'horario' => Negocio::horario($negocio),
+            'horario' => Sede::horario($negocio),
         ], 'onboarding');
     }
 
@@ -148,10 +148,10 @@ class OnboardingController
             redirigir('/panel/onboarding/horario');
         }
 
-        Negocio::guardarHorario(
+        Sede::guardarHorario(
             (int) $negocio['id'],
-            Negocio::horarioDesdePost($_POST),
-            Negocio::intervaloDesdePost($_POST)
+            Sede::horarioDesdePost($_POST),
+            Sede::intervaloDesdePost($_POST)
         );
 
         redirigir('/panel/onboarding/pago');
@@ -162,13 +162,13 @@ class OnboardingController
         $negocio = Auth::exigirSesion();
 
         if ($negocio['tipo_negocio'] === 'reservas') {
-            if (Servicio::contarPorNegocio((int) $negocio['id']) === 0) {
+            if (Servicio::contarPorSede((int) $negocio['id']) === 0) {
                 redirigir('/panel/onboarding/productos');
             }
-            if (Negocio::horario($negocio) === []) {
+            if (Sede::horario($negocio) === []) {
                 redirigir('/panel/onboarding/horario');
             }
-        } elseif (Producto::contarPorNegocio((int) $negocio['id']) === 0) {
+        } elseif (Producto::contarPorSede((int) $negocio['id']) === 0) {
             redirigir('/panel/onboarding/productos');
         }
 
@@ -192,12 +192,12 @@ class OnboardingController
         }
         $valor = trim((string) ($_POST['llave_valor'] ?? $negocio['whatsapp']));
 
-        Negocio::guardarLlaveBreB((int) $negocio['id'], $tipo, $valor);
-        Negocio::publicar((int) $negocio['id']);
+        Sede::guardarLlaveBreB((int) $negocio['id'], $tipo, $valor);
+        Sede::publicar((int) $negocio['id']);
 
         ver('onboarding/publicada', [
             'titulo'  => '¡Tienda publicada! · Veci',
-            'negocio' => Negocio::buscarPorId((int) $negocio['id']),
+            'negocio' => Sede::buscarPorId((int) $negocio['id']),
         ], 'onboarding');
     }
 }

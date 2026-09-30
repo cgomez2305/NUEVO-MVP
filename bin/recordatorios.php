@@ -34,7 +34,7 @@ foreach ($citas as $cita) {
     $ok = RecordatorioWhatsapp::enviar($cita, (string) $cita['cliente_telefono'], $mensaje);
 
     if ($ok) {
-        Cita::marcarRecordatorioEnviado((int) $cita['id'], (int) $cita['negocio_id']);
+        Cita::marcarRecordatorioEnviado((int) $cita['id'], (int) $cita['sede_id']);
         $enviados++;
     }
 }

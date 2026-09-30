@@ -78,11 +78,16 @@ class Copiloto
      */
     public static function segmentar(int $negocioId, string $tipoNegocio = 'pedidos'): array
     {
+        // pedidos/citas son por sede, pero el copiloto mide al cliente en todo
+        // el negocio (si compra en dos sedes de la misma marca, es el mismo
+        // cliente), así que se cruza con sedes para filtrar por negocio_id.
         $sql = $tipoNegocio === 'reservas'
-            ? 'SELECT cliente_id, fecha_hora AS fecha, precio AS monto FROM citas
-               WHERE negocio_id = :negocio_id AND estado != "cancelada" ORDER BY cliente_id ASC, fecha_hora ASC'
-            : 'SELECT cliente_id, creado_en AS fecha, total AS monto FROM pedidos
-               WHERE negocio_id = :negocio_id ORDER BY cliente_id ASC, creado_en ASC';
+            ? 'SELECT c.cliente_id, c.fecha_hora AS fecha, c.precio AS monto FROM citas c
+               JOIN sedes s ON s.id = c.sede_id
+               WHERE s.negocio_id = :negocio_id AND c.estado != "cancelada" ORDER BY c.cliente_id ASC, c.fecha_hora ASC'
+            : 'SELECT p.cliente_id, p.creado_en AS fecha, p.total AS monto FROM pedidos p
+               JOIN sedes s ON s.id = p.sede_id
+               WHERE s.negocio_id = :negocio_id ORDER BY p.cliente_id ASC, p.creado_en ASC';
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['negocio_id' => $negocioId]);
@@ -181,12 +186,14 @@ class Copiloto
     public static function recompraMensualPct(int $negocioId, string $tipoNegocio = 'pedidos'): int
     {
         $sql = $tipoNegocio === 'reservas'
-            ? 'SELECT cliente_id, COUNT(*) AS total FROM citas
-               WHERE negocio_id = :negocio_id AND fecha_hora >= NOW() - INTERVAL 30 DAY AND estado != "cancelada"
-               GROUP BY cliente_id'
-            : 'SELECT cliente_id, COUNT(*) AS total FROM pedidos
-               WHERE negocio_id = :negocio_id AND creado_en >= NOW() - INTERVAL 30 DAY
-               GROUP BY cliente_id';
+            ? 'SELECT c.cliente_id, COUNT(*) AS total FROM citas c
+               JOIN sedes s ON s.id = c.sede_id
+               WHERE s.negocio_id = :negocio_id AND c.fecha_hora >= NOW() - INTERVAL 30 DAY AND c.estado != "cancelada"
+               GROUP BY c.cliente_id'
+            : 'SELECT p.cliente_id, COUNT(*) AS total FROM pedidos p
+               JOIN sedes s ON s.id = p.sede_id
+               WHERE s.negocio_id = :negocio_id AND p.creado_en >= NOW() - INTERVAL 30 DAY
+               GROUP BY p.cliente_id';
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['negocio_id' => $negocioId]);
