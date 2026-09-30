@@ -39,4 +39,15 @@ return [
     // endpoint /webhooks/breb rechaza cualquier notificación entrante.
     // Ver src/Controllers/WebhookController.php.
     'breb_webhook_secret' => null,
+
+    // Opcional. Llaves VAPID para las notificaciones push de la PWA (avisa
+    // al dueño de un pedido/cita nueva aunque tenga el panel cerrado). Se
+    // generan UNA vez con: php bin/generar_claves_vapid.php
+    // Sin esto, el botón "Activar notificaciones" del panel no aparece;
+    // la notificación en pestaña abierta (polling) sigue funcionando igual.
+    'push_vapid' => [
+        'public_key'  => null,
+        'private_key' => null,
+        'subject'     => 'mailto:soporte@tuveci.co',
+    ],
 ];

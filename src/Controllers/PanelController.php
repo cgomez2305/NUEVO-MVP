@@ -13,6 +13,7 @@ use App\Models\FechaBloqueada;
 use App\Models\Negocio;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\PushSubscripcion;
 use App\Models\Servicio;
 use App\Services\RecordatorioWhatsapp;
 
@@ -467,6 +468,52 @@ class PanelController
                 'texto' => $c['cliente_nombre'] . ' · ' . $c['nombre_servicio'] . ' · ' . date('d M g:i a', strtotime((string) $c['fecha_hora'])),
             ], $citas),
         ]);
+        exit;
+    }
+
+    /** Llave pública VAPID para que el JS del panel arme la suscripción push. Null si no está configurada. */
+    public function pushClavePublica(array $parametros): void
+    {
+        Auth::exigirSesion();
+
+        header('Content-Type: application/json');
+        $clave = config('push_vapid.public_key');
+        echo json_encode(['clave' => is_string($clave) && $clave !== '' ? $clave : null]);
+        exit;
+    }
+
+    public function pushSuscribir(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $endpoint = (string) ($_POST['endpoint'] ?? '');
+            $p256dh = (string) ($_POST['p256dh'] ?? '');
+            $auth = (string) ($_POST['auth'] ?? '');
+
+            if ($endpoint !== '' && $p256dh !== '' && $auth !== '') {
+                PushSubscripcion::guardar((int) $negocio['id'], $endpoint, $p256dh, $auth);
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function pushDesuscribir(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            $endpoint = (string) ($_POST['endpoint'] ?? '');
+            if ($endpoint !== '') {
+                PushSubscripcion::eliminarPorEndpointYNegocio($endpoint, (int) $negocio['id']);
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
         exit;
     }
 

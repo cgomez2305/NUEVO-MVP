@@ -12,6 +12,7 @@ use App\Models\Negocio;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Servicio;
+use App\Services\WebPush;
 
 /**
  * El flujo B de la maqueta: el cliente entra a la tienda y, según el tipo
@@ -208,6 +209,13 @@ class TiendaController
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
 
+        WebPush::notificarNegocio(
+            (int) $negocio['id'],
+            'Cita nueva',
+            "{$nombre} · {$servicio['nombre']} el " . date('d M', strtotime($fecha)) . " a las {$hora}",
+            '/panel/citas'
+        );
+
         $resumenTexto = "Reserva nueva de {$nombre}:\n"
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
             . 'Valor: ' . pesos((int) $servicio['precio'])
@@ -312,6 +320,13 @@ class TiendaController
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
 
         $this->guardarCarrito((int) $negocio['id'], []);
+
+        WebPush::notificarNegocio(
+            (int) $negocio['id'],
+            'Pedido nuevo',
+            "{$nombre} · " . pesos((int) $pedido['total']),
+            '/panel/pedidos'
+        );
 
         $resumenTexto = "Pedido nuevo de {$nombre}:\n";
         foreach ($items as $item) {

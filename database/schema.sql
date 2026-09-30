@@ -178,3 +178,17 @@ CREATE TABLE IF NOT EXISTS citas (
   INDEX idx_citas_negocio_fecha (negocio_id, fecha_hora),
   UNIQUE KEY uniq_citas_token (token_gestion)
 ) ENGINE=InnoDB;
+
+-- Suscripciones de Web Push del navegador del dueño (PWA instalada o no).
+-- endpoint/p256dh/auth vienen tal cual de PushSubscription.toJSON() en el
+-- navegador; con esto se manda la notificación aunque el panel esté cerrado.
+CREATE TABLE IF NOT EXISTS push_subscripciones (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id  INT UNSIGNED NOT NULL,
+  endpoint    VARCHAR(600) NOT NULL,
+  p256dh      VARCHAR(255) NOT NULL,
+  auth        VARCHAR(255) NOT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_push_endpoint (endpoint)
+) ENGINE=InnoDB;
