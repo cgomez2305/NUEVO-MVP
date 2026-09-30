@@ -16,8 +16,9 @@
   <div class="pq-stack" style="gap: 10px; margin-top: 20px">
     <?php foreach ($citas as $cita): ?>
       <div class="pq-card-borde">
-        <div style="display: flex; align-items: center; justify-content: space-between">
-          <div class="pq-stack">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
+          <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600">
               <?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?> · <?= e($cita['cliente_nombre']) ?>
             </span>

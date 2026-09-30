@@ -12,8 +12,9 @@
   <div class="pq-stack" style="gap: 10px; margin-top: 20px">
     <?php foreach ($pedidos as $pedido): ?>
       <div class="pq-card-borde">
-        <div style="display: flex; align-items: center; justify-content: space-between">
-          <div class="pq-stack">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
+          <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600">
               #<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?>
             </span>

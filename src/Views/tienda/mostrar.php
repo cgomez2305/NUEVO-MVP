@@ -15,9 +15,9 @@
     <p class="pq-ayuda" style="margin-top: 24px">Este negocio todavía no tiene productos publicados.</p>
   <?php else: ?>
     <div class="pq-productos">
-      <?php foreach ($productos as $producto): ?>
+      <?php foreach ($productos as $i => $producto): ?>
         <?php $agotado = (int) $producto['agotado'] === 1; ?>
-        <div class="pq-producto<?= $agotado ? ' pq-producto-agotado' : '' ?>">
+        <div class="pq-producto<?= $agotado ? ' pq-producto-agotado' : '' ?>" style="--i: <?= (int) $i ?>">
           <div class="pq-producto-foto" style="background: <?= e($producto['color']) ?>"></div>
           <span class="pq-producto-nombre"><?= e($producto['nombre']) ?></span>
           <div class="pq-producto-fila">

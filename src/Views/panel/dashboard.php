@@ -17,14 +17,17 @@
 
 <div class="pq-stats">
   <div class="pq-stat">
+    <span class="pq-stat-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--caja)"><?= $pedidosHoy ?></span>
     <span class="pq-stat-label"><?= $esReservas ? 'citas hoy' : 'pedidos hoy' ?></span>
   </div>
   <div class="pq-stat">
+    <span class="pq-stat-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--sello)"><?= $recompraPct ?>%</span>
     <span class="pq-stat-label">recompra del mes</span>
   </div>
   <div class="pq-stat">
+    <span class="pq-stat-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 16.5h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
     <span class="pq-stat-valor" style="color: var(--aji)"><?= $aReactivar ?></span>
     <span class="pq-stat-label">por reactivar</span>
   </div>
@@ -43,8 +46,9 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($proximasCitas as $cita): ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between">
-          <div class="pq-stack">
+        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 12px">
+          <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($cita['cliente_nombre'], 0, 1))) ?></div>
+          <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($cita['cliente_nombre']) ?> · <?= e($cita['nombre_servicio']) ?></span>
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $cita['fecha_hora']))) ?></span>
           </div>
@@ -67,8 +71,9 @@
   <?php else: ?>
     <div class="pq-stack" style="gap: 8px; margin-top: 10px">
       <?php foreach ($ultimosPedidos as $pedido): ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between">
-          <div class="pq-stack">
+        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 12px">
+          <div class="pq-avatar pq-avatar-chico" style="background: var(--caja)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
+          <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($pedido['cliente_nombre']) ?></span>
             <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?></span>
           </div>

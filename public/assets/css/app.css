@@ -43,6 +43,10 @@ a { color: inherit; }
 img { max-width: 100%; display: block; }
 button { font-family: inherit; }
 
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
 .pq-mono { font-family: 'JetBrains Mono', monospace; }
 .pq-serif { font-family: 'Instrument Serif', serif; }
 
@@ -88,17 +92,40 @@ button { font-family: inherit; }
   font-weight: 400;
   text-decoration: none;
   color: var(--carbon);
+  display: inline-flex;
+  align-items: center;
 }
+.pq-topbar-brand img { height: 24px; width: auto; }
 
-.pq-topbar-links { display: flex; align-items: center; gap: 16px; }
+.pq-topbar-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+}
+.pq-topbar-links::-webkit-scrollbar { display: none; }
 .pq-topbar-links a {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 11.5px;
   text-decoration: none;
   color: var(--gris-suave);
-  padding: 6px 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s ease, color .15s ease;
 }
-.pq-topbar-links a.activo { color: var(--sello); border-bottom: 2px solid var(--sello); }
+.pq-topbar-links a svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .8; }
+.pq-topbar-links a:hover { background: var(--recibo); color: var(--carbon); }
+.pq-topbar-links a.activo { color: var(--sello); background: var(--tinte-sello); font-weight: 600; }
+.pq-topbar-links a.activo svg { opacity: 1; }
 
 .pq-content { padding: 24px 20px 40px; flex-grow: 1; }
 .pq-content-tienda { padding: 0 20px 120px; flex-grow: 1; }
@@ -144,7 +171,8 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 }
 .pq-btn:active { transform: scale(.98); }
 .pq-btn-sello, .pq-btn-caja, .pq-btn-aji, .pq-btn-oscuro { box-shadow: var(--sombra-suave); }
-.pq-btn-sello:hover, .pq-btn-caja:hover, .pq-btn-aji:hover, .pq-btn-oscuro:hover { filter: brightness(1.06); box-shadow: var(--sombra-media); }
+.pq-btn-sello:hover, .pq-btn-caja:hover, .pq-btn-aji:hover, .pq-btn-oscuro:hover { filter: brightness(1.06); box-shadow: var(--sombra-media); transform: translateY(-1px); }
+.pq-btn-sello:active, .pq-btn-caja:active, .pq-btn-aji:active, .pq-btn-oscuro:active { transform: scale(.98); }
 .pq-btn-sello { background: var(--sello); color: var(--tiquete); }
 .pq-btn-caja { background: var(--caja); color: var(--tiquete); }
 .pq-btn-aji { background: var(--aji); color: #FFFEF9; }
@@ -174,13 +202,37 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   font-family: inherit;
   background: var(--tiquete);
   color: var(--carbon);
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 .pq-input:focus, .pq-select:focus, .pq-textarea:focus {
-  outline: 2px solid var(--sello);
-  outline-offset: 1px;
+  outline: none;
   border-color: var(--sello);
+  box-shadow: 0 0 0 3px var(--tinte-sello);
+}
+.pq-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2354565f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 13px;
 }
 .pq-ayuda { font-size: 12px; color: var(--gris-suave); margin-top: 4px; }
+
+/* selector de sede: un pill compacto pegado al topbar, no un <select> suelto */
+.pq-sede-switcher { padding: 0 20px; margin-top: 4px; }
+.pq-sede-switcher .pq-select {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 32px 8px 12px;
+  border-radius: 999px;
+  background-color: var(--recibo);
+  border-color: transparent;
+  color: var(--carbon);
+}
+.pq-sede-switcher .pq-select:hover { background-color: #E2DCC9; }
 
 .pq-alerta {
   background: #FDEDEA;
@@ -258,16 +310,26 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   flex: 1;
   background: #F4F1E9;
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   border: 1px solid transparent;
-  transition: transform .15s ease;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
+.pq-stat:hover { transform: translateY(-2px); box-shadow: var(--sombra-suave); }
 .pq-stat:has(.pq-stat-valor[style*="caja"]) { background: var(--tinte-caja); }
 .pq-stat:has(.pq-stat-valor[style*="sello"]) { background: var(--tinte-sello); }
 .pq-stat:has(.pq-stat-valor[style*="aji"]) { background: var(--tinte-aji); }
+.pq-stat-icono {
+  width: 26px; height: 26px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 6px;
+}
+.pq-stat-icono svg { width: 14px; height: 14px; }
+.pq-stat:has(.pq-stat-valor[style*="caja"]) .pq-stat-icono { background: rgba(22,163,106,.18); color: var(--caja); }
+.pq-stat:has(.pq-stat-valor[style*="sello"]) .pq-stat-icono { background: rgba(59,76,202,.16); color: var(--sello); }
+.pq-stat:has(.pq-stat-valor[style*="aji"]) .pq-stat-icono { background: rgba(232,69,44,.16); color: var(--aji); }
 .pq-stat-valor {
   font-family: 'JetBrains Mono', monospace;
   font-size: 22px;
@@ -303,6 +365,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   color: var(--tiquete);
   box-shadow: 0 3px 8px rgba(32, 33, 36, .18);
 }
+.pq-avatar-chico { width: 34px; height: 34px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; }
 
 /* ---------- tienda pública (Ruta 1) ---------- */
 
@@ -324,6 +387,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   font-size: 22px;
   color: var(--tinta);
   background: var(--mostaza);
+  box-shadow: 0 4px 12px -2px rgba(27, 26, 23, .25), 0 0 0 4px rgba(255, 255, 255, .5);
 }
 .pq-tienda-nombre {
   margin: 0;
@@ -350,12 +414,26 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   gap: 8px;
   box-shadow: 0 1px 2px rgba(27, 26, 23, .03), 0 6px 16px -10px rgba(27, 26, 23, .12);
   transition: box-shadow .15s ease, transform .15s ease;
+  animation: pqEntrada .35s ease both;
+  animation-delay: calc(var(--i, 0) * 45ms);
 }
+@keyframes pqEntrada { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .pq-producto:hover { box-shadow: 0 4px 8px rgba(27, 26, 23, .04), 0 14px 28px -14px rgba(27, 26, 23, .2); transform: translateY(-2px); }
 .pq-producto-agotado { opacity: .55; }
 .pq-producto-agotado:hover { transform: none; box-shadow: 0 1px 2px rgba(27, 26, 23, .03), 0 6px 16px -10px rgba(27, 26, 23, .12); }
 .pq-producto-agotado .pq-producto-foto { filter: grayscale(1); }
-.pq-producto-foto { height: 70px; border-radius: 10px; }
+.pq-producto-foto {
+  height: 76px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 -14px 20px -8px rgba(0, 0, 0, .2);
+}
+.pq-producto-foto::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .4), transparent 60%);
+}
 .pq-producto-nombre { font-size: 13px; font-weight: 600; line-height: 1.25; }
 .pq-producto-fila { display: flex; align-items: center; justify-content: space-between; }
 .pq-producto-precio { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b6350; }
@@ -372,7 +450,10 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: transform .15s ease;
 }
+.pq-add:hover { transform: scale(1.1); }
+.pq-add:active { transform: scale(.92); }
 
 .pq-barra-carrito {
   position: sticky;
@@ -435,7 +516,84 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 }
 
 @media (min-width: 640px) {
-  body.pq-panel-bg { background: var(--recibo); }
-  body.pq-tienda-bg { background: #E9E0CC; }
+  body.pq-panel-bg {
+    background:
+      radial-gradient(ellipse 640px 420px at 10% -8%, rgba(59, 76, 202, .09), transparent 60%),
+      radial-gradient(ellipse 560px 400px at 100% 0%, rgba(232, 69, 44, .07), transparent 58%),
+      var(--recibo);
+  }
+  body.pq-tienda-bg {
+    background:
+      radial-gradient(ellipse 640px 420px at 12% -8%, rgba(242, 182, 50, .16), transparent 60%),
+      radial-gradient(ellipse 560px 400px at 100% 0%, rgba(91, 127, 58, .10), transparent 58%),
+      #E9E0CC;
+  }
   .pq-shell, .pq-shell-tienda { box-shadow: 0 30px 70px -30px rgba(32, 33, 36, .28); }
+}
+
+/* ---------- panel en escritorio: de "app angosta estirada" a dashboard real ---------- */
+@media (min-width: 960px) {
+  body.pq-panel-bg { padding: 32px 20px; }
+
+  .pq-shell:has(.pq-topbar-links) {
+    max-width: 1120px;
+    min-height: calc(100vh - 64px);
+    display: grid;
+    grid-template-columns: 236px minmax(0, 1fr);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .pq-shell:has(.pq-topbar-links) > .pq-topbar {
+    grid-column: 1;
+    grid-row: 1 / span 30;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 28px;
+    padding: 26px 18px;
+    border-bottom: none;
+    border-right: 1px solid var(--recibo);
+    background: #F4F1E9;
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    height: calc(100vh - 64px);
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand { padding: 0 6px; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 26px; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    overflow: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-links a {
+    padding: 10px 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-links a svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .75; }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-links a.activo svg { opacity: 1; }
+
+  .pq-shell:has(.pq-topbar-links) .pq-sede-switcher { grid-column: 2; padding: 22px 32px 0; margin: 0; }
+  .pq-shell:has(.pq-topbar-links) .pq-content { grid-column: 2; padding: 24px 32px 40px; max-width: 760px; }
+  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 12px"],
+  .pq-shell:has(.pq-topbar-links) > form { grid-column: 2; padding-left: 32px; padding-right: 32px; }
+  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 12px"] { padding-top: 8px; }
+
+  .pq-stats { max-width: 480px; }
+}
+
+/* ---------- tienda pública en escritorio: catálogo de verdad, no una columna angosta ---------- */
+@media (min-width: 860px) {
+  .pq-shell-tienda { max-width: 900px; }
+  .pq-tienda-header { padding: 28px 32px 0; }
+  .pq-content-tienda { padding: 0 32px 60px; }
+  .pq-productos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .pq-barra-carrito { margin-left: 32px; margin-right: 32px; }
 }
