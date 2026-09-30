@@ -1,18 +1,12 @@
-<?php
-$hoyStr = date('Y-m-d');
-$entregadosHoy = count(array_filter($todos, fn ($p) => $p['estado'] === 'entregado' && substr((string) $p['creado_en'], 0, 10) === $hoyStr));
-?>
 <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap">
   <div>
     <span class="pq-eyebrow">Pedidos</span>
-    <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap">
-      <h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
-      <?php if ($entregadosHoy > 0): ?>
-        <span class="pq-ayuda" style="font-size: 12.5px"><?= $entregadosHoy ?> entregados hoy</span>
-      <?php endif; ?>
-    </div>
+    <h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
   </div>
-  <a href="<?= e(base_url('/panel/pedidos/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
+  <a href="<?= e(base_url('/panel/pedidos/exportar.csv') . '?' . http_build_query(array_filter([
+      'estado' => $filtro, 'q' => $busqueda, 'rango' => $rango,
+      'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado,
+  ]))) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar <?= $historialTotal ?> pedido<?= $historialTotal === 1 ? '' : 's' ?></a>
 </div>
 
 <?php
@@ -25,20 +19,11 @@ $iconoEntrega = static function (string $tipo): string {
         default   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg>',
     };
 };
-
 $etiquetaEntregaCorta = static function (array $pedido): string {
     return match ($pedido['tipo_entrega']) {
         'recoger' => 'Recoge',
         'mesa'    => 'Mesa ' . $pedido['mesa'],
         default   => 'Domicilio',
-    };
-};
-
-$etiquetaEntregaLarga = static function (array $pedido): string {
-    return match ($pedido['tipo_entrega']) {
-        'recoger' => 'Recoge en el local',
-        'mesa'    => 'Come en el local · Mesa ' . $pedido['mesa'],
-        default   => $pedido['direccion'] ?? 'Domicilio',
     };
 };
 
@@ -48,10 +33,9 @@ $etiquetaEntregaLarga = static function (array $pedido): string {
 $objetivoMin = 20;
 
 // Tablero por columnas (solo desktop, ver .pq-kanban en app.css): agrupa
-// los pedidos activos por etapa para verlos todos de un vistazo, como una
-// cocina real. "Entregados" no vive aquí — ya no requiere ninguna acción,
-// así que solo aparece como contador arriba del título; verlo en detalle
-// completo es cosa del historial de abajo.
+// los pedidos EN VUELO por etapa. El historial completo (abajo) es una
+// cosa aparte — puede tener cientos de registros y no debe usar el mismo
+// patrón de tarjetas grandes que el tablero operativo.
 $columnasKanban = [
     ['clave' => 'confirmados', 'titulo' => 'Confirmados',    'estados' => ['pendiente', 'pagado'], 'color' => 'var(--sello)'],
     ['clave' => 'cocina',      'titulo' => 'Preparación',    'estados' => ['en_cocina'],            'color' => 'var(--aji)'],
@@ -59,129 +43,146 @@ $columnasKanban = [
     ['clave' => 'camino',      'titulo' => 'En camino',      'estados' => ['en_camino'],            'color' => '#8a5a00'],
 ];
 foreach ($columnasKanban as &$columna) {
-    $columna['pedidos'] = array_values(array_filter($todos, fn ($p) => in_array($p['estado'], $columna['estados'], true)));
+    $columna['pedidos'] = array_values(array_filter($activos, fn ($p) => in_array($p['estado'], $columna['estados'], true)));
 }
 unset($columna);
 ?>
 
-<?php if ($total > 0): ?>
-  <div class="pq-kanban">
-    <?php foreach ($columnasKanban as $columna): ?>
-      <div class="pq-kanban-col">
-        <div class="pq-kanban-col-header">
-          <span class="pq-kanban-dot" style="background: <?= e($columna['color']) ?>"></span>
-          <?= e($columna['titulo']) ?>
-          <span class="pq-kanban-count"><?= count($columna['pedidos']) ?></span>
-        </div>
-        <div class="pq-kanban-cards">
-          <?php if ($columna['pedidos'] === []): ?>
-            <p class="pq-ayuda" style="padding: 4px 2px">Nada por aquí.</p>
-          <?php endif; ?>
-          <?php foreach ($columna['pedidos'] as $pedido): ?>
-            <?php
-            $minutos = minutos_desde((string) $pedido['creado_en']);
-            $nivel = nivel_espera($minutos, $objetivoMin);
-            $siguiente = \App\Models\Pedido::siguientePaso($pedido);
-            ?>
-            <div class="pq-kanban-card<?= $nivel === 'prioridad' ? ' pq-card-demorado' : '' ?>">
-              <a class="pq-kanban-card-link" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">#<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?></a>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
-                <span class="pq-tiempo-espera" style="color: var(--gris-texto)">
-                  <?= $iconoEntrega($pedido['tipo_entrega']) ?>
-                  <?= e($etiquetaEntregaCorta($pedido)) ?>
-                </span>
-                <span class="pq-mono pq-precio-suave" style="font-size: 12px; flex-shrink: 0"><?= pesos((int) $pedido['total']) ?></span>
-              </div>
-              <?php if (!empty($pedido['notas'])): ?>
-                <span class="pq-ayuda pq-nota-corta" style="font-size: 11px">"<?= e($pedido['notas']) ?>"</span>
-              <?php endif; ?>
-              <span class="pq-tiempo-espera pq-tiempo-<?= e($nivel) ?>">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-                <?= e(texto_espera($minutos)) ?>
+<div class="pq-kanban">
+  <?php foreach ($columnasKanban as $columna): ?>
+    <div class="pq-kanban-col">
+      <div class="pq-kanban-col-header">
+        <span class="pq-kanban-dot" style="background: <?= e($columna['color']) ?>"></span>
+        <?= e($columna['titulo']) ?>
+        <span class="pq-kanban-count"><?= count($columna['pedidos']) ?></span>
+      </div>
+      <div class="pq-kanban-cards">
+        <?php if ($columna['pedidos'] === []): ?>
+          <p class="pq-ayuda" style="padding: 4px 2px">Nada por aquí.</p>
+        <?php endif; ?>
+        <?php foreach ($columna['pedidos'] as $pedido): ?>
+          <?php
+          $minutos = minutos_desde((string) $pedido['creado_en']);
+          $nivel = nivel_espera($minutos, $objetivoMin);
+          $siguiente = \App\Models\Pedido::siguientePaso($pedido);
+          ?>
+          <div class="pq-kanban-card<?= $nivel === 'prioridad' ? ' pq-card-demorado' : '' ?>">
+            <a class="pq-kanban-card-link" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">#<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?></a>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
+              <span class="pq-tiempo-espera" style="color: var(--gris-texto)">
+                <?= $iconoEntrega($pedido['tipo_entrega']) ?>
+                <?= e($etiquetaEntregaCorta($pedido)) ?>
               </span>
-              <?php if ($siguiente !== null): ?>
-                <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>" style="margin-top: 4px">
-                  <?= csrf_campo() ?>
-                  <input type="hidden" name="estado" value="<?= e($siguiente['estado']) ?>">
-                  <input type="hidden" name="volver" value="/panel/pedidos">
-                  <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico" style="width: 100%; font-size: 12px; padding: 8px 10px"><?= e($siguiente['texto']) ?> →</button>
-                </form>
-              <?php endif; ?>
+              <span class="pq-mono pq-precio-suave" style="font-size: 12px; flex-shrink: 0"><?= pesos((int) $pedido['total']) ?></span>
             </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-
-  <p class="pq-eyebrow pq-kanban-label">Historial completo</p>
-<?php endif; ?>
-
-<?php if ($total > 0): ?>
-  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px">
-    <a href="<?= e(base_url('/panel/pedidos')) ?>" class="pq-chip <?= $filtro === '' ? 'pq-chip-caja' : '' ?>" style="text-decoration: none">Todos · <?= $total ?></a>
-    <?php foreach ($etiquetasEstado as $clave => $texto): ?>
-      <?php if (($conteos[$clave] ?? 0) > 0): ?>
-        <a href="<?= e(base_url('/panel/pedidos') . '?estado=' . $clave) ?>" class="pq-chip <?= $filtro === $clave ? 'pq-chip-caja' : '' ?>" style="text-decoration: none"><?= e($texto) ?> · <?= $conteos[$clave] ?></a>
-      <?php endif; ?>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
-
-<?php if ($pedidos === [] && $total === 0): ?>
-  <p class="pq-lead" style="margin-top: 16px">Todavía no te han hecho pedidos.</p>
-<?php elseif ($pedidos === []): ?>
-  <p class="pq-lead" style="margin-top: 16px">No tienes pedidos en estado «<?= e($etiquetasEstado[$filtro] ?? $filtro) ?>».</p>
-<?php else: ?>
-  <div class="pq-stack" style="gap: 10px; margin-top: 20px">
-    <?php foreach ($pedidos as $pedido): ?>
-      <?php
-      $pedidoActivo = !in_array($pedido['estado'], ['entregado', 'cancelado'], true);
-      $minutosEspera = minutos_desde((string) $pedido['creado_en']);
-      $nivelFila = nivel_espera($minutosEspera, $objetivoMin);
-      $siguienteFila = \App\Models\Pedido::siguientePaso($pedido);
-      ?>
-      <div class="pq-card-borde<?= $nivelFila === 'prioridad' && $pedidoActivo ? ' pq-card-demorado' : '' ?>">
-        <div style="display: flex; align-items: center; gap: 12px">
-          <div class="pq-avatar pq-avatar-chico" style="background: var(--sello)"><?= e(mb_strtoupper(mb_substr($pedido['cliente_nombre'], 0, 1))) ?></div>
-          <div class="pq-stack" style="flex-grow: 1">
-            <a href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" style="font-size: 14px; font-weight: 600; color: inherit; text-decoration: none">
-              #<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?>
-            </a>
-            <span class="pq-ayuda"><?= e(date('d M, g:i a', strtotime((string) $pedido['creado_en']))) ?> · <?= e(strtoupper($pedido['metodo_pago'])) ?></span>
-            <span class="pq-tiempo-espera" style="color: var(--gris-texto); white-space: normal; align-items: flex-start">
-              <?= $iconoEntrega($pedido['tipo_entrega']) ?>
-              <?= e($etiquetaEntregaLarga($pedido)) ?>
-            </span>
             <?php if (!empty($pedido['notas'])): ?>
-              <span class="pq-ayuda pq-nota-corta">"<?= e($pedido['notas']) ?>"</span>
+              <span class="pq-ayuda pq-nota-corta" style="font-size: 11px">"<?= e($pedido['notas']) ?>"</span>
+            <?php endif; ?>
+            <span class="pq-tiempo-espera pq-tiempo-<?= e($nivel) ?>">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              <?= e(texto_espera($minutos)) ?>
+            </span>
+            <?php if ($siguiente !== null): ?>
+              <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>" style="margin-top: 4px">
+                <?= csrf_campo() ?>
+                <input type="hidden" name="estado" value="<?= e($siguiente['estado']) ?>">
+                <input type="hidden" name="volver" value="/panel/pedidos">
+                <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico" style="width: 100%; font-size: 12px; padding: 8px 10px"><?= e($siguiente['texto']) ?> →</button>
+              </form>
             <?php endif; ?>
           </div>
-          <div class="pq-stack" style="align-items: flex-end; gap: 3px">
-            <span class="pq-mono pq-precio-suave" style="font-size: 14px"><?= pesos((int) $pedido['total']) ?></span>
-            <?php if ($pedidoActivo): ?>
-              <span class="pq-tiempo-espera pq-tiempo-<?= e($nivelFila) ?>">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-                <?= e(texto_espera($minutosEspera)) ?>
-              </span>
-            <?php else: ?>
-              <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']]) ?></span>
-            <?php endif; ?>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center">
-          <?php if ($siguienteFila !== null): ?>
-            <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>">
-              <?= csrf_campo() ?>
-              <input type="hidden" name="estado" value="<?= e($siguienteFila['estado']) ?>">
-              <input type="hidden" name="volver" value="/panel/pedidos<?= $filtro !== '' ? '?estado=' . e($filtro) : '' ?>">
-              <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguienteFila['texto']) ?> →</button>
-            </form>
-          <?php endif; ?>
-          <a href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Ver detalle</a>
-        </div>
+        <?php endforeach; ?>
       </div>
-    <?php endforeach; ?>
+    </div>
+  <?php endforeach; ?>
+</div>
+
+<?php if ($activos === []): ?>
+  <div class="pq-kanban-vacio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+    Todo al día. No tienes pedidos pendientes.
   </div>
+<?php endif; ?>
+
+<div style="margin-top: 28px; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px">
+  <span class="pq-seccion-titulo">Historial completo</span>
+</div>
+
+<form method="get" action="<?= e(base_url('/panel/pedidos')) ?>" class="pq-filtro-historial">
+  <input class="pq-input" type="text" name="q" value="<?= e($busqueda) ?>" placeholder="Buscar pedido o cliente...">
+  <select class="pq-select" name="estado" data-autoenviar>
+    <option value="">Todos los estados</option>
+    <?php foreach ($etiquetasEstado as $clave => $texto): ?>
+      <option value="<?= e($clave) ?>" <?= $filtro === $clave ? 'selected' : '' ?>><?= e($texto) ?> · <?= (int) ($conteosPorEstado[$clave] ?? 0) ?></option>
+    <?php endforeach; ?>
+  </select>
+  <select class="pq-select" name="rango" data-autoenviar>
+    <option value="">Todo el tiempo</option>
+    <option value="hoy" <?= $rango === 'hoy' ? 'selected' : '' ?>>Hoy</option>
+    <option value="7dias" <?= $rango === '7dias' ? 'selected' : '' ?>>Últimos 7 días</option>
+    <option value="mes" <?= $rango === 'mes' ? 'selected' : '' ?>>Este mes</option>
+    <option value="mes_pasado" <?= $rango === 'mes_pasado' ? 'selected' : '' ?>>Mes pasado</option>
+    <option value="personalizado" <?= $rango === 'personalizado' ? 'selected' : '' ?>>Personalizado...</option>
+  </select>
+  <span data-mostrar-si="rango=personalizado" class="pq-filtro-fecha-personalizada">
+    <input class="pq-input" type="date" name="desde" value="<?= e($desdePersonalizado) ?>" aria-label="Desde">
+    <input class="pq-input" type="date" name="hasta" value="<?= e($hastaPersonalizado) ?>" aria-label="Hasta">
+  </span>
+  <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico" style="width: auto">Buscar</button>
+</form>
+
+<p class="pq-historial-resumen">
+  <strong><?= $historialTotal ?></strong> pedido<?= $historialTotal === 1 ? '' : 's' ?> · <strong><?= pesos($historialSuma) ?></strong> vendidos
+  <?= $filtro !== '' || $busqueda !== '' || $rango !== '' ? ' con este filtro' : '' ?>
+</p>
+
+<?php if ($historial === []): ?>
+  <div class="pq-tabla-wrap">
+    <p class="pq-tabla-vacia">No hay pedidos que coincidan con la búsqueda.</p>
+  </div>
+<?php else: ?>
+  <div class="pq-tabla-wrap">
+    <table class="pq-tabla">
+      <thead>
+        <tr>
+          <th>Pedido</th><th>Cliente</th><th>Entrega</th><th>Fecha</th><th>Estado</th><th>Total</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($historial as $pedido): ?>
+          <tr data-href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">
+            <td class="pq-mono" style="font-weight: 700">#<?= (int) $pedido['id'] ?></td>
+            <td style="font-weight: 600"><?= e($pedido['cliente_nombre']) ?></td>
+            <td style="color: var(--gris-texto)"><?= e($etiquetaEntregaCorta($pedido)) ?></td>
+            <td style="color: var(--gris-texto); white-space: nowrap"><?= e(date('d M · g:i a', strtotime((string) $pedido['creado_en']))) ?></td>
+            <td><span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']]) ?></span></td>
+            <td class="pq-mono" style="font-weight: 700"><?= pesos((int) $pedido['total']) ?></td>
+            <td><a class="pq-fila-ver" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" aria-label="Ver pedido #<?= (int) $pedido['id'] ?>">›</a></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+
+  <?php if ($totalPaginas > 1): ?>
+    <?php
+    $parametrosBase = array_filter(['estado' => $filtro, 'q' => $busqueda, 'rango' => $rango, 'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado]);
+    $enlacePagina = fn (int $p) => e(base_url('/panel/pedidos') . '?' . http_build_query($parametrosBase + ['pagina' => $p]));
+    ?>
+    <div class="pq-paginacion">
+      <a class="<?= $pagina <= 1 ? 'pq-pagina-deshabilitada' : '' ?>" href="<?= $enlacePagina(max(1, $pagina - 1)) ?>" aria-label="Anterior">‹</a>
+      <?php for ($p = 1; $p <= $totalPaginas; $p++): ?>
+        <?php if ($p === 1 || $p === $totalPaginas || abs($p - $pagina) <= 1): ?>
+          <?php if ($p === $pagina): ?>
+            <span class="pq-pagina-activa"><?= $p ?></span>
+          <?php else: ?>
+            <a href="<?= $enlacePagina($p) ?>"><?= $p ?></a>
+          <?php endif; ?>
+        <?php elseif ($p === 2 || $p === $totalPaginas - 1): ?>
+          <span class="pq-pagina-puntos">···</span>
+        <?php endif; ?>
+      <?php endfor; ?>
+      <a class="<?= $pagina >= $totalPaginas ? 'pq-pagina-deshabilitada' : '' ?>" href="<?= $enlacePagina(min($totalPaginas, $pagina + 1)) ?>" aria-label="Siguiente">›</a>
+    </div>
+  <?php endif; ?>
 <?php endif; ?>

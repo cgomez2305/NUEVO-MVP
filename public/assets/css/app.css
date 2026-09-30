@@ -634,6 +634,85 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 
 .pq-acciones-rapidas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
+/* ---------- historial de pedidos: filtros, tabla, paginación ---------- */
+
+.pq-kanban-vacio {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--tinte-caja);
+  border: 1px solid rgba(22, 163, 106, .3);
+  border-radius: 12px;
+  color: #0f6b45;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.pq-kanban-vacio svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.pq-filtro-historial {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+}
+.pq-filtro-historial .pq-input { flex: 1 1 220px; min-width: 0; }
+.pq-filtro-historial .pq-select { flex: 0 1 170px; width: auto; min-width: 0; }
+.pq-filtro-historial input[type="date"] { flex: 0 1 150px; width: auto; min-width: 0; }
+.pq-filtro-fecha-personalizada { display: flex; gap: 8px; }
+
+.pq-historial-resumen { font-size: 13px; color: var(--gris-texto); margin-top: 12px; }
+.pq-historial-resumen strong { color: var(--carbon); }
+
+.pq-tabla-wrap {
+  margin-top: 10px;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--sombra-suave);
+}
+.pq-tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.pq-tabla thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--gris-suave);
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--recibo);
+  background: #F4F1E9;
+  white-space: nowrap;
+}
+.pq-tabla tbody td { padding: 11px 14px; border-bottom: 1px solid var(--recibo); vertical-align: middle; }
+.pq-tabla tbody tr:last-child td { border-bottom: none; }
+.pq-tabla tbody tr[data-href] { cursor: pointer; transition: background .12s ease; }
+.pq-tabla tbody tr[data-href]:hover { background: var(--recibo); }
+.pq-tabla .pq-fila-ver { color: var(--sello); text-decoration: none; font-weight: 700; font-size: 15px; }
+.pq-tabla-vacia { padding: 30px 16px; text-align: center; color: var(--gris-suave); font-size: 13.5px; }
+
+.pq-paginacion { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 16px; flex-wrap: wrap; }
+.pq-paginacion a, .pq-paginacion span {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--carbon);
+}
+.pq-paginacion a:hover { background: var(--recibo); }
+.pq-paginacion span.pq-pagina-activa { background: var(--sello); color: var(--tiquete); }
+.pq-paginacion span.pq-pagina-puntos { color: var(--gris-suave); }
+.pq-paginacion a.pq-pagina-deshabilitada { pointer-events: none; opacity: .35; }
+
 a.pq-stat { text-decoration: none; display: flex; }
 a.pq-stat:hover { border-color: var(--sello); }
 .pq-btn-icono {
@@ -882,18 +961,29 @@ a.pq-stat:hover { border-color: var(--sello); }
 @media (min-width: 960px) {
   body.pq-panel-bg { padding: 32px 20px; }
 
+  /* Escritorio: el sidebar y el contenido son dos columnas flex, no grid.
+     Con grid había que hacer que el sidebar "adivinara" cuántas filas
+     abarcar (grid-row: 1 / span N) para que su altura cubriera todo el
+     contenido de la derecha; con listas largas eso se quedaba corto. Pero
+     el problema real, encontrado después, era otro: overflow:hidden en
+     este contenedor (usado solo para recortar las esquinas redondeadas)
+     convierte a .pq-shell en su propio "contenedor de scroll" a ojos del
+     spec de CSS, y position:sticky dentro de un ancestro así deja de
+     engancharse al scroll real de la ventana — el sidebar se queda quieto
+     en su sitio en vez de seguir el scroll. Por eso el redondeado de la
+     esquina izquierda ahora vive en el propio sidebar (border-radius),
+     no en el contenedor con overflow:hidden. */
   .pq-shell:has(.pq-topbar-links) {
-    max-width: 1120px;
+    max-width: 1400px;
     min-height: calc(100vh - 64px);
-    display: grid;
-    grid-template-columns: 236px minmax(0, 1fr);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
     border-radius: 20px;
-    overflow: hidden;
   }
 
   .pq-shell:has(.pq-topbar-links) > .pq-topbar {
-    grid-column: 1;
-    grid-row: 1 / span 30;
+    flex: 0 0 236px;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
@@ -902,10 +992,12 @@ a.pq-stat:hover { border-color: var(--sello); }
     border-bottom: none;
     border-right: 1px solid var(--recibo);
     background: #F4F1E9;
+    border-radius: 20px 0 0 20px;
     position: sticky;
     top: 32px;
-    align-self: start;
-    height: calc(100vh - 64px);
+    align-self: flex-start;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-brand { padding: 0 6px 6px; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 30px; }
@@ -938,9 +1030,21 @@ a.pq-stat:hover { border-color: var(--sello); }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .75; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a.activo svg { opacity: 1; }
 
-  .pq-shell:has(.pq-topbar-links) .pq-sede-switcher { grid-column: 2; padding: 22px 32px 0; margin: 0; }
-  .pq-shell:has(.pq-topbar-links) .pq-content { grid-column: 2; padding: 24px 32px 40px; max-width: 760px; }
-  .pq-shell:has(.pq-topbar-links) > div[style*="padding: 0 20px 24px"] { grid-column: 2; padding-left: 32px; padding-right: 32px; padding-top: 8px; }
+  .pq-shell:has(.pq-topbar-links) .pq-shell-main { flex: 1 1 auto; min-width: 0; }
+  /* La barra con el nombre del negocio se queda visible al bajar por un
+     historial largo — así nunca se pierde el contexto de qué sede se
+     está viendo, ni hay que subir hasta arriba para cambiar de sede. */
+  .pq-shell:has(.pq-topbar-links) .pq-sede-switcher {
+    padding: 14px 32px;
+    margin: 0;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    background: var(--tiquete);
+    border-bottom: 1px solid var(--recibo);
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-content { padding: 24px 32px 40px; max-width: 1240px; }
+  .pq-shell:has(.pq-topbar-links) .pq-shell-main > div[style*="padding: 0 20px 24px"] { padding-left: 32px; padding-right: 32px; padding-top: 8px; }
 
   .pq-stats { max-width: 480px; }
 }

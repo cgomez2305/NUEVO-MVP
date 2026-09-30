@@ -66,28 +66,30 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
       </nav>
     </div>
 
-    <?php $sedesAcceso = \App\Auth::sedesAccesibles($negocio); ?>
-    <?php if (count($sedesAcceso) > 1): ?>
-      <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>" class="pq-sede-switcher">
-        <?= csrf_campo() ?>
-        <input type="hidden" name="volver" value="<?= e($_SERVER['REQUEST_URI'] ?? base_url('/panel')) ?>">
-        <select class="pq-select" name="sede_id" data-autoenviar>
-          <?php foreach ($sedesAcceso as $s): ?>
-            <option value="<?= (int) $s['id'] ?>" <?= (int) $s['id'] === (int) $negocio['id'] ? 'selected' : '' ?>>
-              <?= e($s['nombre']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </form>
-    <?php endif; ?>
+    <div class="pq-shell-main">
+      <?php $sedesAcceso = \App\Auth::sedesAccesibles($negocio); ?>
+      <?php if (count($sedesAcceso) > 1): ?>
+        <form method="post" action="<?= e(base_url('/panel/sede/cambiar')) ?>" class="pq-sede-switcher">
+          <?= csrf_campo() ?>
+          <input type="hidden" name="volver" value="<?= e($_SERVER['REQUEST_URI'] ?? base_url('/panel')) ?>">
+          <select class="pq-select" name="sede_id" data-autoenviar>
+            <?php foreach ($sedesAcceso as $s): ?>
+              <option value="<?= (int) $s['id'] ?>" <?= (int) $s['id'] === (int) $negocio['id'] ? 'selected' : '' ?>>
+                <?= e($s['nombre']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </form>
+      <?php endif; ?>
 
-    <div class="pq-content">
-      <?= $contenido ?>
-    </div>
+      <div class="pq-content">
+        <?= $contenido ?>
+      </div>
 
-    <div style="padding: 0 20px 24px">
-      <button type="button" id="push-boton" class="pq-btn pq-btn-ghost pq-btn-chico" data-csrf="<?= e(csrf_token()) ?>">Activar notificaciones</button>
-      <p id="push-estado" class="pq-ayuda" style="margin-top: 6px"></p>
+      <div style="padding: 0 20px 24px">
+        <button type="button" id="push-boton" class="pq-btn pq-btn-ghost pq-btn-chico" data-csrf="<?= e(csrf_token()) ?>">Activar notificaciones</button>
+        <p id="push-estado" class="pq-ayuda" style="margin-top: 6px"></p>
+      </div>
     </div>
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>

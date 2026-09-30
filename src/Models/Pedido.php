@@ -110,6 +110,113 @@ class Pedido
         return $stmt->fetchAll();
     }
 
+    /**
+     * Pedidos "en vuelo" (confirmado → en camino) para el tablero. A
+     * diferencia del historial completo, esto nunca debería crecer sin
+     * límite — un negocio real tiene un número acotado de pedidos abiertos
+     * a la vez — así que no hace falta paginar.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function listarActivosPorSede(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
+             FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
+             WHERE p.sede_id = :sede_id
+               AND p.estado IN ('pendiente','pagado','en_cocina','listo','en_camino')
+             ORDER BY p.creado_en DESC"
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        return $stmt->fetchAll();
+    }
+
+    /** Cuántos pedidos hay de cada estado, sobre TODO el historial (no solo lo que se está viendo). */
+    public static function conteosPorEstado(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT estado, COUNT(*) AS total FROM pedidos WHERE sede_id = :sede_id GROUP BY estado'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        $conteos = [];
+        foreach ($stmt->fetchAll() as $fila) {
+            $conteos[$fila['estado']] = (int) $fila['total'];
+        }
+        return $conteos;
+    }
+
+    /**
+     * Historial filtrado + paginado: la base del listado de abajo del
+     * tablero. $porPagina en null trae todo sin límite (lo usa el CSV,
+     * que debe exportar exactamente lo que el filtro actual muestra).
+     *
+     * @return array{filas: array<int, array<string, mixed>>, total: int, suma: int}
+     */
+    public static function buscarPorSede(
+        int $sedeId,
+        string $estado = '',
+        string $busqueda = '',
+        ?string $desde = null,
+        ?string $hasta = null,
+        int $pagina = 1,
+        ?int $porPagina = 20
+    ): array {
+        $condiciones = ['p.sede_id = :sede_id'];
+        $params = ['sede_id' => $sedeId];
+
+        if ($estado !== '' && in_array($estado, self::ESTADOS, true)) {
+            $condiciones[] = 'p.estado = :estado';
+            $params['estado'] = $estado;
+        }
+        if ($busqueda !== '') {
+            $condiciones[] = '(c.nombre LIKE :busqueda OR p.id = :busqueda_id)';
+            $params['busqueda'] = '%' . $busqueda . '%';
+            $params['busqueda_id'] = ctype_digit($busqueda) ? (int) $busqueda : 0;
+        }
+        if ($desde !== null) {
+            $condiciones[] = 'p.creado_en >= :desde';
+            $params['desde'] = $desde;
+        }
+        if ($hasta !== null) {
+            $condiciones[] = 'p.creado_en <= :hasta';
+            $params['hasta'] = $hasta;
+        }
+
+        $where = implode(' AND ', $condiciones);
+        $pdo = Database::conexion();
+
+        $stmtTotales = $pdo->prepare(
+            "SELECT COUNT(*) AS total, COALESCE(SUM(p.total), 0) AS suma
+             FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
+             WHERE {$where}"
+        );
+        $stmtTotales->execute($params);
+        $totales = $stmtTotales->fetch();
+
+        $sql = "SELECT p.*, c.nombre AS cliente_nombre, c.telefono AS cliente_telefono
+                FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
+                WHERE {$where}
+                ORDER BY p.creado_en DESC";
+        if ($porPagina !== null) {
+            $sql .= ' LIMIT :limite OFFSET :offset';
+        }
+        $stmt = $pdo->prepare($sql);
+        foreach ($params as $llave => $valor) {
+            $stmt->bindValue($llave, $valor);
+        }
+        if ($porPagina !== null) {
+            $stmt->bindValue('limite', $porPagina, \PDO::PARAM_INT);
+            $stmt->bindValue('offset', max(0, ($pagina - 1) * $porPagina), \PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
+        return [
+            'filas' => $stmt->fetchAll(),
+            'total' => (int) $totales['total'],
+            'suma'  => (int) $totales['suma'],
+        ];
+    }
+
     public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(

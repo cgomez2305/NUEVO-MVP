@@ -11,6 +11,7 @@
  *   <select data-autoenviar>                       en vez de onchange="this.form.submit()"
  *   <input data-seleccionar-al-tocar>              en vez de onclick="this.select()"
  *   <button data-imprimir>                         en vez de onclick="window.print()"
+ *   <tr data-href="/panel/pedidos/1">               en vez de onclick="location.href=..."
  */
 (function () {
   'use strict';
@@ -35,6 +36,13 @@
     }
     if (evento.target.closest && evento.target.closest('[data-imprimir]')) {
       window.print();
+    }
+    // Fila de tabla clicable (historial de pedidos): ignora el clic si ya
+    // cayó sobre un enlace o botón propio de la fila, para no interceptar
+    // ese clic ni navegar dos veces.
+    var fila = evento.target.closest && evento.target.closest('[data-href]');
+    if (fila && !evento.target.closest('a, button, input, select')) {
+      window.location.href = fila.getAttribute('data-href');
     }
   });
 })();

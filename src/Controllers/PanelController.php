@@ -58,29 +58,70 @@ class PanelController
     public function pedidos(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
-        $todos = Pedido::listarPorSede((int) $negocio['id']);
-
-        $conteos = [];
-        foreach ($todos as $pedido) {
-            $conteos[$pedido['estado']] = ($conteos[$pedido['estado']] ?? 0) + 1;
-        }
+        $sedeId = (int) $negocio['id'];
 
         $filtro = (string) ($_GET['estado'] ?? '');
         if (!in_array($filtro, Pedido::ESTADOS, true)) {
             $filtro = '';
         }
-        $pedidos = $filtro === '' ? $todos : array_values(array_filter($todos, fn ($p) => $p['estado'] === $filtro));
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $rango = (string) ($_GET['rango'] ?? '');
+        $desdePersonalizado = (string) ($_GET['desde'] ?? '');
+        $hastaPersonalizado = (string) ($_GET['hasta'] ?? '');
+        [$desde, $hasta] = $this->rangoFechasPedidos($rango, $desdePersonalizado, $hastaPersonalizado);
+
+        $porPagina = 20;
+        $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
+
+        $resultado = Pedido::buscarPorSede($sedeId, $filtro, $busqueda, $desde, $hasta, $pagina, $porPagina);
+        $totalPaginas = max(1, (int) ceil($resultado['total'] / $porPagina));
+        if ($pagina > $totalPaginas) {
+            $pagina = $totalPaginas;
+            $resultado = Pedido::buscarPorSede($sedeId, $filtro, $busqueda, $desde, $hasta, $pagina, $porPagina);
+        }
 
         ver('panel/pedidos', [
-            'titulo'  => 'Pedidos · Veci',
-            'activo'  => 'pedidos',
-            'negocio' => $negocio,
-            'pedidos' => $pedidos,
-            'todos'   => $todos,
-            'total'   => count($todos),
-            'conteos' => $conteos,
-            'filtro'  => $filtro,
+            'titulo'   => 'Pedidos · Veci',
+            'activo'   => 'pedidos',
+            'negocio'  => $negocio,
+            'activos'  => Pedido::listarActivosPorSede($sedeId),
+            'conteosPorEstado' => Pedido::conteosPorEstado($sedeId),
+            'filtro'   => $filtro,
+            'busqueda' => $busqueda,
+            'rango'    => $rango,
+            'desdePersonalizado' => $desdePersonalizado,
+            'hastaPersonalizado' => $hastaPersonalizado,
+            'historial'      => $resultado['filas'],
+            'historialTotal' => $resultado['total'],
+            'historialSuma'  => $resultado['suma'],
+            'pagina'       => $pagina,
+            'totalPaginas' => $totalPaginas,
         ], 'panel');
+    }
+
+    /**
+     * Traduce el filtro de fecha del historial (hoy/7 días/mes/mes
+     * pasado/personalizado) a un rango [desde, hasta] en formato DATETIME
+     * para la consulta. Ambos null significa "sin límite de fecha".
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function rangoFechasPedidos(string $rango, string $desdePersonalizado, string $hastaPersonalizado): array
+    {
+        return match ($rango) {
+            'hoy' => [date('Y-m-d 00:00:00'), null],
+            '7dias' => [date('Y-m-d 00:00:00', strtotime('-6 days')), null],
+            'mes' => [date('Y-m-01 00:00:00'), null],
+            'mes_pasado' => [
+                date('Y-m-01 00:00:00', strtotime('first day of last month')),
+                date('Y-m-t 23:59:59', strtotime('last day of last month')),
+            ],
+            'personalizado' => [
+                $desdePersonalizado !== '' ? $desdePersonalizado . ' 00:00:00' : null,
+                $hastaPersonalizado !== '' ? $hastaPersonalizado . ' 23:59:59' : null,
+            ],
+            default => [null, null],
+        };
     }
 
     public function cambiarEstadoPedido(array $parametros): void
@@ -116,11 +157,22 @@ class PanelController
         ], 'panel');
     }
 
+    /** Exporta exactamente lo que el filtro actual del historial está mostrando, no todo el histórico a ciegas. */
     public function exportarPedidosCsv(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $pedidos = Pedido::listarPorSede((int) $negocio['id'], 100000);
+
+        $filtro = (string) ($_GET['estado'] ?? '');
+        if (!in_array($filtro, Pedido::ESTADOS, true)) {
+            $filtro = '';
+        }
+        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $rango = (string) ($_GET['rango'] ?? '');
+        [$desde, $hasta] = $this->rangoFechasPedidos($rango, (string) ($_GET['desde'] ?? ''), (string) ($_GET['hasta'] ?? ''));
+
+        $resultado = Pedido::buscarPorSede((int) $negocio['id'], $filtro, $busqueda, $desde, $hasta, 1, null);
+        $pedidos = $resultado['filas'];
 
         $salida = $this->abrirDescargaCsv('pedidos');
         fputcsv($salida, ['ID', 'Fecha', 'Cliente', 'Teléfono', 'Total', 'Método de pago', 'Estado']);
