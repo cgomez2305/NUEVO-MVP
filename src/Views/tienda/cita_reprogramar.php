@@ -1,5 +1,8 @@
-<div class="pq-topbar" style="border-bottom: none; padding-top: 20px">
-  <a href="<?= e(base_url('/cita/' . $cita['token_gestion'])) ?>" class="pq-mono" style="font-size: 11px; color: var(--gris-suave); text-decoration: none">‹ volver a tu cita</a>
+<div class="pq-topbar pq-topbar-tienda">
+  <a href="<?= e(base_url('/cita/' . $cita['token_gestion'])) ?>" class="pq-volver">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Tu cita
+  </a>
 </div>
 
 <?php $diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']; ?>

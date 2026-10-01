@@ -780,11 +780,15 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-chip-cancelado { background: #FBE3E0; color: #9c2c17; }
 
 /* A diferencia de .pq-chip como insignia de estado (no interactiva, se usa
-   en pedidos/citas), los chips de fecha en reservar.php SÍ son botones —
-   necesitan un borde sutil para no leerse como "deshabilitados" entre
-   tantos chips beige planos por toda la app. */
-.pq-chip-dia { border: 1px solid var(--recibo); background: var(--papel); }
+   en pedidos/citas), los chips de fecha en reservar.php SÍ son botones — un
+   blanco real (no el mismo crema del fondo) para que se noten como
+   superficies táctiles, con un borde que se oscurece al tocar/hover. */
+.pq-chip-dia { border: 1px solid #E4DDD1; background: #FFFFFF; font-weight: 600; }
 .pq-chip-dia:hover, .pq-chip-dia:focus-visible { border-color: var(--tinta); }
+/* El chip de fecha activo reusa .pq-chip-caja (mismo mint que el resto de
+   la app) pero con más definición: borde del mismo verde y texto más
+   pesado, para que no dependa solo del cambio de fondo. */
+.pq-dias-scroll .pq-chip-caja { border: 1px solid #8FCDA8; font-weight: 700; }
 
 /* Carrusel de fechas (reservar.php): con 14 opciones casi siempre hay más
    chips de los que caben en pantalla. El fundido a la derecha (en vez de
@@ -799,6 +803,149 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
 }
 .pq-dias-scroll::-webkit-scrollbar { display: none; }
+
+/* "Ver más fechas" (reservar.php): el carrusel por sí solo depende del
+   swipe horizontal para descubrir que hay 14 días, no solo 5. Este
+   <details> nativo despliega TODAS las fechas en una grilla que envuelve
+   (sin scroll), como alternativa a deslizar — sin JS, mismo patrón de
+   disclosure que el resto de la app. */
+.pq-calendario-detalle { margin-top: 8px; }
+.pq-calendario-detalle > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  padding: 6px 2px;
+  min-height: 32px;
+}
+.pq-calendario-detalle > summary::-webkit-details-marker { display: none; }
+.pq-calendario-detalle[open] > summary { color: var(--tinta); }
+.pq-calendario-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--recibo);
+}
+
+/* Mes junto a "Elige el día": contexto que antes faltaba del todo. */
+.pq-mes-actual { font-size: 12px; color: var(--gris-suave); font-weight: 600; }
+
+/* Grilla real de horarios (reservar.php): antes era un flex-wrap que
+   dejaba huecos irregulares según el ancho de cada hora. Con 3 columnas
+   fijas todas las franjas quedan alineadas, y cada celda es una superficie
+   blanca real — ya no un botón con borde sobre el mismo fondo crema. */
+.pq-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pq-slots-grid + .pq-slots-grid,
+.pq-slot-grupo + .pq-slot-grupo { margin-top: 20px; }
+.pq-slot-grupo-titulo {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--gris-suave);
+  margin-bottom: 8px;
+  display: block;
+}
+.pq-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 46px;
+  padding: 10px 6px;
+  background: #FFFFFF;
+  border: 1px solid #E4DDD1;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+  text-decoration: none;
+  text-align: center;
+  transition: transform .1s ease, border-color .12s ease, background .12s ease, color .12s ease;
+}
+.pq-slot:hover { border-color: var(--tinta); }
+.pq-slot:active { transform: scale(.96); }
+.pq-slot:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-slot-seleccionado, .pq-slot-seleccionado:hover {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--papel);
+}
+.pq-slot-seleccionado svg { flex-shrink: 0; }
+
+/* Tarjeta informativa (sin cupos / día cerrado) vs. tarjeta de éxito
+   (ya anotado en lista de espera): antes eran dos rectángulos blancos
+   casi idénticos. El verde muy suave en la segunda deja claro de un
+   vistazo cuál es un estado ya logrado y cuál sigue siendo una opción
+   por tomar — mismo verde que .pq-chip-caja en toda la app, no uno nuevo. */
+.pq-card-exito { background: #EFF8F2; border: 1px solid #BFE4CC; }
+.pq-card-exito-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #16A36A;
+  color: #fff;
+  flex-shrink: 0;
+}
+.pq-card-exito-check svg { width: 13px; height: 13px; }
+
+/* "Salir de la lista": una acción que revierte un estado real, no un
+   link cualquiera — por eso pide una confirmación propia en vez de
+   ejecutarse con un solo toque. El botón "Sí, salir" vive DENTRO del
+   <details> pero envía el <form> real de afuera vía el atributo form="…"
+   (asociación nativa de HTML5, funciona sin JS). "Cancelar" es type=button
+   (nunca envía nada); con JS además colapsa el <details> — sin JS el
+   usuario solo tiene que tocar el resumen de nuevo para cerrarlo. */
+.pq-salir-confirm { margin-top: 12px; }
+.pq-salir-confirm > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gris-suave);
+  padding: 6px 2px;
+  min-height: 32px;
+}
+.pq-salir-confirm > summary::-webkit-details-marker { display: none; }
+.pq-salir-confirm > summary:hover { color: var(--tinta); }
+.pq-salir-confirm-caja {
+  margin-top: 8px;
+  padding: 12px;
+  background: #FFFFFF;
+  border: 1px solid #BFE4CC;
+  border-radius: 10px;
+}
+
+/* Cabecera de las pantallas de reserva/reprogramar: el mismo fondo crema
+   del resto de la pantalla (antes usaba --tiquete, casi blanco puro, y se
+   veía como una franja de otra pantalla pegada encima). El área de "volver"
+   tiene que sentirse como navegación real, no un breadcrumb técnico. */
+.pq-topbar-tienda { background: var(--papel); border-bottom: 1px solid var(--recibo); padding: 10px 20px; }
+.pq-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+  text-decoration: none;
+}
+.pq-volver:hover { color: var(--sello); }
+.pq-volver svg { flex-shrink: 0; }
 
 /* ---------- estadísticas del panel ---------- */
 

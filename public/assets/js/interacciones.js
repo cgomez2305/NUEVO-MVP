@@ -472,4 +472,21 @@
       }
     });
   });
+
+  // "Cancelar" en la confirmación de "Salir de la lista" (reservar.php):
+  // es type="button" a propósito (nunca envía el form real aunque algo
+  // falle), así que sin JS simplemente no hace nada visible — el usuario
+  // sigue pudiendo cerrar la caja tocando el resumen de nuevo. Con JS,
+  // además colapsa el <details> para que "Cancelar" se sienta como una
+  // acción real.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-cerrar-details]').forEach(function (boton) {
+      boton.addEventListener('click', function () {
+        var detalle = boton.closest('details');
+        if (detalle) {
+          detalle.removeAttribute('open');
+        }
+      });
+    });
+  });
 })();

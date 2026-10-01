@@ -1,5 +1,8 @@
-<div class="pq-topbar" style="border-bottom: none; padding-top: 20px">
-  <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-mono" style="font-size: 11px; color: var(--gris-suave); text-decoration: none">‹ ver servicios</a>
+<div class="pq-topbar pq-topbar-tienda">
+  <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-volver">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Servicios
+  </a>
 </div>
 
 <?php
@@ -7,18 +10,12 @@ $diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 $diasLargo = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 $diasPlural = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
 $mesesCorto = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+$mesesLargo = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '';
 $fechaEsHoy = $fecha === date('Y-m-d');
-$nombreDia = static fn (string $f) => $f === date('Y-m-d') ? 'hoy' : $diasCorto[(int) date('w', strtotime($f))] . ' ' . date('d', strtotime($f));
 $fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string {
     $ts = strtotime($f);
     return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts) . ' ' . $mesesCorto[(int) date('n', $ts) - 1] . '.';
-};
-// Versión sin mes para el botón: el mes ya aparece justo arriba en "Próximo
-// disponible", repetirlo en el CTA solo lo alarga sin añadir información.
-$fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
-    $ts = strtotime($f);
-    return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts);
 };
 // A diferencia de hora_legible() (usada en servicios.php, donde "9 a. m."
 // sin minutos es deliberado), aquí conviven horas "en punto" y horas con
@@ -30,9 +27,14 @@ $horaCompleta = static function (string $hora): string {
     $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
     return date('g:i', $ts) . ' ' . $meridiano;
 };
+$mesActual = ucfirst($mesesLargo[(int) date('n', strtotime($fecha)) - 1]) . ' ' . date('Y', strtotime($fecha));
+// Mañana/tarde para escanear la grilla más rápido cuando hay muchos cupos
+// — el corte es mediodía, no la hora de cierre del negocio.
+$slotsManana = array_values(array_filter($slots, static fn (string $s) => (int) substr($s, 0, 2) < 12));
+$slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) substr($s, 0, 2) >= 12));
 ?>
 <div class="pq-content-tienda" style="padding-top: 0">
-  <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
+  <h1 class="pq-tienda-nombre" style="font-size: 26px; margin-top: 24px"><?= e($servicio['nombre']) ?></h1>
   <span class="pq-tienda-desc"><?= e(nombre_publico_sede($negocio)) ?> · <?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
   <?php if ($anticipo > 0): ?>
     <div class="pq-alerta pq-alerta-aviso" style="margin-top: 12px">
@@ -45,7 +47,7 @@ $horaCompleta = static function (string $hora): string {
   <?php endif; ?>
 
   <?php if (!empty($empleados)): ?>
-    <div style="margin-top: 20px">
+    <div style="margin-top: 24px">
       <span class="pq-label">¿Con quién?</span>
       <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px">
         <?php foreach ($empleados as $emp): ?>
@@ -57,21 +59,40 @@ $horaCompleta = static function (string $hora): string {
     </div>
   <?php endif; ?>
 
-  <div id="elige-dia" style="margin-top: 20px; scroll-margin-top: 16px">
-    <span class="pq-label">Elige el día</span>
-    <div class="pq-dias-scroll" style="display: flex; gap: 8px; padding-bottom: 6px; margin-top: 8px">
+  <div id="elige-dia" style="margin-top: 28px; scroll-margin-top: 16px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <span class="pq-label" style="margin-bottom: 0">Elige el día</span>
+      <span class="pq-mes-actual"><?= e($mesActual) ?></span>
+    </div>
+    <div class="pq-dias-scroll" style="display: flex; gap: 8px; padding-bottom: 6px; margin-top: 10px">
       <?php foreach ($fechasDisponibles as $opcion): ?>
         <?php $esHoy = $opcion === date('Y-m-d'); $activo = $opcion === $fecha; ?>
         <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado) ?>"
-           class="pq-chip <?= $activo ? 'pq-chip-caja' : 'pq-chip-dia' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0; min-height: 32px; display: inline-flex; align-items: center">
+           class="pq-chip <?= $activo ? 'pq-chip-caja' : 'pq-chip-dia' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0; min-height: 36px; display: inline-flex; align-items: center">
           <?= $esHoy ? 'Hoy' : e($diasCorto[(int) date('w', strtotime($opcion))] . ' ' . date('d', strtotime($opcion))) ?>
         </a>
       <?php endforeach; ?>
     </div>
+
+    <details class="pq-calendario-detalle">
+      <summary>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Ver más fechas
+      </summary>
+      <div class="pq-calendario-grid">
+        <?php foreach ($fechasDisponibles as $opcion): ?>
+          <?php $esHoy = $opcion === date('Y-m-d'); $activo = $opcion === $fecha; ?>
+          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado) ?>"
+             class="pq-chip <?= $activo ? 'pq-chip-caja' : 'pq-chip-dia' ?>" style="text-decoration: none; white-space: nowrap; min-height: 36px; display: inline-flex; align-items: center">
+            <?= $esHoy ? 'Hoy' : e($diasCorto[(int) date('w', strtotime($opcion))] . ' ' . date('d', strtotime($opcion))) ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </details>
   </div>
 
-  <div style="margin-top: 20px">
-    <span class="pq-label">Disponibilidad</span>
+  <div style="margin-top: 28px">
+    <span class="pq-label">Disponibilidad<?= $slots !== [] ? ' · ' . count($slots) . ' horario' . (count($slots) === 1 ? '' : 's') : '' ?></span>
 
     <?php if (!empty($faltaElegirEmpleado)): ?>
       <p class="pq-ayuda" style="margin-top: 10px">Elige con quién quieres agendar para ver los horarios.</p>
@@ -89,34 +110,52 @@ $horaCompleta = static function (string $hora): string {
             $tituloSinCupos = 'Sin cupos para ' . $diasLargo[$diaSemanaIdx] . ' ' . (int) date('j', strtotime($fecha));
         }
       ?>
-      <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E7E0CF">
-        <span style="font-size: 14px; font-weight: 700"><?= e($tituloSinCupos) ?></span>
+      <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E4DDD1">
+        <span style="font-size: 15px; font-weight: 700"><?= e($tituloSinCupos) ?></span>
         <?php if ($proximoDisponible !== null): ?>
-          <div style="margin-top: 10px">
+          <div style="margin-top: 12px">
             <span class="pq-ayuda" style="display: block">Próximo horario disponible</span>
-            <span style="font-size: 14px; font-weight: 600"><?= e($fechaCorta($proximoDisponible['fecha'])) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
+            <span style="font-size: 15px; font-weight: 700; display: block; margin-top: 2px"><?= e(ucfirst($diasLargo[(int) date('w', strtotime($proximoDisponible['fecha']))])) ?> <?= (int) date('j', strtotime($proximoDisponible['fecha'])) ?> de <?= e($mesesLargo[(int) date('n', strtotime($proximoDisponible['fecha'])) - 1]) ?></span>
+            <span style="font-size: 14px; color: var(--gris-texto)"><?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
           </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e($fechaCortaSinMes($proximoDisponible['fecha'])) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 14px; width: auto">Reservar este horario →</a>
         <?php else: ?>
           <p class="pq-ayuda" style="margin-top: 6px">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
         <?php endif; ?>
       </div>
 
       <?php if ($listaEsperaId !== null): ?>
-        <div class="pq-card" style="margin-top: 14px; background: #FFFFFF; border: 1px solid #E7E0CF">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg>
-          <span style="display: block; font-size: 14px; font-weight: 700; margin-top: 6px">Estás en la lista de espera</span>
-          <p style="font-size: 14px; margin-top: 4px"><?= e($servicio['nombre']) ?></p>
+        <div class="pq-card pq-card-exito" style="margin-top: 14px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span class="pq-card-exito-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg>
+            </span>
+            <span style="font-size: 15px; font-weight: 700">Estás en la lista de espera</span>
+          </div>
+          <p style="font-size: 14px; margin-top: 10px"><?= e($servicio['nombre']) ?></p>
           <p style="font-size: 14px; font-weight: 600; margin-top: 2px"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></p>
-          <p class="pq-ayuda" style="margin-top: 6px">Te escribiremos por WhatsApp si se libera un cupo.</p>
-          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera/salir')) ?>" style="margin-top: 10px">
+          <p class="pq-ayuda" style="margin-top: 8px">Te escribiremos por WhatsApp si se libera un cupo.</p>
+
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera/salir')) ?>" id="pq-form-salir-lista">
             <?= csrf_campo() ?>
             <input type="hidden" name="id" value="<?= (int) $listaEsperaId ?>">
             <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
             <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
-            <button type="submit" class="pq-mono" style="background: none; border: none; padding: 6px 0; font-size: 12px; color: var(--gris-suave); text-decoration: underline; cursor: pointer">Salir de la lista</button>
           </form>
+          <details class="pq-salir-confirm">
+            <summary>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              Salir de la lista
+            </summary>
+            <div class="pq-salir-confirm-caja">
+              <p class="pq-ayuda">¿Seguro que quieres salir de la lista de espera para <?= $fechaEsHoy ? 'hoy, ' : '' ?><?= e(fecha_larga($fecha)) ?>?</p>
+              <div style="display: flex; gap: 8px; margin-top: 10px">
+                <button type="button" data-cerrar-details class="pq-btn pq-btn-ghost-oscuro pq-btn-chico" style="flex: 1">Cancelar</button>
+                <button type="submit" form="pq-form-salir-lista" class="pq-btn pq-btn-oscuro pq-btn-chico" style="flex: 1">Sí, salir</button>
+              </div>
+            </div>
+          </details>
         </div>
       <?php else: ?>
         <details class="pq-lista-espera-detalle" style="margin-top: 14px">
@@ -150,19 +189,43 @@ $horaCompleta = static function (string $hora): string {
         </details>
       <?php endif; ?>
     <?php else: ?>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px">
-        <?php foreach ($slots as $slot): ?>
-          <?php $activo = $slot === $horaElegida; ?>
-          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . $sufijoEmpleado . '&hora=' . $slot) ?>#confirmar"
-             class="pq-btn <?= $activo ? 'pq-btn-sello' : 'pq-btn-ghost-oscuro' ?> pq-btn-chico pq-mono"><?= e($horaCompleta($slot)) ?></a>
-        <?php endforeach; ?>
+
+      <?php
+        $renderGrupo = static function (array $slotsGrupo, ?string $titulo) use ($negocio, $servicio, $fecha, $sufijoEmpleado, $horaElegida, $horaCompleta): void {
+            if ($slotsGrupo === []) {
+                return;
+            }
+            echo '<div class="pq-slot-grupo">';
+            if ($titulo !== null) {
+                echo '<span class="pq-slot-grupo-titulo">' . e($titulo) . '</span>';
+            }
+            echo '<div class="pq-slots-grid">';
+            foreach ($slotsGrupo as $slot) {
+                $activo = $slot === $horaElegida;
+                $href = e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . $sufijoEmpleado . '&hora=' . $slot) . '#confirmar';
+                echo '<a href="' . $href . '" class="pq-slot' . ($activo ? ' pq-slot-seleccionado' : '') . '">';
+                if ($activo) {
+                    echo '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg>';
+                }
+                echo e($horaCompleta($slot)) . '</a>';
+            }
+            echo '</div></div>';
+        };
+      ?>
+      <div style="margin-top: 10px">
+        <?php if ($slotsManana !== [] && $slotsTarde !== []): ?>
+          <?php $renderGrupo($slotsManana, 'MAÑANA'); ?>
+          <?php $renderGrupo($slotsTarde, 'TARDE'); ?>
+        <?php else: ?>
+          <?php $renderGrupo($slots, null); ?>
+        <?php endif; ?>
       </div>
     <?php endif; ?>
   </div>
 
   <?php if ($horaElegida !== null): ?>
-    <div id="confirmar" class="pq-card" style="margin-top: 24px; border: 1px solid #E7E0CF">
-      <span style="font-size: 14px; font-weight: 700">Confirmar reserva</span>
+    <div id="confirmar" class="pq-card" style="margin-top: 28px; border: 1px solid #E4DDD1">
+      <span style="font-size: 15px; font-weight: 700">Confirmar reserva</span>
       <p class="pq-ayuda" style="margin-top: 4px">
         <?= e($servicio['nombre']) ?> el <?= e(date('d M', strtotime($fecha))) ?> a las <?= e($horaCompleta($horaElegida)) ?>
       </p>
