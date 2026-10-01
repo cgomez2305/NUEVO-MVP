@@ -36,6 +36,7 @@ class TiendaController
                 'titulo'          => $negocio['nombre'] . ' · Veci',
                 'negocio'         => $negocio,
                 'servicios'       => Servicio::listarPorSede((int) $negocio['id'], true),
+                'horario'         => horario_resumen(Sede::horario($negocio)),
                 'metaDescripcion' => $metaDescripcion,
                 'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
@@ -294,6 +295,11 @@ class TiendaController
             }
         }
 
+        if ($this->esPeticionAjax()) {
+            $this->responderCarritoJson($negocio);
+            return;
+        }
+
         redirigir('/t/' . $negocio['slug']);
     }
 
@@ -308,7 +314,31 @@ class TiendaController
             $this->guardarCarrito((int) $negocio['id'], $carrito);
         }
 
+        if ($this->esPeticionAjax()) {
+            $this->responderCarritoJson($negocio);
+            return;
+        }
+
         redirigir('/t/' . $negocio['slug'] . '/carrito');
+    }
+
+    /**
+     * El sitio funciona sin JavaScript (todo formulario normal llega aquí
+     * también); esta cabecera solo la manda el fetch() de interacciones.js,
+     * así que su presencia distingue "quiero la respuesta en JSON para
+     * actualizar la página sin recargar" de una petición de formulario real.
+     */
+    private function esPeticionAjax(): bool
+    {
+        return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+    }
+
+    private function responderCarritoJson(array $negocio): void
+    {
+        $productos = Producto::listarPorSede((int) $negocio['id'], true);
+        $carrito = $this->resumenCarrito($negocio, $productos);
+        header('Content-Type: application/json');
+        echo json_encode(['cantidad' => $carrito['cantidad'], 'total' => $carrito['total']]);
     }
 
     public function verCarrito(array $parametros): void

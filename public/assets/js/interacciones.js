@@ -144,4 +144,72 @@
       campo.addEventListener('input', actualizar);
     });
   });
+
+  // ---------------------------------------------------------------------
+  // Carrito de la tienda pública (data-carrito-form="agregar"/"quitar"):
+  // el form sigue siendo uno normal con su action real, así que sin este
+  // script (o si el fetch falla) el envío normal recarga la página y
+  // funciona exactamente igual que siempre. Con JS, se manda lo mismo por
+  // fetch y se actualiza la barra de carrito / el total en el sitio, sin
+  // recargar toda la página solo por sumar un producto.
+  // ---------------------------------------------------------------------
+  function formatearPesos(valor) {
+    return '$' + String(Math.round(valor)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function actualizarCarritoEnPagina(carrito, tipo, fila) {
+    var barra = document.getElementById('pq-barra-carrito');
+    if (barra) {
+      if (carrito.cantidad > 0) {
+        var resumen = document.getElementById('pq-barra-carrito-resumen');
+        if (resumen) {
+          resumen.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto · ' : ' productos · ') + formatearPesos(carrito.total);
+        }
+        barra.classList.remove('pq-barra-carrito-oculta');
+        barra.classList.add('pq-barra-carrito-pulso');
+        window.setTimeout(function () { barra.classList.remove('pq-barra-carrito-pulso'); }, 220);
+      } else {
+        barra.classList.add('pq-barra-carrito-oculta');
+      }
+    }
+
+    if (tipo === 'quitar') {
+      // Carrito vacío: la página de carrito tiene un estado vacío propio
+      // (mensaje + botón "Ver el menú") que solo el servidor sabe armar.
+      if (carrito.cantidad === 0) {
+        window.location.reload();
+        return;
+      }
+      if (fila) fila.remove();
+      var total = document.getElementById('pq-carrito-total');
+      if (total) total.textContent = formatearPesos(carrito.total);
+    }
+  }
+
+  document.addEventListener('submit', function (evento) {
+    var form = evento.target;
+    if (!form.matches || !form.matches('[data-carrito-form]')) return;
+    if (!window.fetch || !window.FormData) return; // sin soporte: que siga el envío normal
+
+    evento.preventDefault();
+    var tipo = form.getAttribute('data-carrito-form');
+    var fila = form.closest('.pq-fila-carrito');
+    // El listener de "enviando…" de arriba ya deshabilitó este botón; como
+    // aquí la página no recarga, hay que volver a habilitarlo o el cliente
+    // no podría agregar una segunda unidad del mismo producto.
+    var boton = form.querySelector('button[type="submit"]');
+
+    fetch(form.getAttribute('action'), {
+      method: 'POST',
+      body: new FormData(form),
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+      .then(function (resp) { return resp.ok ? resp.json() : Promise.reject(); })
+      .then(function (carrito) {
+        actualizarCarritoEnPagina(carrito, tipo, fila);
+        if (boton) { boton.disabled = false; boton.classList.remove('pq-btn-cargando'); }
+      })
+      .catch(function () { form.submit(); }); // algo falló: no se pierde la acción, solo recarga
+  });
 })();

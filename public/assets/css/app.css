@@ -1194,7 +1194,15 @@ a.pq-stat:hover { border-color: var(--sello); }
   justify-content: space-between;
   box-shadow: 0 10px 24px rgba(27, 26, 23, .25);
   text-decoration: none;
+  transition: transform .15s ease;
 }
+/* El marcado siempre existe (así el fetch de "agregar" solo tiene que
+   mostrarla/actualizarla); con 0 productos simplemente no ocupa espacio. */
+.pq-barra-carrito-oculta { display: none; }
+/* Pequeño "pulso" cuando se agrega un producto sin recargar la página —
+   la única señal de que el clic sí hizo algo, ya que no hay navegación. */
+.pq-barra-carrito-pulso { animation: pqBarraPulso .22s ease; }
+@keyframes pqBarraPulso { 0% { transform: scale(1); } 50% { transform: scale(1.025); } 100% { transform: scale(1); } }
 
 .pq-fila-carrito {
   display: flex;

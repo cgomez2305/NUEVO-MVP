@@ -15,16 +15,16 @@
     <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-btn pq-btn-oscuro" style="margin-top: 16px">Ver el menú →</a>
   <?php else: ?>
 
-    <div style="margin-top: 16px">
+    <div style="margin-top: 16px" id="pq-carrito-lineas">
       <?php foreach ($carrito['lineas'] as $linea): $producto = $linea['producto']; ?>
-        <div class="pq-fila-carrito">
+        <div class="pq-fila-carrito" data-fila-producto="<?= (int) $producto['id'] ?>">
           <div class="pq-fila-carrito-icono" style="background: <?= e($producto['color']) ?>"></div>
           <div class="pq-stack" style="flex-grow: 1">
             <span style="font-size: 14px; font-weight: 600"><?= e($producto['nombre']) ?></span>
             <span class="pq-mono" style="font-size: 12px; color: var(--gris-texto)"><?= $linea['cantidad'] ?> × <?= pesos((int) $producto['precio']) ?></span>
           </div>
           <span class="pq-mono" style="font-size: 13px"><?= pesos((int) $producto['precio'] * $linea['cantidad']) ?></span>
-          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/quitar')) ?>">
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/quitar')) ?>" data-carrito-form="quitar">
             <?= csrf_campo() ?>
             <input type="hidden" name="producto_id" value="<?= (int) $producto['id'] ?>">
             <button type="submit" aria-label="Quitar <?= e($producto['nombre']) ?>" style="background: none; border: none; color: var(--gris-suave); font-size: 18px; cursor: pointer; line-height: 1">×</button>
@@ -34,7 +34,7 @@
 
       <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #C9BFA4">
         <span>Total</span>
-        <span class="pq-mono"><?= pesos($carrito['total']) ?></span>
+        <span class="pq-mono" id="pq-carrito-total"><?= pesos($carrito['total']) ?></span>
       </div>
     </div>
 

@@ -233,3 +233,45 @@ function nivel_espera(int $minutos, int $objetivoMin): string
     }
     return 'neutral';
 }
+
+/**
+ * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
+ * legibles, uniendo días consecutivos con el mismo horario en un solo rango
+ * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir no
+ * aparecen. Devuelve {dia, rango} en vez de un string ya armado para que la
+ * vista no tenga que volver a separar nombre de horas.
+ *
+ * @param array<string, array{0:string,1:string}> $horario
+ * @return array<int, array{dia: string, rango: string}>
+ */
+function horario_resumen(array $horario): array
+{
+    $dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+    $hora12 = static function (string $hora): string {
+        $ts = strtotime($hora) ?: 0;
+        $minutos = date('i', $ts);
+        $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
+        return date('g', $ts) . ($minutos !== '00' ? ':' . $minutos : '') . ' ' . $meridiano;
+    };
+
+    $lineas = [];
+    $inicioGrupo = 1;
+    $rangoActual = null;
+
+    for ($dia = 1; $dia <= 8; $dia++) {
+        $rango = $dia <= 7 ? ($horario[(string) $dia] ?? null) : null;
+        $cambia = $rango !== $rangoActual;
+
+        if ($cambia && $rangoActual !== null) {
+            $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
+            $lineas[] = ['dia' => $nombre, 'rango' => $hora12($rangoActual[0]) . ' - ' . $hora12($rangoActual[1])];
+        }
+        if ($cambia) {
+            $inicioGrupo = $dia;
+        }
+        $rangoActual = $rango;
+    }
+
+    return $lineas;
+}

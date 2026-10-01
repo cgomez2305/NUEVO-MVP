@@ -33,4 +33,20 @@
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
+
+  <?php if ($horario !== []): ?>
+    <div class="pq-card" style="margin-top: 28px; display: flex; flex-direction: column; gap: 8px">
+      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">HORARIO DE ATENCIÓN</span>
+      <?php foreach ($horario as $linea): ?>
+        <div style="display: flex; justify-content: space-between; font-size: 14px">
+          <span><?= e($linea['dia']) ?></span>
+          <span class="pq-mono"><?= e($linea['rango']) ?></span>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($negocio['whatsapp'])): ?>
+    <a href="https://wa.me/57<?= e(preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '') ?>" target="_blank" rel="noopener" class="pq-mono pq-centro" style="display: block; margin-top: 18px; font-size: 12px; color: var(--gris-suave); text-decoration: none">¿Dudas? Escríbele a <?= e($negocio['nombre']) ?> por WhatsApp</a>
+  <?php endif; ?>
 </div>

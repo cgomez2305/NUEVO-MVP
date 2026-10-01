@@ -48,7 +48,7 @@
               <?php if ($agotado): ?>
                 <span class="pq-chip pq-chip-cancelado">Agotado</span>
               <?php else: ?>
-                <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/agregar')) ?>">
+                <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/agregar')) ?>" data-carrito-form="agregar">
                   <?= csrf_campo() ?>
                   <input type="hidden" name="producto_id" value="<?= (int) $producto['id'] ?>">
                   <button type="submit" class="pq-add" aria-label="Agregar <?= e($producto['nombre']) ?>">+</button>
@@ -62,9 +62,7 @@
   <?php endif; ?>
 </div>
 
-<?php if ($carrito['cantidad'] > 0): ?>
-  <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito')) ?>" class="pq-barra-carrito">
-    <span style="font-size: 14px; font-weight: 600"><?= $carrito['cantidad'] ?> producto<?= $carrito['cantidad'] === 1 ? '' : 's' ?> · <?= pesos($carrito['total']) ?></span>
-    <span class="pq-mono" style="font-size: 12px; color: var(--mostaza)">Ver carrito →</span>
-  </a>
-<?php endif; ?>
+<a href="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito')) ?>" class="pq-barra-carrito<?= $carrito['cantidad'] > 0 ? '' : ' pq-barra-carrito-oculta' ?>" id="pq-barra-carrito">
+  <span style="font-size: 14px; font-weight: 600" id="pq-barra-carrito-resumen"><?= $carrito['cantidad'] ?> producto<?= $carrito['cantidad'] === 1 ? '' : 's' ?> · <?= pesos($carrito['total']) ?></span>
+  <span class="pq-mono" style="font-size: 12px; color: var(--mostaza)">Ver carrito →</span>
+</a>
