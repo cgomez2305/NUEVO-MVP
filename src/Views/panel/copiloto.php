@@ -6,7 +6,11 @@
     <h1 class="pq-h1">Buenos días, <?= e($negocio['nombre']) ?></h1>
     <p class="pq-lead">Encontramos clientes que podrías recuperar hoy.</p>
   </div>
-  <a href="<?= e(base_url('/panel/clientes/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar clientes CSV</a>
+  <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
+    <a href="<?= e(base_url('/panel/clientes/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar clientes CSV</a>
+  <?php else: ?>
+    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="opacity: .6">Exportar clientes CSV · Pro</a>
+  <?php endif; ?>
 </div>
 
 <?php if ($ok): ?>

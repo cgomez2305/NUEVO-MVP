@@ -53,7 +53,12 @@ if ($tipoReservas) {
     $navOperacion[] = ['productos', 'Menú', base_url('/panel/productos')];
 }
 
-$navCrecimiento = $esDueno ? [['copiloto', 'Copiloto', base_url('/panel/copiloto')]] : [];
+// Si el plan no incluye el copiloto (Gratis), el link sigue llevando ahí —
+// el controller explica por qué y manda a /panel/plan — pero la etiqueta ya
+// lo avisa de una vez en vez de dejar que se sienta como un link roto.
+$navCrecimiento = $esDueno
+    ? [['copiloto', empty($negocio['incluye_copiloto']) ? 'Copiloto · Barrio+' : 'Copiloto', base_url('/panel/copiloto')]]
+    : [];
 
 $navConfiguracion = [['sedes', 'Sedes', base_url('/panel/sedes')]];
 if ($esDueno) {
@@ -69,6 +74,9 @@ if ($esDueno) {
     $navCuenta[] = ['plan', 'Plan', base_url('/panel/plan')];
 }
 
+// El bottom nav es angosto (3 pestañas en ~390px): la etiqueta larga de
+// $navCrecimiento ("Copiloto · Barrio+") se queda solo para el sidebar de
+// escritorio, que sí tiene el ancho; aquí va el nombre corto siempre.
 $tercerTabMovil = $esDueno
     ? ['copiloto', 'Copiloto', base_url('/panel/copiloto')]
     : ($tipoReservas ? ['servicios', 'Servicios', base_url('/panel/servicios')] : ['productos', 'Menú', base_url('/panel/productos')]);

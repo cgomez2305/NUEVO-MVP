@@ -3,10 +3,14 @@
     <span class="pq-eyebrow">Pedidos</span>
     <h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
   </div>
-  <a href="<?= e(base_url('/panel/pedidos/exportar.csv') . '?' . http_build_query(array_filter([
-      'estado' => $filtro, 'q' => $busqueda, 'rango' => $rango,
-      'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado,
-  ]))) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar <?= $historialTotal ?> pedido<?= $historialTotal === 1 ? '' : 's' ?></a>
+  <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
+    <a href="<?= e(base_url('/panel/pedidos/exportar.csv') . '?' . http_build_query(array_filter([
+        'estado' => $filtro, 'q' => $busqueda, 'rango' => $rango,
+        'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado,
+    ]))) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar <?= $historialTotal ?> pedido<?= $historialTotal === 1 ? '' : 's' ?></a>
+  <?php else: ?>
+    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="opacity: .6">Exportar CSV · Pro</a>
+  <?php endif; ?>
 </div>
 
 <?php

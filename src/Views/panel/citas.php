@@ -3,7 +3,11 @@
     <span class="pq-eyebrow">Agenda</span>
     <h1 class="pq-h1" style="font-size: 28px">Tus próximas citas</h1>
   </div>
-  <a href="<?= e(base_url('/panel/citas/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
+  <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
+    <a href="<?= e(base_url('/panel/citas/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
+  <?php else: ?>
+    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="opacity: .6">Exportar CSV · Pro</a>
+  <?php endif; ?>
 </div>
 
 <?php if (!empty($ok)): ?>
