@@ -148,6 +148,17 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    partir con datos ya cargados, entra con la cuenta de demostración
    (`3001234567` / `veci123`) si importaste `seed.sql`.
 
+### Actualizar una instalación que ya está en producción
+
+`database/schema.sql` es el esquema completo para una base **nueva**; no
+lo vuelvas a importar sobre una base que ya tiene datos. Cuando una
+actualización del código agrega columnas o tablas, el cambio queda
+también como un archivo en `database/migrations/` (nombrado por fecha)
+que solo tiene el `ALTER TABLE`/`CREATE TABLE` necesario. Para aplicarlo:
+con un backup reciente a mano, cPanel → phpMyAdmin → tu base → pestaña
+*Import* → sube ese archivo (o pégalo en la pestaña *SQL* y ejecútalo).
+Cada migración se aplica una sola vez.
+
 ## Recuperación de contraseña, panel interno y legal
 
 Tres piezas pensadas para operar Veci en producción, no solo para que un
