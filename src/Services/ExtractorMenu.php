@@ -14,15 +14,21 @@ namespace App\Services;
  * o si la llamada falla por cualquier razón, devuelve un catálogo de ejemplo:
  * así el flujo completo (foto → catálogo → Bre-B → publicar) funciona de
  * punta a punta sin depender de una API externa ni de una llave pagada.
+ *
+ * $forzarEjemplo hace lo mismo que no tener llave configurada: salta
+ * directo al catálogo de ejemplo sin llamar a la API. Lo usa
+ * OnboardingController::analizar() cuando el negocio ya alcanzó
+ * planes.limite_ia_mes (plan Gratis) — así el límite se hace cumplir sin
+ * que este servicio tenga que saber nada de negocios ni de planes.
  */
 class ExtractorMenu
 {
     /** @return array<int, array{nombre:string, precio:int, categoria:string}> */
-    public static function extraer(string $rutaAbsolutaImagen): array
+    public static function extraer(string $rutaAbsolutaImagen, bool $forzarEjemplo = false): array
     {
         $apiKey = config('anthropic_api_key');
 
-        if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
+        if (!$forzarEjemplo && is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
             $prompt = 'Lee esta foto de un menú de un negocio colombiano. Responde SOLO con '
                 . 'un JSON (sin texto adicional, sin bloque de código) con una lista de '
                 . 'productos: [{"nombre":"...", "precio": 12000, "categoria":"Comidas|Bebidas|General"}]. '
@@ -38,11 +44,11 @@ class ExtractorMenu
     }
 
     /** @return array<int, array{nombre:string, precio:int, duracion_min:int}> */
-    public static function extraerServicios(string $rutaAbsolutaImagen): array
+    public static function extraerServicios(string $rutaAbsolutaImagen, bool $forzarEjemplo = false): array
     {
         $apiKey = config('anthropic_api_key');
 
-        if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
+        if (!$forzarEjemplo && is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
             $prompt = 'Lee esta foto de la lista de servicios y precios de un negocio colombiano '
                 . '(por ejemplo una peluquería, un spa, un taller o un consultorio). Responde SOLO '
                 . 'con un JSON (sin texto adicional, sin bloque de código) con una lista de '

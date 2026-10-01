@@ -40,6 +40,42 @@
 <?php endif; ?>
 
 <div style="margin-top: 24px">
+  <span style="font-size: 13px; font-weight: 600">Plan: <?= e(ucfirst($plan['nombre'])) ?></span>
+  <span class="pq-ayuda">
+    <?php if ($negocio['plan_estado'] === 'degradado_a_gratis'): ?>
+      · degradado a Gratis por falta de pago
+    <?php elseif (!empty($negocio['plan_vence_en'])): ?>
+      · vence el <?= e(date('d/m/Y', strtotime((string) $negocio['plan_vence_en']))) ?>
+    <?php endif; ?>
+  </span>
+
+  <div class="pq-stack" style="gap: 8px; margin-top: 8px">
+    <?php foreach ($pagosPlan as $pago): ?>
+      <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 12px<?= $pago['confirmado_en'] === null ? '; border-color: var(--sello)' : '' ?>">
+        <div class="pq-stack" style="gap: 2px">
+          <span style="font-size: 13px; font-weight: 600">
+            Plan <?= e(ucfirst($pago['plan_nombre'])) ?> (<?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>) · <?= pesos((int) $pago['monto']) ?>
+          </span>
+          <span class="pq-ayuda">
+            Pedido el <?= e(date('d/m/Y', strtotime((string) $pago['creado_en']))) ?>
+            <?= $pago['confirmado_en'] !== null ? ' · confirmado el ' . e(date('d/m/Y', strtotime((string) $pago['confirmado_en']))) : ' · esperando confirmación' ?>
+          </span>
+        </div>
+        <?php if ($pago['confirmado_en'] === null): ?>
+          <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/confirmar')) ?>" data-confirmar="¿Confirmar que ya llegó la transferencia de este pago? Esto activa el plan del negocio de inmediato.">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Confirmar pago</button>
+          </form>
+        <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+    <?php if ($pagosPlan === []): ?>
+      <p class="pq-ayuda">Sin pagos de plan registrados todavía.</p>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div style="margin-top: 24px">
   <span style="font-size: 13px; font-weight: 600">Sedes (<?= count($sedes) ?>)</span>
   <div class="pq-stack" style="gap: 8px; margin-top: 8px">
     <?php foreach ($sedes as $sede): ?>

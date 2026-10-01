@@ -11,11 +11,15 @@ use App\Models\Copiloto;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
 use App\Models\ListaEspera;
+use App\Models\Negocio;
+use App\Models\PagoPlan;
 use App\Models\Pedido;
+use App\Models\Plan;
 use App\Models\Producto;
 use App\Models\PushSubscripcion;
 use App\Models\Sede;
 use App\Models\Servicio;
+use App\Models\UsoIA;
 use App\Models\Usuario;
 use App\Services\RecordatorioWhatsapp;
 
@@ -40,6 +44,13 @@ class PanelController
         $negocioId = (int) $negocio['negocio_id'];
         $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
+        // null = plan sin límite (Barrio/Pro); solo Gratis lo tiene, así que
+        // solo ahí vale la pena contar cuánto se lleva usado este mes.
+        $limitePedidosMes = $negocio['limite_pedidos_mes'] ?? null;
+        $usadosEsteMes = $limitePedidosMes !== null
+            ? ($esReservas ? Cita::contarEsteMesPorNegocio($negocioId) : Pedido::contarEsteMesPorNegocio($negocioId))
+            : null;
+
         ver('panel/dashboard', [
             'titulo'          => 'Panel · Veci',
             'activo'          => 'panel',
@@ -53,6 +64,8 @@ class PanelController
             'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($sedeId), 0, 5) : [],
             'listaEsperaCount' => $esReservas ? ListaEspera::contarPendientesPorSede($sedeId) : 0,
             'resumenSemana'   => $esReservas ? Cita::resumenSemana($sedeId) : Pedido::resumenSemana($sedeId),
+            'limitePedidosMes' => $limitePedidosMes,
+            'usadosEsteMes'    => $usadosEsteMes,
         ], 'panel');
     }
 
@@ -70,6 +83,18 @@ class PanelController
         $desdePersonalizado = (string) ($_GET['desde'] ?? '');
         $hastaPersonalizado = (string) ($_GET['hasta'] ?? '');
         [$desde, $hasta] = $this->rangoFechasPedidos($rango, $desdePersonalizado, $hastaPersonalizado);
+
+        // Gratis y Barrio solo ven los últimos 30 días de historial (Pro trae
+        // el histórico completo, ver planes.incluye_estadisticas_completas).
+        // Se recorta cualquier filtro que pida más atrás, nunca se oculta
+        // en silencio: la vista avisa cuando esto recortó lo que se pidió.
+        $historialLimitado = !($negocio['incluye_estadisticas_completas'] ?? false);
+        if ($historialLimitado) {
+            $limiteDesde = (new \DateTimeImmutable('-30 days midnight'))->format('Y-m-d H:i:s');
+            if ($desde === null || $desde < $limiteDesde) {
+                $desde = $limiteDesde;
+            }
+        }
 
         $porPagina = 20;
         $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
@@ -98,6 +123,7 @@ class PanelController
             'pagina'       => $pagina,
             'totalPaginas' => $totalPaginas,
             'porPagina'    => $porPagina,
+            'historialLimitado' => $historialLimitado,
         ], 'panel');
     }
 
@@ -164,6 +190,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirExportar($negocio);
 
         $filtro = (string) ($_GET['estado'] ?? '');
         if (!in_array($filtro, Pedido::ESTADOS, true)) {
@@ -549,6 +576,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirExportar($negocio);
         $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
@@ -576,6 +604,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirExportar($negocio);
         $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
         $salida = $this->abrirDescargaCsv('clientes');
@@ -839,6 +868,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
         $negocioId = (int) $negocio['negocio_id'];
 
         $segmentos = Copiloto::segmentar($negocioId, $negocio['tipo_negocio']);
@@ -875,6 +905,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
         $negocioId = (int) $negocio['negocio_id'];
         $cliente = Cliente::buscar((int) $parametros['cliente'], $negocioId);
 
@@ -912,6 +943,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
         $segmento = $this->segmentoValido($_POST['segmento'] ?? null);
 
         if (csrf_verificar()) {
@@ -1170,6 +1202,98 @@ class PanelController
         redirigir('/panel/cuenta');
     }
 
+    /**
+     * Plan actual, cuánto se lleva usado este mes (solo importa en Gratis,
+     * que es el único con límites) y los 3 planes para subir o bajar. Solo
+     * el dueño: es dinero del negocio, no algo que un colaborador toque.
+     */
+    public function plan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
+
+        $limitePedidosMes = $negocio['limite_pedidos_mes'] ?? null;
+        $usadosEsteMes = $limitePedidosMes !== null
+            ? ($esReservas ? Cita::contarEsteMesPorNegocio($negocioId) : Pedido::contarEsteMesPorNegocio($negocioId))
+            : null;
+        $limiteIa = $negocio['limite_ia_mes'] ?? null;
+        $iaUsadaEsteMes = $limiteIa !== null ? UsoIA::contarEsteMesPorNegocio($negocioId) : null;
+
+        ver('panel/plan', [
+            'titulo'            => 'Tu plan · Veci',
+            'activo'            => 'plan',
+            'negocio'           => $negocio,
+            'planes'            => Plan::listarTodos(),
+            'pendiente'         => PagoPlan::pendientePorNegocio($negocioId),
+            'limitePedidosMes'  => $limitePedidosMes,
+            'usadosEsteMes'     => $usadosEsteMes,
+            'limiteIaMes'       => $limiteIa,
+            'iaUsadaEsteMes'    => $iaUsadaEsteMes,
+            'sustantivo'        => $esReservas ? 'citas' : 'pedidos',
+            'llaveBreb'         => config('cobro_planes.llave_breb'),
+            'ok'                => flash_obtener('ok'),
+            'error'             => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    /**
+     * Pide el cambio a un plan pago: deja una fila sin confirmar en
+     * pagos_plan con lo que se espera que transfiera (ver PagoPlan), para
+     * que un admin la reconozca y confirme desde /admin. El plan del
+     * negocio NO cambia todavía — eso solo pasa cuando se confirma. Bajar a
+     * Gratis es la excepción: es instantáneo, no hay nada que cobrar.
+     */
+    public function solicitarCambioPlan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (!csrf_verificar()) {
+            flash_set('error', 'El formulario expiró, intenta de nuevo.');
+            redirigir('/panel/plan');
+        }
+
+        $plan = Plan::buscarPorId((int) ($_POST['plan_id'] ?? 0));
+        $ciclo = (string) ($_POST['ciclo'] ?? 'mensual');
+        if (!in_array($ciclo, ['mensual', 'anual'], true)) {
+            $ciclo = 'mensual';
+        }
+
+        if ($plan === null) {
+            flash_set('error', 'Elige un plan válido.');
+            redirigir('/panel/plan');
+        }
+
+        if ($plan['nombre'] === 'gratis') {
+            Negocio::cambiarAGratis((int) $negocio['negocio_id']);
+            flash_set('ok', 'Tu negocio pasó al plan Gratis.');
+            redirigir('/panel/plan');
+        }
+
+        if (PagoPlan::pendientePorNegocio((int) $negocio['negocio_id']) !== null) {
+            flash_set('error', 'Ya tienes una solicitud de cambio de plan pendiente de confirmación.');
+            redirigir('/panel/plan');
+        }
+
+        $monto = $ciclo === 'anual' ? (int) $plan['precio_anual'] : (int) $plan['precio_mensual'];
+        $inicio = new \DateTimeImmutable('today');
+        $fin = $inicio->modify($ciclo === 'anual' ? '+1 year' : '+30 days');
+
+        PagoPlan::crearPendiente(
+            (int) $negocio['negocio_id'],
+            (int) $plan['id'],
+            $monto,
+            $ciclo,
+            $inicio->format('Y-m-d'),
+            $fin->format('Y-m-d')
+        );
+
+        flash_set('ok', 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($monto) . ' por Bre-B y confirmamos tu plan apenas lo veamos.');
+        redirigir('/panel/plan');
+    }
+
     /** Derecho de eliminación de datos (habeas data): borra al cliente y todo su historial. Solo el dueño. */
     public function eliminarCliente(array $parametros): void
     {
@@ -1185,6 +1309,24 @@ class PanelController
         }
 
         redirigir('/panel/copiloto');
+    }
+
+    /** Corta la ejecución si el plan del negocio no incluye el copiloto de recompra (planes.incluye_copiloto). */
+    private function exigirCopiloto(array $negocio): void
+    {
+        if (!Copiloto::disponiblePara($negocio)) {
+            flash_set('error', 'El copiloto de recompra es parte de los planes Barrio y Pro.');
+            redirigir('/panel/plan');
+        }
+    }
+
+    /** Exportar a CSV es parte del histórico completo de Pro (planes.incluye_estadisticas_completas). */
+    private function exigirExportar(array $negocio): void
+    {
+        if (!($negocio['incluye_estadisticas_completas'] ?? false)) {
+            flash_set('error', 'Exportar a CSV es parte del plan Pro.');
+            redirigir('/panel/plan');
+        }
     }
 
     /** Valida el segmento recibido por GET/POST antes de usarlo para elegir plantilla de mensaje. */

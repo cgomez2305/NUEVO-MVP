@@ -23,6 +23,7 @@ $pqIconos = [
     'sedes'          => '<path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/>',
     'colaboradores'  => '<circle cx="8" cy="9" r="3"/><path d="M2 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/><circle cx="17.5" cy="8" r="2.3"/><path d="M15.8 14.7c2.4.4 4.2 2.5 4.2 5.3"/>',
     'cuenta'         => '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>',
+    'plan'           => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/>',
     'mas'            => '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
 ];
 $pqIcono = static function (string $clave) use ($pqIconos): string {
@@ -60,8 +61,13 @@ if ($esDueno) {
 }
 // "Mi cuenta" no es un módulo de negocio: se separa del resto (divisor propio,
 // ver el <span class="pq-nav-separador"> antes de pintarla) en vez de mezclarse
-// con Sedes/Colaboradores dentro de Configuración.
+// con Sedes/Colaboradores dentro de Configuración. "Plan" va con ella por lo
+// mismo (es plata del negocio, no catálogo ni operación) y solo para el
+// dueño: un colaborador no puede cambiarlo (ver PanelController::plan).
 $navCuenta = [['cuenta', 'Mi cuenta', base_url('/panel/cuenta')]];
+if ($esDueno) {
+    $navCuenta[] = ['plan', 'Plan', base_url('/panel/plan')];
+}
 
 $tercerTabMovil = $esDueno
     ? ['copiloto', 'Copiloto', base_url('/panel/copiloto')]

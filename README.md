@@ -190,6 +190,40 @@ negocio use la app:
   `/panel/copiloto`, y si el negocio no responde, `soporte@tuveci.co` lo
   hace directamente.
 
+## Planes y suscripciones
+
+Tres planes — Gratis ($0), Barrio ($59.000/mes) y Pro ($129.000/mes) — con
+límites y funciones que sí se hacen cumplir en el código (`database/schema.sql`
+→ tabla `planes`; `negocios.plan_id/plan_estado/plan_vence_en/plan_ciclo`):
+
+- **Gratis**: hasta 50 pedidos o citas por mes calendario (se resetea el
+  día 1), hasta 3 análisis con foto con IA por mes, sin copiloto de
+  recompra, historial de 30 días, sello "Hecho con Veci" visible en la
+  tienda pública.
+- **Barrio**: todo ilimitado salvo estadísticas completas (sigue en 30 días
+  de historial), incluye el copiloto de recompra.
+- **Pro**: historial completo + exportar a CSV, y es el único con
+  multisede (3 sedes incluidas en el precio, sede extra aparte — el cobro
+  por sede extra todavía no se hace cumplir en el código, es un proyecto
+  aparte).
+
+**Cómo se cobra**: Bre-B y Nequi no tienen cobro automático recurrente, así
+que el cobro es manual verificado. El dueño pide el cambio de plan desde
+`/panel/plan` (queda una fila sin confirmar en `pagos_plan` con lo que se
+espera que transfiera), transfiere por Bre-B a la llave de Veci
+(`config/config.php` → `cobro_planes.llave_breb`), y un admin confirma el
+pago desde `/admin/negocios/{id}` al ver el comprobante — eso activa o
+extiende el plan. Bajar a Gratis es la excepción: es instantáneo, no hay
+nada que cobrar.
+
+**Si un plan pago vence** sin que se confirme un pago nuevo, el negocio
+vuelve a Gratis automáticamente — nunca se bloquea la tienda. Lo hace un
+cron diario:
+
+```bash
+0 3 * * * php /ruta/al/proyecto/bin/revisar_planes.php
+```
+
 ## Estructura
 
 ```

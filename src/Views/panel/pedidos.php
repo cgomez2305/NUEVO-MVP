@@ -131,6 +131,12 @@ unset($columna);
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Buscar</button>
 </form>
 
+<?php if ($historialLimitado): ?>
+  <div class="pq-alerta pq-alerta-aviso" style="margin-top: 10px">
+    Tu plan muestra hasta 30 días de historial. <a href="<?= e(base_url('/panel/plan')) ?>">Sube a Pro</a> para ver el histórico completo y exportarlo a CSV.
+  </div>
+<?php endif; ?>
+
 <?php
 $desdeIdx = $historial === [] ? 0 : (($pagina - 1) * $porPagina) + 1;
 $hastaIdx = min($pagina * $porPagina, $historialTotal);

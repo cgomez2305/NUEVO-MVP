@@ -225,6 +225,11 @@ class TiendaController
             redirigir('/t/' . $negocio['slug']);
         }
 
+        if ($this->limiteDelMesAlcanzado($negocio)) {
+            flash_set('error', 'Este negocio ya llegó al número de citas que puede recibir este mes. Escríbele directo por WhatsApp para agendar.');
+            redirigir($volverAReservar);
+        }
+
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)) {
             flash_set('error', 'Elige una fecha y una hora válidas.');
             redirigir($volverAReservar);
@@ -511,6 +516,11 @@ class TiendaController
             redirigir('/t/' . $negocio['slug']);
         }
 
+        if ($this->limiteDelMesAlcanzado($negocio)) {
+            flash_set('error', 'Este negocio ya llegó al número de pedidos que puede recibir este mes. Escríbele directo por WhatsApp para hacer tu pedido.');
+            redirigir('/t/' . $negocio['slug'] . '/carrito');
+        }
+
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
         $telefono = preg_replace('/\D+/', '', (string) ($_POST['telefono'] ?? '')) ?? '';
         $autorizo = isset($_POST['autorizo_datos']);
@@ -609,10 +619,11 @@ class TiendaController
         }
 
         ver('tienda/cita_gestionar', [
-            'titulo' => 'Tu cita · ' . $cita['negocio_nombre'],
-            'cita'   => $cita,
-            'error'  => flash_obtener('error'),
-            'ok'     => flash_obtener('ok'),
+            'titulo'  => 'Tu cita · ' . $cita['negocio_nombre'],
+            'negocio' => Sede::buscarPorId((int) $cita['sede_id']),
+            'cita'    => $cita,
+            'error'   => flash_obtener('error'),
+            'ok'      => flash_obtener('ok'),
         ], 'tienda');
     }
 
@@ -707,6 +718,28 @@ class TiendaController
         Cita::reprogramar((int) $cita['id'], (int) $negocio['id'], "{$fecha} {$hora}:00");
         flash_set('ok', 'Tu cita quedó reprogramada.');
         redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /**
+     * El plan Gratis limita cuántos pedidos/citas puede recibir un negocio
+     * por mes calendario (planes.limite_pedidos_mes; null = ilimitado,
+     * como Barrio y Pro). El límite es del NEGOCIO (negocio_id), no de la
+     * sede: con varias sedes se cuenta entre todas, porque es ahí donde
+     * vive el plan.
+     */
+    private function limiteDelMesAlcanzado(array $negocio): bool
+    {
+        $limite = $negocio['limite_pedidos_mes'] ?? null;
+        if ($limite === null) {
+            return false;
+        }
+
+        $negocioId = (int) $negocio['negocio_id'];
+        $usados = $negocio['tipo_negocio'] === 'reservas'
+            ? Cita::contarEsteMesPorNegocio($negocioId)
+            : Pedido::contarEsteMesPorNegocio($negocioId);
+
+        return $usados >= (int) $limite;
     }
 
     private function negocioOAbortar(string $slug): array

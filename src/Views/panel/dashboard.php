@@ -6,6 +6,20 @@ $sustantivoSingular = $esReservas ? 'cita' : 'pedido';
 <h1 class="pq-h1">Hola, <?= e($negocio['nombre']) ?> 👋</h1>
 <p class="pq-lead" style="margin-top: 2px">Así va tu <?= $esReservas ? 'agenda' : 'tienda' ?> hoy</p>
 
+<?php if ($limitePedidosMes !== null && $usadosEsteMes >= $limitePedidosMes * 0.8): ?>
+  <?php $limiteAlcanzado = $usadosEsteMes >= $limitePedidosMes; ?>
+  <div class="pq-alerta<?= $limiteAlcanzado ? '' : ' pq-alerta-aviso' ?>" style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+    <span>
+      <?php if ($limiteAlcanzado): ?>
+        Llegaste al límite de <?= (int) $limitePedidosMes ?> <?= $sustantivo ?> de este mes del plan Gratis: no se pueden recibir más hasta el próximo mes.
+      <?php else: ?>
+        Vas en <?= (int) $usadosEsteMes ?> de <?= (int) $limitePedidosMes ?> <?= $sustantivo ?> de este mes del plan Gratis.
+      <?php endif; ?>
+    </span>
+    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-sello" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0">Subir de plan →</a>
+  </div>
+<?php endif; ?>
+
 <div class="pq-stats" style="margin-top: 18px">
   <div class="pq-stat">
     <span class="pq-stat-icono" style="background: rgba(59,76,202,.16); color: var(--sello)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>

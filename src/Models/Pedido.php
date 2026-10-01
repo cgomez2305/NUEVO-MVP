@@ -263,6 +263,26 @@ class Pedido
         return $stmt->fetchAll();
     }
 
+    /**
+     * Pedidos creados este mes calendario, sumados entre todas las sedes
+     * del negocio (el límite del plan es por negocio, no por sede — ver
+     * planes.limite_pedidos_mes). Cuenta todos los estados, cancelados
+     * incluidos: son pedidos que de todas formas consumieron el flujo.
+     */
+    public static function contarEsteMesPorNegocio(int $negocioId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COUNT(*) AS total FROM pedidos p
+             JOIN sedes s ON s.id = p.sede_id
+             WHERE s.negocio_id = :negocio_id AND p.creado_en >= :desde'
+        );
+        $stmt->execute([
+            'negocio_id' => $negocioId,
+            'desde'      => (new \DateTimeImmutable('first day of this month midnight'))->format('Y-m-d H:i:s'),
+        ]);
+        return (int) $stmt->fetch()['total'];
+    }
+
     public static function contarHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(

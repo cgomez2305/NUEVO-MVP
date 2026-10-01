@@ -2,7 +2,24 @@
 <h1 class="pq-h1" style="font-size: 28px">Todos los negocios</h1>
 <p class="pq-lead">Busca por nombre del negocio o WhatsApp de cualquiera de sus usuarios.</p>
 
-<form method="get" action="<?= e(base_url('/admin')) ?>" style="margin-top: 16px; display: flex; gap: 8px">
+<?php if ($pagosPendientes !== []): ?>
+  <div style="margin-top: 20px">
+    <span style="font-size: 13px; font-weight: 600">Pagos de plan pendientes de confirmar (<?= count($pagosPendientes) ?>)</span>
+    <div class="pq-stack" style="gap: 8px; margin-top: 8px">
+      <?php foreach ($pagosPendientes as $pago): ?>
+        <a href="<?= e(base_url('/admin/negocios/' . $pago['negocio_id'])) ?>" class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; gap: 12px; border-color: var(--sello)">
+          <div class="pq-stack" style="gap: 2px">
+            <span style="font-size: 14px; font-weight: 600; color: var(--carbon)"><?= e($pago['negocio_nombre']) ?></span>
+            <span class="pq-ayuda">Plan <?= e(ucfirst($pago['plan_nombre'])) ?> (<?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>) · <?= pesos((int) $pago['monto']) ?></span>
+          </div>
+          <span class="pq-ayuda pq-mono"><?= e(date('d/m/Y', strtotime((string) $pago['creado_en']))) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
+<form method="get" action="<?= e(base_url('/admin')) ?>" style="margin-top: 24px; display: flex; gap: 8px">
   <input class="pq-input" type="text" name="q" value="<?= e($busqueda) ?>" placeholder="Doña María, 3001234567...">
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Buscar</button>
 </form>

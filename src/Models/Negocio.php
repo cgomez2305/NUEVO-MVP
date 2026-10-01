@@ -79,4 +79,36 @@ class Negocio
         );
         $stmt->execute(['id' => $id]);
     }
+
+    /** Bajar a Gratis es instantáneo y gratis (no hay nada que cobrar ni confirmar) — lo usa /panel/plan cuando ya se está en un plan pago. */
+    public static function cambiarAGratis(int $id): void
+    {
+        $stmt = Database::conexion()->prepare(
+            "UPDATE negocios SET plan_id = (SELECT id FROM planes WHERE nombre = 'gratis'),
+                                  plan_estado = 'activo', plan_vence_en = NULL
+             WHERE id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Baja a Gratis todo negocio cuyo plan pago venció sin que se confirmara
+     * un pago nuevo a tiempo (ver bin/revisar_planes.php). Nunca bloquea la
+     * tienda: solo vuelve a los límites del plan Gratis.
+     *
+     * @return int cuántos negocios se degradaron
+     */
+    public static function degradarVencidos(): int
+    {
+        $stmt = Database::conexion()->prepare(
+            "UPDATE negocios SET plan_id = (SELECT id FROM planes WHERE nombre = 'gratis'),
+                                  plan_estado = 'degradado_a_gratis', plan_vence_en = NULL
+             WHERE plan_estado = 'activo'
+               AND plan_vence_en IS NOT NULL
+               AND plan_vence_en < CURDATE()
+               AND plan_id != (SELECT id FROM planes WHERE nombre = 'gratis')"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
 }

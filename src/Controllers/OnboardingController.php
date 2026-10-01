@@ -8,6 +8,7 @@ use App\Auth;
 use App\Models\Sede;
 use App\Models\Producto;
 use App\Models\Servicio;
+use App\Models\UsoIA;
 use App\Services\ExtractorMenu;
 
 /**
@@ -103,23 +104,44 @@ class OnboardingController
         }
 
         $sedeId = (int) $negocio['id'];
+        $negocioId = (int) $negocio['negocio_id'];
         $rutaImagen = __DIR__ . '/../../public/' . $negocio['menu_foto'];
+
+        // El plan Gratis limita cuántos análisis reales con IA puede pedir un
+        // negocio por mes (planes.limite_ia_mes; null = ilimitado, como
+        // Barrio y Pro). Si ya lo alcanzó, se le arma el catálogo de ejemplo
+        // igual que si no hubiera llave de Anthropic configurada — nunca un
+        // error — y se le explica por qué en el siguiente paso.
+        $limiteIa = $negocio['limite_ia_mes'] ?? null;
+        $limiteIaAlcanzado = $limiteIa !== null && UsoIA::contarEsteMesPorNegocio($negocioId) >= (int) $limiteIa;
 
         // Solo analiza si el catálogo todavía está vacío: evita duplicar
         // productos/servicios si el dueño recarga la página después de analizar.
         if ($negocio['tipo_negocio'] === 'reservas') {
             if (Servicio::contarPorSede($sedeId) === 0) {
-                foreach (ExtractorMenu::extraerServicios($rutaImagen) as $servicio) {
+                foreach (ExtractorMenu::extraerServicios($rutaImagen, $limiteIaAlcanzado) as $servicio) {
                     Servicio::crear($sedeId, $servicio['nombre'], $servicio['precio'], $servicio['duracion_min']);
                 }
+                $this->avisarUsoIa($limiteIaAlcanzado, $negocioId, $sedeId, $limiteIa);
             }
         } elseif (Producto::contarPorSede($sedeId) === 0) {
-            foreach (ExtractorMenu::extraer($rutaImagen) as $producto) {
+            foreach (ExtractorMenu::extraer($rutaImagen, $limiteIaAlcanzado) as $producto) {
                 Producto::crear($sedeId, $producto['nombre'], $producto['precio'], $producto['categoria']);
             }
+            $this->avisarUsoIa($limiteIaAlcanzado, $negocioId, $sedeId, $limiteIa);
         }
 
         redirigir('/panel/onboarding/productos');
+    }
+
+    /** Registra el uso real de IA, o avisa al dueño por qué salió un catálogo de ejemplo en vez del real. */
+    private function avisarUsoIa(bool $limiteAlcanzado, int $negocioId, int $sedeId, ?int $limiteIa): void
+    {
+        if ($limiteAlcanzado) {
+            flash_set('aviso', "Ya usaste tus {$limiteIa} análisis con foto de este mes en el plan Gratis. Te armamos un catálogo de ejemplo para que lo edites a mano — sube a Barrio para análisis ilimitados.");
+            return;
+        }
+        UsoIA::registrar($negocioId, $sedeId);
     }
 
     public function mostrarHorario(array $parametros): void

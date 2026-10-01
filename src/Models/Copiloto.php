@@ -14,6 +14,12 @@ use DateTimeImmutable;
  */
 class Copiloto
 {
+    /** El copiloto es exclusivo de los planes Barrio y Pro (ver planes.incluye_copiloto). $negocio es el contexto de Auth::exigirSesion(). */
+    public static function disponiblePara(array $negocio): bool
+    {
+        return (bool) ($negocio['incluye_copiloto'] ?? false);
+    }
+
     /**
      * Clientes con al menos 2 pedidos cuyo silencio actual supera 1.5x
      * su frecuencia habitual (con un piso de 14 días para no molestar

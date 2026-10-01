@@ -7,6 +7,8 @@ namespace App\Controllers;
 use App\AdminAuth;
 use App\Database;
 use App\Models\Negocio;
+use App\Models\PagoPlan;
+use App\Models\Plan;
 use App\Models\Sede;
 use App\Models\Usuario;
 
@@ -63,10 +65,11 @@ class AdminController
         $busqueda = trim((string) ($_GET['q'] ?? ''));
 
         ver('admin/dashboard', [
-            'titulo'   => 'Negocios · Panel interno · Veci',
-            'admin'    => $admin,
-            'negocios' => Negocio::listarTodos($busqueda),
-            'busqueda' => $busqueda,
+            'titulo'         => 'Negocios · Panel interno · Veci',
+            'admin'          => $admin,
+            'negocios'       => Negocio::listarTodos($busqueda),
+            'busqueda'       => $busqueda,
+            'pagosPendientes' => PagoPlan::listarPendientes(),
         ], 'admin');
     }
 
@@ -86,6 +89,8 @@ class AdminController
             'titulo'       => $negocio['nombre'] . ' · Panel interno · Veci',
             'admin'        => $admin,
             'negocio'      => $negocio,
+            'plan'         => Plan::buscarPorId((int) $negocio['plan_id']),
+            'pagosPlan'    => PagoPlan::listarPorNegocio($stmtNegocioId),
             'sedes'        => Sede::listarPorNegocio($stmtNegocioId),
             'usuarios'     => $this->usuariosDelNegocio($stmtNegocioId),
             'ok'           => flash_obtener('ok'),
@@ -93,6 +98,28 @@ class AdminController
             'resetEnlace'  => flash_obtener('reset_enlace'),
             'resetUsuario' => flash_obtener('reset_usuario'),
         ], 'admin');
+    }
+
+    /** Confirma un cobro manual pendiente: activa/extiende el plan pago del negocio (ver PagoPlan::confirmar). */
+    public function confirmarPago(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $pago = PagoPlan::buscarPorId((int) $parametros['id']);
+
+        if ($pago === null) {
+            redirigir('/admin');
+        }
+
+        if (csrf_verificar()) {
+            if ($pago['confirmado_en'] !== null) {
+                flash_set('error', 'Ese pago ya estaba confirmado.');
+            } else {
+                PagoPlan::confirmar((int) $pago['id'], (int) $admin['id']);
+                flash_set('ok', 'Pago confirmado: el plan del negocio ya quedó activo.');
+            }
+        }
+
+        redirigir('/admin/negocios/' . (int) $pago['negocio_id']);
     }
 
     public function suspender(array $parametros): void

@@ -102,6 +102,8 @@ $router->post('/panel/colaboradores/{id}/eliminar', [$panel, 'eliminarColaborado
 $router->get('/panel/cuenta', [$panel, 'cuenta']);
 $router->post('/panel/cuenta/correo', [$panel, 'actualizarCorreo']);
 $router->post('/panel/cuenta/password', [$panel, 'actualizarPasswordCuenta']);
+$router->get('/panel/plan', [$panel, 'plan']);
+$router->post('/panel/plan/solicitar', [$panel, 'solicitarCambioPlan']);
 $router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente']);
 
 // --- Tienda pública del cliente (flujo B de la maqueta) ----------------
@@ -136,5 +138,6 @@ $router->get('/admin/negocios/{id}', [$admin, 'verNegocio']);
 $router->post('/admin/negocios/{id}/suspender', [$admin, 'suspender']);
 $router->post('/admin/negocios/{id}/reactivar', [$admin, 'reactivar']);
 $router->post('/admin/usuarios/{usuario}/generar-reset', [$admin, 'generarReset']);
+$router->post('/admin/pagos/{id}/confirmar', [$admin, 'confirmarPago']);
 
 $router->despachar($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

@@ -58,27 +58,40 @@ class Sede
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * Columnas de marca y de plan que se funden en toda consulta de sede de
+     * abajo: así cualquier $negocio/$contexto de la app (vienen todos de
+     * aquí, directo o vía Auth::exigirSesion) trae de una vez tipo_negocio,
+     * color_marca Y los límites/flags del plan vigente, sin que cada sitio
+     * que necesita gatear una función tenga que ir a buscar el plan aparte.
+     * plan_* con el prefijo es de negocios (el estado de la suscripción);
+     * el resto sin prefijo es de planes (el catálogo fijo de 3 planes).
+     */
+    private const SELECT_CON_MARCA_Y_PLAN = "
+        SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre,
+               n.plan_id, n.plan_estado, n.plan_vence_en, n.plan_ciclo,
+               p.nombre AS plan_nombre, p.precio_mensual AS plan_precio_mensual, p.precio_anual AS plan_precio_anual,
+               p.limite_pedidos_mes, p.limite_ia_mes, p.incluye_copiloto, p.incluye_estadisticas_completas,
+               p.incluye_multisede, p.sedes_incluidas, p.precio_sede_extra
+        FROM sedes s
+        JOIN negocios n ON n.id = s.negocio_id
+        JOIN planes p ON p.id = n.plan_id
+    ";
+
     /** @return array<int, array<string, mixed>> */
     public static function listarPorNegocio(int $negocioId): array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre
-             FROM sedes s JOIN negocios n ON n.id = s.negocio_id
-             WHERE s.negocio_id = :negocio_id
-             ORDER BY s.id ASC'
+            self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.negocio_id = :negocio_id ORDER BY s.id ASC'
         );
         $stmt->execute(['negocio_id' => $negocioId]);
         return $stmt->fetchAll();
     }
 
-    /** Trae la sede con los datos de marca del negocio (tipo_negocio, color_marca) ya incluidos. */
+    /** Trae la sede con los datos de marca del negocio (tipo_negocio, color_marca) y de su plan ya incluidos. */
     public static function buscarPorId(int $id): ?array
     {
-        $stmt = Database::conexion()->prepare(
-            'SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre
-             FROM sedes s JOIN negocios n ON n.id = s.negocio_id
-             WHERE s.id = :id'
-        );
+        $stmt = Database::conexion()->prepare(self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.id = :id');
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
     }
@@ -92,9 +105,7 @@ class Sede
     public static function buscarPorSlugPublicada(string $slug): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre
-             FROM sedes s JOIN negocios n ON n.id = s.negocio_id
-             WHERE s.slug = :slug AND s.publicada = 1 AND n.suspendido = 0'
+            self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.slug = :slug AND s.publicada = 1 AND n.suspendido = 0'
         );
         $stmt->execute(['slug' => $slug]);
         return $stmt->fetch() ?: null;

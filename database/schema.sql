@@ -10,24 +10,71 @@ CREATE DATABASE IF NOT EXISTS veci
 USE veci;
 SET NAMES utf8mb4;
 
+-- Los tres planes de Veci (gratis/barrio/pro). Filas fijas (ver el INSERT
+-- más abajo, después de creada la tabla negocios): se editan a mano desde
+-- SQL si cambia un precio o un límite, no hay pantalla de administración
+-- para esto todavía. NULL en un límite significa "ilimitado".
+-- sedes_incluidas/precio_sede_extra son metadata para cuando exista el
+-- proyecto de multisede con cobro por sede extra (hoy cualquier negocio
+-- puede crear sedes sin límite, ver `sedes` más abajo — incluye_multisede
+-- todavía no se hace cumplir en el código, ver src/Models/Sede.php).
+CREATE TABLE IF NOT EXISTS planes (
+  id                             TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre                         VARCHAR(20)  NOT NULL UNIQUE,
+  precio_mensual                 INT UNSIGNED NOT NULL,
+  precio_anual                   INT UNSIGNED NOT NULL,
+  limite_pedidos_mes             SMALLINT UNSIGNED DEFAULT NULL,
+  limite_ia_mes                  TINYINT UNSIGNED DEFAULT NULL,
+  incluye_copiloto               TINYINT(1)   NOT NULL DEFAULT 0,
+  incluye_estadisticas_completas TINYINT(1)   NOT NULL DEFAULT 0,
+  incluye_multisede              TINYINT(1)   NOT NULL DEFAULT 0,
+  sedes_incluidas                TINYINT UNSIGNED DEFAULT NULL,
+  precio_sede_extra              INT UNSIGNED DEFAULT NULL,
+  creado_en                      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 -- Un negocio = una marca. tipo_negocio decide qué flujo usan TODAS sus
 -- sedes: catálogo con carrito ('pedidos', comida, tiendas) o servicios con
 -- cita previa ('reservas', peluquerías, talleres, consultorios, spas...).
 -- Lo que antes vivía aquí (tienda pública, horario, catálogo, Bre-B) ahora
 -- vive en `sedes`: un negocio puede tener una sola sede (el caso normal,
 -- no se nota que existe el concepto) o varias.
+--
+-- plan_id arranca en 1 (gratis) para toda cuenta nueva. plan_estado y
+-- plan_vence_en solo importan para un plan pago: 'activo' con
+-- plan_vence_en en el futuro, o 'degradado_a_gratis' cuando el cron
+-- (bin/revisar_planes.php) lo bajó por falta de pago — nunca se bloquea
+-- la tienda, solo se vuelve a los límites de Gratis. Ver pagos_plan.
 CREATE TABLE IF NOT EXISTS negocios (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre        VARCHAR(120) NOT NULL,
   color_marca   CHAR(7)      DEFAULT '#E8452C',
   tipo_negocio  ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
+  plan_id       TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
+  plan_vence_en DATE         DEFAULT NULL,
+  plan_ciclo    ENUM('mensual','anual') NOT NULL DEFAULT 'mensual',
   -- El equipo de Veci suspende una cuenta desde el panel interno (mora,
   -- abuso, solicitud del dueño). Suspendida: nadie de ese negocio puede
   -- iniciar sesión y sus tiendas públicas dejan de responder.
   suspendido    TINYINT(1)   NOT NULL DEFAULT 0,
   suspendido_en DATETIME     DEFAULT NULL,
-  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (plan_id) REFERENCES planes(id)
 ) ENGINE=InnoDB;
+
+-- Precios actuales (ver docs/precios.html): mismo precio mensual×12 para
+-- el anual, sin descuento todavía definido — se ajusta aquí si se decide
+-- uno. limite_ia_mes cuenta usos reales de la API de Claude por negocio
+-- (ver usos_ia); limite_pedidos_mes cuenta pedidos+citas creados por mes
+-- calendario (ver Pedido::contarEsteMesPorNegocio / Cita::ídem).
+INSERT INTO planes
+  (id, nombre, precio_mensual, precio_anual, limite_pedidos_mes, limite_ia_mes,
+   incluye_copiloto, incluye_estadisticas_completas, incluye_multisede, sedes_incluidas, precio_sede_extra)
+VALUES
+  (1, 'gratis', 0,      0,       50,   3,    0, 0, 0, 1, NULL),
+  (2, 'barrio', 59000,  708000,  NULL, NULL, 1, 0, 0, 1, NULL),
+  (3, 'pro',    129000, 1548000, NULL, NULL, 1, 1, 1, 3, 30000);
 
 -- Quién entra al panel. 'dueno' ve y administra TODAS las sedes de su
 -- negocio (incluyendo crear sedes y colaboradores). 'colaborador' solo
@@ -297,4 +344,44 @@ CREATE TABLE IF NOT EXISTS push_subscripciones (
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_push_endpoint (endpoint)
+) ENGINE=InnoDB;
+
+-- Cobro manual verificado de un plan pago (decisión híbrida: Bre-B a mano
+-- ahora, posible pasarela recurrente más adelante — metodo_pago queda
+-- libre como texto para no tener que migrar el esquema si eso cambia).
+-- El dueño pide el cambio de plan desde /panel/plan (queda una fila sin
+-- confirmar); un admin la confirma desde /admin/negocios/{id} después de
+-- ver el comprobante por WhatsApp, lo que extiende negocios.plan_vence_en.
+CREATE TABLE IF NOT EXISTS pagos_plan (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id     INT UNSIGNED NOT NULL,
+  plan_id        TINYINT UNSIGNED NOT NULL,
+  monto          INT UNSIGNED NOT NULL,
+  metodo_pago    VARCHAR(30)  NOT NULL DEFAULT 'breb_manual',
+  ciclo          ENUM('mensual','anual') NOT NULL DEFAULT 'mensual',
+  periodo_inicio DATE         NOT NULL,
+  periodo_fin    DATE         NOT NULL,
+  -- NULL en confirmado_en = todavía esperando que un admin lo revise.
+  confirmado_por INT UNSIGNED DEFAULT NULL,
+  confirmado_en  DATETIME     DEFAULT NULL,
+  creado_en      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (plan_id) REFERENCES planes(id),
+  FOREIGN KEY (confirmado_por) REFERENCES admins(id) ON DELETE SET NULL,
+  INDEX idx_pagos_plan_pendientes (confirmado_en)
+) ENGINE=InnoDB;
+
+-- Un uso real de la API de Claude para "la IA arma tu catálogo" (foto →
+-- productos/servicios), para hacer cumplir planes.limite_ia_mes del plan
+-- Gratis. Solo se inserta cuando sí se intentó la llamada real a la API
+-- (ver ExtractorMenu + OnboardingController::analizar) — no cuando ya se
+-- usó el catálogo de ejemplo, sea por falta de llave o por límite alcanzado.
+CREATE TABLE IF NOT EXISTS usos_ia (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id  INT UNSIGNED NOT NULL,
+  sede_id     INT UNSIGNED NOT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  INDEX idx_usos_ia_negocio_fecha (negocio_id, creado_en)
 ) ENGINE=InnoDB;

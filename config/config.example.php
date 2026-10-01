@@ -51,6 +51,16 @@ return [
         'subject'     => 'mailto:soporte@tuveci.co',
     ],
 
+    // Llave Bre-B de VECI (no la del negocio) para el cobro manual
+    // verificado de los planes Barrio/Pro: un dueño que pide subir de plan
+    // ve esta llave en /panel/plan, transfiere ahí, y un admin confirma el
+    // pago desde /admin (ver database/migrations/…_planes_suscripciones.sql
+    // y src/Models/PagoPlan.php). Sin esto configurado, /panel/plan igual
+    // deja pedir el cambio, solo que no muestra a dónde transferir.
+    'cobro_planes' => [
+        'llave_breb' => null, // p.ej. '3001234567' (celular) o un correo
+    ],
+
     // Opcional. Credenciales SMTP para enviar el correo de "recuperar mi
     // contraseña" (el dueño tiene que haber guardado un correo en
     // "Mi cuenta" primero). Sirve cualquier proveedor con AUTH LOGIN +
