@@ -14,6 +14,12 @@ $fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string 
     $ts = strtotime($f);
     return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts) . ' ' . $mesesCorto[(int) date('n', $ts) - 1] . '.';
 };
+// Versión sin mes para el botón: el mes ya aparece justo arriba en "Próximo
+// disponible", repetirlo en el CTA solo lo alarga sin añadir información.
+$fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
+    $ts = strtotime($f);
+    return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts);
+};
 ?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
@@ -66,7 +72,7 @@ $fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string 
       <?php
         $diaSemanaIdx = (int) date('w', strtotime($fecha));
         if ($cerradoEseDia) {
-            $tituloSinCupos = nombre_publico_sede($negocio) . ' no atiende los ' . $diasPlural[$diaSemanaIdx] . '.';
+            $tituloSinCupos = 'El salón no atiende los ' . $diasPlural[$diaSemanaIdx];
         } elseif ($fechaEsHoy) {
             $tituloSinCupos = 'Sin cupos para hoy';
         } else {
@@ -75,13 +81,16 @@ $fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string 
       ?>
       <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E7E0CF">
         <span style="font-size: 14px; font-weight: 700"><?= e($tituloSinCupos) ?></span>
+        <?php if (!empty($ok)): ?>
+          <p class="pq-ayuda" style="margin-top: 6px">Ya estás en la lista de espera por si se libera un cupo.</p>
+        <?php endif; ?>
         <?php if ($proximoDisponible !== null): ?>
           <div style="margin-top: 10px">
-            <span class="pq-ayuda" style="display: block">Próximo disponible</span>
+            <span class="pq-ayuda" style="display: block">Próximo horario disponible</span>
             <span style="font-size: 14px; font-weight: 600"><?= e($fechaCorta($proximoDisponible['fecha'])) ?> · <?= e(hora_legible($proximoDisponible['hora'])) ?></span>
           </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e(hora_legible($proximoDisponible['hora'])) ?> →</a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e($fechaCortaSinMes($proximoDisponible['fecha'])) ?> · <?= e(hora_legible($proximoDisponible['hora'])) ?></a>
         <?php else: ?>
           <p class="pq-ayuda" style="margin-top: 6px">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
         <?php endif; ?>
@@ -91,7 +100,9 @@ $fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string 
         <div class="pq-card" style="margin-top: 14px; background: #FFFFFF; border: 1px solid #E7E0CF">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg>
           <span style="display: block; font-size: 14px; font-weight: 700; margin-top: 6px">Estás en la lista de espera</span>
-          <p class="pq-ayuda" style="margin-top: 4px">Te escribiremos por WhatsApp si se libera un cupo de <strong><?= e($servicio['nombre']) ?></strong> <?= $fechaEsHoy ? 'hoy' : 'el ' . e(fecha_larga($fecha)) ?>.</p>
+          <p style="font-size: 14px; margin-top: 4px"><?= e($servicio['nombre']) ?></p>
+          <p style="font-size: 14px; font-weight: 600; margin-top: 2px"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></p>
+          <p class="pq-ayuda" style="margin-top: 6px">Te escribiremos por WhatsApp si se libera un cupo.</p>
         </div>
       <?php else: ?>
         <details class="pq-lista-espera-detalle" style="margin-top: 14px">

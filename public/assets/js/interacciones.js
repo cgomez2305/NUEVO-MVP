@@ -456,4 +456,20 @@
       ]);
     }
   });
+
+  // ---------------------------------------------------------------------
+  // Carrusel de fechas (reservar.php / cita_reprogramar.php): con 14 días
+  // para elegir, el chip de la fecha activa puede caer fuera de la vista
+  // inicial (ej. tras anotarse en la lista de espera para un domingo
+  // lejano) y parecer que la pantalla no coincide con la fecha real.
+  // Lo centramos al cargar — sin JS el carrusel sigue siendo deslizable
+  // a mano, no se pierde información, solo el centrado automático.
+  // ---------------------------------------------------------------------
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.pq-dias-scroll .pq-chip-caja').forEach(function (chip) {
+      if (typeof chip.scrollIntoView === 'function') {
+        chip.scrollIntoView({ inline: 'center', block: 'nearest' });
+      }
+    });
+  });
 })();
