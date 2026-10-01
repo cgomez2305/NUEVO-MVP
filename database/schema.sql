@@ -78,6 +78,12 @@ CREATE TABLE IF NOT EXISTS sedes (
   -- negocio sin consumo en el local (tienda, panadería solo para llevar...)
   -- lo desactiva desde "Editar sede" y esa opción deja de aparecer.
   acepta_mesa         TINYINT(1)   NOT NULL DEFAULT 1,
+  -- Dirección física de la sede, en texto libre ("Cra 15 #8-20, Barrio
+  -- Centro"). Opcional: muchos negocios solo venden por domicilio/WhatsApp
+  -- y no tienen local al que invitar al cliente. Cuando está presente se
+  -- muestra en la tienda pública ("Dónde estamos") y en el checkout
+  -- ("Recoges en") con un enlace de búsqueda en Google Maps.
+  direccion           VARCHAR(200) DEFAULT NULL,
   publicada           TINYINT(1)   NOT NULL DEFAULT 0,
   creado_en           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE

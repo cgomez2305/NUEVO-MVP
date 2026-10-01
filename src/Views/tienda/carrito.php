@@ -119,6 +119,9 @@
       <div class="pq-campo" data-mostrar-si="tipo_entrega=recoger">
         <span class="pq-label">Recoges en</span>
         <span style="font-size: 14px; display: block; margin-top: 2px"><?= e(nombre_publico_sede($negocio)) ?></span>
+        <?php if (!empty($negocio['direccion'])): ?>
+          <span style="font-size: 13px; color: var(--gris-texto); display: block; margin-top: 2px"><?= e($negocio['direccion']) ?></span>
+        <?php endif; ?>
       </div>
 
       <?php if (!empty($negocio['acepta_mesa'])): ?>

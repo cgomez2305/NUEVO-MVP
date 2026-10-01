@@ -315,6 +315,14 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
 .pq-btn-whatsapp { background: #25D366; color: #0b3d24; box-shadow: var(--sombra-suave); }
 .pq-btn-ghost { background: transparent; border: 1.5px solid var(--borde); color: var(--carbon); }
 .pq-btn-ghost:hover { border-color: var(--sello); color: var(--sello); }
+
+/* Variante de .pq-btn-ghost con los tokens de la tienda pública (fondo
+   cálido, no el --tiquete del panel): clase que ya se usaba en reservar.php
+   y cita_reprogramar.php para los horarios no elegidos pero nunca se había
+   definido — sin fondo NI borde, un botón "fantasma" invisible de verdad,
+   no el "solo borde" que el nombre prometía. */
+.pq-btn-ghost-oscuro { background: transparent; border: 1.5px solid var(--recibo); color: var(--tinta); }
+.pq-btn-ghost-oscuro:hover { border-color: var(--tinta); background: rgba(27, 26, 23, .04); }
 .pq-btn-chico { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 9px; }
 
 /* estado "enviando…" de un botón: se agrega solo, con JS, al mandar

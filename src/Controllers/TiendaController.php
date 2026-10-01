@@ -32,14 +32,40 @@ class TiendaController
             : "Pide o reserva con {$negocio['nombre']} directo por WhatsApp, sin comisión.";
 
         if ($negocio['tipo_negocio'] === 'reservas') {
+            $horarioSede = Sede::horario($negocio);
+            $abiertoAhora = negocio_abierto_ahora($horarioSede);
+            $servicios = Servicio::listarPorSede((int) $negocio['id'], true);
+
+            // El "próximo cupo hoy" por servicio solo tiene sentido cuando hay
+            // UN solo horario compartido para toda la sede: con empleados cada
+            // uno puede tener su propia agenda, y mostrar un cupo "del
+            // servicio" sería adivinar cuál empleado lo atendería.
+            $disponibilidadHoy = [];
+            if (Empleado::listarPorSede((int) $negocio['id'], true) === []) {
+                $hoy = date('Y-m-d');
+                $ocupadosHoy = Cita::ocupadosEnFecha((int) $negocio['id'], $hoy);
+                foreach ($servicios as $servicio) {
+                    $slots = Cita::calcularDisponibilidad(
+                        $horarioSede,
+                        (int) $negocio['intervalo_citas_min'],
+                        $hoy,
+                        (int) $servicio['duracion_min'],
+                        $ocupadosHoy
+                    );
+                    $disponibilidadHoy[$servicio['id']] = $slots[0] ?? null;
+                }
+            }
+
             ver('tienda/servicios', [
-                'titulo'          => $negocio['nombre'] . ' · Veci',
-                'negocio'         => $negocio,
-                'servicios'       => Servicio::listarPorSede((int) $negocio['id'], true),
-                'horario'         => horario_resumen(Sede::horario($negocio)),
-                'abiertoAhora'    => negocio_abierto_ahora(Sede::horario($negocio)),
-                'metaDescripcion' => $metaDescripcion,
-                'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
+                'titulo'           => $negocio['nombre'] . ' · Veci',
+                'negocio'          => $negocio,
+                'servicios'        => $servicios,
+                'horario'          => horario_resumen($horarioSede),
+                'abiertoAhora'     => $abiertoAhora,
+                'proximaApertura'  => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
+                'disponibilidadHoy' => $disponibilidadHoy,
+                'metaDescripcion'  => $metaDescripcion,
+                'canonicalUrl'     => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
             return;
         }

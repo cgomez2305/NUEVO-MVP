@@ -16,6 +16,12 @@
     <span class="pq-ayuda">Solo números, sin espacios ni signos.</span>
   </div>
 
+  <div class="pq-campo" style="margin-bottom: 0">
+    <label class="pq-label" for="direccion">Dirección (opcional)</label>
+    <input class="pq-input" type="text" id="direccion" name="direccion" value="<?= e($sede['direccion'] ?? '') ?>" placeholder="Cra 15 #8-20, Barrio Centro" maxlength="200">
+    <span class="pq-ayuda">Se muestra a tus clientes en la tienda y el checkout, con un enlace a Google Maps. Déjala vacía si solo atiendes por domicilio.</span>
+  </div>
+
   <?php if ($sede['tipo_negocio'] === 'pedidos'): ?>
     <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--carbon)">
       <input type="checkbox" name="acepta_mesa" value="1" style="margin-top: 3px"<?= (int) ($sede['acepta_mesa'] ?? 1) === 1 ? ' checked' : '' ?>>

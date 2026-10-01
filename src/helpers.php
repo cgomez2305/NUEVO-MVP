@@ -296,10 +296,50 @@ function hora_legible(string $hora): string
 }
 
 /**
+ * Cuándo vuelve a abrir, para completar "Cerrado ahora" con algo útil
+ * ("Abre mañana a las 9:00 a. m.") en vez de dejar al cliente adivinando.
+ * Solo tiene sentido llamarla cuando ya se sabe que el negocio está
+ * cerrado ahora mismo (ver negocio_abierto_ahora()). Null si no hay
+ * horario configurado o si no abre ningún día de la semana siguiente.
+ *
+ * @param array<string, array{0:string,1:string}> $horario
+ * @return array{dia: string, hora: string}|null
+ */
+function negocio_proxima_apertura(array $horario): ?array
+{
+    if ($horario === []) {
+        return null;
+    }
+    $diasNombre = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    $ahora = date('H:i');
+    $diaHoyIso = (int) date('N');
+
+    for ($offset = 0; $offset <= 7; $offset++) {
+        $diaIso = (($diaHoyIso - 1 + $offset) % 7) + 1;
+        $rango = $horario[(string) $diaIso] ?? null;
+        if ($rango === null) {
+            continue;
+        }
+        if ($offset === 0 && $ahora >= $rango[1]) {
+            continue; // hoy ya cerró; sigue buscando el próximo día
+        }
+        $etiqueta = $offset === 0 ? 'hoy' : ($offset === 1 ? 'mañana' : $diasNombre[$diaIso - 1]);
+        return ['dia' => $etiqueta, 'hora' => hora_legible($rango[0])];
+    }
+
+    return null;
+}
+
+/**
  * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
  * legibles, uniendo días consecutivos con el mismo horario en un solo rango
- * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir no
- * aparecen. Devuelve {dia, rango} en vez de un string ya armado para que la
+ * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir
+ * aparecen como "Cerrado" (agrupados igual que los abiertos) en vez de
+ * desaparecer — un negocio que no trabaja domingo necesita poder decirlo,
+ * no solo omitir el día y dejar que el cliente adivine. Única excepción:
+ * si el negocio no tiene NINGÚN horario configurado todavía, devuelve []
+ * en vez de un "Lun-Dom: Cerrado" que daría a entender que cerró para
+ * siempre. Devuelve {dia, rango} en vez de un string ya armado para que la
  * vista no tenga que volver a separar nombre de horas.
  *
  * @param array<string, array{0:string,1:string}> $horario
@@ -307,19 +347,26 @@ function hora_legible(string $hora): string
  */
 function horario_resumen(array $horario): array
 {
+    if ($horario === []) {
+        return [];
+    }
+
     $dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    $SIN_INICIAR = '__sin_iniciar__';
+    $FIN = '__fin__';
 
     $lineas = [];
     $inicioGrupo = 1;
-    $rangoActual = null;
+    $rangoActual = $SIN_INICIAR;
 
     for ($dia = 1; $dia <= 8; $dia++) {
-        $rango = $dia <= 7 ? ($horario[(string) $dia] ?? null) : null;
+        $rango = $dia <= 7 ? ($horario[(string) $dia] ?? null) : $FIN;
         $cambia = $rango !== $rangoActual;
 
-        if ($cambia && $rangoActual !== null) {
+        if ($cambia && $rangoActual !== $SIN_INICIAR) {
             $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
-            $lineas[] = ['dia' => $nombre, 'rango' => hora_legible($rangoActual[0]) . ' - ' . hora_legible($rangoActual[1])];
+            $rangoTexto = $rangoActual === null ? 'Cerrado' : hora_legible($rangoActual[0]) . ' - ' . hora_legible($rangoActual[1]);
+            $lineas[] = ['dia' => $nombre, 'rango' => $rangoTexto];
         }
         if ($cambia) {
             $inicioGrupo = $dia;

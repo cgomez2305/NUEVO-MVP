@@ -10,7 +10,13 @@
     <?php if ($abiertoAhora !== null): ?>
       <span class="pq-estado-abierto <?= $abiertoAhora['abierto'] ? 'pq-estado-abierto-si' : 'pq-estado-abierto-no' ?>">
         <span class="pq-estado-abierto-punto"></span>
-        <?= $abiertoAhora['abierto'] ? 'Abierto ahora · hasta las ' . e(hora_legible($abiertoAhora['hasta'])) : 'Cerrado ahora' ?>
+        <?php if ($abiertoAhora['abierto']): ?>
+          Abierto ahora · hasta las <?= e(hora_legible($abiertoAhora['hasta'])) ?>
+        <?php elseif ($proximaApertura !== null): ?>
+          Cerrado ahora · abre <?= e($proximaApertura['dia']) ?> a las <?= e($proximaApertura['hora']) ?>
+        <?php else: ?>
+          Cerrado ahora
+        <?php endif; ?>
       </span>
     <?php endif; ?>
   </div>
@@ -24,6 +30,8 @@
       <?php foreach ($servicios as $servicio): ?>
         <?php $agotado = (int) $servicio['agotado'] === 1; ?>
         <?php $urlReservar = base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']); ?>
+        <?php $hayDatoHoy = array_key_exists($servicio['id'], $disponibilidadHoy); ?>
+        <?php $cupoHoy = $hayDatoHoy ? $disponibilidadHoy[$servicio['id']] : null; ?>
         <?php if ($agotado): ?>
           <div class="pq-fila-carrito" style="align-items: center; opacity: .55">
         <?php else: ?>
@@ -33,11 +41,16 @@
           <div class="pq-stack" style="flex-grow: 1; gap: 2px">
             <span style="font-size: 14px; font-weight: 600"><?= e($servicio['nombre']) ?></span>
             <span class="pq-mono" style="font-size: 12px; color: var(--gris-texto)"><?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
+            <?php if ($hayDatoHoy && !$agotado): ?>
+              <span class="pq-mono" style="font-size: 11px; color: <?= $cupoHoy !== null ? 'var(--sello)' : 'var(--gris-texto)' ?>">
+                <?= $cupoHoy !== null ? 'Próximo cupo: hoy ' . e(hora_legible($cupoHoy)) : 'Sin cupos hoy' ?>
+              </span>
+            <?php endif; ?>
           </div>
           <?php if ($agotado): ?>
             <span class="pq-chip pq-chip-cancelado">No disponible</span>
           <?php else: ?>
-            <span class="pq-btn pq-btn-oscuro pq-btn-chico" style="pointer-events: none">Reservar</span>
+            <span class="pq-btn pq-btn-oscuro pq-btn-chico" style="pointer-events: none"><?= $hayDatoHoy && $cupoHoy === null ? 'Ver horarios' : 'Reservar' ?></span>
           <?php endif; ?>
         <?= $agotado ? '</div>' : '</a>' ?>
       <?php endforeach; ?>
@@ -45,14 +58,26 @@
   <?php endif; ?>
 
   <?php if ($horario !== []): ?>
-    <div class="pq-card" style="margin-top: 28px; display: flex; flex-direction: column; gap: 8px">
+    <div style="margin-top: 28px">
       <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">HORARIO DE ATENCIÓN</span>
-      <?php foreach ($horario as $linea): ?>
-        <div style="display: flex; justify-content: space-between; font-size: 14px">
-          <span><?= e($linea['dia']) ?></span>
-          <span class="pq-mono"><?= e($linea['rango']) ?></span>
-        </div>
-      <?php endforeach; ?>
+      <div style="margin-top: 8px; border-top: 1px solid var(--recibo)">
+        <?php foreach ($horario as $linea): ?>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--recibo)">
+            <span><?= e($linea['dia']) ?></span>
+            <span class="pq-mono" style="<?= $linea['rango'] === 'Cerrado' ? 'color: var(--gris-texto)' : '' ?>"><?= e($linea['rango']) ?></span>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($negocio['direccion'])): ?>
+    <div style="margin-top: 28px">
+      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">DÓNDE ESTAMOS</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--recibo)">
+        <span style="font-size: 14px"><?= e($negocio['direccion']) ?></span>
+        <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($negocio['direccion']) ?>" target="_blank" rel="noopener" class="pq-mono" style="font-size: 12px; white-space: nowrap; color: var(--tinta)">Ver ubicación ›</a>
+      </div>
     </div>
   <?php endif; ?>
 

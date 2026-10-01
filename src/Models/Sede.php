@@ -34,12 +34,18 @@ class Sede
         return (int) $pdo->lastInsertId();
     }
 
-    public static function actualizar(int $id, string $nombre, string $whatsapp, bool $aceptaMesa): void
+    public static function actualizar(int $id, string $nombre, string $whatsapp, bool $aceptaMesa, ?string $direccion = null): void
     {
         $stmt = Database::conexion()->prepare(
-            'UPDATE sedes SET nombre = :nombre, whatsapp = :whatsapp, acepta_mesa = :acepta_mesa WHERE id = :id'
+            'UPDATE sedes SET nombre = :nombre, whatsapp = :whatsapp, acepta_mesa = :acepta_mesa, direccion = :direccion WHERE id = :id'
         );
-        $stmt->execute(['nombre' => $nombre, 'whatsapp' => $whatsapp, 'acepta_mesa' => $aceptaMesa ? 1 : 0, 'id' => $id]);
+        $stmt->execute([
+            'nombre'      => $nombre,
+            'whatsapp'    => $whatsapp,
+            'acepta_mesa' => $aceptaMesa ? 1 : 0,
+            'direccion'   => $direccion,
+            'id'          => $id,
+        ]);
     }
 
     /** Cuántas sedes publicadas tiene un negocio: decide si la tienda pública muestra el nombre de la sede o solo el de la marca. */

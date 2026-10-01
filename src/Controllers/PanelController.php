@@ -1012,9 +1012,10 @@ class PanelController
             $nombre = trim((string) ($_POST['nombre'] ?? ''));
             $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
             $aceptaMesa = isset($_POST['acepta_mesa']);
+            $direccion = trim((string) ($_POST['direccion'] ?? ''));
 
             if ($nombre !== '' && $whatsapp !== '') {
-                Sede::actualizar((int) $sede['id'], $nombre, $whatsapp, $aceptaMesa);
+                Sede::actualizar((int) $sede['id'], $nombre, $whatsapp, $aceptaMesa, $direccion !== '' ? $direccion : null);
                 flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }
         }
