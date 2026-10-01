@@ -182,7 +182,13 @@ class TiendaController
             'cerradoEseDia'     => $cerradoEseDia,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
-            'ok'                => flash_obtener('ok'),
+            // Solo viene con valor justo después de unirse a la lista de
+            // espera en esta misma vuelta (ver unirseListaEspera): habilita
+            // la tarjeta de confirmación y el botón "Salir de la lista". Una
+            // recarga posterior de la URL ya no lo trae — es un flash, no
+            // sesión — así que ese botón no queda como una gestión
+            // permanente del cupo sin login.
+            'listaEsperaId'     => ($idFlash = flash_obtener('lista_espera_id')) !== null ? (int) $idFlash : null,
         ], 'tienda');
     }
 
@@ -324,7 +330,7 @@ class TiendaController
         }
 
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
-        ListaEspera::crear((int) $negocio['id'], $clienteId, (int) $servicio['id'], $servicio['nombre'], $fecha);
+        $listaEsperaId = ListaEspera::crear((int) $negocio['id'], $clienteId, (int) $servicio['id'], $servicio['nombre'], $fecha);
 
         WebPush::notificarSede(
             (int) $negocio['id'],
@@ -333,7 +339,26 @@ class TiendaController
             '/panel/citas'
         );
 
-        flash_set('ok', 'Listo, ' . $nombre . '. Te avisamos por WhatsApp si se libera un cupo ese día.');
+        // Solo mientras dura esta misma vuelta (flash, no sesión persistente):
+        // permite mostrar "Salir de la lista" justo después de anotarse, sin
+        // necesitar login ni un token de gestión como el de citas.
+        flash_set('lista_espera_id', (string) $listaEsperaId);
+        redirigir($volverAReservar);
+    }
+
+    public function salirListaEspera(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $servicioId = (int) ($_POST['servicio_id'] ?? 0);
+        $fecha = (string) ($_POST['fecha'] ?? '');
+        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
+
+        if (csrf_verificar()) {
+            ListaEspera::eliminar($id, (int) $negocio['id']);
+        }
+
         redirigir($volverAReservar);
     }
 

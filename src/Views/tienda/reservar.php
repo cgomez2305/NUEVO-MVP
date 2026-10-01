@@ -20,6 +20,16 @@ $fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
     $ts = strtotime($f);
     return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts);
 };
+// A diferencia de hora_legible() (usada en servicios.php, donde "9 a. m."
+// sin minutos es deliberado), aquí conviven horas "en punto" y horas con
+// minutos en la misma pantalla (grilla de horarios + próximo disponible +
+// resumen de confirmación) — mostrar siempre los minutos evita mezclar
+// "9 a. m." con "09:00" como si fueran formatos distintos.
+$horaCompleta = static function (string $hora): string {
+    $ts = strtotime($hora) ?: 0;
+    $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
+    return date('g:i', $ts) . ' ' . $meridiano;
+};
 ?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
@@ -61,7 +71,7 @@ $fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
   </div>
 
   <div style="margin-top: 20px">
-    <span class="pq-label">Horarios disponibles</span>
+    <span class="pq-label">Disponibilidad</span>
 
     <?php if (!empty($faltaElegirEmpleado)): ?>
       <p class="pq-ayuda" style="margin-top: 10px">Elige con quién quieres agendar para ver los horarios.</p>
@@ -81,28 +91,32 @@ $fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
       ?>
       <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E7E0CF">
         <span style="font-size: 14px; font-weight: 700"><?= e($tituloSinCupos) ?></span>
-        <?php if (!empty($ok)): ?>
-          <p class="pq-ayuda" style="margin-top: 6px">Ya estás en la lista de espera por si se libera un cupo.</p>
-        <?php endif; ?>
         <?php if ($proximoDisponible !== null): ?>
           <div style="margin-top: 10px">
             <span class="pq-ayuda" style="display: block">Próximo horario disponible</span>
-            <span style="font-size: 14px; font-weight: 600"><?= e($fechaCorta($proximoDisponible['fecha'])) ?> · <?= e(hora_legible($proximoDisponible['hora'])) ?></span>
+            <span style="font-size: 14px; font-weight: 600"><?= e($fechaCorta($proximoDisponible['fecha'])) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
           </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e($fechaCortaSinMes($proximoDisponible['fecha'])) ?> · <?= e(hora_legible($proximoDisponible['hora'])) ?></a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e($fechaCortaSinMes($proximoDisponible['fecha'])) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></a>
         <?php else: ?>
           <p class="pq-ayuda" style="margin-top: 6px">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
         <?php endif; ?>
       </div>
 
-      <?php if (!empty($ok)): ?>
+      <?php if ($listaEsperaId !== null): ?>
         <div class="pq-card" style="margin-top: 14px; background: #FFFFFF; border: 1px solid #E7E0CF">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg>
           <span style="display: block; font-size: 14px; font-weight: 700; margin-top: 6px">Estás en la lista de espera</span>
           <p style="font-size: 14px; margin-top: 4px"><?= e($servicio['nombre']) ?></p>
           <p style="font-size: 14px; font-weight: 600; margin-top: 2px"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></p>
           <p class="pq-ayuda" style="margin-top: 6px">Te escribiremos por WhatsApp si se libera un cupo.</p>
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera/salir')) ?>" style="margin-top: 10px">
+            <?= csrf_campo() ?>
+            <input type="hidden" name="id" value="<?= (int) $listaEsperaId ?>">
+            <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
+            <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
+            <button type="submit" class="pq-mono" style="background: none; border: none; padding: 6px 0; font-size: 12px; color: var(--gris-suave); text-decoration: underline; cursor: pointer">Salir de la lista</button>
+          </form>
         </div>
       <?php else: ?>
         <details class="pq-lista-espera-detalle" style="margin-top: 14px">
@@ -140,7 +154,7 @@ $fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
         <?php foreach ($slots as $slot): ?>
           <?php $activo = $slot === $horaElegida; ?>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . $sufijoEmpleado . '&hora=' . $slot) ?>#confirmar"
-             class="pq-btn <?= $activo ? 'pq-btn-sello' : 'pq-btn-ghost-oscuro' ?> pq-btn-chico pq-mono"><?= e($slot) ?></a>
+             class="pq-btn <?= $activo ? 'pq-btn-sello' : 'pq-btn-ghost-oscuro' ?> pq-btn-chico pq-mono"><?= e($horaCompleta($slot)) ?></a>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
@@ -150,7 +164,7 @@ $fechaCortaSinMes = static function (string $f) use ($diasCorto): string {
     <div id="confirmar" class="pq-card" style="margin-top: 24px; border: 1px solid #E7E0CF">
       <span style="font-size: 14px; font-weight: 700">Confirmar reserva</span>
       <p class="pq-ayuda" style="margin-top: 4px">
-        <?= e($servicio['nombre']) ?> el <?= e(date('d M', strtotime($fecha))) ?> a las <?= e($horaElegida) ?>
+        <?= e($servicio['nombre']) ?> el <?= e(date('d M', strtotime($fecha))) ?> a las <?= e($horaCompleta($horaElegida)) ?>
       </p>
       <?php if ($anticipo > 0): ?>
         <p class="pq-ayuda" style="margin-top: 4px; color: #8a5a00">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>

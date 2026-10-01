@@ -69,4 +69,23 @@ class ListaEspera
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
+
+    /** @return array<string, mixed>|null */
+    public static function buscarPorId(int $id, int $sedeId): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT * FROM lista_espera WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    /** El cliente se retracta de la lista de espera (no es el dueño cancelándola). */
+    public static function eliminar(int $id, int $sedeId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'DELETE FROM lista_espera WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+    }
 }

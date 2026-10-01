@@ -116,6 +116,7 @@ $router->post('/t/{slug}/pedido', [$tienda, 'crearPedido']);
 $router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);
 $router->post('/t/{slug}/lista-espera', [$tienda, 'unirseListaEspera']);
+$router->post('/t/{slug}/lista-espera/salir', [$tienda, 'salirListaEspera']);
 
 // --- Gestión de cita por el cliente, sin login (enlace con token) -------
 $router->get('/cita/{token}', [$tienda, 'gestionarCita']);
