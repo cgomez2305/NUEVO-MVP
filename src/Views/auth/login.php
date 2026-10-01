@@ -20,16 +20,17 @@
   </div>
 
   <button type="submit" class="pq-btn pq-btn-sello">Entrar →</button>
+
+  <p class="pq-lead pq-centro" style="margin-top: 16px">
+    <a href="<?= e(base_url('/olvide-password')) ?>" style="color: var(--gris-suave)">¿Olvidaste tu contraseña?</a>
+  </p>
 </form>
 
-<p class="pq-lead pq-centro" style="margin-top: 16px">
-  <a href="<?= e(base_url('/olvide-password')) ?>" style="color: var(--gris-suave)">¿Olvidaste tu contraseña?</a>
-</p>
+<div class="pq-auth-separador"><span>o</span></div>
 
-<p class="pq-lead pq-centro" style="margin-top: 8px">
-  ¿Aún no tienes tienda? <a href="<?= e(base_url('/registro')) ?>" style="color: var(--sello); font-weight: 600">Créala gratis</a>
-</p>
+<a href="<?= e(base_url('/registro')) ?>" class="pq-btn pq-btn-ghost">Crear mi tienda gratis →</a>
 
-<p class="pq-ayuda pq-centro" style="margin-top: 24px">
-  Demo: WhatsApp <strong>3001234567</strong> · contraseña <strong>veci123</strong>
-</p>
+<div class="pq-demo-caja">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+  <span>Demo: WhatsApp <strong>3001234567</strong> · contraseña <strong>veci123</strong></span>
+</div>

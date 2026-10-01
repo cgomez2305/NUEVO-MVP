@@ -1,7 +1,7 @@
-<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; ?>
-<div class="pq-topbar" style="border-bottom: none">
+<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; $pasoActual = $esReservas ? 4 : 3; $totalPasos = $esReservas ? 4 : 3; ?>
+<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
   <a href="<?= e(base_url($esReservas ? '/panel/onboarding/horario' : '/panel/onboarding/productos')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <span class="pq-chip"><?= $esReservas ? 'PASO 4 DE 4' : 'PASO 3 DE 3' ?></span>
+  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
 
 <div class="pq-content">
@@ -11,13 +11,26 @@
   <form method="post" action="<?= e(base_url('/panel/onboarding/publicar')) ?>" style="margin-top: 20px">
     <?= csrf_campo() ?>
 
+    <?php $llaveTipo = $negocio['llave_breb_tipo'] ?? 'celular'; ?>
     <div class="pq-campo">
-      <label class="pq-label" for="llave_tipo">Tipo de llave</label>
-      <select class="pq-select" id="llave_tipo" name="llave_tipo">
-        <option value="celular">Celular</option>
-        <option value="cedula">Cédula</option>
-        <option value="correo">Correo</option>
-      </select>
+      <label class="pq-label">Tipo de llave</label>
+      <div class="pq-llave-tipo">
+        <label class="pq-llave-tipo-opcion">
+          <input type="radio" name="llave_tipo" value="celular" <?= $llaveTipo === 'celular' ? 'checked' : '' ?>>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+          <span>Celular</span>
+        </label>
+        <label class="pq-llave-tipo-opcion">
+          <input type="radio" name="llave_tipo" value="cedula" <?= $llaveTipo === 'cedula' ? 'checked' : '' ?>>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="12" r="2"/><path d="M14 10h4M14 14h3"/></svg>
+          <span>Cédula</span>
+        </label>
+        <label class="pq-llave-tipo-opcion">
+          <input type="radio" name="llave_tipo" value="correo" <?= $llaveTipo === 'correo' ? 'checked' : '' ?>>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+          <span>Correo</span>
+        </label>
+      </div>
     </div>
 
     <div class="pq-campo">

@@ -1,6 +1,7 @@
-<div class="pq-topbar" style="border-bottom: none">
+<?php $pasoActual = 2; $totalPasos = 3; ?>
+<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
   <a href="<?= e(base_url('/panel/onboarding/foto')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <span class="pq-chip">PASO 2 DE 3</span>
+  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
 
 <div class="pq-content">
@@ -17,8 +18,9 @@
     </div>
   <?php else: ?>
     <div style="margin-top: 20px">
-      <span class="pq-mono" style="font-size: 12px; color: var(--caja); display: block; margin-bottom: 10px">
-        <?= count($productos) ?> PRODUCTOS ENCONTRADOS
+      <span class="pq-contador-badge" style="margin-bottom: 10px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l5 5L20 7"/></svg>
+        <?= count($productos) ?> productos encontrados
       </span>
       <?php $compacto = true; require __DIR__ . '/../productos/_gestor.php'; ?>
     </div>

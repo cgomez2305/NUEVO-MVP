@@ -1,10 +1,12 @@
 <?php
 $dias = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
 $porDefecto = ['08:00', '18:00'];
+$pasoActual = 3;
+$totalPasos = 4;
 ?>
-<div class="pq-topbar" style="border-bottom: none">
+<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
   <a href="<?= e(base_url('/panel/onboarding/productos')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <span class="pq-chip">PASO 3 DE 4</span>
+  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
 
 <div class="pq-content">
@@ -17,10 +19,11 @@ $porDefecto = ['08:00', '18:00'];
     <div class="pq-stack" style="gap: 10px">
       <?php foreach ($dias as $num => $nombre): ?>
         <?php $abierto = isset($horario[(string) $num]); $rango = $horario[(string) $num] ?? $porDefecto; ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-          <label style="display: flex; align-items: center; gap: 8px; width: 110px; font-size: 13px; font-weight: 600">
+        <div class="pq-card-borde pq-dia-fila">
+          <label class="pq-dia-switch">
             <input type="checkbox" name="abierto_<?= $num ?>" value="1" <?= $abierto ? 'checked' : '' ?>>
-            <?= e($nombre) ?>
+            <span class="pq-dia-switch-pista"></span>
+            <span class="pq-dia-switch-nombre"><?= e($nombre) ?></span>
           </label>
           <input class="pq-input pq-mono" style="width: 110px" type="time" name="inicio_<?= $num ?>" value="<?= e($rango[0]) ?>">
           <span class="pq-ayuda">a</span>

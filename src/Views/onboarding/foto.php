@@ -1,9 +1,9 @@
-<div class="pq-topbar" style="border-bottom: none">
+<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; $pasoActual = 1; $totalPasos = $esReservas ? 4 : 3; ?>
+<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
   <a href="<?= e(base_url('/')) ?>" class="pq-topbar-brand">Veci</a>
-  <span class="pq-chip">PASO 1 DE 3</span>
+  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
 
-<?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; ?>
 <div class="pq-content">
   <h1 class="pq-h1" style="font-size: 28px"><?= $esReservas ? 'Toma foto de tu lista de servicios' : 'Toma foto de tu menú' ?></h1>
   <p class="pq-lead">
