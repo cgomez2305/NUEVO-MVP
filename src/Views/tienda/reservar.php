@@ -91,10 +91,16 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
     </details>
   </div>
 
-  <div style="margin-top: 28px">
+  <div id="disponibilidad" style="margin-top: 28px">
     <span class="pq-label">Disponibilidad<?= $slots !== [] ? ' · ' . count($slots) . ' horario' . (count($slots) === 1 ? '' : 's') : '' ?></span>
 
-    <?php if (!empty($faltaElegirEmpleado)): ?>
+    <?php if (!empty($disponibilidadError)): ?>
+      <div class="pq-disponibilidad-error" style="margin-top: 10px">
+        <span class="pq-disponibilidad-error-titulo">No pudimos cargar la disponibilidad</span>
+        <p class="pq-ayuda" style="margin-top: 4px">Puede ser algo pasajero. Intenta de nuevo o escribe directo por WhatsApp.</p>
+        <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 10px; width: auto; min-height: 46px">Reintentar</a>
+      </div>
+    <?php elseif (!empty($faltaElegirEmpleado)): ?>
       <p class="pq-ayuda" style="margin-top: 10px">Elige con quién quieres agendar para ver los horarios.</p>
     <?php elseif (!empty($bloqueada)): ?>
       <p class="pq-ayuda" style="margin-top: 10px"><?= e(nombre_publico_sede($negocio)) ?> no atiende ese día. Elige otra fecha.</p>
@@ -115,11 +121,10 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
         <?php if ($proximoDisponible !== null): ?>
           <div style="margin-top: 12px">
             <span class="pq-ayuda" style="display: block">Próximo horario disponible</span>
-            <span style="font-size: 15px; font-weight: 700; display: block; margin-top: 2px"><?= e(ucfirst($diasLargo[(int) date('w', strtotime($proximoDisponible['fecha']))])) ?> <?= (int) date('j', strtotime($proximoDisponible['fecha'])) ?> de <?= e($mesesLargo[(int) date('n', strtotime($proximoDisponible['fecha'])) - 1]) ?></span>
-            <span style="font-size: 14px; color: var(--gris-texto)"><?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
+            <span style="font-size: 15px; font-weight: 700; display: block; margin-top: 2px"><?= e(ucfirst($diasLargo[(int) date('w', strtotime($proximoDisponible['fecha']))])) ?> <?= (int) date('j', strtotime($proximoDisponible['fecha'])) ?> de <?= e($mesesLargo[(int) date('n', strtotime($proximoDisponible['fecha'])) - 1]) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
           </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 14px; width: auto">Reservar este horario →</a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 14px; width: auto; min-height: 46px">Reservar este horario →</a>
         <?php else: ?>
           <p class="pq-ayuda" style="margin-top: 6px">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
         <?php endif; ?>
@@ -133,9 +138,9 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
             </span>
             <span style="font-size: 15px; font-weight: 700">Estás en la lista de espera</span>
           </div>
-          <p style="font-size: 14px; margin-top: 10px"><?= e($servicio['nombre']) ?></p>
+          <p style="font-size: 14px; margin-top: 8px"><?= e($servicio['nombre']) ?></p>
           <p style="font-size: 14px; font-weight: 600; margin-top: 2px"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></p>
-          <p class="pq-ayuda" style="margin-top: 8px">Te escribiremos por WhatsApp si se libera un cupo.</p>
+          <p class="pq-ayuda" style="margin-top: 6px">Te escribiremos por WhatsApp si se libera un cupo.</p>
 
           <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera/salir')) ?>" id="pq-form-salir-lista">
             <?= csrf_campo() ?>
@@ -177,7 +182,7 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
                 <input class="pq-input pq-mono" type="tel" inputmode="numeric" id="le-telefono" name="telefono" placeholder="300 123 4567" required maxlength="20" autocomplete="tel-national">
               </div>
             </div>
-            <label class="pq-consentimiento pq-consentimiento-requerido" style="margin-bottom: 12px">
+            <label class="pq-consentimiento" style="margin-bottom: 12px">
               <input type="checkbox" name="autorizo_datos" value="1" required>
               <span>
                 <span class="pq-consentimiento-titulo">Aviso por WhatsApp si se libera un cupo</span>
@@ -227,7 +232,7 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
     <div id="confirmar" class="pq-card" style="margin-top: 28px; border: 1px solid #E4DDD1">
       <span style="font-size: 15px; font-weight: 700">Confirmar reserva</span>
       <p class="pq-ayuda" style="margin-top: 4px">
-        <?= e($servicio['nombre']) ?> el <?= e(date('d M', strtotime($fecha))) ?> a las <?= e($horaCompleta($horaElegida)) ?>
+        <?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?> · <?= e($horaCompleta($horaElegida)) ?>
       </p>
       <?php if ($anticipo > 0): ?>
         <p class="pq-ayuda" style="margin-top: 4px; color: #8a5a00">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>
@@ -255,7 +260,7 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
           </div>
         </div>
 
-        <label class="pq-consentimiento pq-consentimiento-requerido" style="margin-bottom: 20px">
+        <label class="pq-consentimiento" style="margin-bottom: 20px">
           <input type="checkbox" name="autorizo_datos" value="1" required>
           <span>
             <span class="pq-consentimiento-titulo">Uso de datos para gestionar tu reserva</span>
@@ -265,7 +270,7 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
 
         <button type="submit" class="pq-btn pq-btn-whatsapp">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="#0b3d24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-          Reservar y confirmar por WhatsApp
+          Confirmar por WhatsApp
         </button>
         <p class="pq-ayuda pq-centro" style="margin-top: 10px">Revisarás la reserva en WhatsApp antes de enviarla.</p>
       </form>

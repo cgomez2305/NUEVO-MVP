@@ -489,4 +489,22 @@
       });
     });
   });
+
+  // Feedback de "cargando" al cambiar de fecha en reservar.php: la
+  // navegación real es una recarga completa de página (no hay nada que
+  // esperar de verdad), pero atenuar el bloque de disponibilidad en el
+  // instante del toque evita que el chip se sienta "muerto" mientras
+  // carga la página siguiente. Sin JS esto simplemente no se aplica — la
+  // navegación nativa funciona exactamente igual.
+  document.addEventListener('DOMContentLoaded', function () {
+    var disponibilidad = document.getElementById('disponibilidad');
+    if (!disponibilidad) {
+      return;
+    }
+    document.querySelectorAll('.pq-dias-scroll a, .pq-calendario-grid a').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        disponibilidad.classList.add('pq-disponibilidad-cargando');
+      });
+    });
+  });
 })();

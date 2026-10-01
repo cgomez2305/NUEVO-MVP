@@ -115,55 +115,69 @@ class TiendaController
             }
         }
 
-        $horario = Sede::horario($negocio);
-        $intervalo = (int) $negocio['intervalo_citas_min'];
-        $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
-        // Si el negocio tiene empleados registrados, hay que elegir uno antes de ver horarios.
-        $faltaElegirEmpleado = $empleados !== [] && $empleadoElegido === null;
-
-        if ($bloqueada || $faltaElegirEmpleado) {
-            $ocupados = [];
-            $slots = [];
-        } else {
-            $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoElegido['id'] ?? null);
-            $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados);
-        }
-
-        $horaElegida = (string) ($_GET['hora'] ?? '');
-        $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
-
-        // Distingue "este día no se atiende" (horario sin ese día) de
-        // "todo ocupado ese día", para no decirle al cliente "sin cupos"
-        // cuando en realidad el negocio ni siquiera abre.
-        $cerradoEseDia = !$bloqueada && !$faltaElegirEmpleado && !isset($horario[(string) (int) date('N', strtotime($fecha))]);
-
         // Los próximos 14 días, para que el cliente pueda cambiar de fecha sin escribirla a mano.
         $fechasDisponibles = [];
         for ($i = 0; $i < 14; $i++) {
             $fechasDisponibles[] = date('Y-m-d', strtotime("+{$i} days"));
         }
 
-        // Sin cupos hoy: antes de mandar al cliente directo a la lista de
-        // espera, se busca el próximo día con hueco real (mismo horario,
-        // misma duración, mismo empleado si aplica) para ofrecerlo como
-        // salida principal. Acotado a los mismos 14 días de arriba, así el
-        // costo (una consulta de disponibilidad por día) tiene techo.
+        $bloqueada = false;
+        $faltaElegirEmpleado = $empleados !== [] && $empleadoElegido === null;
+        $slots = [];
+        $cerradoEseDia = false;
         $proximoDisponible = null;
-        if ($slots === [] && !$faltaElegirEmpleado) {
-            foreach ($fechasDisponibles as $opcion) {
-                if ($opcion <= $fecha) {
-                    continue;
-                }
-                if (FechaBloqueada::estaBloqueada((int) $negocio['id'], $opcion)) {
-                    continue;
-                }
-                $ocupadosOpcion = Cita::ocupadosEnFecha((int) $negocio['id'], $opcion, null, $empleadoElegido['id'] ?? null);
-                $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion);
-                if ($slotsOpcion !== []) {
-                    $proximoDisponible = ['fecha' => $opcion, 'hora' => $slotsOpcion[0]];
-                    break;
+        $horaElegida = (string) ($_GET['hora'] ?? '');
+        $slotValido = false;
+        $disponibilidadError = false;
+
+        // Todo lo que depende de la base de datos para calcular
+        // disponibilidad va envuelto aquí: si algo falla (conexión caída,
+        // dato corrupto en horario_atencion), el cliente ve un mensaje
+        // honesto con un botón de reintentar en vez de una pantalla en
+        // blanco o un error de PHP crudo.
+        try {
+            $horario = Sede::horario($negocio);
+            $intervalo = (int) $negocio['intervalo_citas_min'];
+            $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
+
+            if (!$bloqueada && !$faltaElegirEmpleado) {
+                $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoElegido['id'] ?? null);
+                $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados);
+            }
+
+            $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
+
+            // Distingue "este día no se atiende" (horario sin ese día) de
+            // "todo ocupado ese día", para no decirle al cliente "sin cupos"
+            // cuando en realidad el negocio ni siquiera abre.
+            $cerradoEseDia = !$bloqueada && !$faltaElegirEmpleado && !isset($horario[(string) (int) date('N', strtotime($fecha))]);
+
+            // Sin cupos hoy: antes de mandar al cliente directo a la lista de
+            // espera, se busca el próximo día con hueco real (mismo horario,
+            // misma duración, mismo empleado si aplica) para ofrecerlo como
+            // salida principal. Acotado a los mismos 14 días de arriba, así el
+            // costo (una consulta de disponibilidad por día) tiene techo.
+            if ($slots === [] && !$faltaElegirEmpleado) {
+                foreach ($fechasDisponibles as $opcion) {
+                    if ($opcion <= $fecha) {
+                        continue;
+                    }
+                    if (FechaBloqueada::estaBloqueada((int) $negocio['id'], $opcion)) {
+                        continue;
+                    }
+                    $ocupadosOpcion = Cita::ocupadosEnFecha((int) $negocio['id'], $opcion, null, $empleadoElegido['id'] ?? null);
+                    $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion);
+                    if ($slotsOpcion !== []) {
+                        $proximoDisponible = ['fecha' => $opcion, 'hora' => $slotsOpcion[0]];
+                        break;
+                    }
                 }
             }
+        } catch (\Throwable $e) {
+            $disponibilidadError = true;
+            $slots = [];
+            $proximoDisponible = null;
+            $slotValido = false;
         }
 
         ver('tienda/reservar', [
@@ -180,6 +194,7 @@ class TiendaController
             'slots'             => $slots,
             'bloqueada'         => $bloqueada,
             'cerradoEseDia'     => $cerradoEseDia,
+            'disponibilidadError' => $disponibilidadError,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
             // Solo viene con valor justo después de unirse a la lista de

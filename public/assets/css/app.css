@@ -51,7 +51,10 @@ button { font-family: inherit; }
 .pq-serif { font-family: 'Instrument Serif', serif; }
 
 .pq-panel-bg { background: var(--tiquete); color: var(--carbon); }
-.pq-tienda-bg { background: var(--papel); color: var(--tinta); font-family: 'Inter Tight', sans-serif; }
+.pq-tienda-bg { background: var(--papel); color: var(--tinta); font-family: 'Inter Tight', sans-serif; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  .pq-tienda-bg { scroll-behavior: auto; }
+}
 
 /* ---------- layout ---------- */
 
@@ -783,7 +786,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
    en pedidos/citas), los chips de fecha en reservar.php SÍ son botones — un
    blanco real (no el mismo crema del fondo) para que se noten como
    superficies táctiles, con un borde que se oscurece al tocar/hover. */
-.pq-chip-dia { border: 1px solid #E4DDD1; background: #FFFFFF; font-weight: 600; }
+.pq-chip-dia { border: 1.5px solid #D8CDBC; background: #FFFFFF; font-weight: 600; }
 .pq-chip-dia:hover, .pq-chip-dia:focus-visible { border-color: var(--tinta); }
 /* El chip de fecha activo reusa .pq-chip-caja (mismo mint que el resto de
    la app) pero con más definición: borde del mismo verde y texto más
@@ -799,8 +802,9 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
-  mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  margin-right: -6px;
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent 100%);
 }
 .pq-dias-scroll::-webkit-scrollbar { display: none; }
 
@@ -849,7 +853,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   font-weight: 700;
   letter-spacing: .06em;
   color: var(--gris-suave);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   display: block;
 }
 .pq-slot {
@@ -904,8 +908,10 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
    <details> pero envía el <form> real de afuera vía el atributo form="…"
    (asociación nativa de HTML5, funciona sin JS). "Cancelar" es type=button
    (nunca envía nada); con JS además colapsa el <details> — sin JS el
-   usuario solo tiene que tocar el resumen de nuevo para cerrarlo. */
-.pq-salir-confirm { margin-top: 12px; }
+   usuario solo tiene que tocar el resumen de nuevo para cerrarlo.
+   Deliberadamente gris y liviano (no negro): es secundaria dentro de una
+   tarjeta de éxito, no debería competir con "Estás en la lista de espera". */
+.pq-salir-confirm { margin-top: 10px; }
 .pq-salir-confirm > summary {
   list-style: none;
   cursor: pointer;
@@ -913,19 +919,56 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--gris-suave);
   padding: 6px 2px;
   min-height: 32px;
 }
 .pq-salir-confirm > summary::-webkit-details-marker { display: none; }
 .pq-salir-confirm > summary:hover { color: var(--tinta); }
+
+/* La confirmación sube como hoja desde abajo (bottom sheet) en vez de
+   crecer dentro de la tarjeta verde — "tarjeta → tarjeta → botones" se
+   sentía como demasiadas capas anidadas. El fondo oscurecido usa :has()
+   (ya es una técnica establecida en esta hoja de estilos, ver
+   .pq-content-tienda:has(.pq-checkout-sticky)) con pointer-events: none
+   para que, sin JS, seguir tocando el resumen abierto lo cierre igual
+   — la única vía de cierre sin JS, ya que un <details> no tiene backdrop
+   nativo como <dialog>. */
+.pq-content-tienda:has(.pq-salir-confirm[open])::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 26, 23, .45);
+  z-index: 40;
+  pointer-events: none;
+  animation: pqFundido .15s ease;
+}
 .pq-salir-confirm-caja {
-  margin-top: 8px;
-  padding: 12px;
+  padding: 16px;
   background: #FFFFFF;
   border: 1px solid #BFE4CC;
   border-radius: 10px;
+}
+.pq-salir-confirm[open] .pq-salir-confirm-caja {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  max-width: 480px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid var(--recibo);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -10px 30px rgba(27, 26, 23, .18);
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: pqHojaSube .2s ease;
+}
+@keyframes pqHojaSube { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes pqFundido { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .pq-salir-confirm[open] .pq-salir-confirm-caja, .pq-content-tienda:has(.pq-salir-confirm[open])::after { animation: none; }
 }
 
 /* Cabecera de las pantallas de reserva/reprogramar: el mismo fondo crema
@@ -945,7 +988,32 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   text-decoration: none;
 }
 .pq-volver:hover { color: var(--sello); }
+.pq-volver:active { background: var(--recibo); border-radius: 8px; }
 .pq-volver svg { flex-shrink: 0; }
+
+/* El form de confirmación aparece de golpe apenas se elige un horario
+   (recarga completa de página, no hay transición de "antes/después" como
+   en una SPA) — una entrada corta evita que se sienta como contenido que
+   salta a la pantalla. */
+#confirmar { animation: pqApareceSuave .2s ease; }
+@keyframes pqApareceSuave { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  #confirmar { animation: none; }
+}
+
+/* Feedback de "cargando" al cambiar de fecha (reservar.php, progresivo):
+   la navegación es una recarga completa de página — no hay nada que
+   "esperar" de verdad — pero atenuar el bloque de disponibilidad apenas
+   se toca un chip de fecha evita que el toque se sienta sin respuesta
+   durante el instante antes de que cargue la página siguiente. Sin JS
+   simplemente no se aplica, la navegación nativa sigue funcionando igual. */
+.pq-disponibilidad-cargando { opacity: .4; pointer-events: none; transition: opacity .15s ease; }
+
+/* Estado de error al calcular disponibilidad (reservar.php): defensivo —
+   si algo falla al consultar el horario/las citas ocupadas, esto se
+   muestra en vez de un error crudo o una pantalla en blanco. */
+.pq-disponibilidad-error { background: #FBE3E0; border: 1px solid #F3C4BC; border-radius: 10px; padding: 14px; }
+.pq-disponibilidad-error-titulo { font-size: 14px; font-weight: 700; color: #9c2c17; display: block; }
 
 /* ---------- estadísticas del panel ---------- */
 
@@ -1522,7 +1590,8 @@ a.pq-stat:hover { border-color: var(--sello); }
   font-weight: 600;
   color: var(--carbon);
   padding: 10px 12px;
-  border: 1px dashed var(--borde);
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -1532,7 +1601,7 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-lista-espera-detalle > summary::after { content: "+"; font-size: 16px; color: var(--gris-suave); }
 .pq-lista-espera-detalle[open] > summary::after { content: "–"; }
 .pq-lista-espera-detalle[open] > summary { border-radius: 10px 10px 0 0; border-bottom: none; }
-.pq-lista-espera-detalle[open] form { padding: 12px; border: 1px dashed var(--borde); border-top: none; border-radius: 0 0 10px 10px; }
+.pq-lista-espera-detalle[open] form { padding: 12px; background: var(--tiquete); border: 1px solid var(--recibo); border-top: none; border-radius: 0 0 10px 10px; }
 
 /* Pasos numerados de pago (pedido_confirmado.php / cita_confirmada.php):
    la llave, la referencia y "envía el comprobante" eran un bloque de texto
