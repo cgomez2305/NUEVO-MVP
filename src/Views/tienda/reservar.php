@@ -4,9 +4,16 @@
 
 <?php
 $diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+$diasLargo = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+$diasPlural = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
+$mesesCorto = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '';
 $fechaEsHoy = $fecha === date('Y-m-d');
 $nombreDia = static fn (string $f) => $f === date('Y-m-d') ? 'hoy' : $diasCorto[(int) date('w', strtotime($f))] . ' ' . date('d', strtotime($f));
+$fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string {
+    $ts = strtotime($f);
+    return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts) . ' ' . $mesesCorto[(int) date('n', $ts) - 1] . '.';
+};
 ?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
@@ -36,11 +43,11 @@ $nombreDia = static fn (string $f) => $f === date('Y-m-d') ? 'hoy' : $diasCorto[
 
   <div id="elige-dia" style="margin-top: 20px; scroll-margin-top: 16px">
     <span class="pq-label">Elige el día</span>
-    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 8px">
+    <div class="pq-dias-scroll" style="display: flex; gap: 8px; padding-bottom: 6px; margin-top: 8px">
       <?php foreach ($fechasDisponibles as $opcion): ?>
         <?php $esHoy = $opcion === date('Y-m-d'); $activo = $opcion === $fecha; ?>
         <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado) ?>"
-           class="pq-chip <?= $activo ? 'pq-chip-caja' : '' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0; min-height: 32px; display: inline-flex; align-items: center">
+           class="pq-chip <?= $activo ? 'pq-chip-caja' : 'pq-chip-dia' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0; min-height: 32px; display: inline-flex; align-items: center">
           <?= $esHoy ? 'Hoy' : e($diasCorto[(int) date('w', strtotime($opcion))] . ' ' . date('d', strtotime($opcion))) ?>
         </a>
       <?php endforeach; ?>
@@ -56,30 +63,41 @@ $nombreDia = static fn (string $f) => $f === date('Y-m-d') ? 'hoy' : $diasCorto[
       <p class="pq-ayuda" style="margin-top: 10px"><?= e(nombre_publico_sede($negocio)) ?> no atiende ese día. Elige otra fecha.</p>
     <?php elseif ($slots === []): ?>
 
-      <?php if ($proximoDisponible !== null): ?>
-        <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E7E0CF">
-          <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">NO HAY CUPOS PARA <?= mb_strtoupper(e($nombreDia($fecha))) ?></span>
-          <p style="font-size: 14px; margin-top: 4px">El próximo horario disponible es <strong><?= e(fecha_larga($proximoDisponible['fecha'])) ?> a las <?= e($proximoDisponible['hora']) ?></strong>.</p>
+      <?php
+        $diaSemanaIdx = (int) date('w', strtotime($fecha));
+        if ($cerradoEseDia) {
+            $tituloSinCupos = nombre_publico_sede($negocio) . ' no atiende los ' . $diasPlural[$diaSemanaIdx] . '.';
+        } elseif ($fechaEsHoy) {
+            $tituloSinCupos = 'Sin cupos para hoy';
+        } else {
+            $tituloSinCupos = 'Sin cupos para ' . $diasLargo[$diaSemanaIdx] . ' ' . (int) date('j', strtotime($fecha));
+        }
+      ?>
+      <div class="pq-card" style="margin-top: 10px; background: #FFFFFF; border: 1px solid #E7E0CF">
+        <span style="font-size: 14px; font-weight: 700"><?= e($tituloSinCupos) ?></span>
+        <?php if ($proximoDisponible !== null): ?>
+          <div style="margin-top: 10px">
+            <span class="pq-ayuda" style="display: block">Próximo disponible</span>
+            <span style="font-size: 14px; font-weight: 600"><?= e($fechaCorta($proximoDisponible['fecha'])) ?> · <?= e(hora_legible($proximoDisponible['hora'])) ?></span>
+          </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 10px; width: auto">Ver ese horario</a>
-        </div>
-      <?php else: ?>
-        <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
-      <?php endif; ?>
-
-      <a href="#elige-dia" class="pq-mono" style="display: inline-block; margin-top: 10px; font-size: 12px; color: var(--gris-suave); text-decoration: underline">Elegir otro día</a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 12px; width: auto">Reservar <?= e(hora_legible($proximoDisponible['hora'])) ?> →</a>
+        <?php else: ?>
+          <p class="pq-ayuda" style="margin-top: 6px">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
+        <?php endif; ?>
+      </div>
 
       <?php if (!empty($ok)): ?>
         <div class="pq-card" style="margin-top: 14px; background: #FFFFFF; border: 1px solid #E7E0CF">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg>
           <span style="display: block; font-size: 14px; font-weight: 700; margin-top: 6px">Estás en la lista de espera</span>
-          <p class="pq-ayuda" style="margin-top: 4px">Te escribiremos por WhatsApp si se libera un horario para <strong><?= e($servicio['nombre']) ?></strong> el <?= e(fecha_larga($fecha)) ?>.</p>
+          <p class="pq-ayuda" style="margin-top: 4px">Te escribiremos por WhatsApp si se libera un cupo de <strong><?= e($servicio['nombre']) ?></strong> <?= $fechaEsHoy ? 'hoy' : 'el ' . e(fecha_larga($fecha)) ?>.</p>
         </div>
       <?php else: ?>
         <details class="pq-lista-espera-detalle" style="margin-top: 14px">
-          <summary>¿Quieres que te avisemos si alguien cancela?</summary>
+          <summary>Avísame si se libera un cupo</summary>
           <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/lista-espera')) ?>" id="pq-form-lista-espera" style="margin-top: 12px">
-            <p class="pq-ayuda">Te escribiremos por WhatsApp si aparece disponibilidad para <strong><?= e(fecha_larga($fecha)) ?></strong>.</p>
+            <p class="pq-ayuda">Para <?= $fechaEsHoy ? 'hoy, ' : '' ?><?= e(fecha_larga($fecha)) ?>.</p>
             <?= csrf_campo() ?>
             <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
             <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
@@ -98,11 +116,11 @@ $nombreDia = static fn (string $f) => $f === date('Y-m-d') ? 'hoy' : $diasCorto[
             <label class="pq-consentimiento pq-consentimiento-requerido" style="margin-bottom: 12px">
               <input type="checkbox" name="autorizo_datos" value="1" required>
               <span>
-                <span class="pq-consentimiento-titulo">Uso de datos para avisarte de este cupo</span>
-                <span class="pq-ayuda" style="margin-top: 1px">Solo te escribimos si se libera un horario — nada de promociones.</span>
+                <span class="pq-consentimiento-titulo">Aviso por WhatsApp si se libera un cupo</span>
+                <span class="pq-ayuda" style="margin-top: 1px">Solo te escribimos si se libera un cupo — nada de promociones.</span>
               </span>
             </label>
-            <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico" style="width: 100%">Anotarme en la lista</button>
+            <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico" style="width: 100%">Avisarme si se libera un cupo</button>
           </form>
         </details>
       <?php endif; ?>

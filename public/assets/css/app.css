@@ -779,6 +779,27 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-chip-pendiente { background: #FDF1DA; color: #8a5a00; }
 .pq-chip-cancelado { background: #FBE3E0; color: #9c2c17; }
 
+/* A diferencia de .pq-chip como insignia de estado (no interactiva, se usa
+   en pedidos/citas), los chips de fecha en reservar.php SÍ son botones —
+   necesitan un borde sutil para no leerse como "deshabilitados" entre
+   tantos chips beige planos por toda la app. */
+.pq-chip-dia { border: 1px solid var(--recibo); background: var(--papel); }
+.pq-chip-dia:hover, .pq-chip-dia:focus-visible { border-color: var(--tinta); }
+
+/* Carrusel de fechas (reservar.php): con 14 opciones casi siempre hay más
+   chips de los que caben en pantalla. El fundido a la derecha (en vez de
+   una flecha o un JS que detecte scroll) avisa "hay más" sin depender de
+   JavaScript, y se oculta la scrollbar nativa para que no compita con el
+   fundido. */
+.pq-dias-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+}
+.pq-dias-scroll::-webkit-scrollbar { display: none; }
+
 /* ---------- estadísticas del panel ---------- */
 
 .pq-stats { display: flex; gap: 10px; margin-top: 16px; }

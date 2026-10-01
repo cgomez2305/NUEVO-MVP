@@ -132,6 +132,11 @@ class TiendaController
         $horaElegida = (string) ($_GET['hora'] ?? '');
         $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
 
+        // Distingue "este día no se atiende" (horario sin ese día) de
+        // "todo ocupado ese día", para no decirle al cliente "sin cupos"
+        // cuando en realidad el negocio ni siquiera abre.
+        $cerradoEseDia = !$bloqueada && !$faltaElegirEmpleado && !isset($horario[(string) (int) date('N', strtotime($fecha))]);
+
         // Los próximos 14 días, para que el cliente pueda cambiar de fecha sin escribirla a mano.
         $fechasDisponibles = [];
         for ($i = 0; $i < 14; $i++) {
@@ -174,6 +179,7 @@ class TiendaController
             'faltaElegirEmpleado' => $faltaElegirEmpleado,
             'slots'             => $slots,
             'bloqueada'         => $bloqueada,
+            'cerradoEseDia'     => $cerradoEseDia,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
             'ok'                => flash_obtener('ok'),

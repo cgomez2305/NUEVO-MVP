@@ -13,11 +13,11 @@
 
   <div style="margin-top: 20px">
     <span class="pq-label">Elige el día</span>
-    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 8px">
+    <div class="pq-dias-scroll" style="display: flex; gap: 8px; padding-bottom: 6px; margin-top: 8px">
       <?php foreach ($fechasDisponibles as $opcion): ?>
         <?php $esHoy = $opcion === date('Y-m-d'); $activo = $opcion === $fecha; ?>
         <a href="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/reprogramar')) . '?fecha=' . $opcion ?>"
-           class="pq-chip <?= $activo ? 'pq-chip-caja' : '' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0">
+           class="pq-chip <?= $activo ? 'pq-chip-caja' : 'pq-chip-dia' ?>" style="text-decoration: none; white-space: nowrap; flex-shrink: 0">
           <?= $esHoy ? 'Hoy' : e($diasCorto[(int) date('w', strtotime($opcion))] . ' ' . date('d', strtotime($opcion))) ?>
         </a>
       <?php endforeach; ?>
