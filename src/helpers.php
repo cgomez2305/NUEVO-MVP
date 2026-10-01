@@ -166,6 +166,16 @@ function fecha_corta(string $fechaHora, string $separador = ' · '): string
     return $fecha . $separador . date('g:i', $ts) . ' ' . $meridiano;
 }
 
+/** "miércoles 30 de septiembre" — fecha larga en español, para confirmaciones y listas de espera donde el día de la semana importa más que la hora. */
+function fecha_larga(string $fechaIso): string
+{
+    $dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $ts = strtotime($fechaIso) ?: 0;
+
+    return $dias[(int) date('w', $ts)] . ' ' . (int) date('j', $ts) . ' de ' . $meses[(int) date('n', $ts) - 1];
+}
+
 function chip_estado(string $estado): string
 {
     return match ($estado) {
@@ -254,6 +264,38 @@ function nombre_publico_sede(array $sede): string
 }
 
 /**
+ * Si la sede está abierta en este preciso momento, según su horario crudo
+ * (día ISO 1=lunes..7=domingo => [inicio, fin], igual que Sede::horario()
+ * — no el ya agrupado de horario_resumen()). Null si el negocio no tiene
+ * horario configurado: en ese caso no hay nada honesto que mostrar.
+ *
+ * @param array<string, array{0:string,1:string}> $horario
+ * @return array{abierto: bool, desde: ?string, hasta: ?string}|null
+ */
+function negocio_abierto_ahora(array $horario): ?array
+{
+    if ($horario === []) {
+        return null;
+    }
+    $diaHoy = (string) date('N');
+    if (!isset($horario[$diaHoy])) {
+        return ['abierto' => false, 'desde' => null, 'hasta' => null];
+    }
+    [$inicio, $fin] = $horario[$diaHoy];
+    $ahora = date('H:i');
+    return ['abierto' => $ahora >= $inicio && $ahora < $fin, 'desde' => $inicio, 'hasta' => $fin];
+}
+
+/** "18:00" → "6:00 p. m." (sin minutos si son :00 → "6 p. m."). */
+function hora_legible(string $hora): string
+{
+    $ts = strtotime($hora) ?: 0;
+    $minutos = date('i', $ts);
+    $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
+    return date('g', $ts) . ($minutos !== '00' ? ':' . $minutos : '') . ' ' . $meridiano;
+}
+
+/**
  * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
  * legibles, uniendo días consecutivos con el mismo horario en un solo rango
  * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir no
@@ -267,13 +309,6 @@ function horario_resumen(array $horario): array
 {
     $dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-    $hora12 = static function (string $hora): string {
-        $ts = strtotime($hora) ?: 0;
-        $minutos = date('i', $ts);
-        $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
-        return date('g', $ts) . ($minutos !== '00' ? ':' . $minutos : '') . ' ' . $meridiano;
-    };
-
     $lineas = [];
     $inicioGrupo = 1;
     $rangoActual = null;
@@ -284,7 +319,7 @@ function horario_resumen(array $horario): array
 
         if ($cambia && $rangoActual !== null) {
             $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
-            $lineas[] = ['dia' => $nombre, 'rango' => $hora12($rangoActual[0]) . ' - ' . $hora12($rangoActual[1])];
+            $lineas[] = ['dia' => $nombre, 'rango' => hora_legible($rangoActual[0]) . ' - ' . hora_legible($rangoActual[1])];
         }
         if ($cambia) {
             $inicioGrupo = $dia;

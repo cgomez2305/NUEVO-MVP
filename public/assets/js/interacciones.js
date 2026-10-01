@@ -242,6 +242,145 @@
   });
 
   // ---------------------------------------------------------------------
+  // Validación con mensajes propios bajo cada campo (checkout, reserva y
+  // lista de espera), en vez del globo genérico del navegador o de un
+  // alert(). Un solo motor reusado por los tres forms de la tienda pública
+  // que piden nombre/WhatsApp — ver activarValidacionFormulario() más abajo
+  // y sus tres usos en los bloques DOMContentLoaded siguientes.
+  // ---------------------------------------------------------------------
+  function soloDigitos(valor) { return (valor || '').replace(/\D+/g, ''); }
+  function telefonoColombianoValido(valor) {
+    var digitos = soloDigitos(valor);
+    return digitos.length === 10 && digitos.charAt(0) === '3';
+  }
+
+  // El mensaje de error va DESPUÉS del contenedor visual del campo, no
+  // después del <input> crudo: para el teléfono eso es el wrapper con el
+  // prefijo +57 (si no, el texto quedaría apretado como un tercer item de
+  // esa fila en vez de en su propia línea); para el consentimiento, la
+  // tarjeta completa del checkbox.
+  function contenedorDe(campo) {
+    return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo;
+  }
+
+  function limpiarErrorCampo(campo) {
+    campo.classList.remove('pq-input-invalido');
+    campo.removeAttribute('aria-invalid');
+    var siguiente = contenedorDe(campo).nextElementSibling;
+    if (siguiente && siguiente.classList.contains('pq-campo-error')) siguiente.remove();
+  }
+
+  function mostrarErrorCampo(campo, mensaje, enLabel) {
+    limpiarErrorCampo(campo);
+    if (!enLabel) campo.classList.add('pq-input-invalido');
+    campo.setAttribute('aria-invalid', 'true');
+    var error = document.createElement('span');
+    error.className = 'pq-campo-error';
+    error.textContent = mensaje;
+    contenedorDe(campo).insertAdjacentElement('afterend', error);
+  }
+
+  function tipoEntregaDe(form) {
+    var el = form.querySelector('[name="tipo_entrega"]:checked');
+    return el ? el.value : 'domicilio';
+  }
+
+  // Reglas reusables: cada una recibe el <form> y devuelve un mensaje de
+  // error (string) o null si el campo está bien.
+  function errorRequerido(form, selector, mensaje) {
+    var campo = form.querySelector(selector);
+    return campo && campo.value.trim() === '' ? mensaje : null;
+  }
+  function errorNombre(form, selector) {
+    return errorRequerido(form, selector || '#nombre', 'Escribe tu nombre para continuar.');
+  }
+  function errorTelefono(form, selector) {
+    var campo = form.querySelector(selector || '#telefono');
+    if (!campo) return null;
+    if (campo.value.trim() === '') return 'Escribe tu WhatsApp para continuar.';
+    return telefonoColombianoValido(campo.value) ? null : 'Ingresa un número de WhatsApp válido.';
+  }
+
+  // { id, selector, obtenerError(form) => string|null, enLabel }
+  function regla(id, selector, obtenerError) {
+    return { id: id, selector: selector, obtenerError: obtenerError };
+  }
+  function reglaConsentimiento(mensaje) {
+    return {
+      id: 'autorizo_datos', selector: '[name="autorizo_datos"]', enLabel: true,
+      obtenerError: function (f) {
+        var campo = f.querySelector('[name="autorizo_datos"]');
+        return campo && !campo.checked ? mensaje : null;
+      },
+    };
+  }
+
+  /**
+   * Conecta un <form> a validación progresiva: nada se marca en rojo al
+   * cargar, un campo se valida la primera vez que pierde el foco (queda
+   * "tocado") y de ahí en adelante se corrige en vivo mientras se escribe.
+   * Al enviar, se marca todo como tocado y se muestran los errores que
+   * sigan pendientes, con scroll al primero. novalidate solo lo pone JS:
+   * sin JS, el navegador sigue validando con los required/maxlength de
+   * siempre — esto es una mejora encima, no la única red de seguridad.
+   *
+   * opciones.revalidarConCambioDe: nombres de radio/select cuyo cambio
+   * puede volver requerido (o no) un campo ya tocado — p. ej. elegir
+   * "recoger" en vez de "domicilio" debe soltar el error de Dirección de
+   * inmediato, no esperar a que ese campo pierda el foco otra vez.
+   */
+  function activarValidacionFormulario(form, reglas, opciones) {
+    form.setAttribute('novalidate', 'novalidate');
+    var tocados = {};
+
+    function revalidar(r) {
+      var campo = form.querySelector(r.selector);
+      if (!campo) return;
+      var mensaje = r.obtenerError(form);
+      if (mensaje) mostrarErrorCampo(campo, mensaje, r.enLabel);
+      else limpiarErrorCampo(campo);
+    }
+
+    reglas.forEach(function (r) {
+      var campo = form.querySelector(r.selector);
+      if (!campo) return;
+      var evento = r.enLabel ? 'change' : 'blur';
+      campo.addEventListener(evento, function () { tocados[r.id] = true; revalidar(r); });
+      campo.addEventListener('input', function () { if (tocados[r.id]) revalidar(r); });
+    });
+
+    var disparadores = (opciones && opciones.revalidarConCambioDe) || [];
+    disparadores.forEach(function (nombre) {
+      form.querySelectorAll('[name="' + nombre + '"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          reglas.forEach(function (r) { if (tocados[r.id]) revalidar(r); });
+        });
+      });
+    });
+
+    form.addEventListener('submit', function (evento) {
+      var errores = [];
+      reglas.forEach(function (r) {
+        var campo = form.querySelector(r.selector);
+        if (!campo) return;
+        var mensaje = r.obtenerError(form);
+        if (mensaje) errores.push({ campo: campo, mensaje: mensaje, enLabel: r.enLabel });
+      });
+      if (errores.length === 0) return;
+
+      evento.preventDefault();
+      reglas.forEach(function (r) { tocados[r.id] = true; });
+      errores.forEach(function (error, indice) {
+        mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
+        if (indice === 0) {
+          contenedorDe(error.campo).scrollIntoView({ block: 'center', behavior: 'smooth' });
+          error.campo.focus();
+        }
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // Borrador del checkout público (nombre/WhatsApp/dirección): conveniencia
   // del navegador (localStorage), nunca algo que el servidor necesite leer.
   // Se guarda mientras la persona escribe (no solo al enviar con éxito), así
@@ -280,141 +419,41 @@
     formPedido.addEventListener('input', guardarBorrador);
     formPedido.addEventListener('submit', guardarBorrador);
 
-    // ---------------------------------------------------------------------
-    // Validación del checkout con mensajes propios bajo cada campo, en vez
-    // del globo genérico del navegador ("Rellena este campo") o de un
-    // alert(). novalidate solo lo pone JS: sin JS, el navegador sigue
-    // validando con los required/maxlength de siempre (ver fallback más
-    // abajo) — esto es una mejora encima, no la única red de seguridad.
-    // ---------------------------------------------------------------------
-    formPedido.setAttribute('novalidate', 'novalidate');
+    activarValidacionFormulario(formPedido, [
+      regla('nombre', '#nombre', errorNombre),
+      regla('telefono', '#telefono', errorTelefono),
+      regla('direccion', '#direccion', function (f) {
+        return tipoEntregaDe(f) === 'domicilio' ? errorRequerido(f, '#direccion', 'Necesitamos una dirección para el domicilio.') : null;
+      }),
+      regla('mesa', '#mesa', function (f) {
+        return tipoEntregaDe(f) === 'mesa' ? errorRequerido(f, '#mesa', 'Escribe tu número de mesa.') : null;
+      }),
+      reglaConsentimiento('Debes aceptar el uso de datos para procesar el pedido.'),
+    ], { revalidarConCambioDe: ['tipo_entrega'] });
+  });
 
-    function soloDigitos(valor) { return (valor || '').replace(/\D+/g, ''); }
-    function telefonoColombianoValido(valor) {
-      var digitos = soloDigitos(valor);
-      return digitos.length === 10 && digitos.charAt(0) === '3';
+  // ---------------------------------------------------------------------
+  // Validación de los forms de reserva y lista de espera (reservar.php):
+  // mismas reglas y mismo comportamiento progresivo que el checkout de
+  // arriba, sin duplicar la lógica — ver activarValidacionFormulario().
+  // ---------------------------------------------------------------------
+  document.addEventListener('DOMContentLoaded', function () {
+    var formReserva = document.getElementById('pq-form-reserva');
+    if (formReserva) {
+      activarValidacionFormulario(formReserva, [
+        regla('nombre', '#nombre', errorNombre),
+        regla('telefono', '#telefono', errorTelefono),
+        reglaConsentimiento('Debes aceptar el uso de datos para continuar.'),
+      ]);
     }
 
-    // El mensaje de error va DESPUÉS del contenedor visual del campo, no
-    // después del <input> crudo: para el teléfono eso es el wrapper con el
-    // prefijo +57 (si no, el texto quedaría apretado como un tercer item
-    // de esa fila en vez de en su propia línea); para el consentimiento,
-    // la tarjeta completa del checkbox.
-    function contenedorDe(campo) {
-      return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo;
+    var formListaEspera = document.getElementById('pq-form-lista-espera');
+    if (formListaEspera) {
+      activarValidacionFormulario(formListaEspera, [
+        regla('nombre', '#le-nombre', function (f) { return errorRequerido(f, '#le-nombre', 'Escribe tu nombre para continuar.'); }),
+        regla('telefono', '#le-telefono', function (f) { return errorTelefono(f, '#le-telefono'); }),
+        reglaConsentimiento('Debes aceptar el uso de datos para continuar.'),
+      ]);
     }
-
-    function limpiarErrorCampo(campo) {
-      campo.classList.remove('pq-input-invalido');
-      campo.removeAttribute('aria-invalid');
-      var siguiente = contenedorDe(campo).nextElementSibling;
-      if (siguiente && siguiente.classList.contains('pq-campo-error')) siguiente.remove();
-    }
-
-    function mostrarErrorCampo(campo, mensaje, enLabel) {
-      limpiarErrorCampo(campo);
-      if (!enLabel) campo.classList.add('pq-input-invalido');
-      campo.setAttribute('aria-invalid', 'true');
-      var error = document.createElement('span');
-      error.className = 'pq-campo-error';
-      error.textContent = mensaje;
-      contenedorDe(campo).insertAdjacentElement('afterend', error);
-    }
-
-    // Una sola regla por campo, reusada tanto al validar-en-vivo (blur) como
-    // al intentar enviar — evita que las dos rutas puedan quedar distintas.
-    function validarCampo(id) {
-      var tipoEntregaEl = formPedido.querySelector('[name="tipo_entrega"]:checked');
-      var tipoEntrega = tipoEntregaEl ? tipoEntregaEl.value : 'domicilio';
-
-      if (id === 'nombre') {
-        var nombre = formPedido.querySelector('#nombre');
-        if (nombre && nombre.value.trim() === '') {
-          return { campo: nombre, mensaje: 'Escribe tu nombre para continuar.' };
-        }
-      }
-      if (id === 'telefono') {
-        var telefono = formPedido.querySelector('#telefono');
-        if (telefono && telefono.value.trim() === '') {
-          return { campo: telefono, mensaje: 'Escribe tu WhatsApp para continuar.' };
-        }
-        if (telefono && !telefonoColombianoValido(telefono.value)) {
-          return { campo: telefono, mensaje: 'Ingresa un número de WhatsApp válido.' };
-        }
-      }
-      if (id === 'direccion' && tipoEntrega === 'domicilio') {
-        var direccion = formPedido.querySelector('#direccion');
-        if (direccion && direccion.value.trim() === '') {
-          return { campo: direccion, mensaje: 'Necesitamos una dirección para el domicilio.' };
-        }
-      }
-      if (id === 'mesa' && tipoEntrega === 'mesa') {
-        var mesa = formPedido.querySelector('#mesa');
-        if (mesa && mesa.value.trim() === '') {
-          return { campo: mesa, mensaje: 'Escribe tu número de mesa.' };
-        }
-      }
-      if (id === 'autorizo_datos') {
-        var autorizo = formPedido.querySelector('[name="autorizo_datos"]');
-        if (autorizo && !autorizo.checked) {
-          return { campo: autorizo, mensaje: 'Debes aceptar el uso de datos para procesar el pedido.', enLabel: true };
-        }
-      }
-      return null;
-    }
-
-    var IDS_VALIDABLES = ['nombre', 'telefono', 'direccion', 'mesa', 'autorizo_datos'];
-    var SELECTOR_POR_ID = {
-      nombre: '#nombre', telefono: '#telefono', direccion: '#direccion',
-      mesa: '#mesa', autorizo_datos: '[name="autorizo_datos"]',
-    };
-    var tocados = {};
-
-    function revalidarCampo(id) {
-      var campo = formPedido.querySelector(SELECTOR_POR_ID[id]);
-      if (!campo) return;
-      var error = validarCampo(id);
-      if (error) mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
-      else limpiarErrorCampo(campo);
-    }
-
-    // Progresivo a propósito: nada se marca en rojo apenas se carga la
-    // página. Un campo solo se valida la primera vez que pierde el foco
-    // (blur) — ahí queda "tocado" — y de ahí en adelante se corrige en vivo
-    // mientras se escribe. Antes de ese primer blur, escribir no dispara
-    // ningún error aunque el campo esté vacío a mitad de frase.
-    IDS_VALIDABLES.forEach(function (id) {
-      var campo = formPedido.querySelector(SELECTOR_POR_ID[id]);
-      if (!campo) return;
-      var evento = id === 'autorizo_datos' ? 'change' : 'blur';
-      campo.addEventListener(evento, function () { tocados[id] = true; revalidarCampo(id); });
-      campo.addEventListener('input', function () { if (tocados[id]) revalidarCampo(id); });
-    });
-
-    // Cambiar "Cómo lo recibes" puede volver requerido (o dejar de serlo) un
-    // campo que ya estaba tocado — p. ej. pasar de "recoger" a "domicilio"
-    // con Dirección vacía debe avisar de inmediato, no esperar otro blur.
-    formPedido.querySelectorAll('[name="tipo_entrega"]').forEach(function (radio) {
-      radio.addEventListener('change', function () {
-        ['direccion', 'mesa'].forEach(function (id) {
-          if (tocados[id]) revalidarCampo(id);
-        });
-      });
-    });
-
-    formPedido.addEventListener('submit', function (evento) {
-      var errores = IDS_VALIDABLES.map(validarCampo).filter(Boolean);
-      if (errores.length === 0) return;
-
-      evento.preventDefault();
-      IDS_VALIDABLES.forEach(function (id) { tocados[id] = true; });
-      errores.forEach(function (error, indice) {
-        mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
-        if (indice === 0) {
-          contenedorDe(error.campo).scrollIntoView({ block: 'center', behavior: 'smooth' });
-          error.campo.focus();
-        }
-      });
-    });
   });
 })();

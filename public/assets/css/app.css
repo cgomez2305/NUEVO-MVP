@@ -1009,8 +1009,8 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 a.pq-stat { text-decoration: none; display: flex; }
 a.pq-stat:hover { border-color: var(--sello); }
 .pq-btn-icono {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: var(--tiquete);
@@ -1164,8 +1164,8 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-producto-fila { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 2px; }
 .pq-producto-precio { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b6350; }
 .pq-add {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--aji);
   color: #FFFEF9;
@@ -1213,6 +1213,25 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 .pq-fila-carrito-icono { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
 
+/* Fila de servicio (servicios.php): la fila ENTERA es el link a reservar
+   (así no hay que acertarle al botón en una pantalla chica), con "Reservar"
+   como señal visual de que algo es clicable, no como el único destino —
+   pointer-events:none en ese span para que el click lo resuelva siempre la
+   fila, nunca un elemento duplicado dentro. */
+.pq-fila-servicio { text-decoration: none; color: inherit; cursor: pointer; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 10px; transition: background .15s ease; }
+.pq-fila-servicio:hover { background: var(--recibo); }
+
+/* Estado "abierto ahora" bajo el nombre del negocio: calculado de verdad
+   contra el horario de hoy (ver negocio_abierto_ahora() en helpers.php),
+   nunca un texto fijo — si el negocio no tiene horario cargado, no se
+   muestra nada en vez de inventar un estado. */
+.pq-estado-abierto { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 12px; font-weight: 600; }
+.pq-estado-abierto-punto { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pq-estado-abierto-si { color: #16A36A; }
+.pq-estado-abierto-si .pq-estado-abierto-punto { background: #16A36A; }
+.pq-estado-abierto-no { color: var(--gris-suave); }
+.pq-estado-abierto-no .pq-estado-abierto-punto { background: var(--gris-suave); }
+
 /* Fila de producto del carrito (checkout): a diferencia de la fila de
    servicio (una sola línea), acá hay nombre + precio unitario + el stepper
    de cantidad, así que el ícono se alinea arriba en vez de centrado. */
@@ -1223,8 +1242,8 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-stepper { display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--borde); border-radius: 9px; padding: 2px; }
 .pq-stepper form { display: contents; }
 .pq-stepper-boton {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 7px;
   background: transparent;
@@ -1242,8 +1261,8 @@ a.pq-stat:hover { border-color: var(--sello); }
    destructiva, no debería competir visualmente con el stepper). */
 .pq-fila-carrito-eliminar { flex-shrink: 0; margin-top: 2px; }
 .pq-fila-carrito-eliminar button {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1314,6 +1333,49 @@ a.pq-stat:hover { border-color: var(--sello); }
    no se lea como un trámite más al mismo nivel que el opcional de abajo,
    que se queda plano. Mismo lenguaje visual que .pq-aviso-sutil. */
 .pq-consentimiento-requerido { padding: 10px 12px; border-radius: 10px; background: var(--tiquete); border: 1px solid var(--recibo); }
+
+/* Lista de espera en reservar.php: secundaria a propósito frente a "ver el
+   próximo horario" (la salida principal cuando no hay cupos), así que vive
+   colapsada en un <details> — mismo patrón de disclosure que el resto de la
+   app (kebab, "+ Nueva sede") en vez de un form siempre abierto compitiendo
+   visualmente con la alternativa real. */
+.pq-lista-espera-detalle > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--carbon);
+  padding: 10px 12px;
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pq-lista-espera-detalle > summary::-webkit-details-marker { display: none; }
+.pq-lista-espera-detalle > summary::after { content: "+"; font-size: 16px; color: var(--gris-suave); }
+.pq-lista-espera-detalle[open] > summary::after { content: "–"; }
+.pq-lista-espera-detalle[open] > summary { border-radius: 10px 10px 0 0; border-bottom: none; }
+.pq-lista-espera-detalle[open] form { padding: 12px; border: 1px dashed var(--borde); border-top: none; border-radius: 0 0 10px 10px; }
+
+/* Pasos numerados de pago (pedido_confirmado.php / cita_confirmada.php):
+   la llave, la referencia y "envía el comprobante" eran un bloque de texto
+   que había que interpretar; como pasos 1-2-3 con numeración visible se
+   leen de un vistazo y en orden. */
+.pq-paso-pago { display: flex; gap: 12px; align-items: flex-start; }
+.pq-paso-pago-numero {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Caja informativa sutil para avisos tipo "esto puede cambiar" (p. ej. el
    costo de domicilio): un fondo tenue para que no se pierda como texto

@@ -11,8 +11,12 @@
   <?php endif; ?>
 
   <?php if ($carrito['lineas'] === []): ?>
-    <p class="pq-ayuda" style="margin-top: 24px">Aún no has agregado productos.</p>
-    <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-btn pq-btn-oscuro" style="margin-top: 16px">Ver el menú →</a>
+    <div class="pq-centro" style="margin-top: 15vh; max-width: 280px; margin-left: auto; margin-right: auto">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--gris-suave)" stroke-width="1.6" style="margin: 0 auto 14px"><path d="M6 6h15l-1.5 9h-12L6 6Z"/><path d="M6 6 5 2H2"/><circle cx="9" cy="20" r="1.4" fill="var(--gris-suave)" stroke="none"/><circle cx="17" cy="20" r="1.4" fill="var(--gris-suave)" stroke="none"/></svg>
+      <span style="display: block; font-size: 17px; font-weight: 700; color: var(--tinta)">Tu carrito está vacío</span>
+      <p class="pq-ayuda" style="margin-top: 6px">Explora el menú y agrega algo que te guste.</p>
+      <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-btn pq-btn-oscuro" style="margin-top: 18px">Explorar productos →</a>
+    </div>
   <?php else: ?>
 
     <div style="margin-top: 16px" id="pq-carrito-lineas">

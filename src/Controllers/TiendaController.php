@@ -37,6 +37,7 @@ class TiendaController
                 'negocio'         => $negocio,
                 'servicios'       => Servicio::listarPorSede((int) $negocio['id'], true),
                 'horario'         => horario_resumen(Sede::horario($negocio)),
+                'abiertoAhora'    => negocio_abierto_ahora(Sede::horario($negocio)),
                 'metaDescripcion' => $metaDescripcion,
                 'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
@@ -111,6 +112,29 @@ class TiendaController
             $fechasDisponibles[] = date('Y-m-d', strtotime("+{$i} days"));
         }
 
+        // Sin cupos hoy: antes de mandar al cliente directo a la lista de
+        // espera, se busca el próximo día con hueco real (mismo horario,
+        // misma duración, mismo empleado si aplica) para ofrecerlo como
+        // salida principal. Acotado a los mismos 14 días de arriba, así el
+        // costo (una consulta de disponibilidad por día) tiene techo.
+        $proximoDisponible = null;
+        if ($slots === [] && !$faltaElegirEmpleado) {
+            foreach ($fechasDisponibles as $opcion) {
+                if ($opcion <= $fecha) {
+                    continue;
+                }
+                if (FechaBloqueada::estaBloqueada((int) $negocio['id'], $opcion)) {
+                    continue;
+                }
+                $ocupadosOpcion = Cita::ocupadosEnFecha((int) $negocio['id'], $opcion, null, $empleadoElegido['id'] ?? null);
+                $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion);
+                if ($slotsOpcion !== []) {
+                    $proximoDisponible = ['fecha' => $opcion, 'hora' => $slotsOpcion[0]];
+                    break;
+                }
+            }
+        }
+
         ver('tienda/reservar', [
             'titulo'            => 'Reservar ' . $servicio['nombre'] . ' · ' . $negocio['nombre'],
             'negocio'           => $negocio,
@@ -118,6 +142,7 @@ class TiendaController
             'anticipo'          => Servicio::calcularAnticipo($servicio),
             'fecha'             => $fecha,
             'fechasDisponibles' => $fechasDisponibles,
+            'proximoDisponible' => $proximoDisponible,
             'empleados'         => $empleados,
             'empleadoElegido'   => $empleadoElegido,
             'faltaElegirEmpleado' => $faltaElegirEmpleado,
