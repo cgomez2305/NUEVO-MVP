@@ -31,7 +31,12 @@
       <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">
         PAGA POR BRE-B<?= (int) $cita['anticipo_monto'] === 0 ? ' (OPCIONAL)' : '' ?>
       </span>
-      <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor']) ?></strong></span>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+        <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor']) ?></strong></span>
+        <button type="button" class="pq-btn-icono" data-copiar="<?= e($negocio['llave_breb_valor']) ?>" title="Copiar llave" aria-label="Copiar llave" style="width: 30px; height: 30px; flex-shrink: 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
+        </button>
+      </div>
       <?php if ((int) $cita['anticipo_monto'] > 0): ?>
         <span style="font-size: 14px">Monto del anticipo: <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong></span>
       <?php endif; ?>

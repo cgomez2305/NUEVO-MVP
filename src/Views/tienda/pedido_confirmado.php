@@ -46,7 +46,13 @@
     <?php if ($pedido['metodo_pago'] === 'efectivo'): ?>
       <span style="font-size: 14px">Paga en efectivo cuando te entreguen el pedido.</span>
     <?php else: ?>
-      <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor'] ?? $negocio['whatsapp']) ?></strong></span>
+      <?php $llave = (string) ($negocio['llave_breb_valor'] ?? $negocio['whatsapp']); ?>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+        <span style="font-size: 14px">Llave: <strong><?= e($llave) ?></strong></span>
+        <button type="button" class="pq-btn-icono" data-copiar="<?= e($llave) ?>" title="Copiar llave" aria-label="Copiar llave" style="width: 30px; height: 30px; flex-shrink: 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
+        </button>
+      </div>
       <?php if ($pedido['metodo_pago'] === 'breb'): ?>
         <span class="pq-ayuda">Incluye este código en el concepto de tu transferencia: <strong class="pq-mono">VECI-P<?= (int) $pedido['id'] ?></strong></span>
       <?php endif; ?>
