@@ -54,7 +54,7 @@
         <span>Total</span>
         <span class="pq-mono" id="pq-carrito-total"><?= pesos($carrito['total']) ?></span>
       </div>
-      <p class="pq-ayuda" data-mostrar-si="tipo_entrega=domicilio" style="margin-top: 6px">Si el domicilio tiene costo, te lo confirman por WhatsApp — no está incluido arriba.</p>
+      <p class="pq-aviso-sutil" data-mostrar-si="tipo_entrega=domicilio">Si el domicilio tiene costo, te lo confirman por WhatsApp — no está incluido arriba.</p>
     </div>
 
     <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/pedido')) ?>" style="margin-top: 8px" id="pq-form-pedido">
@@ -155,19 +155,19 @@
         </div>
       </div>
 
-      <div class="pq-stack" style="gap: 14px; margin: 20px 0 4px">
-        <label class="pq-consentimiento">
+      <div class="pq-stack" style="gap: 10px; margin: 20px 0 4px">
+        <label class="pq-consentimiento pq-consentimiento-requerido">
           <input type="checkbox" name="autorizo_datos" value="1" required>
           <span>
             <span class="pq-consentimiento-titulo">Uso de datos para gestionar tu pedido</span>
-            <span class="pq-ayuda" style="margin-top: 1px">Necesario para procesar y avisarte sobre este pedido.</span>
+            <span class="pq-ayuda" style="margin-top: 1px">Necesario para procesar el pedido y avisarte sobre cambios.</span>
           </span>
         </label>
         <label class="pq-consentimiento">
           <input type="checkbox" name="acepta_marketing" value="1">
           <span>
-            <span class="pq-consentimiento-titulo">Quiero recibir promociones por WhatsApp</span>
-            <span class="pq-ayuda" style="margin-top: 1px">Opcional.</span>
+            <span class="pq-consentimiento-titulo">Promociones por WhatsApp</span>
+            <span class="pq-ayuda" style="margin-top: 1px">Quiero recibir promociones y novedades. Opcional.</span>
           </span>
         </label>
         <span class="pq-ayuda">Al continuar aceptas nuestra <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.</span>

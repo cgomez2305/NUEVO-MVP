@@ -321,52 +321,93 @@
       contenedorDe(campo).insertAdjacentElement('afterend', error);
     }
 
-    function validar() {
-      var errores = [];
-      var nombre = formPedido.querySelector('#nombre');
-      var telefono = formPedido.querySelector('#telefono');
+    // Una sola regla por campo, reusada tanto al validar-en-vivo (blur) como
+    // al intentar enviar — evita que las dos rutas puedan quedar distintas.
+    function validarCampo(id) {
       var tipoEntregaEl = formPedido.querySelector('[name="tipo_entrega"]:checked');
       var tipoEntrega = tipoEntregaEl ? tipoEntregaEl.value : 'domicilio';
-      var autorizo = formPedido.querySelector('[name="autorizo_datos"]');
 
-      if (nombre && nombre.value.trim() === '') {
-        errores.push({ campo: nombre, mensaje: 'Escribe tu nombre para continuar.' });
-      }
-      if (telefono) {
-        if (telefono.value.trim() === '') {
-          errores.push({ campo: telefono, mensaje: 'Escribe tu WhatsApp para continuar.' });
-        } else if (!telefonoColombianoValido(telefono.value)) {
-          errores.push({ campo: telefono, mensaje: 'Ingresa un número colombiano válido (10 dígitos, empieza en 3).' });
+      if (id === 'nombre') {
+        var nombre = formPedido.querySelector('#nombre');
+        if (nombre && nombre.value.trim() === '') {
+          return { campo: nombre, mensaje: 'Escribe tu nombre para continuar.' };
         }
       }
-      if (tipoEntrega === 'domicilio') {
+      if (id === 'telefono') {
+        var telefono = formPedido.querySelector('#telefono');
+        if (telefono && telefono.value.trim() === '') {
+          return { campo: telefono, mensaje: 'Escribe tu WhatsApp para continuar.' };
+        }
+        if (telefono && !telefonoColombianoValido(telefono.value)) {
+          return { campo: telefono, mensaje: 'Ingresa un número de WhatsApp válido.' };
+        }
+      }
+      if (id === 'direccion' && tipoEntrega === 'domicilio') {
         var direccion = formPedido.querySelector('#direccion');
         if (direccion && direccion.value.trim() === '') {
-          errores.push({ campo: direccion, mensaje: 'Necesitamos una dirección para el domicilio.' });
+          return { campo: direccion, mensaje: 'Necesitamos una dirección para el domicilio.' };
         }
       }
-      if (tipoEntrega === 'mesa') {
+      if (id === 'mesa' && tipoEntrega === 'mesa') {
         var mesa = formPedido.querySelector('#mesa');
         if (mesa && mesa.value.trim() === '') {
-          errores.push({ campo: mesa, mensaje: 'Escribe tu número de mesa.' });
+          return { campo: mesa, mensaje: 'Escribe tu número de mesa.' };
         }
       }
-      if (autorizo && !autorizo.checked) {
-        errores.push({ campo: autorizo, mensaje: 'Acepta el uso de tus datos para continuar.', enLabel: true });
+      if (id === 'autorizo_datos') {
+        var autorizo = formPedido.querySelector('[name="autorizo_datos"]');
+        if (autorizo && !autorizo.checked) {
+          return { campo: autorizo, mensaje: 'Debes aceptar el uso de datos para procesar el pedido.', enLabel: true };
+        }
       }
-      return errores;
+      return null;
     }
 
-    formPedido.querySelectorAll('#nombre, #telefono, #direccion, #mesa, [name="autorizo_datos"]').forEach(function (campo) {
-      campo.addEventListener('input', function () { limpiarErrorCampo(campo); });
-      campo.addEventListener('change', function () { limpiarErrorCampo(campo); });
+    var IDS_VALIDABLES = ['nombre', 'telefono', 'direccion', 'mesa', 'autorizo_datos'];
+    var SELECTOR_POR_ID = {
+      nombre: '#nombre', telefono: '#telefono', direccion: '#direccion',
+      mesa: '#mesa', autorizo_datos: '[name="autorizo_datos"]',
+    };
+    var tocados = {};
+
+    function revalidarCampo(id) {
+      var campo = formPedido.querySelector(SELECTOR_POR_ID[id]);
+      if (!campo) return;
+      var error = validarCampo(id);
+      if (error) mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
+      else limpiarErrorCampo(campo);
+    }
+
+    // Progresivo a propósito: nada se marca en rojo apenas se carga la
+    // página. Un campo solo se valida la primera vez que pierde el foco
+    // (blur) — ahí queda "tocado" — y de ahí en adelante se corrige en vivo
+    // mientras se escribe. Antes de ese primer blur, escribir no dispara
+    // ningún error aunque el campo esté vacío a mitad de frase.
+    IDS_VALIDABLES.forEach(function (id) {
+      var campo = formPedido.querySelector(SELECTOR_POR_ID[id]);
+      if (!campo) return;
+      var evento = id === 'autorizo_datos' ? 'change' : 'blur';
+      campo.addEventListener(evento, function () { tocados[id] = true; revalidarCampo(id); });
+      campo.addEventListener('input', function () { if (tocados[id]) revalidarCampo(id); });
+    });
+
+    // Cambiar "Cómo lo recibes" puede volver requerido (o dejar de serlo) un
+    // campo que ya estaba tocado — p. ej. pasar de "recoger" a "domicilio"
+    // con Dirección vacía debe avisar de inmediato, no esperar otro blur.
+    formPedido.querySelectorAll('[name="tipo_entrega"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        ['direccion', 'mesa'].forEach(function (id) {
+          if (tocados[id]) revalidarCampo(id);
+        });
+      });
     });
 
     formPedido.addEventListener('submit', function (evento) {
-      var errores = validar();
+      var errores = IDS_VALIDABLES.map(validarCampo).filter(Boolean);
       if (errores.length === 0) return;
 
       evento.preventDefault();
+      IDS_VALIDABLES.forEach(function (id) { tocados[id] = true; });
       errores.forEach(function (error, indice) {
         mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
         if (indice === 0) {

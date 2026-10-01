@@ -1310,13 +1310,24 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-consentimiento { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .pq-consentimiento input { margin-top: 3px; flex-shrink: 0; }
 .pq-consentimiento-titulo { display: block; font-size: 13px; font-weight: 600; color: var(--carbon); }
+/* El consentimiento REQUERIDO lleva una caja sutil (fondo + borde) para que
+   no se lea como un trámite más al mismo nivel que el opcional de abajo,
+   que se queda plano. Mismo lenguaje visual que .pq-aviso-sutil. */
+.pq-consentimiento-requerido { padding: 10px 12px; border-radius: 10px; background: var(--tiquete); border: 1px solid var(--recibo); }
+
+/* Caja informativa sutil para avisos tipo "esto puede cambiar" (p. ej. el
+   costo de domicilio): un fondo tenue para que no se pierda como texto
+   gris suelto, pero sin el tono amarillo de advertencia de .pq-alerta-aviso
+   (no es una alerta, es solo contexto). */
+.pq-aviso-sutil { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--tiquete); border: 1px solid var(--recibo); font-size: 12px; color: var(--gris-texto); line-height: 1.4; }
 
 /* Validación del checkout: mensaje propio bajo el campo en vez del globo
    genérico del navegador. Vive junto al resto del checkout porque solo
    interacciones.js la genera (ver validar() ahí) — sin JS, el navegador
    sigue validando con los required/maxlength normales del HTML. */
 .pq-input-invalido { border-color: #9c2c17 !important; }
-.pq-campo-error { display: block; margin-top: 5px; font-size: 12px; color: #9c2c17; }
+.pq-campo-error { display: flex; align-items: flex-start; gap: 5px; margin-top: 4px; font-size: 12px; color: #9c2c17; line-height: 1.35; }
+.pq-campo-error::before { content: "!"; flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; background: #9c2c17; color: #fff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; }
 
 /* Barra de acción FIJA al fondo de la pantalla en el checkout: en un
    formulario largo, el total y el botón de confirmar quedan siempre a la
