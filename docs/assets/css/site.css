@@ -588,7 +588,7 @@ h3{font-size:clamp(16px,.6vw + .95rem,19px)}
 .plan{
   position:relative;background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio-tarjeta);
   padding:30px 26px 26px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--sombra-suave);
-  overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease,border-color .25s ease;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease,border-color .25s ease;
 }
 .plan::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%), var(--tinte-sello), transparent 72%);transition:opacity .35s ease;pointer-events:none}
 .plan:hover::before{opacity:1}
