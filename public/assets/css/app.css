@@ -277,6 +277,9 @@ button { font-family: inherit; }
   text-transform: uppercase;
   color: var(--sello);
 }
+/* login/registro: el eyebrow competía con el h1 por atención. Mismo
+   token, menos peso visual (más chico, color apagado). */
+.pq-eyebrow-sutil { font-size: 11px; color: var(--gris-suave); }
 
 h1.pq-h1 {
   font-family: 'Instrument Serif', serif;
@@ -308,6 +311,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
 .pq-btn:active { transform: scale(.98); }
+.pq-btn:disabled { opacity: .45; cursor: not-allowed; filter: none; box-shadow: none; transform: none; }
 .pq-btn-sello, .pq-btn-caja, .pq-btn-aji, .pq-btn-oscuro { box-shadow: var(--sombra-suave); }
 .pq-btn-sello:hover, .pq-btn-caja:hover, .pq-btn-aji:hover, .pq-btn-oscuro:hover { filter: brightness(1.06); box-shadow: var(--sombra-media); transform: translateY(-1px); }
 .pq-btn-sello:active, .pq-btn-caja:active, .pq-btn-aji:active, .pq-btn-oscuro:active { transform: scale(.98); }
@@ -367,6 +371,23 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   pointer-events: none;
 }
 .pq-campo-dinero > input { padding-left: 24px; width: 100%; }
+
+/* Mismo truco que .pq-campo-dinero pero con el sufijo a la derecha
+   (ej. "30 min" como un solo control, en vez de input + etiqueta
+   suelta al lado). */
+.pq-campo-sufijo { position: relative; }
+.pq-campo-sufijo::after {
+  content: attr(data-sufijo);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gris-suave);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  pointer-events: none;
+}
+.pq-campo-sufijo > input { padding-right: 34px; }
 .pq-label {
   font-size: 13px;
   font-weight: 600;
@@ -2039,6 +2060,34 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-subir-foto span { font-size: 11.5px }
 .pq-subir-foto input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden }
 
+/* foto.php del onboarding: el input nativo "Choose File | No file chosen"
+   rompía la estética — ahora son dos botones dentro de la misma zona
+   (ambos abren el mismo selector; en móvil el picker del sistema ya
+   ofrece cámara y galería con accept="image/*", así que no hace falta
+   forzar la cámara con el atributo capture). */
+.pq-subir-foto-botones { display: flex; gap: 8px; margin: 2px 0; }
+.pq-subir-foto-boton {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--tiquete);
+  border: 1px solid var(--borde);
+  color: var(--carbon);
+}
+.pq-subir-foto-boton-principal { background: var(--sello); border-color: var(--sello); color: #fff; }
+
+/* Previsualización tras elegir archivo (progresiva: solo aparece con JS;
+   sin JS el navegador no da feedback de nombre/tamaño, pero el envío
+   nativo sigue funcionando igual). */
+.pq-foto-previa { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px; border: 1px solid var(--recibo); border-radius: 14px; background: var(--tiquete); }
+.pq-foto-previa img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.pq-foto-previa-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pq-foto-previa-info strong { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pq-foto-previa-info span { font-size: 12px; color: var(--gris-suave); }
+.pq-foto-previa-cambiar { font-size: 12.5px; font-weight: 700; color: var(--sello); background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.pq-subir-foto[hidden], .pq-foto-previa[hidden] { display: none; }
+
 .pq-foto-actual { display: flex; align-items: center; gap: 12px }
 .pq-foto-actual img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; flex-shrink: 0 }
 .pq-foto-actual-botones { display: flex; flex-direction: column; gap: 6px; align-items: flex-start }
@@ -2209,9 +2258,15 @@ body.pq-auth-bg {
   gap: 12px;
   align-items: flex-start;
   cursor: pointer;
+  border-color: var(--borde);
   transition: border-color .15s ease, background .15s ease;
 }
+.pq-tipo-opcion:hover { border-color: var(--gris-suave); }
 .pq-tipo-opcion:has(input:checked) { border-color: var(--sello); background: var(--tinte-sello); }
+/* La tarjeta no seleccionada usaba --recibo/--gris-texto para todo y
+   terminaba leyéndose como deshabilitada junto a la seleccionada — el
+   ícono ahora usa --borde (más oscuro que --recibo) y --tinta (texto
+   casi negro) en vez de un gris intermedio. */
 .pq-tipo-opcion-icono {
   flex-shrink: 0;
   width: 36px;
@@ -2220,8 +2275,8 @@ body.pq-auth-bg {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--recibo);
-  color: var(--gris-texto);
+  background: var(--borde);
+  color: var(--tinta);
 }
 .pq-tipo-opcion:has(input:checked) .pq-tipo-opcion-icono { background: var(--sello); color: #fff; }
 .pq-tipo-opcion-icono svg { width: 18px; height: 18px; }
@@ -2230,7 +2285,7 @@ body.pq-auth-bg {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1.5px solid var(--borde);
+  border: 1.5px solid var(--gris-suave);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2275,12 +2330,40 @@ body.pq-auth-bg {
 .pq-dia-fila-compacta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 10px 2px;
   border-bottom: 1px solid var(--recibo);
 }
 .pq-dia-fila-compacta:last-child { border-bottom: none; }
 .pq-dia-fila-compacta-nombre { font-size: 13px; font-weight: 600; width: 72px; flex-shrink: 0; }
+/* El rango de hora nunca se recorta: si no cabe junto al switch+nombre
+   en una sola línea, baja completo a su propia línea en vez de
+   comprimirse hasta truncar el AM/PM del input nativo. */
+.pq-dia-fila-compacta-horas { display: flex; align-items: center; gap: 8px; margin-left: 44px; }
+
+/* "Copiar horario del lunes" ahora deja elegir a qué días se aplica
+   (antes era un blanco martes-sábado fijo, que no servía para negocios
+   que trabajan distinto los sábados). */
+.pq-copiar-horario { margin-top: 16px; }
+.pq-copiar-horario > summary {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  color: var(--carbon);
+}
+.pq-copiar-horario > summary::-webkit-details-marker { display: none; }
+.pq-copiar-horario[open] > summary { border-color: var(--sello); color: var(--sello); margin-bottom: 10px; }
+.pq-copiar-horario-panel { padding: 12px; border: 1px solid var(--recibo); border-radius: 12px; background: var(--tiquete); }
+.pq-copiar-horario-dias { display: flex; flex-wrap: wrap; gap: 8px; }
+.pq-copiar-horario-dias label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--borde); cursor: pointer; }
+.pq-copiar-horario-dias input { accent-color: var(--sello); }
 .pq-dia-nombre-corto { display: none; font-size: 11px; letter-spacing: .03em; }
 @media (max-width: 370px) {
   .pq-dia-fila-compacta-nombre { width: 34px; }
@@ -2316,8 +2399,8 @@ body.pq-auth-bg {
 .pq-dia-switch-chico input:focus-visible ~ .pq-dia-switch-pista { outline: 2px solid var(--sello); outline-offset: 2px; }
 .pq-dia-fila-compacta:not(:has(input:checked)) .pq-dia-fila-compacta-nombre { color: var(--gris-suave); font-weight: 500; }
 .pq-dia-fila-compacta:not(:has(input:checked)) input[type="time"] { opacity: .4; pointer-events: none; }
-.pq-input-chico { width: 110px; flex-shrink: 0; padding: 8px 10px; }
-@media (max-width: 370px) { .pq-input-chico { width: 88px; padding: 8px 6px; } }
+.pq-input-chico { width: 134px; flex-shrink: 0; padding: 8px 6px; }
+@media (max-width: 370px) { .pq-input-chico { width: 108px; padding: 8px 4px; } }
 
 /* pago.php: el <select> de tipo de llave Bre-B no transmitía nada sobre
    qué opción es más común; 3 segmentos con ícono se leen de un vistazo. */
@@ -2342,6 +2425,24 @@ body.pq-auth-bg {
 .pq-llave-tipo-opcion span { font-size: 12.5px; font-weight: 600; }
 .pq-llave-tipo-opcion:has(input:checked) { border-color: var(--sello); background: var(--tinte-sello); color: var(--sello); }
 .pq-llave-tipo-opcion:has(input:focus-visible) { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-llave-tipo-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sello);
+  color: #fff;
+  opacity: 0;
+  transform: scale(.6);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.pq-llave-tipo-check svg { width: 10px; height: 10px; }
+.pq-llave-tipo-opcion:has(input:checked) .pq-llave-tipo-check { opacity: 1; transform: scale(1); }
 
 /* Fila compacta de servicio/producto en el onboarding (servicios/_gestor.php,
    productos/_gestor.php con $compacto=true): antes cada fila tenía 2-3
@@ -2361,8 +2462,23 @@ body.pq-auth-bg {
 /* Anticipo como desplegable: la mayoría de servicios no lo usan, así que
    no amerita ocupar espacio permanente — progressive disclosure. */
 .pq-servicio-anticipo { margin-top: 2px; border-top: 1px dashed var(--borde); padding-top: 8px; }
-.pq-servicio-anticipo > summary { font-size: 12px; color: var(--gris-suave); cursor: pointer; list-style: none; }
+.pq-servicio-anticipo > summary { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gris-suave); cursor: pointer; list-style: none; }
 .pq-servicio-anticipo > summary::-webkit-details-marker { display: none; }
+.pq-servicio-anticipo-flecha { display: inline-block; transition: transform .15s ease; }
+.pq-servicio-anticipo[open] .pq-servicio-anticipo-flecha { transform: rotate(90deg); }
+
+/* "+ Agregar servicio/producto" en el onboarding: antes el formulario
+   de alta quedaba siempre visible con 2-3 campos vacíos ocupando
+   espacio permanente — ahora es un desplegable, igual que el anticipo. */
+.pq-agregar-toggle > summary {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sello);
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 2px;
+}
+.pq-agregar-toggle > summary::-webkit-details-marker { display: none; }
 
 /* Checklist final de publicada.php: refuerza que la tienda quedó
    completa, y el único ítem pendiente (dirección) es opcional y linkea

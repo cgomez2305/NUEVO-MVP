@@ -1,4 +1,4 @@
-<span class="pq-eyebrow">Nuevo negocio</span>
+<span class="pq-eyebrow pq-eyebrow-sutil">Nuevo negocio</span>
 <h1 class="pq-h1">Publica tu tienda en minutos</h1>
 <p class="pq-lead">Sin comisión por pedido. Solo tu nombre, tu WhatsApp y una contraseña.</p>
 

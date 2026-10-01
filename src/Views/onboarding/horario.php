@@ -15,7 +15,21 @@ $pasoNombre = 'Horarios';
   <h1 class="pq-h1" style="font-size: 28px">Tu horario de atención</h1>
   <p class="pq-lead">Con esto calculamos qué horas puede reservar tu cliente. Puedes cambiarlo después desde el panel.</p>
 
-  <button type="button" class="pq-btn pq-btn-ghost pq-btn-chico" style="margin-top: 16px; width: auto" data-aplicar-horario-semana="1">Usar el horario del lunes toda la semana</button>
+  <details class="pq-copiar-horario">
+    <summary>Copiar horario del lunes</summary>
+    <div class="pq-copiar-horario-panel">
+      <p class="pq-ayuda" style="margin-bottom: 8px">Aplicar a:</p>
+      <div class="pq-copiar-horario-dias">
+        <?php foreach ([2, 3, 4, 5, 6, 7] as $num): ?>
+          <label>
+            <input type="checkbox" data-copiar-dia="<?= $num ?>" <?= $num <= 5 ? 'checked' : '' ?>>
+            <?= e($diasAbrev[$num]) ?>
+          </label>
+        <?php endforeach; ?>
+      </div>
+      <button type="button" class="pq-btn pq-btn-sello pq-btn-chico" style="margin-top: 10px; width: auto" data-aplicar-horario-semana="1">Aplicar</button>
+    </div>
+  </details>
 
   <form method="post" action="<?= e(base_url('/panel/onboarding/horario')) ?>" style="margin-top: 12px">
     <?= csrf_campo() ?>
@@ -32,9 +46,11 @@ $pasoNombre = 'Horarios';
             <span class="pq-dia-nombre-largo"><?= e($nombre) ?></span>
             <span class="pq-dia-nombre-corto pq-mono"><?= e($diasAbrev[$num]) ?></span>
           </span>
-          <input class="pq-input pq-mono pq-input-chico" type="time" name="inicio_<?= $num ?>" data-inicio-dia="<?= $num ?>" value="<?= e($rango[0]) ?>">
-          <span class="pq-ayuda">–</span>
-          <input class="pq-input pq-mono pq-input-chico" type="time" name="fin_<?= $num ?>" data-fin-dia="<?= $num ?>" value="<?= e($rango[1]) ?>">
+          <span class="pq-dia-fila-compacta-horas">
+            <input class="pq-input pq-mono pq-input-chico" type="time" name="inicio_<?= $num ?>" data-inicio-dia="<?= $num ?>" value="<?= e($rango[0]) ?>">
+            <span class="pq-ayuda">–</span>
+            <input class="pq-input pq-mono pq-input-chico" type="time" name="fin_<?= $num ?>" data-fin-dia="<?= $num ?>" value="<?= e($rango[1]) ?>">
+          </span>
         </div>
       <?php endforeach; ?>
     </div>

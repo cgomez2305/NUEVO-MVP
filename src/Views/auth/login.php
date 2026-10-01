@@ -1,4 +1,4 @@
-<span class="pq-eyebrow">Bienvenido de nuevo</span>
+<span class="pq-eyebrow pq-eyebrow-sutil">Bienvenido de nuevo</span>
 <h1 class="pq-h1">Entra a tu panel</h1>
 <p class="pq-lead">Con el WhatsApp y la contraseña de tu negocio.</p>
 

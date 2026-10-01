@@ -523,10 +523,11 @@
     boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
   });
 
-  // "Usar el horario del lunes toda la semana" (horario.php del
-  // onboarding): copia el horario y el estado abierto/cerrado del lunes
-  // a martes-sábado (domingo se deja aparte porque muchos negocios
-  // cierran ese día). Sin JS el botón no hace nada — cada día se sigue
+  // "Copiar horario del lunes" (horario.php del onboarding): copia el
+  // horario y el estado abierto/cerrado del lunes solo a los días que
+  // la persona marcó en el desplegable (sábado/domingo vienen
+  // destildados por defecto porque muchos negocios trabajan distinto
+  // esos días). Sin JS el botón no hace nada — cada día se sigue
   // pudiendo editar a mano, que es el camino que ya existía.
   document.addEventListener('click', function (evento) {
     var boton = evento.target.closest('[data-aplicar-horario-semana]');
@@ -535,14 +536,17 @@
     var inicioLunes = document.querySelector('input[data-inicio-dia="1"]');
     var finLunes = document.querySelector('input[data-fin-dia="1"]');
     if (!abiertoLunes || !inicioLunes || !finLunes) return;
-    for (var dia = 2; dia <= 6; dia++) {
+    document.querySelectorAll('[data-copiar-dia]:checked').forEach(function (casilla) {
+      var dia = casilla.getAttribute('data-copiar-dia');
       var abierto = document.querySelector('input[data-dia="' + dia + '"]');
       var inicio = document.querySelector('input[data-inicio-dia="' + dia + '"]');
       var fin = document.querySelector('input[data-fin-dia="' + dia + '"]');
       if (abierto) abierto.checked = abiertoLunes.checked;
       if (inicio) inicio.value = inicioLunes.value;
       if (fin) fin.value = finLunes.value;
-    }
+    });
+    var detalle = boton.closest('details');
+    if (detalle) detalle.removeAttribute('open');
   });
 
   // Requisito de largo de contraseña en vivo (registro.php): el
@@ -560,5 +564,88 @@
         ayuda.style.color = cumple ? 'var(--caja)' : '';
       });
     });
+  });
+
+  // Separador de miles en campos de precio (servicios/productos del
+  // onboarding): el valor real que se envía son solo dígitos — el punto
+  // es puramente visual mientras se escribe. Sin JS el campo se queda
+  // como texto plano sin separador, pero sigue enviando un número
+  // válido (el backend ya hace (int) de todas formas).
+  function pqSoloDigitos(valor) { return (valor || '').replace(/\D+/g, ''); }
+  function pqConSeparadorMiles(digitos) { return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  document.addEventListener('input', function (evento) {
+    var campo = evento.target.closest('[data-precio-cop]');
+    if (!campo) return;
+    var posDesdeFinal = campo.value.length - (campo.selectionStart || 0);
+    var digitos = pqSoloDigitos(campo.value);
+    campo.value = digitos === '' ? '' : pqConSeparadorMiles(digitos);
+    var nuevaPos = Math.max(0, campo.value.length - posDesdeFinal);
+    campo.setSelectionRange(nuevaPos, nuevaPos);
+  });
+
+  document.addEventListener('submit', function (evento) {
+    document.querySelectorAll('[data-precio-cop]').forEach(function (campo) {
+      if (campo.form === evento.target) campo.value = pqSoloDigitos(campo.value);
+    });
+  });
+
+  // Tipo de dato esperado en "Valor de la llave" (pago.php del
+  // onboarding) según el tipo de llave elegido: solo ayuda al teclado
+  // y a la validación del navegador, nunca bloquea el envío sin JS.
+  document.addEventListener('change', function (evento) {
+    var radio = evento.target.closest('[data-llave-tipo-input]');
+    if (!radio) return;
+    var campo = document.querySelector('[data-llave-valor-input]');
+    if (!campo) return;
+    if (radio.value === 'correo') {
+      campo.type = 'email';
+      campo.inputMode = 'email';
+    } else if (radio.value === 'cedula') {
+      campo.type = 'text';
+      campo.inputMode = 'numeric';
+    } else {
+      campo.type = 'tel';
+      campo.inputMode = 'numeric';
+    }
+  });
+
+  // Previsualización del uploader de foto.php (onboarding): sin JS el
+  // input nativo sigue funcionando (required lo valida), esto solo
+  // añade la miniatura + nombre/tamaño y deshabilita el botón hasta
+  // que haya un archivo elegido.
+  document.addEventListener('DOMContentLoaded', function () {
+    var input = document.querySelector('[data-input-foto]');
+    if (!input) return;
+    var dropzone = document.querySelector('[data-dropzone-foto]');
+    var previa = document.querySelector('[data-previa-foto]');
+    var previaImg = document.querySelector('[data-previa-foto-img]');
+    var previaNombre = document.querySelector('[data-previa-foto-nombre]');
+    var previaTamano = document.querySelector('[data-previa-foto-tamano]');
+    var boton = document.querySelector('[data-boton-foto]');
+    var cambiar = document.querySelector('[data-previa-foto-cambiar]');
+
+    if (boton) boton.disabled = true;
+
+    input.addEventListener('change', function () {
+      var archivo = input.files && input.files[0];
+      if (!archivo) return;
+      if (boton) boton.disabled = false;
+      if (dropzone) dropzone.hidden = true;
+      if (previa) previa.hidden = false;
+      if (previaNombre) previaNombre.textContent = archivo.name;
+      if (previaTamano) previaTamano.textContent = (archivo.size / (1024 * 1024)).toFixed(1) + ' MB';
+      if (previaImg) previaImg.src = URL.createObjectURL(archivo);
+    });
+
+    if (cambiar) {
+      cambiar.addEventListener('click', function () {
+        input.value = '';
+        if (boton) boton.disabled = true;
+        if (previa) previa.hidden = true;
+        if (dropzone) dropzone.hidden = false;
+        input.click();
+      });
+    }
   });
 })();

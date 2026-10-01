@@ -63,7 +63,7 @@ $agruparPorCategoria = !$compacto && count($porCategoria) > 1;
           <div class="pq-servicio-compacto-campos">
             <input form="<?= e($formId) ?>" class="pq-input" style="flex-grow: 1; min-width: 0" type="text" name="categoria" value="<?= e($producto['categoria']) ?>" list="categorias-sugeridas" placeholder="Categoría">
             <div class="pq-campo-dinero" style="width: 110px; flex-shrink: 0">
-              <input form="<?= e($formId) ?>" class="pq-input pq-mono" type="number" name="precio" value="<?= (int) $producto['precio'] ?>" min="0" step="500" required>
+              <input form="<?= e($formId) ?>" class="pq-input pq-mono" type="text" inputmode="numeric" name="precio" value="<?= number_format((int) $producto['precio'], 0, ',', '.') ?>" data-precio-cop required>
             </div>
             <button type="submit" form="<?= e($formId) ?>" class="pq-btn-icono" aria-label="Guardar cambios">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
@@ -127,19 +127,35 @@ $agruparPorCategoria = !$compacto && count($porCategoria) > 1;
   <p class="pq-ayuda">Aún no tienes productos en tu catálogo.</p>
 <?php endif; ?>
 
-<form method="post" action="<?= e(base_url('/panel/productos')) ?>" enctype="multipart/form-data" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px">
-  <?= csrf_campo() ?>
-  <input type="hidden" name="volver" value="<?= e($volver) ?>">
-  <input class="pq-input" type="text" name="nombre" placeholder="<?= $compacto ? 'Agregar otro producto' : 'Nuevo producto' ?>" required maxlength="120">
-  <div style="display: flex; gap: 8px">
-    <input class="pq-input" style="flex: 1; min-width: 0" type="text" name="categoria" list="categorias-sugeridas" placeholder="Categoría" maxlength="60">
-    <div class="pq-campo-dinero" style="flex: 1; min-width: 0">
-      <input class="pq-input pq-mono" type="number" name="precio" placeholder="0" min="0" step="500" required>
+<?php if ($compacto): ?>
+  <details class="pq-agregar-toggle" style="margin-top: 10px">
+    <summary>+ Agregar producto</summary>
+    <form method="post" action="<?= e(base_url('/panel/productos')) ?>" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px">
+      <?= csrf_campo() ?>
+      <input type="hidden" name="volver" value="<?= e($volver) ?>">
+      <input class="pq-input" type="text" name="nombre" placeholder="Nombre del producto" required maxlength="120">
+      <div style="display: flex; gap: 8px">
+        <input class="pq-input" style="flex: 1; min-width: 0" type="text" name="categoria" list="categorias-sugeridas" placeholder="Categoría" maxlength="60">
+        <div class="pq-campo-dinero" style="flex: 1; min-width: 0">
+          <input class="pq-input pq-mono" type="text" inputmode="numeric" name="precio" placeholder="0" data-precio-cop required>
+        </div>
+      </div>
+      <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
+    </form>
+  </details>
+<?php else: ?>
+  <form method="post" action="<?= e(base_url('/panel/productos')) ?>" enctype="multipart/form-data" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px">
+    <?= csrf_campo() ?>
+    <input type="hidden" name="volver" value="<?= e($volver) ?>">
+    <input class="pq-input" type="text" name="nombre" placeholder="Nuevo producto" required maxlength="120">
+    <div style="display: flex; gap: 8px">
+      <input class="pq-input" style="flex: 1; min-width: 0" type="text" name="categoria" list="categorias-sugeridas" placeholder="Categoría" maxlength="60">
+      <div class="pq-campo-dinero" style="flex: 1; min-width: 0">
+        <input class="pq-input pq-mono" type="number" name="precio" placeholder="0" min="0" step="500" required>
+      </div>
     </div>
-  </div>
-  <?php if (!$compacto): ?>
     <textarea class="pq-input" name="descripcion" rows="2" placeholder="Descripción corta (opcional)" maxlength="160"></textarea>
     <input class="pq-input" type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
-  <?php endif; ?>
-  <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
-</form>
+    <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
+  </form>
+<?php endif; ?>

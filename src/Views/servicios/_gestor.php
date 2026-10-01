@@ -54,17 +54,18 @@ $compacto = $compacto ?? false;
 
         <div class="pq-servicio-compacto-campos">
           <div class="pq-campo-dinero">
-            <input form="<?= e($formId) ?>" class="pq-input pq-mono" type="number" name="precio" value="<?= (int) $servicio['precio'] ?>" min="0" step="500" required>
+            <input form="<?= e($formId) ?>" class="pq-input pq-mono" type="text" inputmode="numeric" name="precio" value="<?= number_format((int) $servicio['precio'], 0, ',', '.') ?>" data-precio-cop required>
           </div>
-          <input form="<?= e($formId) ?>" class="pq-input pq-mono" style="width: 64px" type="number" name="duracion_min" value="<?= (int) $servicio['duracion_min'] ?>" min="5" step="5" required aria-label="Duración en minutos">
-          <span class="pq-ayuda">min</span>
+          <div class="pq-campo-sufijo" data-sufijo="min" style="width: 64px; flex-shrink: 0">
+            <input form="<?= e($formId) ?>" class="pq-input pq-mono" type="number" name="duracion_min" value="<?= (int) $servicio['duracion_min'] ?>" min="5" step="5" required aria-label="Duración en minutos">
+          </div>
           <button type="submit" form="<?= e($formId) ?>" class="pq-btn-icono" aria-label="Guardar cambios">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
           </button>
         </div>
 
         <details class="pq-servicio-anticipo">
-          <summary><?= e($depositoResumen) ?></summary>
+          <summary><?= e($depositoResumen) ?> <span class="pq-servicio-anticipo-flecha" aria-hidden="true">›</span></summary>
           <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/deposito')) ?>" style="display: flex; gap: 8px; align-items: center; margin-top: 10px">
             <?= csrf_campo() ?>
             <input type="hidden" name="volver" value="<?= e($volver) ?>">
@@ -144,15 +145,35 @@ $compacto = $compacto ?? false;
   <?php endif; ?>
 </div>
 
-<form method="post" action="<?= e(base_url('/panel/servicios')) ?>" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px">
-  <?= csrf_campo() ?>
-  <input type="hidden" name="volver" value="<?= e($volver) ?>">
-  <input class="pq-input" type="text" name="nombre" placeholder="<?= $compacto ? 'Agregar otro servicio' : 'Nuevo servicio' ?>" required maxlength="120">
-  <div style="display: flex; gap: 8px">
-    <div class="pq-campo-dinero">
-      <input class="pq-input pq-mono" type="number" name="precio" placeholder="0" min="0" step="500" required>
+<?php if ($compacto): ?>
+  <details class="pq-agregar-toggle" style="margin-top: 10px">
+    <summary>+ Agregar servicio</summary>
+    <form method="post" action="<?= e(base_url('/panel/servicios')) ?>" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px">
+      <?= csrf_campo() ?>
+      <input type="hidden" name="volver" value="<?= e($volver) ?>">
+      <input class="pq-input" type="text" name="nombre" placeholder="Nombre del servicio" required maxlength="120">
+      <div style="display: flex; gap: 8px">
+        <div class="pq-campo-dinero">
+          <input class="pq-input pq-mono" type="text" inputmode="numeric" name="precio" placeholder="0" data-precio-cop required>
+        </div>
+        <div class="pq-campo-sufijo" data-sufijo="min" style="width: 90px; flex-shrink: 0">
+          <input class="pq-input pq-mono" type="number" name="duracion_min" placeholder="Min" min="5" step="5" value="30" required aria-label="Duración en minutos">
+        </div>
+        <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
+      </div>
+    </form>
+  </details>
+<?php else: ?>
+  <form method="post" action="<?= e(base_url('/panel/servicios')) ?>" class="pq-card" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px">
+    <?= csrf_campo() ?>
+    <input type="hidden" name="volver" value="<?= e($volver) ?>">
+    <input class="pq-input" type="text" name="nombre" placeholder="Nuevo servicio" required maxlength="120">
+    <div style="display: flex; gap: 8px">
+      <div class="pq-campo-dinero">
+        <input class="pq-input pq-mono" type="number" name="precio" placeholder="0" min="0" step="500" required>
+      </div>
+      <input class="pq-input pq-mono" style="width: 90px" type="number" name="duracion_min" placeholder="Min" min="5" step="5" value="30" required aria-label="Duración en minutos">
+      <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
     </div>
-    <input class="pq-input pq-mono" style="width: 90px" type="number" name="duracion_min" placeholder="Min" min="5" step="5" value="30" required aria-label="Duración en minutos">
-    <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">+ Agregar</button>
-  </div>
-</form>
+  </form>
+<?php endif; ?>

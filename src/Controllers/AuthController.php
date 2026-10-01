@@ -112,6 +112,12 @@ class AuthController
             redirigir('/login');
         }
 
+        $sede = Auth::exigirSesion();
+        if ((int) $sede['publicada'] !== 1) {
+            flash_set('ok', 'Termina de configurar tu negocio.');
+            redirigir('/panel/onboarding/' . Sede::siguientePasoOnboarding($sede));
+        }
+
         redirigir('/panel');
     }
 

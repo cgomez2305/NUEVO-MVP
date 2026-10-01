@@ -1,6 +1,8 @@
 <?php $esReservas = $negocio['tipo_negocio'] === 'reservas'; $pasoActual = 1; $totalPasos = $esReservas ? 4 : 3; $pasoNombre = 'Foto'; ?>
 <div class="pq-topbar" style="border-bottom: none">
-  <a href="<?= e(base_url('/')) ?>" class="pq-topbar-brand">Veci</a>
+  <a href="<?= e(base_url('/')) ?>" style="display: inline-flex; text-decoration: none">
+    <img src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci" style="height: 24px; width: auto">
+  </a>
 </div>
 <?php require __DIR__ . '/_pasos.php'; ?>
 
@@ -26,14 +28,30 @@
     </div>
   <?php endif; ?>
 
-  <form method="post" action="<?= e(base_url('/panel/onboarding/foto')) ?>" enctype="multipart/form-data" style="margin-top: 20px">
+  <form method="post" action="<?= e(base_url('/panel/onboarding/foto')) ?>" enctype="multipart/form-data" style="margin-top: 20px" data-form-foto>
     <?= csrf_campo() ?>
-    <div class="pq-campo">
-      <label class="pq-label" for="foto"><?= $esReservas ? 'Foto de tus servicios' : 'Foto del menú' ?></label>
-      <input class="pq-input" type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/webp" required>
-      <p class="pq-ayuda">JPG, PNG o WEBP. Máximo 8 MB.</p>
+
+    <label class="pq-subir-foto" for="foto" data-dropzone-foto>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+      <strong><?= $esReservas ? 'Sube una foto de tus servicios' : 'Sube una foto de tu menú' ?></strong>
+      <span class="pq-subir-foto-botones">
+        <span class="pq-subir-foto-boton pq-subir-foto-boton-principal">Tomar foto</span>
+        <span class="pq-subir-foto-boton">Elegir archivo</span>
+      </span>
+      <span>JPG, PNG o WEBP · Máx. 8 MB</span>
+      <input id="foto" type="file" name="foto" accept="image/png,image/jpeg,image/webp" required data-input-foto>
+    </label>
+
+    <div class="pq-foto-previa" data-previa-foto hidden>
+      <img data-previa-foto-img alt="">
+      <div class="pq-foto-previa-info">
+        <strong data-previa-foto-nombre></strong>
+        <span data-previa-foto-tamano></span>
+      </div>
+      <button type="button" class="pq-foto-previa-cambiar" data-previa-foto-cambiar>Cambiar foto</button>
     </div>
-    <button type="submit" class="pq-btn pq-btn-sello">Usar esta foto →</button>
+
+    <button type="submit" class="pq-btn pq-btn-sello" style="margin-top: 20px" data-boton-foto>Analizar esta foto →</button>
   </form>
 
   <?php if (!empty($negocio['menu_foto'])): ?>

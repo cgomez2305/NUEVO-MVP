@@ -120,6 +120,31 @@ class Sede
         $stmt->execute(['id' => $id]);
     }
 
+    /**
+     * En qué paso del onboarding quedó una sede sin publicar, para poder
+     * devolverla ahí mismo al iniciar sesión en vez de soltarla en un
+     * panel vacío. Reutiliza las mismas condiciones que ya usan los
+     * guardas de cada paso en OnboardingController.
+     */
+    public static function siguientePasoOnboarding(array $sede): string
+    {
+        if (empty($sede['menu_foto'])) {
+            return 'foto';
+        }
+        if ($sede['tipo_negocio'] === 'reservas') {
+            if (Servicio::contarPorSede((int) $sede['id']) === 0) {
+                return 'productos';
+            }
+            if (self::horario($sede) === []) {
+                return 'horario';
+            }
+        } elseif (Producto::contarPorSede((int) $sede['id']) === 0) {
+            return 'productos';
+        }
+
+        return 'pago';
+    }
+
     /** @param array<string, array{0:string,1:string}> $horario día ISO (1-7) => [inicio, fin] */
     public static function guardarHorario(int $id, array $horario, int $intervaloMin): void
     {
