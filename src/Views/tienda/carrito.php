@@ -54,6 +54,7 @@
         <span>Total</span>
         <span class="pq-mono" id="pq-carrito-total"><?= pesos($carrito['total']) ?></span>
       </div>
+      <p class="pq-ayuda" data-mostrar-si="tipo_entrega=domicilio" style="margin-top: 6px">Si el domicilio tiene costo, te lo confirman por WhatsApp — no está incluido arriba.</p>
     </div>
 
     <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/pedido')) ?>" style="margin-top: 8px" id="pq-form-pedido">
@@ -131,7 +132,7 @@
       <h2 class="pq-seccion-checkout">Pago</h2>
 
       <div class="pq-campo">
-        <label class="pq-label">¿Cómo quieres pagar?</label>
+        <label class="pq-label">Forma de pago</label>
         <div class="pq-opciones-entrega">
           <label class="pq-opcion-entrega">
             <input type="radio" name="metodo_pago" value="breb" checked>
@@ -154,14 +155,20 @@
         </div>
       </div>
 
-      <div class="pq-stack" style="gap: 10px; margin: 20px 0 4px">
-        <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); line-height: 1.5">
-          <input type="checkbox" name="autorizo_datos" value="1" required style="margin-top: 3px">
-          Acepto que usen mi nombre y WhatsApp para gestionar este pedido.
+      <div class="pq-stack" style="gap: 14px; margin: 20px 0 4px">
+        <label class="pq-consentimiento">
+          <input type="checkbox" name="autorizo_datos" value="1" required>
+          <span>
+            <span class="pq-consentimiento-titulo">Uso de datos para gestionar tu pedido</span>
+            <span class="pq-ayuda" style="margin-top: 1px">Necesario para procesar y avisarte sobre este pedido.</span>
+          </span>
         </label>
-        <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); line-height: 1.5">
-          <input type="checkbox" name="acepta_marketing" value="1" style="margin-top: 3px">
-          Quiero recibir promociones y novedades por WhatsApp
+        <label class="pq-consentimiento">
+          <input type="checkbox" name="acepta_marketing" value="1">
+          <span>
+            <span class="pq-consentimiento-titulo">Quiero recibir promociones por WhatsApp</span>
+            <span class="pq-ayuda" style="margin-top: 1px">Opcional.</span>
+          </span>
         </label>
         <span class="pq-ayuda">Al continuar aceptas nuestra <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.</span>
       </div>
@@ -173,7 +180,7 @@
         </div>
         <button type="submit" class="pq-btn pq-btn-whatsapp" style="width: auto; flex-grow: 1; max-width: 260px">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="#0b3d24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-          Confirmar pedido
+          Confirmar por WhatsApp
         </button>
       </div>
       <p class="pq-ayuda pq-centro" style="margin-top: 10px">Revisarás el pedido en WhatsApp antes de enviarlo.</p>

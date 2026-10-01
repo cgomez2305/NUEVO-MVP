@@ -242,34 +242,138 @@
   });
 
   // ---------------------------------------------------------------------
-  // Autocompletar nombre/WhatsApp en el checkout público: conveniencia del
-  // navegador (localStorage), nunca algo que el servidor necesite leer — si
-  // falla o está bloqueado, los campos simplemente quedan vacíos como antes.
+  // Borrador del checkout público (nombre/WhatsApp/dirección): conveniencia
+  // del navegador (localStorage), nunca algo que el servidor necesite leer.
+  // Se guarda mientras la persona escribe (no solo al enviar con éxito), así
+  // un back o un reload accidental a medio llenar no pierde lo ya escrito.
+  // Si localStorage falla o está bloqueado, los campos simplemente quedan
+  // vacíos como antes — nunca bloquea el pedido.
   // ---------------------------------------------------------------------
-  var LLAVE_NOMBRE = 'veci_checkout_nombre';
-  var LLAVE_TELEFONO = 'veci_checkout_telefono';
+  var CAMPOS_BORRADOR = {
+    nombre: 'veci_checkout_nombre',
+    telefono: 'veci_checkout_telefono',
+    direccion: 'veci_checkout_direccion',
+    referencia: 'veci_checkout_referencia',
+  };
 
   document.addEventListener('DOMContentLoaded', function () {
     var formPedido = document.getElementById('pq-form-pedido');
     if (!formPedido) return;
-    try {
-      var nombreGuardado = window.localStorage.getItem(LLAVE_NOMBRE);
-      var telefonoGuardado = window.localStorage.getItem(LLAVE_TELEFONO);
-      var campoNombre = formPedido.querySelector('#nombre');
-      var campoTelefono = formPedido.querySelector('#telefono');
-      if (nombreGuardado && campoNombre && !campoNombre.value) campoNombre.value = nombreGuardado;
-      if (telefonoGuardado && campoTelefono && !campoTelefono.value) campoTelefono.value = telefonoGuardado;
-    } catch (e) { /* localStorage no disponible: los campos quedan vacíos, como siempre */ }
-  });
 
-  document.addEventListener('submit', function (evento) {
-    var form = evento.target;
-    if (!form.id || form.id !== 'pq-form-pedido') return;
     try {
-      var nombre = form.querySelector('#nombre');
-      var telefono = form.querySelector('#telefono');
-      if (nombre && nombre.value) window.localStorage.setItem(LLAVE_NOMBRE, nombre.value);
-      if (telefono && telefono.value) window.localStorage.setItem(LLAVE_TELEFONO, telefono.value);
-    } catch (e) { /* conveniencia opcional: si falla, el pedido sigue su curso igual */ }
+      Object.keys(CAMPOS_BORRADOR).forEach(function (id) {
+        var valor = window.localStorage.getItem(CAMPOS_BORRADOR[id]);
+        var campo = formPedido.querySelector('#' + id);
+        if (valor && campo && !campo.value) campo.value = valor;
+      });
+    } catch (e) { /* localStorage no disponible: los campos quedan vacíos, como siempre */ }
+
+    function guardarBorrador() {
+      try {
+        Object.keys(CAMPOS_BORRADOR).forEach(function (id) {
+          var campo = formPedido.querySelector('#' + id);
+          if (campo && campo.value) window.localStorage.setItem(CAMPOS_BORRADOR[id], campo.value);
+        });
+      } catch (e) { /* conveniencia opcional: si falla, el pedido sigue su curso igual */ }
+    }
+
+    formPedido.addEventListener('input', guardarBorrador);
+    formPedido.addEventListener('submit', guardarBorrador);
+
+    // ---------------------------------------------------------------------
+    // Validación del checkout con mensajes propios bajo cada campo, en vez
+    // del globo genérico del navegador ("Rellena este campo") o de un
+    // alert(). novalidate solo lo pone JS: sin JS, el navegador sigue
+    // validando con los required/maxlength de siempre (ver fallback más
+    // abajo) — esto es una mejora encima, no la única red de seguridad.
+    // ---------------------------------------------------------------------
+    formPedido.setAttribute('novalidate', 'novalidate');
+
+    function soloDigitos(valor) { return (valor || '').replace(/\D+/g, ''); }
+    function telefonoColombianoValido(valor) {
+      var digitos = soloDigitos(valor);
+      return digitos.length === 10 && digitos.charAt(0) === '3';
+    }
+
+    // El mensaje de error va DESPUÉS del contenedor visual del campo, no
+    // después del <input> crudo: para el teléfono eso es el wrapper con el
+    // prefijo +57 (si no, el texto quedaría apretado como un tercer item
+    // de esa fila en vez de en su propia línea); para el consentimiento,
+    // la tarjeta completa del checkbox.
+    function contenedorDe(campo) {
+      return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo;
+    }
+
+    function limpiarErrorCampo(campo) {
+      campo.classList.remove('pq-input-invalido');
+      campo.removeAttribute('aria-invalid');
+      var siguiente = contenedorDe(campo).nextElementSibling;
+      if (siguiente && siguiente.classList.contains('pq-campo-error')) siguiente.remove();
+    }
+
+    function mostrarErrorCampo(campo, mensaje, enLabel) {
+      limpiarErrorCampo(campo);
+      if (!enLabel) campo.classList.add('pq-input-invalido');
+      campo.setAttribute('aria-invalid', 'true');
+      var error = document.createElement('span');
+      error.className = 'pq-campo-error';
+      error.textContent = mensaje;
+      contenedorDe(campo).insertAdjacentElement('afterend', error);
+    }
+
+    function validar() {
+      var errores = [];
+      var nombre = formPedido.querySelector('#nombre');
+      var telefono = formPedido.querySelector('#telefono');
+      var tipoEntregaEl = formPedido.querySelector('[name="tipo_entrega"]:checked');
+      var tipoEntrega = tipoEntregaEl ? tipoEntregaEl.value : 'domicilio';
+      var autorizo = formPedido.querySelector('[name="autorizo_datos"]');
+
+      if (nombre && nombre.value.trim() === '') {
+        errores.push({ campo: nombre, mensaje: 'Escribe tu nombre para continuar.' });
+      }
+      if (telefono) {
+        if (telefono.value.trim() === '') {
+          errores.push({ campo: telefono, mensaje: 'Escribe tu WhatsApp para continuar.' });
+        } else if (!telefonoColombianoValido(telefono.value)) {
+          errores.push({ campo: telefono, mensaje: 'Ingresa un número colombiano válido (10 dígitos, empieza en 3).' });
+        }
+      }
+      if (tipoEntrega === 'domicilio') {
+        var direccion = formPedido.querySelector('#direccion');
+        if (direccion && direccion.value.trim() === '') {
+          errores.push({ campo: direccion, mensaje: 'Necesitamos una dirección para el domicilio.' });
+        }
+      }
+      if (tipoEntrega === 'mesa') {
+        var mesa = formPedido.querySelector('#mesa');
+        if (mesa && mesa.value.trim() === '') {
+          errores.push({ campo: mesa, mensaje: 'Escribe tu número de mesa.' });
+        }
+      }
+      if (autorizo && !autorizo.checked) {
+        errores.push({ campo: autorizo, mensaje: 'Acepta el uso de tus datos para continuar.', enLabel: true });
+      }
+      return errores;
+    }
+
+    formPedido.querySelectorAll('#nombre, #telefono, #direccion, #mesa, [name="autorizo_datos"]').forEach(function (campo) {
+      campo.addEventListener('input', function () { limpiarErrorCampo(campo); });
+      campo.addEventListener('change', function () { limpiarErrorCampo(campo); });
+    });
+
+    formPedido.addEventListener('submit', function (evento) {
+      var errores = validar();
+      if (errores.length === 0) return;
+
+      evento.preventDefault();
+      errores.forEach(function (error, indice) {
+        mostrarErrorCampo(error.campo, error.mensaje, error.enLabel);
+        if (indice === 0) {
+          contenedorDe(error.campo).scrollIntoView({ block: 'center', behavior: 'smooth' });
+          error.campo.focus();
+        }
+      });
+    });
   });
 })();

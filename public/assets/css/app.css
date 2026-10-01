@@ -1302,6 +1302,22 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 .pq-opcion-entrega:has(input:checked) .pq-opcion-entrega-check { display: block; }
 
+/* Los dos checkboxes de consentimiento del checkout: título en negrita +
+   una línea de "para qué sirve" cada uno, para que el requerido (procesar
+   el pedido) no se vea como un trámite equivalente al opcional
+   (promociones) — antes eran dos líneas de texto idénticas en todo menos
+   el contenido, y un vistazo rápido no alcanzaba a notar la diferencia. */
+.pq-consentimiento { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.pq-consentimiento input { margin-top: 3px; flex-shrink: 0; }
+.pq-consentimiento-titulo { display: block; font-size: 13px; font-weight: 600; color: var(--carbon); }
+
+/* Validación del checkout: mensaje propio bajo el campo en vez del globo
+   genérico del navegador. Vive junto al resto del checkout porque solo
+   interacciones.js la genera (ver validar() ahí) — sin JS, el navegador
+   sigue validando con los required/maxlength normales del HTML. */
+.pq-input-invalido { border-color: #9c2c17 !important; }
+.pq-campo-error { display: block; margin-top: 5px; font-size: 12px; color: #9c2c17; }
+
 /* Barra de acción FIJA al fondo de la pantalla en el checkout: en un
    formulario largo, el total y el botón de confirmar quedan siempre a la
    vista mientras se llena el resto, en vez de obligar a bajar hasta el
@@ -1332,6 +1348,22 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 @media (min-width: 860px) {
   .pq-checkout-sticky { max-width: 900px; padding-left: 32px; padding-right: 32px; }
+
+  /* Sin este límite, la columna nombre/precio/stepper se estira hasta los
+     ~836px del contenedor (flex-grow:1 heredado del celular, donde SÍ tiene
+     sentido) y dejaba un vacío enorme entre el stepper y el total — la fila
+     se leía como "producto ................... $28.000" en vez de un
+     bloque compacto. */
+  .pq-fila-carrito-producto .pq-stack { max-width: 420px; }
+}
+
+/* La barra fija SIEMPRE tapa algo del fondo de la pantalla (es su trabajo);
+   lo que no puede hacer es tapar el último campo del formulario o el aviso
+   de qué va a pasar al confirmar. 100-105px de aire (bastante más que el
+   ~75px que mide la barra) cubre el margen de los distintos navegadores
+   móviles sin tener que medir la barra en JS. */
+.pq-content-tienda:has(.pq-checkout-sticky) {
+  padding-bottom: calc(105px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ---------- burbujas estilo WhatsApp ---------- */
