@@ -91,14 +91,14 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
   <script src="<?= e(base_url('assets/js/panel-sidebar-bootstrap.js')) ?>"></script>
   <div class="pq-shell">
     <div class="pq-topbar">
-      <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-      </button>
       <div class="pq-topbar-brand-fila">
         <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">
           <img class="pq-topbar-brand-completo" src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
           <img class="pq-topbar-brand-isotipo" src="<?= e(base_url('assets/img/icon-192.png')) ?>" alt="Veci" width="28" height="28">
         </a>
+        <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
       </div>
       <nav class="pq-topbar-links">
         <span class="pq-nav-grupo">Operación</span>

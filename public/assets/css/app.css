@@ -86,7 +86,12 @@ button { font-family: inherit; }
   background: var(--tiquete);
 }
 
-.pq-topbar-brand-fila { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+/* flex: 0 (sin grow) a propósito: en el sidebar de escritorio .pq-topbar es
+   una columna flex, y esta fila es uno de varios hijos — con flex-grow se
+   repartía el alto libre de la columna con .pq-topbar-spacer y terminaba
+   ocupando ~230px solo para el logo, empujando toda la navegación hacia
+   abajo (el bug real detrás de "el menú se ve centrado verticalmente"). */
+.pq-topbar-brand-fila { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; min-width: 0; }
 .pq-topbar-brand {
   font-family: 'Instrument Serif', serif;
   font-size: 21px;
@@ -100,34 +105,27 @@ button { font-family: inherit; }
 .pq-topbar-brand img { height: 24px; width: auto; }
 .pq-topbar-brand-isotipo { display: none; border-radius: 7px; }
 
-/* Botón para colapsar/expandir el sidebar, como un "handle" pegado a su
-   borde derecho (mitad adentro, mitad afuera) en vez de otro item más
-   dentro de la fila del logo — así no se confunde con la navegación. Solo
-   tiene sentido ≥960px, donde existe un sidebar que colapsar; en celular
-   no se muestra. .pq-topbar ya es position:sticky en el bloque de
-   escritorio, así que sirve de referencia para este absolute sin
-   necesitar una regla aparte. */
+/* Botón para colapsar/expandir el sidebar: un control chico dentro del
+   bloque del logo (mismo lenguaje que los demás botones-icono de la app),
+   no una burbuja flotante pegada al borde. Solo tiene sentido ≥960px,
+   donde existe un sidebar que colapsar; en celular no se muestra. */
 .pq-sidebar-toggle {
   display: none;
-  position: absolute;
-  top: 22px;
-  right: -13px;
-  width: 26px;
-  height: 26px;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--recibo);
-  background: var(--tiquete);
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
   color: var(--gris-suave);
   cursor: pointer;
-  box-shadow: var(--sombra-suave);
-  z-index: 12;
   transition: background .15s ease, color .15s ease;
 }
 .pq-sidebar-toggle:hover { background: var(--recibo); color: var(--carbon); }
 .pq-sidebar-toggle:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
-.pq-sidebar-toggle svg { width: 13px; height: 13px; transition: transform .18s ease; }
+.pq-sidebar-toggle svg { width: 14px; height: 14px; transition: transform .18s ease; }
 
 .pq-topbar-spacer { display: none; }
 
@@ -469,9 +467,9 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 .pq-switcher-boton {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 5px 12px 5px 5px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 11px;
   border: 1px solid var(--recibo);
   background: var(--tiquete);
   list-style: none;
@@ -486,9 +484,9 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 .pq-switcher[open] > .pq-switcher-boton { border-color: var(--sello); box-shadow: var(--sombra-suave); background: var(--tiquete); }
 
 .pq-switcher-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -496,14 +494,14 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   background: var(--sello);
   color: #fff;
   font-family: 'Instrument Serif', serif;
-  font-size: 14.5px;
-  font-weight: 700;
-}
-.pq-switcher-avatar-chico { width: 26px; height: 26px; border-radius: 8px; font-size: 12.5px; }
-.pq-switcher-texto { display: flex; flex-direction: column; min-width: 0; text-align: left; line-height: 1.3; }
-.pq-switcher-nombre {
   font-size: 13px;
   font-weight: 700;
+}
+.pq-switcher-avatar-chico { width: 24px; height: 24px; border-radius: 7px; font-size: 11.5px; }
+.pq-switcher-texto { display: flex; flex-direction: column; min-width: 0; text-align: left; line-height: 1.25; }
+.pq-switcher-nombre {
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--carbon);
   white-space: nowrap;
   overflow: hidden;
@@ -513,9 +511,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 .pq-switcher-sub {
   font-size: 10.5px;
   color: var(--gris-suave);
-  font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: .04em;
+  font-weight: 400;
 }
 .pq-switcher-chevron { width: 14px; height: 14px; flex-shrink: 0; color: var(--gris-suave); transition: transform .15s ease; }
 .pq-switcher[open] .pq-switcher-chevron { transform: rotate(180deg); }
@@ -1299,8 +1295,8 @@ a.pq-stat:hover { border-color: var(--sello); }
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 10px;
-    padding: 26px 18px;
+    gap: 0;
+    padding: 0 18px 20px;
     border-bottom: none;
     border-right: 1px solid var(--recibo);
     background: #F4F1E9;
@@ -1311,15 +1307,29 @@ a.pq-stat:hover { border-color: var(--sello); }
     min-height: calc(100vh - 64px);
     max-height: calc(100vh - 64px);
   }
-  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { padding: 6px 8px 18px 6px; }
-  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 30px; }
+  /* El bloque del logo mide lo mismo que el header (ver .pq-header más
+     abajo) y arranca en el mismo y=32 del sticky: sus bordes inferiores
+     quedan a la misma altura, así sidebar y header se leen como una sola
+     pieza en vez de dos cajas con alturas distintas. El -18px de margin
+     cancela el padding horizontal del propio .pq-topbar para que el borde
+     llegue de punta a punta; el padding interno de 20/14 repone el inset
+     del contenido. */
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila {
+    height: 64px;
+    flex: 0 0 auto;
+    justify-content: space-between;
+    margin: 0 -18px 28px;
+    padding: 0 14px 0 20px;
+    border-bottom: 1px solid var(--recibo);
+  }
+  .pq-shell:has(.pq-topbar-links) .pq-topbar-brand img { height: 28px; }
   .pq-shell:has(.pq-topbar-links) .pq-sidebar-toggle { display: flex; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-spacer { display: block; flex: 1 1 auto; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links-cuenta { flex-shrink: 0; }
   .pq-shell:has(.pq-topbar-links) .pq-nav-separador {
     display: block;
     height: 1px;
-    margin: 0 12px 10px;
+    margin: 6px 12px 10px;
     background: var(--borde);
   }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links {
@@ -1338,7 +1348,7 @@ a.pq-stat:hover { border-color: var(--sello); }
     letter-spacing: .06em;
     text-transform: uppercase;
     color: var(--gris-suave);
-    padding: 14px 12px 4px;
+    padding: 20px 12px 6px;
   }
   .pq-shell:has(.pq-topbar-links) .pq-nav-grupo:first-child { padding-top: 0; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a {
@@ -1381,7 +1391,14 @@ a.pq-stat:hover { border-color: var(--sello); }
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) > .pq-topbar { flex-basis: 76px; padding-left: 12px; padding-right: 12px; }
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-completo { display: none; }
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-isotipo { display: block; }
-  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { justify-content: center; padding: 4px 0 14px; }
+  html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila {
+    height: auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 -12px 20px;
+    padding: 14px 0;
+  }
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-nav-grupo,
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-nav-etiqueta { display: none; }
   html:not([data-sidebar="expandido"]) .pq-shell:has(.pq-topbar-links) .pq-topbar-links a { justify-content: center; padding: 11px; }
@@ -1410,7 +1427,14 @@ a.pq-stat:hover { border-color: var(--sello); }
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) > .pq-topbar { flex-basis: 76px; padding-left: 12px; padding-right: 12px; }
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-completo { display: none; }
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-isotipo { display: block; }
-  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila { justify-content: center; padding: 4px 0 14px; }
+  html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-brand-fila {
+    height: auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 -12px 20px;
+    padding: 14px 0;
+  }
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-nav-grupo,
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-nav-etiqueta { display: none; }
   html[data-sidebar="colapsado"] .pq-shell:has(.pq-topbar-links) .pq-topbar-links a { justify-content: center; padding: 11px; }
