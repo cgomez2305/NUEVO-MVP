@@ -1,8 +1,8 @@
-<?php $pasoActual = 2; $totalPasos = 4; ?>
-<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
+<?php $pasoActual = 2; $totalPasos = 4; $pasoNombre = 'Servicios'; ?>
+<div class="pq-topbar" style="border-bottom: none">
   <a href="<?= e(base_url('/panel/onboarding/foto')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
+<?php require __DIR__ . '/_pasos.php'; ?>
 
 <div class="pq-content">
   <h1 class="pq-h1" style="font-size: 28px">La IA arma tu lista de servicios</h1>
@@ -22,9 +22,9 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l5 5L20 7"/></svg>
         <?= count($servicios) ?> servicios encontrados
       </span>
-      <?php require __DIR__ . '/../servicios/_gestor.php'; ?>
+      <?php $compacto = true; require __DIR__ . '/../servicios/_gestor.php'; ?>
     </div>
 
-    <a href="<?= e(base_url('/panel/onboarding/horario')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 24px">Todo correcto, seguir →</a>
+    <a href="<?= e(base_url('/panel/onboarding/horario')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 24px">Continuar →</a>
   <?php endif; ?>
 </div>

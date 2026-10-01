@@ -160,8 +160,9 @@ class OnboardingController
     public function mostrarPago(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
 
-        if ($negocio['tipo_negocio'] === 'reservas') {
+        if ($esReservas) {
             if (Servicio::contarPorSede((int) $negocio['id']) === 0) {
                 redirigir('/panel/onboarding/productos');
             }
@@ -173,8 +174,9 @@ class OnboardingController
         }
 
         ver('onboarding/pago', [
-            'titulo'  => 'Cómo cobras · Veci',
-            'negocio' => $negocio,
+            'titulo'         => 'Cómo cobras · Veci',
+            'negocio'        => $negocio,
+            'tieneAnticipos' => $esReservas && Servicio::tieneAnticipoActivo((int) $negocio['id']),
         ], 'onboarding');
     }
 
@@ -195,9 +197,13 @@ class OnboardingController
         Sede::guardarLlaveBreB((int) $negocio['id'], $tipo, $valor);
         Sede::publicar((int) $negocio['id']);
 
+        $sedeId = (int) $negocio['id'];
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
+
         ver('onboarding/publicada', [
-            'titulo'  => '¡Tienda publicada! · Veci',
-            'negocio' => Sede::buscarPorId((int) $negocio['id']),
+            'titulo'          => '¡Tienda publicada! · Veci',
+            'negocio'         => Sede::buscarPorId($sedeId),
+            'totalCatalogo'   => $esReservas ? Servicio::contarPorSede($sedeId) : Producto::contarPorSede($sedeId),
         ], 'onboarding');
     }
 }

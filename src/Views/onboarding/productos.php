@@ -1,8 +1,8 @@
-<?php $pasoActual = 2; $totalPasos = 3; ?>
-<div class="pq-topbar pq-onboarding-cabecera" style="border-bottom: none">
+<?php $pasoActual = 2; $totalPasos = 3; $pasoNombre = 'Productos'; ?>
+<div class="pq-topbar" style="border-bottom: none">
   <a href="<?= e(base_url('/panel/onboarding/foto')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <?php require __DIR__ . '/_pasos.php'; ?>
 </div>
+<?php require __DIR__ . '/_pasos.php'; ?>
 
 <div class="pq-content">
   <h1 class="pq-h1" style="font-size: 28px">La IA arma tu tienda</h1>
@@ -25,6 +25,6 @@
       <?php $compacto = true; require __DIR__ . '/../productos/_gestor.php'; ?>
     </div>
 
-    <a href="<?= e(base_url('/panel/onboarding/pago')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 24px">Todo correcto, seguir →</a>
+    <a href="<?= e(base_url('/panel/onboarding/pago')) ?>" class="pq-btn pq-btn-sello" style="margin-top: 24px">Continuar →</a>
   <?php endif; ?>
 </div>

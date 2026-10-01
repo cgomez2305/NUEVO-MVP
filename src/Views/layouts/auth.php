@@ -16,5 +16,6 @@
       </div>
     </div>
   </div>
+  <script src="<?= e(base_url('assets/js/interacciones.js')) ?>" defer></script>
 </body>
 </html>

@@ -507,4 +507,58 @@
       });
     });
   });
+
+  // Mostrar/ocultar contraseña (login y registro): sin JS el campo se
+  // queda en type="password", que es el estado seguro por defecto.
+  var ICONO_OJO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var ICONO_OJO_TACHADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A11 11 0 0 1 12 19c-7 0-11-7-11-7a20.6 20.6 0 0 1 4.2-5.2M9.9 4.2A9.4 9.4 0 0 1 12 4c7 0 11 7 11 7a20.6 20.6 0 0 1-2.6 3.6"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M1 1l22 22"/></svg>';
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest('[data-mostrar-contrasena]');
+    if (!boton) return;
+    var campo = document.querySelector(boton.getAttribute('data-mostrar-contrasena'));
+    if (!campo) return;
+    var visible = campo.type === 'text';
+    campo.type = visible ? 'password' : 'text';
+    boton.innerHTML = visible ? ICONO_OJO : ICONO_OJO_TACHADO;
+    boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  });
+
+  // "Usar el horario del lunes toda la semana" (horario.php del
+  // onboarding): copia el horario y el estado abierto/cerrado del lunes
+  // a martes-sábado (domingo se deja aparte porque muchos negocios
+  // cierran ese día). Sin JS el botón no hace nada — cada día se sigue
+  // pudiendo editar a mano, que es el camino que ya existía.
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest('[data-aplicar-horario-semana]');
+    if (!boton) return;
+    var abiertoLunes = document.querySelector('input[data-dia="1"]');
+    var inicioLunes = document.querySelector('input[data-inicio-dia="1"]');
+    var finLunes = document.querySelector('input[data-fin-dia="1"]');
+    if (!abiertoLunes || !inicioLunes || !finLunes) return;
+    for (var dia = 2; dia <= 6; dia++) {
+      var abierto = document.querySelector('input[data-dia="' + dia + '"]');
+      var inicio = document.querySelector('input[data-inicio-dia="' + dia + '"]');
+      var fin = document.querySelector('input[data-fin-dia="' + dia + '"]');
+      if (abierto) abierto.checked = abiertoLunes.checked;
+      if (inicio) inicio.value = inicioLunes.value;
+      if (fin) fin.value = finLunes.value;
+    }
+  });
+
+  // Requisito de largo de contraseña en vivo (registro.php): el
+  // atributo minlength del navegador ya bloquea el envío, esto solo
+  // confirma visualmente cuando ya se cumplió, sin esperar al submit.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-requisito-largo]').forEach(function (ayuda) {
+      var campo = document.querySelector(ayuda.getAttribute('data-requisito-largo'));
+      var minimo = parseInt(ayuda.getAttribute('data-largo-minimo'), 10) || 0;
+      var textoBase = ayuda.textContent;
+      if (!campo) return;
+      campo.addEventListener('input', function () {
+        var cumple = campo.value.length >= minimo;
+        ayuda.textContent = cumple ? '✓ ' + textoBase : textoBase;
+        ayuda.style.color = cumple ? 'var(--caja)' : '';
+      });
+    });
+  });
 })();

@@ -2177,6 +2177,28 @@ body.pq-auth-bg {
 .pq-demo-caja svg { flex-shrink: 0; color: var(--sello); }
 .pq-demo-caja strong { color: var(--gris-texto); }
 
+/* Mostrar/ocultar contraseña (login.php, registro.php). */
+.pq-input-password { position: relative; }
+.pq-input-password .pq-input { padding-right: 44px; }
+.pq-input-password-ojo {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gris-suave);
+  cursor: pointer;
+  border-radius: 8px;
+}
+.pq-input-password-ojo:hover { background: var(--recibo); color: var(--carbon); }
+.pq-input-password-ojo svg { width: 18px; height: 18px; }
+
 /* "¿Qué vendes?" (registro.php): las dos tarjetas de tipo de negocio no
    tenían ningún indicio visual de cuál estaba seleccionada más allá del
    punto nativo del radio — mismo problema que .pq-opcion-entrega ya
@@ -2203,13 +2225,29 @@ body.pq-auth-bg {
 }
 .pq-tipo-opcion:has(input:checked) .pq-tipo-opcion-icono { background: var(--sello); color: #fff; }
 .pq-tipo-opcion-icono svg { width: 18px; height: 18px; }
+.pq-tipo-opcion-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  align-self: center;
+}
+.pq-tipo-opcion-check svg { width: 13px; height: 13px; }
+.pq-tipo-opcion:has(input:checked) .pq-tipo-opcion-check { background: var(--sello); border-color: var(--sello); color: #fff; }
 
 /* Indicador de progreso del onboarding: antes era solo texto plano
    ("PASO 2 DE 4") sin ninguna señal visual de cuánto falta — ahora una
    barra segmentada (hecho/activo/pendiente) acompaña el texto en vez de
    reemplazarlo, así sigue siendo legible para lectores de pantalla. */
 .pq-onboarding-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.pq-onboarding-pasos { display: flex; gap: 4px; width: 100px; flex-shrink: 0; }
+.pq-onboarding-progreso { padding: 14px 20px 0; display: flex; flex-direction: column; gap: 6px; }
+.pq-onboarding-progreso-texto { font-size: 12.5px; font-weight: 600; color: var(--gris-texto); }
+.pq-onboarding-pasos { display: flex; gap: 4px; width: 100%; }
 .pq-onboarding-paso { height: 4px; flex: 1; border-radius: 2px; background: var(--recibo); }
 .pq-onboarding-paso-hecho { background: var(--caja); }
 .pq-onboarding-paso-activo { background: var(--sello); }
@@ -2229,14 +2267,28 @@ body.pq-auth-bg {
   border-radius: 20px;
 }
 
-/* Horario del onboarding: el checkbox nativo de "abierto/cerrado" no
-   comunicaba estado de un vistazo, y los campos de hora seguían con
-   apariencia activa aunque el día estuviera cerrado. Un switch real +
-   atenuar los campos cuando el día está apagado deja clarísimo cuáles
-   días cuentan. */
-.pq-dia-fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.pq-dia-switch { position: relative; display: inline-flex; align-items: center; gap: 10px; width: 118px; flex-shrink: 0; cursor: pointer; }
-.pq-dia-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+/* Horario del onboarding: antes cada día era una tarjeta grande entera
+   (7 tarjetas = pantalla eterna). Una fila de una sola línea por día,
+   con switch chico + rango de hora, cabe completa sin scroll en la
+   mayoría de los casos y se lee como una tabla, no como 7 formularios. */
+.pq-dias-compacto { display: flex; flex-direction: column; }
+.pq-dia-fila-compacta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--recibo);
+}
+.pq-dia-fila-compacta:last-child { border-bottom: none; }
+.pq-dia-fila-compacta-nombre { font-size: 13px; font-weight: 600; width: 72px; flex-shrink: 0; }
+.pq-dia-nombre-corto { display: none; font-size: 11px; letter-spacing: .03em; }
+@media (max-width: 370px) {
+  .pq-dia-fila-compacta-nombre { width: 34px; }
+  .pq-dia-nombre-largo { display: none; }
+  .pq-dia-nombre-corto { display: inline; }
+}
+.pq-dia-switch-chico { position: relative; display: inline-flex; flex-shrink: 0; cursor: pointer; }
+.pq-dia-switch-chico input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .pq-dia-switch-pista {
   width: 34px;
   height: 20px;
@@ -2259,12 +2311,13 @@ body.pq-auth-bg {
   box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
   transition: transform .15s ease;
 }
-.pq-dia-switch input:checked ~ .pq-dia-switch-pista { background: var(--caja); border-color: var(--caja); }
-.pq-dia-switch input:checked ~ .pq-dia-switch-pista::after { transform: translateX(14px); }
-.pq-dia-switch input:focus-visible ~ .pq-dia-switch-pista { outline: 2px solid var(--sello); outline-offset: 2px; }
-.pq-dia-switch-nombre { font-size: 13px; font-weight: 600; }
-.pq-dia-fila:not(:has(input:checked)) .pq-dia-switch-nombre { color: var(--gris-suave); font-weight: 500; }
-.pq-dia-fila:not(:has(input:checked)) input[type="time"] { opacity: .4; pointer-events: none; }
+.pq-dia-switch-chico input:checked ~ .pq-dia-switch-pista { background: var(--caja); border-color: var(--caja); }
+.pq-dia-switch-chico input:checked ~ .pq-dia-switch-pista::after { transform: translateX(14px); }
+.pq-dia-switch-chico input:focus-visible ~ .pq-dia-switch-pista { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-dia-fila-compacta:not(:has(input:checked)) .pq-dia-fila-compacta-nombre { color: var(--gris-suave); font-weight: 500; }
+.pq-dia-fila-compacta:not(:has(input:checked)) input[type="time"] { opacity: .4; pointer-events: none; }
+.pq-input-chico { width: 110px; flex-shrink: 0; padding: 8px 10px; }
+@media (max-width: 370px) { .pq-input-chico { width: 88px; padding: 8px 6px; } }
 
 /* pago.php: el <select> de tipo de llave Bre-B no transmitía nada sobre
    qué opción es más común; 3 segmentos con ícono se leen de un vistazo. */
@@ -2289,4 +2342,35 @@ body.pq-auth-bg {
 .pq-llave-tipo-opcion span { font-size: 12.5px; font-weight: 600; }
 .pq-llave-tipo-opcion:has(input:checked) { border-color: var(--sello); background: var(--tinte-sello); color: var(--sello); }
 .pq-llave-tipo-opcion:has(input:focus-visible) { outline: 2px solid var(--sello); outline-offset: 2px; }
+
+/* Fila compacta de servicio/producto en el onboarding (servicios/_gestor.php,
+   productos/_gestor.php con $compacto=true): antes cada fila tenía 2-3
+   botones "Guardar" visibles a la vez, que se sentía como administrar una
+   base de datos en vez de revisar una lista. Aquí el guardado es un solo
+   ícono, y "marcar no disponible"/"eliminar" viven en el menú ⋮ ya usado
+   en productos.php y sedes.php del panel. */
+.pq-servicio-compacto { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+.pq-servicio-compacto-agotado { opacity: .6; }
+.pq-servicio-compacto-fila { display: flex; align-items: center; gap: 8px; }
+.pq-servicio-compacto-punto { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.pq-servicio-compacto-nombre { flex-grow: 1; min-width: 0; }
+.pq-servicio-compacto-nombre .pq-input { width: 100%; }
+.pq-servicio-compacto-campos { display: flex; gap: 6px; align-items: center; }
+.pq-servicio-compacto-campos .pq-campo-dinero { flex-shrink: 0; width: 100px; }
+
+/* Anticipo como desplegable: la mayoría de servicios no lo usan, así que
+   no amerita ocupar espacio permanente — progressive disclosure. */
+.pq-servicio-anticipo { margin-top: 2px; border-top: 1px dashed var(--borde); padding-top: 8px; }
+.pq-servicio-anticipo > summary { font-size: 12px; color: var(--gris-suave); cursor: pointer; list-style: none; }
+.pq-servicio-anticipo > summary::-webkit-details-marker { display: none; }
+
+/* Checklist final de publicada.php: refuerza que la tienda quedó
+   completa, y el único ítem pendiente (dirección) es opcional y linkea
+   directo a donde se arregla, en vez de dejarlo como una tarea suelta. */
+.pq-publicada-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gris-texto); text-decoration: none; }
+.pq-publicada-check svg { width: 15px; height: 15px; color: var(--caja); flex-shrink: 0; }
+.pq-publicada-check-pendiente { color: var(--gris-suave); }
+.pq-publicada-check-pendiente svg { color: var(--gris-suave); }
+.pq-publicada-check-pendiente:hover { color: var(--sello); }
+.pq-publicada-check-pendiente:hover svg { color: var(--sello); }
 

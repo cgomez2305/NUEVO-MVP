@@ -127,4 +127,15 @@ class Servicio
 
         return (int) $stmt->fetch()['total'];
     }
+
+    /** true si al menos un servicio de la sede pide anticipo. Usado en el onboarding para saber si el paso de cobros es urgente o puede configurarse después. */
+    public static function tieneAnticipoActivo(int $sedeId): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT COUNT(*) AS total FROM servicios WHERE sede_id = :sede_id AND deposito_tipo != 'ninguno'"
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+
+        return (int) $stmt->fetch()['total'] > 0;
+    }
 }
