@@ -5,7 +5,7 @@
 <?php $diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']; ?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px">Reprogramar <?= e($cita['nombre_servicio']) ?></h1>
-  <span class="pq-tienda-desc"><?= e($negocio['nombre']) ?> · <?= (int) $cita['duracion_min'] ?> min</span>
+  <span class="pq-tienda-desc"><?= e(nombre_publico_sede($negocio)) ?> · <?= (int) $cita['duracion_min'] ?> min</span>
 
   <?php if (!empty($error)): ?>
     <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
@@ -28,7 +28,7 @@
     <span class="pq-label">Horarios disponibles</span>
 
     <?php if (!empty($bloqueada)): ?>
-      <p class="pq-ayuda" style="margin-top: 10px"><?= e($negocio['nombre']) ?> no atiende ese día. Elige otra fecha.</p>
+      <p class="pq-ayuda" style="margin-top: 10px"><?= e(nombre_publico_sede($negocio)) ?> no atiende ese día. Elige otra fecha.</p>
     <?php elseif ($slots === []): ?>
       <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles ese día. Elige otra fecha.</p>
     <?php else: ?>

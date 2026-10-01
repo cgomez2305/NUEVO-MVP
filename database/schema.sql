@@ -73,6 +73,11 @@ CREATE TABLE IF NOT EXISTS sedes (
   llave_breb_valor    VARCHAR(120) DEFAULT NULL,
   horario_atencion    JSON         DEFAULT NULL,
   intervalo_citas_min SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  -- Si el checkout público ofrece "Comer aquí" como forma de entrega. Por
+  -- defecto activo (no cambia el comportamiento de sedes ya creadas); un
+  -- negocio sin consumo en el local (tienda, panadería solo para llevar...)
+  -- lo desactiva desde "Editar sede" y esa opción deja de aparecer.
+  acepta_mesa         TINYINT(1)   NOT NULL DEFAULT 1,
   publicada           TINYINT(1)   NOT NULL DEFAULT 0,
   creado_en           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE
@@ -117,6 +122,10 @@ CREATE TABLE IF NOT EXISTS clientes (
   telefono        VARCHAR(20)  NOT NULL,
   autorizo_datos  TINYINT(1)   NOT NULL DEFAULT 0,
   autorizado_en   DATETIME     DEFAULT NULL,
+  -- Opt-in SEPARADO del anterior: ese autoriza a guardar los datos para
+  -- procesar el pedido (requerido); este es, además, querer recibir
+  -- promociones (opcional). El checkout público los pide por separado.
+  acepta_marketing TINYINT(1)  NOT NULL DEFAULT 0,
   creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono)

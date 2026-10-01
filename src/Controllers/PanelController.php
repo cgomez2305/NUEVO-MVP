@@ -1011,9 +1011,10 @@ class PanelController
         if (csrf_verificar()) {
             $nombre = trim((string) ($_POST['nombre'] ?? ''));
             $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+            $aceptaMesa = isset($_POST['acepta_mesa']);
 
             if ($nombre !== '' && $whatsapp !== '') {
-                Sede::actualizar((int) $sede['id'], $nombre, $whatsapp);
+                Sede::actualizar((int) $sede['id'], $nombre, $whatsapp, $aceptaMesa);
                 flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }
         }

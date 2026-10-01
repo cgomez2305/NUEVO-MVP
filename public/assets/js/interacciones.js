@@ -157,7 +157,7 @@
     return '$' + String(Math.round(valor)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
-  function actualizarCarritoEnPagina(carrito, tipo, fila) {
+  function actualizarCarritoEnPagina(carrito, tipo, fila, productoId) {
     var barra = document.getElementById('pq-barra-carrito');
     if (barra) {
       if (carrito.cantidad > 0) {
@@ -173,17 +173,43 @@
       }
     }
 
-    if (tipo === 'quitar') {
-      // Carrito vacío: la página de carrito tiene un estado vacío propio
-      // (mensaje + botón "Ver el menú") que solo el servidor sabe armar.
-      if (carrito.cantidad === 0) {
-        window.location.reload();
-        return;
-      }
-      if (fila) fila.remove();
-      var total = document.getElementById('pq-carrito-total');
-      if (total) total.textContent = formatearPesos(carrito.total);
+    // Nada más que hacer fuera de la página del carrito (p. ej. el "+" del
+    // catálogo): la barra ya quedó al día arriba.
+    var total = document.getElementById('pq-carrito-total');
+    if (!total) return;
+
+    // Carrito vacío: la página de carrito tiene un estado vacío propio
+    // (mensaje + botón "Ver el menú") que solo el servidor sabe armar.
+    if (carrito.cantidad === 0) {
+      window.location.reload();
+      return;
     }
+
+    total.textContent = formatearPesos(carrito.total);
+    var stickyTotal = document.getElementById('pq-checkout-sticky-total');
+    if (stickyTotal) stickyTotal.textContent = formatearPesos(carrito.total);
+
+    if (tipo === 'quitar') {
+      if (fila) fila.remove();
+      return;
+    }
+
+    // agregar/restar: busca la línea de ESTE producto en la respuesta. Si ya
+    // no aparece es que restar la dejó en 0 (se comporta como "quitar").
+    var lineaActual = null;
+    (carrito.lineas || []).forEach(function (linea) {
+      if (String(linea.producto_id) === String(productoId)) lineaActual = linea;
+    });
+
+    if (lineaActual === null) {
+      if (fila) fila.remove();
+      return;
+    }
+
+    var cantidadEl = document.getElementById('pq-cantidad-' + productoId);
+    if (cantidadEl) cantidadEl.textContent = lineaActual.cantidad;
+    var subtotalEl = document.getElementById('pq-subtotal-' + productoId);
+    if (subtotalEl) subtotalEl.textContent = formatearPesos(lineaActual.subtotal);
   }
 
   document.addEventListener('submit', function (evento) {
@@ -194,6 +220,8 @@
     evento.preventDefault();
     var tipo = form.getAttribute('data-carrito-form');
     var fila = form.closest('.pq-fila-carrito');
+    var campoProducto = form.querySelector('[name="producto_id"]');
+    var productoId = campoProducto ? campoProducto.value : null;
     // El listener de "enviando…" de arriba ya deshabilitó este botón; como
     // aquí la página no recarga, hay que volver a habilitarlo o el cliente
     // no podría agregar una segunda unidad del mismo producto.
@@ -207,9 +235,41 @@
     })
       .then(function (resp) { return resp.ok ? resp.json() : Promise.reject(); })
       .then(function (carrito) {
-        actualizarCarritoEnPagina(carrito, tipo, fila);
+        actualizarCarritoEnPagina(carrito, tipo, fila, productoId);
         if (boton) { boton.disabled = false; boton.classList.remove('pq-btn-cargando'); }
       })
       .catch(function () { form.submit(); }); // algo falló: no se pierde la acción, solo recarga
+  });
+
+  // ---------------------------------------------------------------------
+  // Autocompletar nombre/WhatsApp en el checkout público: conveniencia del
+  // navegador (localStorage), nunca algo que el servidor necesite leer — si
+  // falla o está bloqueado, los campos simplemente quedan vacíos como antes.
+  // ---------------------------------------------------------------------
+  var LLAVE_NOMBRE = 'veci_checkout_nombre';
+  var LLAVE_TELEFONO = 'veci_checkout_telefono';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var formPedido = document.getElementById('pq-form-pedido');
+    if (!formPedido) return;
+    try {
+      var nombreGuardado = window.localStorage.getItem(LLAVE_NOMBRE);
+      var telefonoGuardado = window.localStorage.getItem(LLAVE_TELEFONO);
+      var campoNombre = formPedido.querySelector('#nombre');
+      var campoTelefono = formPedido.querySelector('#telefono');
+      if (nombreGuardado && campoNombre && !campoNombre.value) campoNombre.value = nombreGuardado;
+      if (telefonoGuardado && campoTelefono && !campoTelefono.value) campoTelefono.value = telefonoGuardado;
+    } catch (e) { /* localStorage no disponible: los campos quedan vacíos, como siempre */ }
+  });
+
+  document.addEventListener('submit', function (evento) {
+    var form = evento.target;
+    if (!form.id || form.id !== 'pq-form-pedido') return;
+    try {
+      var nombre = form.querySelector('#nombre');
+      var telefono = form.querySelector('#telefono');
+      if (nombre && nombre.value) window.localStorage.setItem(LLAVE_NOMBRE, nombre.value);
+      if (telefono && telefono.value) window.localStorage.setItem(LLAVE_TELEFONO, telefono.value);
+    } catch (e) { /* conveniencia opcional: si falla, el pedido sigue su curso igual */ }
   });
 })();

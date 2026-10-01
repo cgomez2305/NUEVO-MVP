@@ -107,6 +107,7 @@ $router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente'])
 // --- Tienda pública del cliente (flujo B de la maqueta) ----------------
 $router->get('/t/{slug}', [$tienda, 'mostrar']);
 $router->post('/t/{slug}/carrito/agregar', [$tienda, 'agregarAlCarrito']);
+$router->post('/t/{slug}/carrito/restar', [$tienda, 'restarDelCarrito']);
 $router->post('/t/{slug}/carrito/quitar', [$tienda, 'quitarDelCarrito']);
 $router->get('/t/{slug}/carrito', [$tienda, 'verCarrito']);
 $router->post('/t/{slug}/pedido', [$tienda, 'crearPedido']);

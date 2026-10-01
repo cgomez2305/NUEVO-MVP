@@ -16,6 +16,16 @@
     <span class="pq-ayuda">Solo números, sin espacios ni signos.</span>
   </div>
 
+  <?php if ($sede['tipo_negocio'] === 'pedidos'): ?>
+    <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--carbon)">
+      <input type="checkbox" name="acepta_mesa" value="1" style="margin-top: 3px"<?= (int) ($sede['acepta_mesa'] ?? 1) === 1 ? ' checked' : '' ?>>
+      <span>
+        Ofrecer "Comer aquí" como forma de entrega
+        <span class="pq-ayuda" style="display: block">Desactívalo si tu negocio no tiene mesas ni consumo en el local — el checkout de tus clientes dejará de mostrar esa opción.</span>
+      </span>
+    </label>
+  <?php endif; ?>
+
   <div style="display: flex; gap: 10px; margin-top: 4px">
     <a href="<?= e(base_url('/panel/sedes')) ?>" class="pq-btn pq-btn-ghost" style="width: auto; flex-grow: 1">Cancelar</a>
     <button type="submit" class="pq-btn pq-btn-sello" style="width: auto; flex-grow: 1">Guardar cambios</button>

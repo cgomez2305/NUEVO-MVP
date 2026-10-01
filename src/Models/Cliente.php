@@ -8,8 +8,14 @@ use App\Database;
 
 class Cliente
 {
-    /** Crea el cliente o, si ya existe (mismo teléfono en el mismo negocio), actualiza su nombre. */
-    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos): int
+    /**
+     * Crea el cliente o, si ya existe (mismo teléfono en el mismo negocio),
+     * actualiza su nombre. $aceptaMarketing es un opt-in APARTE del
+     * consentimiento de procesar el pedido: se reescribe en cada pedido, así
+     * que un cliente que cambia de opinión (marca o desmarca la casilla la
+     * próxima vez) queda reflejado.
+     */
+    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos, bool $aceptaMarketing = false): int
     {
         $pdo = Database::conexion();
 
@@ -20,21 +26,24 @@ class Cliente
         $existente = $stmt->fetch();
 
         if ($existente !== false) {
-            $actualizar = $pdo->prepare('UPDATE clientes SET nombre = :nombre WHERE id = :id');
-            $actualizar->execute(['nombre' => $nombre, 'id' => $existente['id']]);
+            $actualizar = $pdo->prepare(
+                'UPDATE clientes SET nombre = :nombre, acepta_marketing = :acepta_marketing WHERE id = :id'
+            );
+            $actualizar->execute(['nombre' => $nombre, 'acepta_marketing' => $aceptaMarketing ? 1 : 0, 'id' => $existente['id']]);
             return (int) $existente['id'];
         }
 
         $crear = $pdo->prepare(
-            'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en)
-             VALUES (:negocio_id, :nombre, :telefono, :autorizo, :autorizado_en)'
+            'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en, acepta_marketing)
+             VALUES (:negocio_id, :nombre, :telefono, :autorizo, :autorizado_en, :acepta_marketing)'
         );
         $crear->execute([
-            'negocio_id'     => $negocioId,
-            'nombre'         => $nombre,
-            'telefono'       => $telefono,
-            'autorizo'       => $autorizoDatos ? 1 : 0,
-            'autorizado_en'  => $autorizoDatos ? date('Y-m-d H:i:s') : null,
+            'negocio_id'       => $negocioId,
+            'nombre'           => $nombre,
+            'telefono'         => $telefono,
+            'autorizo'         => $autorizoDatos ? 1 : 0,
+            'autorizado_en'    => $autorizoDatos ? date('Y-m-d H:i:s') : null,
+            'acepta_marketing' => $aceptaMarketing ? 1 : 0,
         ]);
 
         return (int) $pdo->lastInsertId();

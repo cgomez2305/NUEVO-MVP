@@ -300,7 +300,43 @@ class TiendaController
             return;
         }
 
-        redirigir('/t/' . $negocio['slug']);
+        redirigir($this->volverTrasAccionCarrito($negocio['slug']));
+    }
+
+    /**
+     * El "+" se usa tanto en el catálogo (sin JS, vuelve al catálogo) como
+     * en el stepper del propio carrito (sin JS, debe quedarse en el
+     * carrito) — un hidden "volver=carrito" en ese segundo form es lo que
+     * distingue ambos casos sin duplicar el controller.
+     */
+    private function volverTrasAccionCarrito(string $slug): string
+    {
+        return ($_POST['volver'] ?? '') === 'carrito' ? '/t/' . $slug . '/carrito' : '/t/' . $slug;
+    }
+
+    /** Baja en 1 la cantidad de una línea; si llega a 0, la línea desaparece (igual que "quitar"). */
+    public function restarDelCarrito(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+
+        if (csrf_verificar()) {
+            $productoId = (int) ($_POST['producto_id'] ?? 0);
+            $carrito = $this->carritoDeSesion((int) $negocio['id']);
+            if (isset($carrito[$productoId])) {
+                $carrito[$productoId]--;
+                if ($carrito[$productoId] < 1) {
+                    unset($carrito[$productoId]);
+                }
+                $this->guardarCarrito((int) $negocio['id'], $carrito);
+            }
+        }
+
+        if ($this->esPeticionAjax()) {
+            $this->responderCarritoJson($negocio);
+            return;
+        }
+
+        redirigir('/t/' . $negocio['slug'] . '/carrito');
     }
 
     public function quitarDelCarrito(array $parametros): void
@@ -337,8 +373,16 @@ class TiendaController
     {
         $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
+        // "lineas" va aparte de cantidad/total para que el carrito pueda
+        // actualizar la cantidad y el subtotal de UNA fila puntual (el
+        // stepper +/-) sin tener que recargar ni volver a pintar las demás.
+        $lineas = array_map(fn ($linea) => [
+            'producto_id' => (int) $linea['producto']['id'],
+            'cantidad'    => $linea['cantidad'],
+            'subtotal'    => (int) $linea['producto']['precio'] * $linea['cantidad'],
+        ], $carrito['lineas']);
         header('Content-Type: application/json');
-        echo json_encode(['cantidad' => $carrito['cantidad'], 'total' => $carrito['total']]);
+        echo json_encode(['cantidad' => $carrito['cantidad'], 'total' => $carrito['total'], 'lineas' => $lineas]);
     }
 
     public function verCarrito(array $parametros): void
@@ -348,7 +392,7 @@ class TiendaController
         $carrito = $this->resumenCarrito($negocio, $productos);
 
         ver('tienda/carrito', [
-            'titulo'  => 'Tu carrito · ' . $negocio['nombre'],
+            'titulo'  => 'Tu carrito · ' . nombre_publico_sede($negocio),
             'negocio' => $negocio,
             'carrito' => $carrito,
             'error'   => flash_obtener('error'),
@@ -373,13 +417,18 @@ class TiendaController
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
         $telefono = preg_replace('/\D+/', '', (string) ($_POST['telefono'] ?? '')) ?? '';
         $autorizo = isset($_POST['autorizo_datos']);
+        $aceptaMarketing = isset($_POST['acepta_marketing']);
         $metodoPago = (string) ($_POST['metodo_pago'] ?? 'breb');
         $tipoEntrega = (string) ($_POST['tipo_entrega'] ?? 'domicilio');
-        $direccion = trim((string) ($_POST['direccion'] ?? ''));
+        // La dirección sigue siendo una sola columna en pedidos; el checkout
+        // solo la parte en dos campos (más fáciles de llenar) y se reúne acá.
+        $direccionCalle = trim((string) ($_POST['direccion'] ?? ''));
+        $direccionReferencia = trim((string) ($_POST['referencia'] ?? ''));
+        $direccion = $direccionReferencia === '' ? $direccionCalle : $direccionCalle . ', ' . $direccionReferencia;
         $mesa = trim((string) ($_POST['mesa'] ?? ''));
         $notas = trim((string) ($_POST['notas'] ?? ''));
 
-        if (!in_array($tipoEntrega, ['domicilio', 'recoger', 'mesa'], true)) {
+        if (!in_array($tipoEntrega, ['domicilio', 'recoger', 'mesa'], true) || ($tipoEntrega === 'mesa' && empty($negocio['acepta_mesa']))) {
             $tipoEntrega = 'domicilio';
         }
 
@@ -388,7 +437,7 @@ class TiendaController
             redirigir('/t/' . $negocio['slug'] . '/carrito');
         }
 
-        if ($tipoEntrega === 'domicilio' && $direccion === '') {
+        if ($tipoEntrega === 'domicilio' && $direccionCalle === '') {
             flash_set('error', 'Escribe la dirección donde quieres recibir el domicilio.');
             redirigir('/t/' . $negocio['slug'] . '/carrito');
         }
@@ -402,7 +451,7 @@ class TiendaController
             $metodoPago = 'breb';
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing);
 
         $items = array_map(fn ($linea) => [
             'producto_id' => $linea['producto']['id'],
@@ -569,6 +618,11 @@ class TiendaController
         if ($negocio === null) {
             abortar404();
         }
+        // Calculado una sola vez aquí (todo método público pasa por este
+        // chokepoint) para que nombre_publico_sede() sepa si debe mostrar
+        // "Marca · Sede" o solo "Marca" — la gran mayoría de negocios tiene
+        // una sola sede y ahí el nombre de la sede no le dice nada al cliente.
+        $negocio['multi_sede'] = Sede::contarPublicadasPorNegocio((int) $negocio['negocio_id']) > 1;
         return $negocio;
     }
 

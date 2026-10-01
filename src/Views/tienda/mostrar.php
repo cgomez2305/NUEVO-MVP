@@ -1,9 +1,9 @@
 <div class="pq-tienda-header">
   <div class="pq-tienda-logo" style="background: <?= e($negocio['color_marca']) ?>">
-    <?= e($negocio['inicial'] ?? mb_strtoupper(mb_substr($negocio['nombre'], 0, 1))) ?>
+    <?= e($negocio['inicial'] ?? mb_strtoupper(mb_substr($negocio['negocio_nombre'], 0, 1))) ?>
   </div>
   <div>
-    <h1 class="pq-tienda-nombre"><?= e($negocio['nombre']) ?></h1>
+    <h1 class="pq-tienda-nombre"><?= e(nombre_publico_sede($negocio)) ?></h1>
     <?php if (!empty($negocio['descripcion'])): ?>
       <span class="pq-tienda-desc"><?= e($negocio['descripcion']) ?></span>
     <?php endif; ?>

@@ -8,7 +8,7 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
 ?>
 <div class="pq-content-tienda" style="padding-top: 0">
   <h1 class="pq-tienda-nombre" style="font-size: 24px"><?= e($servicio['nombre']) ?></h1>
-  <span class="pq-tienda-desc"><?= e($negocio['nombre']) ?> · <?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
+  <span class="pq-tienda-desc"><?= e(nombre_publico_sede($negocio)) ?> · <?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
   <?php if ($anticipo > 0): ?>
     <div class="pq-alerta pq-alerta-aviso" style="margin-top: 12px">
       Este servicio pide un anticipo de <strong><?= pesos($anticipo) ?></strong> para confirmar la reserva.
@@ -55,7 +55,7 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
     <?php if (!empty($faltaElegirEmpleado)): ?>
       <p class="pq-ayuda" style="margin-top: 10px">Elige con quién quieres agendar para ver los horarios.</p>
     <?php elseif (!empty($bloqueada)): ?>
-      <p class="pq-ayuda" style="margin-top: 10px"><?= e($negocio['nombre']) ?> no atiende ese día. Elige otra fecha.</p>
+      <p class="pq-ayuda" style="margin-top: 10px"><?= e(nombre_publico_sede($negocio)) ?> no atiende ese día. Elige otra fecha.</p>
     <?php elseif ($slots === []): ?>
       <p class="pq-ayuda" style="margin-top: 10px">No hay horarios disponibles ese día. Elige otra fecha o anótate en la lista de espera.</p>
 
@@ -75,7 +75,7 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
           </div>
           <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); margin-bottom: 4px; line-height: 1.5">
             <input type="checkbox" name="autorizo_datos" value="1" required style="margin-top: 3px">
-            Autorizo a <?= e($negocio['nombre']) ?> a guardar mi nombre y WhatsApp para avisarme, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
+            Autorizo a <?= e(nombre_publico_sede($negocio)) ?> a guardar mi nombre y WhatsApp para avisarme, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
           </label>
           <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico" style="margin-top: 8px">Anotarme en la lista</button>
         </form>
@@ -122,7 +122,7 @@ $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoEleg
 
         <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--gris-texto); margin-bottom: 20px; line-height: 1.5">
           <input type="checkbox" name="autorizo_datos" value="1" required style="margin-top: 3px">
-          Autorizo a <?= e($negocio['nombre']) ?> a guardar mi nombre y WhatsApp para procesar esta reserva, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
+          Autorizo a <?= e(nombre_publico_sede($negocio)) ?> a guardar mi nombre y WhatsApp para procesar esta reserva, según la Ley 1581 de 2012 y la <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline">política de privacidad</a>.
         </label>
 
         <button type="submit" class="pq-btn pq-btn-whatsapp">

@@ -1213,6 +1213,127 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 .pq-fila-carrito-icono { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
 
+/* Fila de producto del carrito (checkout): a diferencia de la fila de
+   servicio (una sola línea), acá hay nombre + precio unitario + el stepper
+   de cantidad, así que el ícono se alinea arriba en vez de centrado. */
+.pq-fila-carrito-producto { align-items: flex-start; }
+.pq-fila-carrito-producto .pq-fila-carrito-icono { margin-top: 2px; }
+
+.pq-stepper-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; }
+.pq-stepper { display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--borde); border-radius: 9px; padding: 2px; }
+.pq-stepper form { display: contents; }
+.pq-stepper-boton {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--carbon);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.pq-stepper-boton:hover { background: var(--recibo); }
+.pq-stepper-cantidad { min-width: 20px; text-align: center; font-size: 13px; font-weight: 600; }
+
+/* Tacho de eliminar: mismo tamaño táctil que el resto de botones-icono de
+   la fila, pero sin el fondo circular (es una acción secundaria y
+   destructiva, no debería competir visualmente con el stepper). */
+.pq-fila-carrito-eliminar { flex-shrink: 0; margin-top: 2px; }
+.pq-fila-carrito-eliminar button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--gris-suave);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background .15s ease, color .15s ease;
+}
+.pq-fila-carrito-eliminar button:hover { background: var(--recibo); color: #9c2c17; }
+.pq-fila-carrito-eliminar svg { width: 16px; height: 16px; }
+
+/* ---------- checkout público: secciones, teléfono, pago, CTA sticky ---------- */
+
+.pq-seccion-checkout {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gris-texto);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin: 28px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid rgba(27, 26, 23, .1);
+}
+.pq-seccion-checkout:first-of-type { margin-top: 20px; }
+
+.pq-input-telefono { display: flex; align-items: stretch; gap: 8px; }
+.pq-input-telefono-prefijo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  background: var(--recibo);
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+.pq-input-telefono .pq-input { flex-grow: 1; }
+
+/* Check de "seleccionado" en las tarjetas de entrega/pago: el borde+fondo
+   (ya resuelto por :has(input:checked) arriba) no siempre se nota a primera
+   vista en una fila de 2-3 tarjetas muy parecidas; esta insignia lo hace
+   inequívoco sin competir con el ícono principal de la tarjeta. */
+.pq-opcion-entrega { position: relative; }
+.pq-opcion-entrega-check {
+  display: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 14px;
+  height: 14px;
+  color: var(--sello);
+}
+.pq-opcion-entrega:has(input:checked) .pq-opcion-entrega-check { display: block; }
+
+/* Barra de acción FIJA al fondo de la pantalla en el checkout: en un
+   formulario largo, el total y el botón de confirmar quedan siempre a la
+   vista mientras se llena el resto, en vez de obligar a bajar hasta el
+   final para encontrarlos. position:fixed (no sticky) a propósito: con
+   sticky, el "margen de maniobra" para quedarse pegada depende de cuánto
+   contenido quede DESPUÉS de ella dentro de su contenedor — como esta barra
+   vive cerca del final del formulario, se despegaba mucho antes de que el
+   cliente terminara de bajar por todo el resto del checkout. Fixed no tiene
+   ese problema: quieta en la pantalla sin importar cuánto se haya scrolleado.
+   El padding-bottom de .pq-content-tienda (120px de base) ya le deja aire
+   para no tapar el último campo. */
+.pq-checkout-sticky {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--papel);
+  border-top: 1px solid var(--recibo);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 -8px 20px rgba(27, 26, 23, .1);
+}
+@media (min-width: 860px) {
+  .pq-checkout-sticky { max-width: 900px; padding-left: 32px; padding-right: 32px; }
+}
+
 /* ---------- burbujas estilo WhatsApp ---------- */
 
 .pq-chat-bg { background: #ECE5DD; }

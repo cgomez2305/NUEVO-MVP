@@ -235,6 +235,25 @@ function nivel_espera(int $minutos, int $objetivoMin): string
 }
 
 /**
+ * Nombre que el CLIENTE ve en la tienda pública: el de la marca
+ * (negocios.nombre), nunca el campo interno sedes.nombre a secas — ese es
+ * para que el dueño distinga sus sedes en el panel, no una denominación
+ * pensada para el público. Si el negocio tiene una sola sede (el caso
+ * normal), mostrar el nombre de la sede no aporta nada y se omite; con
+ * varias, se añade como "Marca · Sede" para que el cliente sepa cuál es.
+ * Requiere que $sede traiga negocio_nombre y multi_sede (ver
+ * TiendaController::negocioOAbortar()).
+ */
+function nombre_publico_sede(array $sede): string
+{
+    $marca = (string) ($sede['negocio_nombre'] ?? $sede['nombre']);
+    if (empty($sede['multi_sede']) || trim((string) $sede['nombre']) === '') {
+        return $marca;
+    }
+    return $marca . ' · ' . $sede['nombre'];
+}
+
+/**
  * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
  * legibles, uniendo días consecutivos con el mismo horario en un solo rango
  * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir no
