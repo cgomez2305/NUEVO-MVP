@@ -64,16 +64,18 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   Luego el panel de administración: hecho (ver `references/admin.md`).
   Con esto tienda, panel, onboarding y admin están todos en v2.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
-- Ahora: "empieza a hacer todos los features" (12). Orden: cupones ✓ → fidelidad ✓ → zonas de domicilio ✓ → agotado hoy + inventario ✓ → combos y lo más pedido ✓ → cierre de caja ✓ → reseñas ✓ → paquetes ✓ → avisos de estado ✓ → Wompi ✓ →
- 
-  referidos. Una migración `database/migrations/2026-10-03_NN_*.sql`
+- Hecho: "empieza a hacer todos los features" (12, todos ✓): cupones →
+  fidelidad → zonas de domicilio → agotado hoy + inventario → combos y lo
+  más pedido → cierre de caja → reseñas → paquetes → avisos de estado →
+  Wompi → referidos. Una migración `database/migrations/2026-10-03_NN_*.sql`
   por feature + `schema.sql` y sus `INSERT IGNORE INTO migraciones` al día;
   `php bin/migrar.php` las aplica. Detalle en `references/crecimiento.md`.
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2.
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
-2. Pasarela de pago para planes (fase 2 del cobro híbrido).
+2. Wompi ya está en código: falta poner llaves reales en
+   `config/config.php` y registrar `/webhooks/wompi` en el panel de Wompi.
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
    disponibilidad de hoy por servicio, `sedes.direccion`) quedaron sin cerrar.
 

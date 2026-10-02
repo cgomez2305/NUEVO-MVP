@@ -395,6 +395,21 @@ class CrecimientoController
         redirigir('/panel/paquetes?vendido=' . $bono['token']);
     }
 
+    /** Invita a otros negocios: tu enlace y en qué va cada invitado. */
+    public function referidos(array $parametros): void
+    {
+        $negocio = $this->exigirDueno();
+        $codigo = \App\Models\Referido::codigoDe((int) $negocio['negocio_id'], (string) $negocio['negocio_nombre']);
+
+        ver('panel/referidos', [
+            'titulo'    => 'Invita y gana · Veci',
+            'activo'    => 'referidos',
+            'negocio'   => $negocio,
+            'enlace'    => url_publica('/registro?ref=' . $codigo),
+            'invitados' => \App\Models\Referido::invitados((int) $negocio['negocio_id']),
+        ], 'panel');
+    }
+
     private function exigirReservas(): array
     {
         $negocio = Auth::exigirSesion();

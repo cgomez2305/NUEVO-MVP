@@ -59,7 +59,10 @@ CREATE TABLE IF NOT EXISTS negocios (
   -- iniciar sesión y sus tiendas públicas dejan de responder.
   suspendido    TINYINT(1)   NOT NULL DEFAULT 0,
   suspendido_en DATETIME     DEFAULT NULL,
+  -- Código para invitar a otros negocios (ver tabla referidos).
+  codigo_referido VARCHAR(16) DEFAULT NULL,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_negocios_codigo_referido (codigo_referido),
   FOREIGN KEY (plan_id) REFERENCES planes(id)
 ) ENGINE=InnoDB;
 
@@ -610,6 +613,19 @@ CREATE TABLE IF NOT EXISTS bono_usos (
   FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Referidos entre negocios (ver migrations/2026-10-03_11_referidos.sql).
+CREATE TABLE IF NOT EXISTS referidos (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  referidor_id  INT UNSIGNED NOT NULL,
+  referido_id   INT UNSIGNED NOT NULL,
+  dias_premio   SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  premiado_en   DATETIME     DEFAULT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_referido (referido_id),
+  FOREIGN KEY (referidor_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (referido_id) REFERENCES negocios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -630,4 +646,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_07_resenas.sql'),
   ('2026-10-03_08_paquetes_bonos.sql'),
   ('2026-10-03_09_avisos_estado.sql'),
-  ('2026-10-03_10_pasarela_wompi.sql');
+  ('2026-10-03_10_pasarela_wompi.sql'),
+  ('2026-10-03_11_referidos.sql');

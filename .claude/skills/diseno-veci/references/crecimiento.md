@@ -166,3 +166,21 @@ N/M" o "le toca {premio}".
   el sello. Confirmación de la cita: "va por cuenta de tu bono: sesión 1 de 3".
 - Panel: vender (paquete como opciones, nombre, WhatsApp), lista de paquetes
   con ahorro y vendidos, y bonos vendidos con las sesiones como puntos.
+
+## Referidos entre negocios (`/panel/referidos`, registro)
+
+- Cada negocio tiene un `codigo_referido` (nombre sin tildes + 3 cifras,
+  p. ej. `DONAMARIA834`), creado la primera vez que el dueño abre la
+  pantalla. El enlace es `/registro?ref=CODIGO`: el registro muestra
+  "**Doña María** te invitó a Veci" (`.pq-registro-invita`) y, al crear la
+  cuenta, queda una fila en `referidos` (un invitado solo tiene un
+  referidor; uno mismo no cuenta).
+- El premio llega cuando el invitado **paga su primer plan** (admin o
+  Wompi, ambos pasan por `PagoPlan::aplicar` → `Referido::premiarPorPago`),
+  nunca al registrarse: crear cuentas falsas no da nada. Si quien invitó
+  tiene un plan pago vigente, se le suman 30 días; si está en Gratis, recibe
+  Barrio 30 días. Una sola vez por invitado (`premiado_en`, FOR UPDATE).
+- Panel: tarjeta con borde mostaza y el enlace (`.pq-referido-tarjeta`),
+  "Compartir por WhatsApp" + "Copiar enlace", los 3 pasos honestos
+  (`.pq-referido-pasos`, punteados como tiquete) y la lista de invitados
+  con chip "Ganaste 30 días" o "Falta su primer pago".

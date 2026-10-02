@@ -18,6 +18,7 @@ $pqIconos = [
     'copiloto'       => '<path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/>',
     'domicilios'     => '<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     'caja'           => '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V5h10v3"/><path d="M3 13h18"/><path d="M10 16.5h4"/>',
+    'referidos'      => '<path d="M20 12v8H4v-8"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 22V7"/><path d="M12 7H8.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7Z"/><path d="M12 7h3.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7Z"/>',
     'resenas'        => '<path d="M12 3.5l2.5 5.2 5.7.7-4.2 3.9 1.1 5.6L12 16.1l-5.1 2.8 1.1-5.6-4.2-3.9 5.7-.7L12 3.5Z"/>',
     'paquetes'       => '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
     'fidelidad'      => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="7.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="16.5" cy="12" r="1.6"/>',
@@ -78,6 +79,7 @@ $navCrecimiento = $esDueno
         ['cupones', 'Cupones', base_url('/panel/cupones')],
         ['fidelidad', 'Tarjeta de sellos', base_url('/panel/fidelidad')],
         ['resenas', 'Reseñas', base_url('/panel/resenas')],
+        ['referidos', 'Invita y gana', base_url('/panel/referidos')],
     ]
     : [];
 

@@ -169,11 +169,15 @@ class PagoPlan
             ]);
 
             $pdo->commit();
-            return true;
         } catch (\Throwable $e) {
             $pdo->rollBack();
             throw $e;
         }
+        // Si este negocio llegó invitado, quien lo invitó gana sus días
+        // ahora que pagó (solo la primera vez; ver Referido).
+        Referido::premiarPorPago((int) $pago['negocio_id']);
+
+        return true;
     }
 
     /** El dueño retira su propia solicitud pendiente (acotado a SU negocio: nunca toca la de otro). */

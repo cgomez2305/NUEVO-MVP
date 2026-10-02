@@ -6,6 +6,9 @@
   <div class="pq-alerta pq-auth-mt5"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php if (!empty($invitadoPor)): ?>
+  <p class="pq-registro-invita"><strong><?= e($invitadoPor) ?></strong> te invitó a Veci.</p>
+<?php endif; ?>
 <form class="pq-auth-mt5" method="post" action="<?= e(base_url('/registro')) ?>">
   <?= csrf_campo() ?>
 

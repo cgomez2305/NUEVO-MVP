@@ -103,6 +103,7 @@ $router->post('/panel/cupones/{id}/eliminar', [$crecimiento, 'eliminarCupon']);
 $router->get('/panel/fidelidad', [$crecimiento, 'fidelidad']);
 $router->post('/panel/fidelidad', [$crecimiento, 'guardarFidelidad']);
 $router->post('/panel/fidelidad/{cliente}/premio', [$crecimiento, 'entregarPremio']);
+$router->get('/panel/referidos', [$crecimiento, 'referidos']);
 $router->get('/panel/resenas', [$crecimiento, 'resenas']);
 $router->post('/panel/resenas/{id}/comentario', [$crecimiento, 'alternarComentarioResena']);
 $router->post('/panel/pedidos/{id}/resena', [$crecimiento, 'pedirResenaPedido']);

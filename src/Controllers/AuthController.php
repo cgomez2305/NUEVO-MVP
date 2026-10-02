@@ -19,9 +19,19 @@ class AuthController
             redirigir('/panel');
         }
 
+        // ?ref=CODIGO de otro negocio: se recuerda en la sesión hasta que
+        // termine el registro (aunque el formulario vuelva con un error).
+        $invita = isset($_GET['ref']) ? \App\Models\Referido::negocioPorCodigo((string) $_GET['ref']) : null;
+        if ($invita !== null) {
+            $_SESSION['referido_por'] = (int) $invita['id'];
+        }
+        $invitaId = (int) ($_SESSION['referido_por'] ?? 0);
+        $invitaNombre = $invita['nombre'] ?? ($invitaId > 0 ? (\App\Models\Negocio::buscarPorId($invitaId)['nombre'] ?? null) : null);
+
         ver('auth/registro', [
             'titulo' => 'Crear tu tienda · Veci',
             'error'  => flash_obtener('error'),
+            'invitadoPor' => $invitaNombre,
         ], 'auth');
     }
 
@@ -76,6 +86,10 @@ class AuthController
         }
 
         LimiteTasa::registrar('registro', $ip);
+        if (!empty($_SESSION['referido_por'])) {
+            \App\Models\Referido::registrar((int) $_SESSION['referido_por'], $negocioId);
+            unset($_SESSION['referido_por']);
+        }
 
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuarioId;

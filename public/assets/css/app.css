@@ -4549,3 +4549,19 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 /* "o" entre las dos formas de pago, sobre una línea punteada. */
 .pq-plan-pendiente-o { display: flex; align-items: center; gap: var(--esp-3); margin: var(--esp-3) 0; color: var(--gris-suave); font-size: 13px; }
 .pq-plan-pendiente-o::before, .pq-plan-pendiente-o::after { content: ""; flex: 1; border-top: 1px dashed var(--borde); }
+
+/* ==========================================================================
+   INVITA Y GANA · panel
+   El enlace va en una "tarjeta de presentación" con el color del negocio:
+   es lo que el dueño le pasa al vecino.
+   ========================================================================== */
+.pq-referido-tarjeta { margin: var(--esp-5) 0; padding: var(--esp-5) var(--esp-4); border-radius: var(--radio-l); background: var(--tiquete); border: 1px solid var(--recibo); border-top: 6px solid var(--marca); box-shadow: var(--sombra-media); }
+.pq-referido-tarjeta-titulo { margin: 0 0 var(--esp-3); font: 700 16px/1.3 var(--fuente-titulo); color: var(--carbon); }
+.pq-referido-enlace { font-size: 14px; }
+.pq-referido-botones { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-3); }
+.pq-referido-botones .pq-btn { width: auto; flex: 1 1 200px; }
+.pq-referido-pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-3); counter-reset: paso; }
+@media (min-width: 900px) { .pq-referido-pasos { grid-template-columns: repeat(3, 1fr); } }
+.pq-referido-pasos li { counter-increment: paso; position: relative; display: flex; flex-direction: column; gap: 2px; padding: var(--esp-3) var(--esp-4) var(--esp-3) 52px; border: 1px dashed var(--borde); border-radius: var(--radio-m); font-size: 14px; color: var(--carbon); }
+.pq-referido-pasos li::before { content: counter(paso); position: absolute; left: var(--esp-4); top: var(--esp-3); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--sello); color: #fff; font-weight: 800; font-size: 13px; }
+.pq-registro-invita { margin: var(--esp-3) 0 0; padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: var(--tinte-sello); color: var(--carbon); font-size: 14px; }
