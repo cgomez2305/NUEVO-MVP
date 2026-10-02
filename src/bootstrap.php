@@ -57,8 +57,8 @@ if ($httpsActivo) {
 }
 header(
     "Content-Security-Policy: default-src 'self'; img-src 'self' data:; "
-    . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-    . "font-src 'self' https://fonts.gstatic.com; "
+    . "style-src 'self' 'unsafe-inline'; "
+    . "font-src 'self'; "
     . "script-src 'self'; frame-ancestors 'none'"
 );
 

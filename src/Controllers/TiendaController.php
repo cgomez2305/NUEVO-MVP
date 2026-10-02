@@ -73,12 +73,17 @@ class TiendaController
 
         $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
+        $horarioSede = Sede::horario($negocio);
+        $abiertoAhora = negocio_abierto_ahora($horarioSede);
 
         ver('tienda/mostrar', [
             'titulo'          => $negocio['nombre'] . ' · Veci',
             'negocio'         => $negocio,
             'productos'       => $productos,
             'carrito'         => $carrito,
+            'horario'         => horario_resumen($horarioSede),
+            'abiertoAhora'    => $abiertoAhora,
+            'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
             'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
         ], 'tienda');

@@ -355,7 +355,9 @@ function negocio_proxima_apertura(array $horario): ?array
  * vista no tenga que volver a separar nombre de horas.
  *
  * @param array<string, array{0:string,1:string}> $horario
- * @return array<int, array{dia: string, rango: string}>
+ * "hoy" marca la línea que incluye el día de hoy, para resaltarla.
+ *
+ * @return array<int, array{dia: string, rango: string, hoy: bool}>
  */
 function horario_resumen(array $horario): array
 {
@@ -377,8 +379,9 @@ function horario_resumen(array $horario): array
 
         if ($cambia && $rangoActual !== $SIN_INICIAR) {
             $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
-            $rangoTexto = $rangoActual === null ? 'Cerrado' : hora_legible($rangoActual[0]) . ' - ' . hora_legible($rangoActual[1]);
-            $lineas[] = ['dia' => $nombre, 'rango' => $rangoTexto];
+            $rangoTexto = $rangoActual === null ? 'Cerrado' : hora_legible($rangoActual[0]) . ' – ' . hora_legible($rangoActual[1]);
+            $hoyIso = (int) date('N');
+            $lineas[] = ['dia' => $nombre, 'rango' => $rangoTexto, 'hoy' => $hoyIso >= $inicioGrupo && $hoyIso <= $dia - 1];
         }
         if ($cambia) {
             $inicioGrupo = $dia;
@@ -387,4 +390,38 @@ function horario_resumen(array $horario): array
     }
 
     return $lineas;
+}
+
+/**
+ * Color de texto legible sobre un fondo de color de marca: tinta oscura o
+ * papel claro según la luminancia relativa (WCAG). El negocio elige su
+ * color libremente (amarillo, azul, rosado...) y la letra encima tiene que
+ * seguir leyéndose — una "S" negra sobre azul oscuro no se lee.
+ */
+function color_texto_sobre(string $hex): string
+{
+    $hex = ltrim(trim($hex), '#');
+    if (strlen($hex) === 3) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if (!preg_match('/^[0-9a-f]{6}$/i', $hex)) {
+        return '#1B1A17';
+    }
+    $canal = static function (string $par): float {
+        $c = hexdec($par) / 255;
+        return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+    };
+    $luminancia = 0.2126 * $canal(substr($hex, 0, 2)) + 0.7152 * $canal(substr($hex, 2, 2)) + 0.0722 * $canal(substr($hex, 4, 2));
+
+    // Contraste contra tinta (#1B1A17, L≈0.011) vs. contra papel (#FFFDF8, L≈0.98):
+    // gana el que dé más contraste.
+    $contraTinta = ($luminancia + 0.05) / (0.011 + 0.05);
+    $contraPapel = (0.98 + 0.05) / ($luminancia + 0.05);
+    return $contraTinta >= $contraPapel ? '#1B1A17' : '#FFFDF8';
+}
+
+/** Un color hex válido (#RRGGBB) o el de respaldo: evita que un dato raro rompa el CSS inline. */
+function color_seguro(?string $hex, string $respaldo = '#F2B632'): string
+{
+    return is_string($hex) && preg_match('/^#[0-9a-f]{6}$/i', trim($hex)) ? trim($hex) : $respaldo;
 }

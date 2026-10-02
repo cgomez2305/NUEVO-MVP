@@ -27,6 +27,34 @@
   --tinte-aji: rgba(232, 69, 44, .08);
   --sombra-suave: 0 1px 2px rgba(32, 33, 36, .04), 0 8px 20px -10px rgba(32, 33, 36, .12);
   --sombra-media: 0 4px 10px rgba(32, 33, 36, .05), 0 16px 32px -14px rgba(32, 33, 36, .18);
+
+  /* Ruta 1 (tienda): neutros cálidos. Contraste AA sobre --papel y blanco. */
+  --papel-hondo: #EFE8D8;
+  --linea-tienda: #E3DBC8;
+  --texto-calido: #5F5848;
+  --texto-tenue: #736C5B;
+
+  /* Escala de espaciado (múltiplos de 4 px): nada de 13 o 22 px a ojo. */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 20px;
+  --esp-6: 24px;
+  --esp-8: 32px;
+  --esp-10: 40px;
+  --esp-12: 48px;
+
+  --radio-s: 8px;
+  --radio-m: 12px;
+  --radio-l: 18px;
+
+  /* Movimiento: rápido para respuestas a un toque, medio para cambios de
+     estado, lento solo para entradas. Una sola curva para todo. */
+  --curva: cubic-bezier(.2, .8, .2, 1);
+  --rapido: 150ms;
+  --medio: 250ms;
+  --lento: 400ms;
 }
 
 * { box-sizing: border-box; }
@@ -1095,9 +1123,16 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 
 /* ---------- estadísticas del panel ---------- */
 
+/* En celular, 4 cifras en una fila no caben con la fuente real (JetBrains
+   Mono a 25px + etiquetas como "Clientes recurrentes"): desbordaban la
+   pantalla 28px. Por debajo de 600px pasan a una cuadrícula de 2×2. */
 .pq-stats { display: flex; gap: 10px; margin-top: 16px; }
+@media (max-width: 599px) {
+  .pq-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .pq-stat {
   flex: 1;
+  min-width: 0;
   background: #F4F1E9;
   border-radius: 12px;
   padding: 14px 12px;
@@ -1390,26 +1425,6 @@ a.pq-stat:hover { border-color: var(--sello); }
 
 /* ---------- tienda pública (Ruta 1) ---------- */
 
-.pq-tienda-header {
-  padding: 16px 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.pq-tienda-logo {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 22px;
-  color: var(--tinta);
-  background: var(--mostaza);
-  box-shadow: 0 4px 12px -2px rgba(27, 26, 23, .25), 0 0 0 4px rgba(255, 255, 255, .5);
-}
 .pq-tienda-nombre {
   margin: 0;
   font-family: 'Bricolage Grotesque', sans-serif;
@@ -1419,112 +1434,400 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 .pq-tienda-desc { font-size: 13px; color: #6b6350; }
 
-/* Un menú de verdad se lee por secciones, no como una sola lista plana:
-   el nombre de categoría separa "Entradas" de "Bebidas" igual que en una
-   carta impresa. Si el negocio no usa categorías (todo quedó en la
-   "General" de siempre), la vista simplemente no imprime ningún título. */
-.pq-menu-categoria {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--tinta);
-  margin: 28px 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1.5px solid rgba(27, 26, 23, .1);
-}
-.pq-menu-categoria:first-child { margin-top: 4px; }
+/* ---------- tienda pública v2: fachada, carta y barra del pedido ----------
+   Ruta 1 "Letrero de barrio". La tienda es del negocio, no de Veci: todo el
+   acento sale de --marca (el color que eligió el dueño, inyectado en
+   layouts/tienda.php junto con --marca-sobre, el texto legible encima).
+   Detalle completo en .claude/skills/diseno-veci/references/tienda.md. */
 
-.pq-productos {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
+.pq-shell-tienda {
+  --marca: #F2B632;
+  --marca-sobre: #1B1A17;
+  /* Derivados: la marca cruda casi nunca sirve como color de texto sobre
+     papel (un amarillo no se lee), así que los acentos de texto usan la
+     versión oscurecida y los fondos la aclarada. */
+  --marca-claro: color-mix(in oklab, var(--marca) 34%, #FFFFFF);
+  --marca-suave: color-mix(in oklab, var(--marca) 13%, var(--papel));
+  --marca-texto: color-mix(in oklab, var(--marca) 52%, var(--tinta));
 }
-.pq-producto {
-  background: #FFFFFF;
-  border: 1px solid #E7E0CF;
-  border-radius: 14px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  box-shadow: 0 1px 2px rgba(27, 26, 23, .03), 0 6px 16px -10px rgba(27, 26, 23, .12);
-  transition: box-shadow .15s ease, transform .15s ease;
-  animation: pqEntrada .35s ease both;
-  animation-delay: calc(var(--i, 0) * 45ms);
-}
-@keyframes pqEntrada { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.pq-producto:hover { box-shadow: 0 4px 8px rgba(27, 26, 23, .04), 0 14px 28px -14px rgba(27, 26, 23, .2); transform: translateY(-2px); }
-.pq-producto-agotado { opacity: .55; }
-.pq-producto-agotado:hover { transform: none; box-shadow: 0 1px 2px rgba(27, 26, 23, .03), 0 6px 16px -10px rgba(27, 26, 23, .12); }
-.pq-producto-agotado .pq-producto-foto { filter: grayscale(1); }
-.pq-producto-foto {
-  height: 108px;
-  border-radius: 10px;
+
+/* Toldo: el detalle propio de la tienda. Rayas del color del negocio con
+   festones abajo, como el toldo de una tienda de barrio. Las rayas miden lo
+   mismo que cada festón (2 × --feston) para que cada uno sea una raya.
+   La sombra va en el contenedor porque la máscara recortaría un
+   drop-shadow puesto en el mismo elemento. */
+.pq-toldo {
+  --feston: 12px;
   position: relative;
-  overflow: hidden;
-  background: #EFE9D8;
-  box-shadow: inset 0 -14px 20px -8px rgba(0, 0, 0, .2);
+  height: 68px;
+  filter: drop-shadow(0 6px 5px rgba(27, 26, 23, .16));
 }
-.pq-producto-foto::before {
+.pq-toldo::before {
   content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .4), transparent 60%);
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--marca-texto) 0 7px, transparent 7px),
+    linear-gradient(180deg, rgba(255, 255, 255, .18), transparent 45%, rgba(27, 26, 23, .12)),
+    repeating-linear-gradient(90deg, var(--marca) 0 calc(var(--feston) * 2), var(--marca-claro) calc(var(--feston) * 2) calc(var(--feston) * 4));
+  -webkit-mask:
+    radial-gradient(var(--feston) at 50% calc(100% - var(--feston)), #000 98%, #0000 101%) 0 100% / calc(var(--feston) * 2) 100% repeat-x,
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--feston)) no-repeat;
+  mask:
+    radial-gradient(var(--feston) at 50% calc(100% - var(--feston)), #000 98%, #0000 101%) 0 100% / calc(var(--feston) * 2) 100% repeat-x,
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--feston)) no-repeat;
+  transform-origin: top;
+  animation: pqToldo .55s var(--curva) both;
 }
-.pq-producto-foto img { width: 100%; height: 100%; object-fit: cover; }
-.pq-producto-nombre { font-size: 13px; font-weight: 600; line-height: 1.25; }
-.pq-producto-desc {
-  font-size: 11.5px;
-  color: #8a8474;
-  line-height: 1.35;
+@keyframes pqToldo { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+
+.pq-letrero { position: relative; padding: 0 var(--esp-5); margin-top: -30px; }
+.pq-letrero-insignia {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--marca);
+  color: var(--marca-sobre);
+  font: 700 28px/1 'Bricolage Grotesque', sans-serif;
+  box-shadow: 0 0 0 4px var(--papel), 0 10px 20px -8px rgba(27, 26, 23, .45);
+  animation: pqAparece .45s .15s var(--curva) both;
+}
+.pq-letrero-nombre {
+  margin: var(--esp-3) 0 0;
+  font: 700 clamp(26px, 7.6vw, 34px)/1.05 'Bricolage Grotesque', sans-serif;
+  letter-spacing: -.02em;
+  color: var(--tinta);
+  text-wrap: balance;
+}
+.pq-letrero-desc { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--texto-calido); text-wrap: pretty; }
+
+/* Estado abierto/cerrado: siempre calculado contra el horario real. El
+   punto verde "late" solo cuando está abierto — único movimiento en bucle
+   permitido, porque comunica un estado vivo. */
+.pq-letrero-estado { display: flex; align-items: center; gap: 8px; margin: var(--esp-3) 0 0; font-size: 13.5px; color: var(--texto-calido); }
+.pq-letrero-estado strong { color: var(--tinta); font-weight: 650; }
+.pq-letrero-estado-punto { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--texto-tenue); flex-shrink: 0; }
+.pq-letrero-estado-abierto strong { color: #0f7a4f; }
+.pq-letrero-estado-abierto .pq-letrero-estado-punto { background: var(--caja); }
+.pq-letrero-estado-abierto .pq-letrero-estado-punto::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--caja);
+  animation: pqLatido 2.4s ease-out infinite;
+}
+@keyframes pqLatido { from { transform: scale(1); opacity: .55; } to { transform: scale(2.8); opacity: 0; } }
+
+/* Accesos rápidos: lo que un cliente de barrio busca primero (escribirle,
+   llegar, saber si está abierto). Pastillas con scroll horizontal en vez de
+   saltar de línea en celulares angostos. */
+.pq-accesos {
+  display: flex;
+  gap: var(--esp-2);
+  margin: var(--esp-4) calc(var(--esp-5) * -1) 0;
+  padding: 2px var(--esp-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pq-accesos::-webkit-scrollbar { display: none; }
+.pq-acceso {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  color: var(--tinta);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color var(--rapido) ease, background var(--rapido) ease, transform var(--rapido) ease;
+}
+.pq-acceso svg { width: 17px; height: 17px; flex-shrink: 0; }
+.pq-acceso:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); background: #FFFFFF; }
+.pq-acceso:active { transform: scale(.97); }
+
+/* Navegación de secciones del menú: pegada arriba al hacer scroll, para
+   saltar de "Comidas" a "Bebidas" sin recorrer todo. tienda.js marca la
+   sección visible y agrega la sombra cuando ya quedó pegada; sin JS siguen
+   siendo enlaces de ancla normales. */
+.pq-categorias {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  gap: 6px;
+  margin-top: var(--esp-5);
+  padding: 10px var(--esp-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: color-mix(in srgb, var(--papel) 90%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--medio) ease, box-shadow var(--medio) ease;
+}
+.pq-categorias::-webkit-scrollbar { display: none; }
+.pq-categorias-pegada { border-bottom-color: var(--linea-tienda); box-shadow: 0 10px 18px -16px rgba(27, 26, 23, .45); }
+.pq-categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  color: var(--texto-calido);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--medio) ease, color var(--medio) ease;
+}
+.pq-categoria:hover { background: var(--papel-hondo); color: var(--tinta); }
+.pq-categoria-cuenta { font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--texto-tenue); }
+.pq-categoria-activa, .pq-categoria-activa:hover { background: var(--marca); color: var(--marca-sobre); }
+.pq-categoria-activa .pq-categoria-cuenta { color: inherit; opacity: .7; }
+
+.pq-vitrina { padding-bottom: var(--esp-8); }
+
+/* La carta: cada sección es una hoja clara sobre el papel, con los platos
+   separados por línea punteada y unidos a su precio con puntos guía, como
+   la carta impresa de un corrientazo. Sin foto real no se inventa una. */
+.pq-carta { margin-top: var(--esp-6); scroll-margin-top: 72px; }
+.pq-categorias + .pq-vitrina .pq-carta:first-child { margin-top: var(--esp-3); }
+.pq-carta-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--esp-3);
+  font: 700 19px/1.2 'Bricolage Grotesque', sans-serif;
+  letter-spacing: -.01em;
+  color: var(--tinta);
+}
+.pq-carta-titulo::before { content: ""; width: 6px; height: 18px; border-radius: 3px; background: var(--marca); flex-shrink: 0; }
+.pq-carta-lista {
+  padding: 0 var(--esp-4);
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  border-radius: var(--radio-l);
+  box-shadow: 0 1px 2px rgba(27, 26, 23, .04), 0 14px 30px -22px rgba(27, 26, 23, .3);
+}
+.pq-carta-nota { display: flex; align-items: center; gap: 8px; margin: calc(var(--esp-1) * -1) var(--esp-1) var(--esp-3); font-size: 13.5px; line-height: 1.45; color: var(--texto-calido); }
+.pq-carta-nota svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--texto-tenue); }
+
+.pq-plato {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-4) 0;
+  border-top: 1px dashed var(--linea-tienda);
+  animation: pqAparece .4s var(--curva) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+.pq-plato:first-child { border-top: 0; }
+.pq-plato-con-foto { align-items: flex-start; }
+.pq-plato-cuerpo { flex: 1; min-width: 0; }
+/* flex-wrap: si el nombre no cabe junto al precio, ocupa su propia línea
+   completa y los puntos guía + precio bajan a la siguiente (sigue leyéndose
+   como carta) en vez de partir el nombre en una palabra por renglón. */
+.pq-plato-linea { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+.pq-plato-nombre { margin: 0; flex: 0 1 auto; max-width: 100%; font: 600 15.5px/1.3 'Inter Tight', sans-serif; color: var(--tinta); overflow-wrap: break-word; text-wrap: pretty; }
+.pq-plato-guia { flex: 1; min-width: 14px; border-bottom: 2px dotted color-mix(in srgb, var(--tinta) 22%, transparent); transform: translateY(-4px); }
+.pq-plato-precio { flex-shrink: 0; font: 650 15px/1.3 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-plato-desc {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--texto-tenue);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.pq-producto-fila { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 2px; }
-.pq-producto-precio { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b6350; }
-.pq-add {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--aji);
-  color: #FFFEF9;
-  border: none;
-  font-size: 18px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform .15s ease;
-}
-.pq-add:hover { transform: scale(1.1); }
-.pq-add:active { transform: scale(.92); }
+.pq-plato-lado { position: relative; flex-shrink: 0; }
+.pq-plato-foto { width: 88px; height: 88px; border-radius: var(--radio-m); object-fit: cover; background: var(--papel-hondo); }
+/* Con foto, el "+" se monta sobre la esquina de la foto (patrón que todo el
+   mundo conoce de las apps de domicilios); sin foto, queda solo a la derecha. */
+.pq-plato-con-foto .pq-plato-form { position: absolute; right: -8px; bottom: -8px; }
+.pq-plato-agotado .pq-plato-nombre, .pq-plato-agotado .pq-plato-precio { color: var(--texto-tenue); }
+.pq-plato-agotado .pq-plato-precio { text-decoration: line-through; }
+.pq-plato-agotado .pq-plato-foto { filter: grayscale(1); opacity: .6; }
+.pq-plato-agotado-etiqueta { display: inline-block; margin-top: 8px; padding: 3px 9px; border-radius: 999px; background: var(--tinte-aji); color: #9c2c17; font-size: 12px; font-weight: 600; }
 
-.pq-barra-carrito {
-  position: sticky;
-  bottom: 20px;
-  margin: 20px 20px 0;
+/* Botón "+": contorno sobrio en vez de un círculo rojo repetido en cada
+   fila (eso era ruido). Cuando el producto ya va en el pedido se llena con
+   la marca y muestra cuántas unidades lleva. */
+.pq-agregar {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: var(--tinta);
+  border: 1.5px solid color-mix(in srgb, var(--tinta) 20%, transparent);
+  cursor: pointer;
+  transition: background var(--rapido) ease, color var(--rapido) ease, border-color var(--rapido) ease, transform var(--rapido) ease;
+}
+.pq-agregar::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; } /* área táctil de 48px */
+.pq-agregar svg { width: 18px; height: 18px; }
+.pq-agregar:hover { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.pq-agregar:active { transform: scale(.9); }
+.pq-agregar:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-agregar-lleva, .pq-agregar-lleva:hover { background: var(--marca); color: var(--marca-sobre); border-color: transparent; }
+.pq-agregar-cuenta {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
   background: var(--tinta);
   color: var(--papel);
-  border-radius: 14px;
-  padding: 14px 18px;
+  font: 700 11.5px/20px 'Inter Tight', sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  box-shadow: 0 0 0 2px #FFFDF8;
+}
+.pq-agregar-cuenta[hidden] { display: none; }
+.pq-agregar-pop { animation: pqPop .35s var(--curva); }
+@keyframes pqPop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* Servicios (reservas): la fila ENTERA es el enlace a reservar; a la
+   derecha, el próximo turno de hoy si existe (dato real, ver
+   TiendaController::mostrar) en vez de un botón oscuro repetido. */
+.pq-servicio {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 10px 24px rgba(27, 26, 23, .25);
+  gap: var(--esp-3);
+  padding: var(--esp-4) 0;
+  border-top: 1px dashed var(--linea-tienda);
+  color: inherit;
   text-decoration: none;
-  transition: transform .15s ease;
+  animation: pqAparece .4s var(--curva) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
 }
+.pq-servicio:first-child { border-top: 0; }
+.pq-servicio-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pq-servicio-nombre { font: 600 15.5px/1.3 'Inter Tight', sans-serif; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-servicio-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13.5px; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
+.pq-servicio-precio { color: var(--tinta); font-weight: 600; }
+.pq-servicio-flecha { width: 18px; height: 18px; flex-shrink: 0; color: var(--texto-tenue); transition: transform var(--rapido) ease, color var(--rapido) ease; }
+a.pq-servicio:hover .pq-servicio-nombre { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+a.pq-servicio:hover .pq-servicio-flecha { transform: translateX(3px); color: var(--tinta); }
+a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4px; border-radius: var(--radio-s); }
+.pq-servicio-agotado { opacity: .6; }
+.pq-cupo {
+  flex-shrink: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 6px 10px;
+  border-radius: var(--radio-s);
+  background: var(--papel-hondo);
+  color: var(--texto-calido);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: right;
+  white-space: nowrap;
+}
+.pq-cupo-sub { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.pq-cupo-hoy { background: var(--tinte-caja); color: #0f7a4f; }
+.pq-cupo-no { background: var(--tinte-aji); color: #9c2c17; }
+
+/* Información del negocio al pie: horario con el día de hoy resaltado y
+   dirección. Mismo lenguaje de línea punteada que la carta. */
+.pq-info-grupo { display: grid; gap: var(--esp-3); margin-top: var(--esp-8); }
+.pq-info { padding: var(--esp-4) var(--esp-5); border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); scroll-margin-top: 72px; }
+.pq-info-titulo { margin: 0 0 var(--esp-2); font: 700 15px/1.3 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-horario { margin: 0; }
+.pq-horario-fila { display: flex; justify-content: space-between; gap: var(--esp-3); padding: 8px 0; border-top: 1px dashed var(--linea-tienda); font-size: 14px; }
+.pq-horario-fila:first-child { border-top: 0; }
+.pq-horario dt { color: var(--texto-calido); }
+.pq-horario dd { margin: 0; color: var(--tinta); font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+.pq-horario-cerrado dd { color: var(--texto-tenue); font-weight: 400; }
+.pq-horario-hoy { margin: 0 -10px; padding: 8px 10px; border-radius: var(--radio-s); border-top-color: transparent; background: var(--marca-suave); }
+.pq-horario-hoy + .pq-horario-fila { border-top-color: transparent; }
+.pq-horario-hoy dt, .pq-horario-hoy dd { color: var(--tinta); font-weight: 650; }
+.pq-horario-etiqueta { margin-left: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--marca-texto); }
+.pq-info-direccion { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--tinta); }
+.pq-info-enlace { display: inline-flex; align-items: center; gap: 4px; padding: 8px 0; color: var(--marca-texto); font-size: 14px; font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.pq-info-enlace svg { width: 15px; height: 15px; }
+
+.pq-vacio-tienda {
+  margin-top: var(--esp-6);
+  padding: var(--esp-10) var(--esp-6);
+  border: 1.5px dashed var(--linea-tienda);
+  border-radius: var(--radio-l);
+  text-align: center;
+  color: var(--texto-calido);
+}
+.pq-vacio-tienda svg { width: 36px; height: 36px; margin: 0 auto var(--esp-3); color: var(--texto-tenue); }
+.pq-vacio-tienda p { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.pq-vacio-tienda strong { color: var(--tinta); }
+
+/* Barra del pedido: flota sobre el final de la pantalla mientras se mira
+   el menú. La bolsa lleva la marca del negocio y el número de productos;
+   el total va a la derecha con números tabulares (no "bailan" al cambiar). */
+.pq-barra-carrito {
+  position: sticky;
+  bottom: calc(var(--esp-4) + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0 var(--esp-4) var(--esp-4);
+  padding: 10px 16px 10px 10px;
+  border-radius: var(--radio-l);
+  background: var(--tinta);
+  color: var(--papel);
+  text-decoration: none;
+  box-shadow: 0 16px 32px -12px rgba(27, 26, 23, .55), 0 2px 6px rgba(27, 26, 23, .2);
+  animation: pqSube .35s var(--curva) both;
+}
+.pq-barra-carrito:focus-visible { outline: 3px solid var(--marca); outline-offset: 3px; }
 /* El marcado siempre existe (así el fetch de "agregar" solo tiene que
    mostrarla/actualizarla); con 0 productos simplemente no ocupa espacio. */
 .pq-barra-carrito-oculta { display: none; }
-/* Pequeño "pulso" cuando se agrega un producto sin recargar la página —
-   la única señal de que el clic sí hizo algo, ya que no hay navegación. */
-.pq-barra-carrito-pulso { animation: pqBarraPulso .22s ease; }
-@keyframes pqBarraPulso { 0% { transform: scale(1); } 50% { transform: scale(1.025); } 100% { transform: scale(1); } }
+.pq-barra-carrito-bolsa { position: relative; width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border-radius: var(--radio-m); background: var(--marca); color: var(--marca-sobre); }
+.pq-barra-carrito-bolsa svg { width: 22px; height: 22px; }
+.pq-barra-carrito-cuenta {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--papel);
+  color: var(--tinta);
+  font: 700 11.5px/20px 'Inter Tight', sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--tinta);
+}
+.pq-barra-carrito-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pq-barra-carrito-etiqueta { font-size: 15px; font-weight: 650; }
+.pq-barra-carrito-sub { font-size: 12.5px; color: rgba(246, 241, 231, .65); }
+.pq-barra-carrito-total { display: flex; align-items: center; gap: 6px; font: 700 16px/1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-barra-carrito-total::after { content: "→"; font-weight: 400; opacity: .6; transition: transform var(--rapido) ease; }
+.pq-barra-carrito:hover .pq-barra-carrito-total::after { transform: translateX(3px); }
+/* "Pulso" cuando se agrega un producto sin recargar la página: la bolsa
+   salta, la única señal de que el clic sí hizo algo. */
+.pq-barra-carrito-pulso .pq-barra-carrito-bolsa { animation: pqPop .35s var(--curva); }
+
+@keyframes pqAparece { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pqSube { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
 .pq-fila-carrito {
   display: flex;
@@ -1534,25 +1837,6 @@ a.pq-stat:hover { border-color: var(--sello); }
   border-bottom: 1px solid #E7E0CF;
 }
 .pq-fila-carrito-icono { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
-
-/* Fila de servicio (servicios.php): la fila ENTERA es el link a reservar
-   (así no hay que acertarle al botón en una pantalla chica), con "Reservar"
-   como señal visual de que algo es clicable, no como el único destino —
-   pointer-events:none en ese span para que el click lo resuelva siempre la
-   fila, nunca un elemento duplicado dentro. */
-.pq-fila-servicio { text-decoration: none; color: inherit; cursor: pointer; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 10px; transition: background .15s ease; }
-.pq-fila-servicio:hover { background: var(--recibo); }
-
-/* Estado "abierto ahora" bajo el nombre del negocio: calculado de verdad
-   contra el horario de hoy (ver negocio_abierto_ahora() en helpers.php),
-   nunca un texto fijo — si el negocio no tiene horario cargado, no se
-   muestra nada en vez de inventar un estado. */
-.pq-estado-abierto { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 12px; font-weight: 600; }
-.pq-estado-abierto-punto { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.pq-estado-abierto-si { color: #16A36A; }
-.pq-estado-abierto-si .pq-estado-abierto-punto { background: #16A36A; }
-.pq-estado-abierto-no { color: var(--gris-suave); }
-.pq-estado-abierto-no .pq-estado-abierto-punto { background: var(--gris-suave); }
 
 /* Fila de producto del carrito (checkout): a diferencia de la fila de
    servicio (una sola línea), acá hay nombre + precio unitario + el stepper
@@ -2020,12 +2304,26 @@ a.pq-stat:hover { border-color: var(--sello); }
 /* ---------- tienda pública en escritorio: catálogo de verdad, no una columna angosta ---------- */
 @media (min-width: 860px) {
   .pq-shell-tienda { max-width: 900px; }
-  .pq-tienda-header { padding: 28px 32px 0; }
   .pq-content-tienda { padding: 0 32px 60px; }
-  .pq-productos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-  .pq-producto-foto { height: 130px; }
-  .pq-menu-categoria { font-size: 17px; margin-top: 36px; }
-  .pq-barra-carrito { margin-left: 32px; margin-right: 32px; }
+  .pq-vitrina { padding-bottom: var(--esp-10); }
+
+  .pq-toldo { --feston: 15px; height: 92px; }
+  .pq-letrero { padding: 0 32px; margin-top: -38px; }
+  .pq-letrero-insignia { width: 80px; height: 80px; font-size: 34px; }
+  .pq-letrero-nombre { font-size: 42px; }
+  .pq-letrero-desc { font-size: 16px; max-width: 60ch; }
+  .pq-accesos { margin-left: -32px; margin-right: -32px; padding-left: 32px; padding-right: 32px; }
+  .pq-categorias { padding-left: 32px; padding-right: 32px; }
+
+  /* En escritorio la carta se abre en dos columnas (como una carta impresa
+     doblada); la línea punteada de arriba se quita en la primera fila de
+     ambas columnas. */
+  .pq-carta-lista { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--esp-8); padding: 0 var(--esp-6); }
+  .pq-carta-lista > :nth-child(2) { border-top: 0; }
+  .pq-carta-titulo { font-size: 22px; }
+  .pq-info-grupo { grid-template-columns: 1fr 1fr; align-items: start; }
+
+  .pq-barra-carrito { width: 400px; margin-left: auto; margin-right: 32px; }
 }
 
 /* ---------- catálogo de productos del panel: lectura primero, edición aparte ---------- */

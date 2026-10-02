@@ -162,15 +162,40 @@
     if (barra) {
       if (carrito.cantidad > 0) {
         var resumen = document.getElementById('pq-barra-carrito-resumen');
+        var totalBarra = document.getElementById('pq-barra-carrito-total');
+        var cuentaBarra = document.getElementById('pq-barra-carrito-cuenta');
         if (resumen) {
-          resumen.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto · ' : ' productos · ') + formatearPesos(carrito.total);
+          // Con el total en su propio elemento, el resumen solo lleva la cantidad.
+          resumen.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos')
+            + (totalBarra ? '' : ' · ' + formatearPesos(carrito.total));
         }
+        if (totalBarra) totalBarra.textContent = formatearPesos(carrito.total);
+        if (cuentaBarra) cuentaBarra.textContent = carrito.cantidad;
         barra.classList.remove('pq-barra-carrito-oculta');
         barra.classList.add('pq-barra-carrito-pulso');
-        window.setTimeout(function () { barra.classList.remove('pq-barra-carrito-pulso'); }, 220);
+        window.setTimeout(function () { barra.classList.remove('pq-barra-carrito-pulso'); }, 360);
       } else {
         barra.classList.add('pq-barra-carrito-oculta');
       }
+    }
+
+    // Catálogo: cada "+" muestra cuántas unidades de su producto van en el
+    // pedido; el que se acaba de tocar da un pequeño salto de confirmación.
+    var cantidades = {};
+    (carrito.lineas || []).forEach(function (linea) { cantidades[String(linea.producto_id)] = linea.cantidad; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cuenta-producto]'), function (cuenta) {
+      var id = cuenta.getAttribute('data-cuenta-producto');
+      var unidades = cantidades[id] || 0;
+      cuenta.textContent = unidades;
+      cuenta.hidden = unidades === 0;
+      var botonProducto = cuenta.closest('.pq-agregar');
+      if (botonProducto) botonProducto.classList.toggle('pq-agregar-lleva', unidades > 0);
+    });
+    var botonTocado = productoId ? document.querySelector('[data-agregar-producto="' + productoId + '"]') : null;
+    if (botonTocado && tipo === 'agregar') {
+      botonTocado.classList.remove('pq-agregar-pop');
+      void botonTocado.offsetWidth; // reinicia la animación si se toca varias veces seguidas
+      botonTocado.classList.add('pq-agregar-pop');
     }
 
     // Nada más que hacer fuera de la página del carrito (p. ej. el "+" del

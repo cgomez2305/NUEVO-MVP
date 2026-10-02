@@ -1,0 +1,39 @@
+<?php
+/**
+ * Pie informativo de la tienda: horario de la semana (con el día de hoy
+ * resaltado) y dirección. Solo se imprime lo que el negocio de verdad
+ * cargó; si no hay ni horario ni dirección, no queda una sección vacía.
+ *
+ * Espera: $negocio; opcional $horario (de horario_resumen()).
+ */
+$horario = $horario ?? [];
+$direccion = trim((string) ($negocio['direccion'] ?? ''));
+?>
+<?php if ($horario !== [] || $direccion !== ''): ?>
+  <div class="pq-info-grupo">
+    <?php if ($horario !== []): ?>
+      <section class="pq-info" id="horario" aria-labelledby="pq-info-horario">
+        <h2 class="pq-info-titulo" id="pq-info-horario">Horario</h2>
+        <dl class="pq-horario">
+          <?php foreach ($horario as $linea): ?>
+            <div class="pq-horario-fila<?= !empty($linea['hoy']) ? ' pq-horario-hoy' : '' ?><?= $linea['rango'] === 'Cerrado' ? ' pq-horario-cerrado' : '' ?>">
+              <dt><?= e($linea['dia']) ?><?php if (!empty($linea['hoy'])): ?> <span class="pq-horario-etiqueta">hoy</span><?php endif; ?></dt>
+              <dd><?= e($linea['rango']) ?></dd>
+            </div>
+          <?php endforeach; ?>
+        </dl>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($direccion !== ''): ?>
+      <section class="pq-info" aria-labelledby="pq-info-donde">
+        <h2 class="pq-info-titulo" id="pq-info-donde">Dónde estamos</h2>
+        <p class="pq-info-direccion"><?= e($direccion) ?></p>
+        <a class="pq-info-enlace" href="https://www.google.com/maps/search/?api=1&amp;query=<?= e(urlencode($direccion)) ?>" target="_blank" rel="noopener">
+          Abrir en el mapa
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+        </a>
+      </section>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>

@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <title><?= e($titulo ?? 'Veci') ?></title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" href="<?= e(base_url('assets/img/icon-192.png')) ?>">
 <?php if (!empty($metaDescripcion)): ?>
 <meta name="description" content="<?= e($metaDescripcion) ?>">
 <meta property="og:type" content="website">
@@ -12,5 +13,5 @@
 <link rel="canonical" href="<?= e($canonicalUrl) ?>">
 <?php endif; ?>
 <?php endif; ?>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="<?= e(base_url('assets/css/fuentes.css')) ?>">
 <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">

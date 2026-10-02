@@ -1,6 +1,12 @@
-# Estado de la sesión — 2026-10-02
+# Estado de la sesión — 2026-10-02 (actualizado tras el rediseño de la tienda)
 
 ## Objetivo actual
+- Último pedido: "crea la skill y empieza por la tienda pública" → skill
+  `.claude/skills/diseno-veci/` (sistema de diseño + proceso + capturas.js)
+  y rediseño v2 de la tienda pública (pedidos y reservas). Orden acordado
+  para lo que sigue: tienda (resto de pantallas) → panel → onboarding → admin.
+- La skill de terceros "ui-ux-pro-max" NO se instaló: el clasificador de
+  seguridad bloqueó clonar el repo; el usuario eligió crear una propia.
 Veci: SaaS en PHP 8.4 + MySQL para negocios de barrio en Colombia que venden
 por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - "realiza todos los puntos. De igual manera, la idea es blindar completamente
@@ -33,9 +39,16 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Auditoría sin hallazgos en: SQLi, IDOR, CSRF, XSS, subidas, redirecciones.
 
 ## En curso
-- Nada a medias.
+- Nada a medias. Tienda v2 aplicada a `mostrar.php` y `servicios.php`
+  (toldo con la marca del negocio, carta con puntos guía, contadores en el
+  "+", barra del pedido, navegación de secciones, horario con "hoy").
+- Fuentes ahora alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
+0. Diseño: llevar `carrito.php`, `reservar.php`, `pedido_confirmado.php`,
+   `cita_*.php` al lenguaje tienda v2 (siguen con mono y cuadros de color);
+   luego el panel. Bug que ya existía: `/panel/productos` desborda 33–63px
+   en celular (detectado por capturas.js).
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
@@ -67,10 +80,15 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Admin local: `admin@tuveci.co` / `admin123`. Dueños demo: `3001234567`,
   `3005556677` / `veci123`. Tiendas: `donamaria`, `salonbonita`, `donamaria-centro`.
 - Puppeteer: `/tmp/pptr/node_modules/puppeteer-core`, Chromium en
-  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
+  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Capturas:
+  `node .claude/skills/diseno-veci/scripts/capturas.js --rutas ... --anchos 360,390,1280 --out <dir> [--cookies jar]`.
 - Tras pruebas: `DELETE FROM limites_tasa;` y borrar pedidos/clientes de prueba.
 
 ## Errores ya resueltos (no repetir)
 - curl exit 7 → servidor PHP caído tras reinicio del contenedor → relanzar.
 - Puppeteer muerto (exit 137) en pruebas largas → usar curl con cookie jar.
 - `column` no existe en el contenedor → usar awk.
+- Chromium no confiaba en el proxy para Google Fonts → se resolvió alojando
+  las fuentes en el propio servidor (no desactivar TLS).
+- Texto con tildes insertado por `mysql` sin `--default-character-set=utf8mb4`
+  queda dañado ("trifÃ¡sico"): es del dato de prueba, no de la app.
