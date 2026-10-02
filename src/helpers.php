@@ -124,6 +124,18 @@ function csrf_verificar(): bool
     return is_string($enviado) && hash_equals($_SESSION['_csrf'] ?? '', $enviado);
 }
 
+/**
+ * La IP real de quien hace la petición, para limitar abuso (ver
+ * RegistroIp::demasiadosDesde). Lee solo REMOTE_ADDR, nunca cabeceras como
+ * X-Forwarded-For: esas las puede mandar cualquiera y, sin un proxy
+ * confiable configurado delante (no es el caso de este hosting compartido
+ * típico), confiar en ellas dejaría falsificar la IP y saltarse el límite.
+ */
+function ip_cliente(): string
+{
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+}
+
 function flash_set(string $clave, string $mensaje): void
 {
     $_SESSION['_flash'][$clave] = $mensaje;

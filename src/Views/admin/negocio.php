@@ -62,10 +62,17 @@
           </span>
         </div>
         <?php if ($pago['confirmado_en'] === null): ?>
-          <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/confirmar')) ?>" data-confirmar="¿Confirmar que ya llegó la transferencia de este pago? Esto activa el plan del negocio de inmediato.">
-            <?= csrf_campo() ?>
-            <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Confirmar pago</button>
-          </form>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/confirmar')) ?>" style="display: flex; gap: 6px; align-items: center" data-confirmar="¿Ya viste esta transferencia en el Bre-B de Veci? Esto activa el plan del negocio de inmediato.">
+              <?= csrf_campo() ?>
+              <input class="pq-input" type="text" inputmode="numeric" name="monto_recibido" required placeholder="Monto recibido" aria-label="Monto que llegó a Bre-B" style="width: 140px; padding: 7px 10px; font-size: 13px">
+              <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Confirmar</button>
+            </form>
+            <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/rechazar')) ?>" data-confirmar="¿Descartar esta solicitud? El dueño podrá volver a pedir el cambio.">
+              <?= csrf_campo() ?>
+              <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Descartar</button>
+            </form>
+          </div>
         <?php endif; ?>
       </div>
     <?php endforeach; ?>

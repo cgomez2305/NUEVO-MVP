@@ -43,6 +43,11 @@ class AdminController
         $correo = trim((string) ($_POST['correo'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
 
+        if (AdminAuth::estaBloqueado($correo)) {
+            flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
+            redirigir('/admin/login');
+        }
+
         if (!AdminAuth::intentarLogin($correo, $password)) {
             flash_set('error', 'Correo o contraseña incorrectos.');
             redirigir('/admin/login');
@@ -111,11 +116,40 @@ class AdminController
         }
 
         if (csrf_verificar()) {
+            // El admin escribe el monto que vio llegar en su Bre-B, en vez
+            // de un clic a ciegas: si no coincide exacto con lo esperado, no
+            // se activa nada (transferencia parcial, plan equivocado, typo).
+            $montoRecibido = dinero_desde_texto((string) ($_POST['monto_recibido'] ?? ''));
+
             if ($pago['confirmado_en'] !== null) {
                 flash_set('error', 'Ese pago ya estaba confirmado.');
+            } elseif ($montoRecibido !== (int) $pago['monto']) {
+                flash_set('error', 'El monto recibido (' . pesos($montoRecibido) . ') no coincide con el esperado (' . pesos((int) $pago['monto']) . '). No se activó el plan.');
+            } elseif (!PagoPlan::confirmar((int) $pago['id'], (int) $admin['id'])) {
+                flash_set('error', 'Ese pago ya estaba confirmado.');
             } else {
-                PagoPlan::confirmar((int) $pago['id'], (int) $admin['id']);
                 flash_set('ok', 'Pago confirmado: el plan del negocio ya quedó activo.');
+            }
+        }
+
+        redirigir('/admin/negocios/' . (int) $pago['negocio_id']);
+    }
+
+    /** Descarta una solicitud de cambio de plan que nunca se pagó, para que el dueño pueda volver a pedir. */
+    public function rechazarPago(array $parametros): void
+    {
+        AdminAuth::exigirSesion();
+        $pago = PagoPlan::buscarPorId((int) $parametros['id']);
+
+        if ($pago === null) {
+            redirigir('/admin');
+        }
+
+        if (csrf_verificar()) {
+            if (PagoPlan::rechazar((int) $pago['id'])) {
+                flash_set('ok', 'Solicitud descartada.');
+            } else {
+                flash_set('error', 'Ese pago ya estaba confirmado; no se puede descartar.');
             }
         }
 

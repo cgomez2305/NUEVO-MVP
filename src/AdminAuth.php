@@ -14,17 +14,35 @@ use App\Models\Admin;
  */
 class AdminAuth
 {
+    /**
+     * false puede significar credenciales inválidas o cuenta bloqueada
+     * temporalmente; usa estaBloqueado() antes de intentar el login para
+     * distinguir el mensaje que le muestras al admin.
+     */
     public static function intentarLogin(string $correo, string $password): bool
     {
         $admin = Admin::buscarPorCorreo($correo);
-        if ($admin === null || !password_verify($password, $admin['password_hash'])) {
+        if ($admin === null || Admin::bloqueado($admin)) {
             return false;
         }
 
+        if (!password_verify($password, $admin['password_hash'])) {
+            Admin::registrarIntentoFallido((int) $admin['id']);
+            return false;
+        }
+
+        Admin::registrarLoginExitoso((int) $admin['id']);
         session_regenerate_id(true);
         $_SESSION['admin_id'] = $admin['id'];
 
         return true;
+    }
+
+    /** Máximo 5 intentos fallidos seguidos antes de bloquear la cuenta 15 minutos (ver Admin::MAX_INTENTOS_LOGIN). */
+    public static function estaBloqueado(string $correo): bool
+    {
+        $admin = Admin::buscarPorCorreo($correo);
+        return $admin !== null && Admin::bloqueado($admin);
     }
 
     public static function cerrarSesion(): void

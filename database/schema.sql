@@ -324,12 +324,29 @@ CREATE TABLE IF NOT EXISTS lista_espera (
 -- todos los negocios, suspenderlos y generar enlaces de recuperación de
 -- contraseña para soporte. Completamente aparte de `usuarios`: no hay
 -- registro público, solo se crea con bin/crear_admin.php.
+-- intentos_fallidos/bloqueado_hasta: mismo mecanismo de fuerza bruta que
+-- usuarios (5 intentos → 15 min bloqueado, ver Admin::MAX_INTENTOS_LOGIN).
+-- Un admin puede confirmar pagos y suspender cuentas, así que esta
+-- contraseña necesita el mismo blindaje que cualquier login de negocio.
 CREATE TABLE IF NOT EXISTS admins (
-  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  nombre        VARCHAR(120) NOT NULL,
-  correo        VARCHAR(160) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre             VARCHAR(120) NOT NULL,
+  correo             VARCHAR(160) NOT NULL UNIQUE,
+  password_hash      VARCHAR(255) NOT NULL,
+  intentos_fallidos  TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  bloqueado_hasta    DATETIME     DEFAULT NULL,
+  creado_en          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Una cuenta nueva creada desde cada IP, para frenar la multiplicación de
+-- cupos del plan Gratis vía multicuenta (ver AuthController::registrar y
+-- RegistroIp::demasiadosDesde). Solo se inserta en registros exitosos; no
+-- es un log general de tráfico.
+CREATE TABLE IF NOT EXISTS registros_ip (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ip          VARCHAR(45)  NOT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_registros_ip_ip_fecha (ip, creado_en)
 ) ENGINE=InnoDB;
 
 -- Suscripciones de Web Push de cada USUARIO del panel (no por sede: un

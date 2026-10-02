@@ -88,40 +88,90 @@ class PagoPlan
     }
 
     /**
-     * Confirma un pago pendiente: lo marca confirmado por ese admin y
-     * activa/extiende el plan del negocio hasta el fin del período pagado.
-     * No valida de nuevo que esté pendiente — eso lo hace el controller
-     * antes de llamar, para poder avisar un mensaje claro si ya no lo está.
+     * Confirma un pago pendiente y activa/extiende el plan del negocio.
+     * Devuelve false si el pago ya no estaba pendiente (otro admin lo
+     * confirmó, o un doble clic): la fila se bloquea con FOR UPDATE y el
+     * UPDATE exige confirmado_en IS NULL, así un mismo pago nunca puede
+     * extender el plan dos veces.
+     *
+     * El período se calcula aquí, al confirmar, y no al pedir: si el
+     * negocio está renovando el MISMO plan y todavía le quedan días, el
+     * período nuevo arranca donde termina el actual (no pierde lo pagado);
+     * en cualquier otro caso arranca hoy.
      */
-    public static function confirmar(int $id, int $adminId): void
+    public static function confirmar(int $id, int $adminId): bool
     {
-        $pago = self::buscarPorId($id);
-        if ($pago === null) {
-            return;
-        }
-
         $pdo = Database::conexion();
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare(
-                'UPDATE pagos_plan SET confirmado_por = :admin_id, confirmado_en = NOW() WHERE id = :id'
-            );
-            $stmt->execute(['admin_id' => $adminId, 'id' => $id]);
+            $stmt = $pdo->prepare('SELECT * FROM pagos_plan WHERE id = :id AND confirmado_en IS NULL FOR UPDATE');
+            $stmt->execute(['id' => $id]);
+            $pago = $stmt->fetch();
+            if ($pago === false) {
+                $pdo->rollBack();
+                return false;
+            }
 
-            $stmtNegocio = $pdo->prepare(
+            $stmtNegocio = $pdo->prepare('SELECT plan_id, plan_vence_en FROM negocios WHERE id = :id FOR UPDATE');
+            $stmtNegocio->execute(['id' => $pago['negocio_id']]);
+            $negocio = $stmtNegocio->fetch();
+
+            $hoy = new \DateTimeImmutable('today');
+            $inicio = $hoy;
+            if (
+                $negocio !== false
+                && (int) $negocio['plan_id'] === (int) $pago['plan_id']
+                && !empty($negocio['plan_vence_en'])
+                && $negocio['plan_vence_en'] >= $hoy->format('Y-m-d')
+            ) {
+                $inicio = new \DateTimeImmutable((string) $negocio['plan_vence_en']);
+            }
+            $fin = $inicio->modify($pago['ciclo'] === 'anual' ? '+1 year' : '+30 days');
+
+            $pdo->prepare(
+                'UPDATE pagos_plan
+                    SET confirmado_por = :admin_id, confirmado_en = NOW(),
+                        periodo_inicio = :inicio, periodo_fin = :fin
+                  WHERE id = :id AND confirmado_en IS NULL'
+            )->execute([
+                'admin_id' => $adminId,
+                'inicio'   => $inicio->format('Y-m-d'),
+                'fin'      => $fin->format('Y-m-d'),
+                'id'       => $id,
+            ]);
+
+            $pdo->prepare(
                 "UPDATE negocios SET plan_id = :plan_id, plan_estado = 'activo', plan_vence_en = :vence_en, plan_ciclo = :ciclo WHERE id = :negocio_id"
-            );
-            $stmtNegocio->execute([
+            )->execute([
                 'plan_id'    => $pago['plan_id'],
-                'vence_en'   => $pago['periodo_fin'],
+                'vence_en'   => $fin->format('Y-m-d'),
                 'ciclo'      => $pago['ciclo'],
                 'negocio_id' => $pago['negocio_id'],
             ]);
 
             $pdo->commit();
+            return true;
         } catch (\Throwable $e) {
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    /** El dueño retira su propia solicitud pendiente (acotado a SU negocio: nunca toca la de otro). */
+    public static function cancelarPendienteDeNegocio(int $negocioId): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            'DELETE FROM pagos_plan WHERE negocio_id = :negocio_id AND confirmado_en IS NULL'
+        );
+        $stmt->execute(['negocio_id' => $negocioId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /** Descarta una solicitud pendiente que nunca se pagó (o se pagó mal), para que el dueño pueda pedir de nuevo. */
+    public static function rechazar(int $id): bool
+    {
+        $stmt = Database::conexion()->prepare('DELETE FROM pagos_plan WHERE id = :id AND confirmado_en IS NULL');
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() === 1;
     }
 }

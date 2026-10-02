@@ -999,6 +999,8 @@ class PanelController
         Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
+            $this->exigirCupoDeSedes($negocio);
+
             $nombre = trim((string) ($_POST['nombre'] ?? ''));
             $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
 
@@ -1010,6 +1012,29 @@ class PanelController
         }
 
         redirigir('/panel/sedes');
+    }
+
+    /**
+     * Corta la ejecución si el negocio ya llegó al número de sedes que
+     * incluye su plan (planes.sedes_incluidas — 1 en Gratis/Barrio, 3 en
+     * Pro). Sin este chequeo cualquier plan podía crear sedes públicas
+     * ilimitadas gratis, que es justo la función que debería costar.
+     * Cuenta TODAS las sedes (publicadas o no): una sin publicar ya ocupa
+     * el cupo igual.
+     */
+    private function exigirCupoDeSedes(array $negocio): void
+    {
+        $incluidas = (int) ($negocio['sedes_incluidas'] ?? 1);
+        if (Sede::contarPorNegocio((int) $negocio['negocio_id']) < $incluidas) {
+            return;
+        }
+
+        flash_set(
+            'error',
+            'Tu plan incluye ' . $incluidas . ' sede' . ($incluidas === 1 ? '' : 's') . '. '
+            . 'Sube de plan para agregar más, o escríbenos a soporte@tuveci.co si ya necesitas una sede extra.'
+        );
+        redirigir('/panel/plan');
     }
 
     public function editarSede(array $parametros): void
@@ -1291,6 +1316,19 @@ class PanelController
         );
 
         flash_set('ok', 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($monto) . ' por Bre-B y confirmamos tu plan apenas lo veamos.');
+        redirigir('/panel/plan');
+    }
+
+    /** El dueño retira su solicitud pendiente (p. ej. eligió el plan o el ciclo equivocado) para poder pedir otra. */
+    public function cancelarSolicitudPlan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+
+        if (csrf_verificar() && PagoPlan::cancelarPendienteDeNegocio((int) $negocio['negocio_id'])) {
+            flash_set('ok', 'Cancelamos tu solicitud. Si ya transferiste, escríbenos a soporte@tuveci.co antes de pedir otra.');
+        }
+
         redirigir('/panel/plan');
     }
 

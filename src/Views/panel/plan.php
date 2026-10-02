@@ -35,6 +35,10 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
       <?php endif; ?>
       y confirmamos tu plan apenas lo veamos (normalmente el mismo día). Si tienes dudas, escríbenos a soporte@tuveci.co.
     </p>
+    <form method="post" action="<?= e(base_url('/panel/plan/cancelar')) ?>" style="margin-top: 10px" data-confirmar="¿Cancelar esta solicitud? Si ya transferiste, escríbenos antes.">
+      <?= csrf_campo() ?>
+      <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cancelar solicitud</button>
+    </form>
   </div>
 <?php endif; ?>
 
@@ -81,8 +85,9 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
       <ul class="pq-plan-card-bullets">
         <?php foreach ($bullets as $bullet): ?><li><?= e($bullet) ?></li><?php endforeach; ?>
       </ul>
-      <?php if (!$esActual): ?>
-        <form method="post" action="<?= e(base_url('/panel/plan/solicitar')) ?>">
+      <?php // Un plan pago actual también lleva formulario: es como se renueva (el período nuevo arranca donde termina el vigente, ver PagoPlan::confirmar). ?>
+      <?php if (!$esActual || $plan['nombre'] !== 'gratis'): ?>
+        <form method="post" action="<?= e(base_url('/panel/plan/solicitar')) ?>"<?= $plan['nombre'] === 'gratis' ? ' data-confirmar="¿Bajar a Gratis ahora? Pierdes lo que quede del período pagado y vuelven los límites del plan Gratis."' : '' ?>>
           <?= csrf_campo() ?>
           <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
           <?php if ($plan['nombre'] !== 'gratis'): ?>
@@ -94,7 +99,7 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
             </label>
           <?php endif; ?>
           <button type="submit" class="pq-btn <?= $plan['nombre'] === 'gratis' ? 'pq-btn-ghost' : 'pq-btn-sello' ?> pq-btn-chico" style="margin-top: 10px">
-            <?= $plan['nombre'] === 'gratis' ? 'Bajar a Gratis' : 'Elegir ' . e($nombresBonitos[$plan['nombre']]) ?>
+            <?= $plan['nombre'] === 'gratis' ? 'Bajar a Gratis' : ($esActual ? 'Renovar' : 'Elegir ' . e($nombresBonitos[$plan['nombre']])) ?>
           </button>
         </form>
       <?php endif; ?>

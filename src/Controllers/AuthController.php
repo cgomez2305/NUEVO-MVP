@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Negocio;
+use App\Models\RegistroIp;
 use App\Models\Sede;
 use App\Models\Usuario;
 use App\Services\Correo;
@@ -57,6 +58,12 @@ class AuthController
             redirigir('/registro');
         }
 
+        $ip = ip_cliente();
+        if (RegistroIp::demasiadosDesde($ip)) {
+            flash_set('error', 'Ya creaste varias cuentas nuevas en poco tiempo. Espera un día o escríbenos a soporte@tuveci.co si de verdad necesitas otra.');
+            redirigir('/registro');
+        }
+
         // Una cuenta nueva es: un negocio (la marca) + su primera sede (el
         // punto de venta, con el mismo nombre y WhatsApp) + un usuario dueño.
         // Así nadie tiene que enterarse de que existen "sedes" hasta que de
@@ -67,6 +74,8 @@ class AuthController
         if ($correo !== '') {
             Usuario::guardarCorreo($usuarioId, $correo);
         }
+
+        RegistroIp::registrar($ip);
 
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuarioId;

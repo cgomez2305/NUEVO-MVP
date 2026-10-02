@@ -58,6 +58,16 @@ class Sede
         return (int) $stmt->fetchColumn();
     }
 
+    /** Cuántas sedes tiene un negocio en total (publicadas o no): lo que hace cumplir el límite de sedes del plan (ver planes.sedes_incluidas). */
+    public static function contarPorNegocio(int $negocioId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COUNT(*) FROM sedes WHERE negocio_id = :negocio_id'
+        );
+        $stmt->execute(['negocio_id' => $negocioId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * Columnas de marca y de plan que se funden en toda consulta de sede de
      * abajo: así cualquier $negocio/$contexto de la app (vienen todos de
@@ -66,17 +76,66 @@ class Sede
      * que necesita gatear una función tenga que ir a buscar el plan aparte.
      * plan_* con el prefijo es de negocios (el estado de la suscripción);
      * el resto sin prefijo es de planes (el catálogo fijo de 3 planes).
+     *
+     * También trae el plan Gratis aparte (pg.*) para poder caer a sus
+     * límites EN LA LECTURA MISMA cuando plan_vence_en ya pasó — ver
+     * aplicarVencimiento() — en vez de depender de que bin/revisar_planes.php
+     * ya haya corrido hoy. Si ese cron nunca se configura en el hosting (es
+     * opcional, fácil de olvidar), sin esto un plan pago no vuelto a pagar
+     * se quedaría con sus beneficios para siempre: el enforcement real no
+     * puede depender de un cron externo que nadie garantiza que corra.
      */
     private const SELECT_CON_MARCA_Y_PLAN = "
         SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre,
                n.plan_id, n.plan_estado, n.plan_vence_en, n.plan_ciclo,
                p.nombre AS plan_nombre, p.precio_mensual AS plan_precio_mensual, p.precio_anual AS plan_precio_anual,
                p.limite_pedidos_mes, p.limite_ia_mes, p.incluye_copiloto, p.incluye_estadisticas_completas,
-               p.incluye_multisede, p.sedes_incluidas, p.precio_sede_extra
+               p.incluye_multisede, p.sedes_incluidas, p.precio_sede_extra,
+               pg.nombre AS pg_nombre, pg.limite_pedidos_mes AS pg_limite_pedidos_mes, pg.limite_ia_mes AS pg_limite_ia_mes,
+               pg.incluye_copiloto AS pg_incluye_copiloto, pg.incluye_estadisticas_completas AS pg_incluye_estadisticas_completas,
+               pg.incluye_multisede AS pg_incluye_multisede, pg.sedes_incluidas AS pg_sedes_incluidas,
+               pg.precio_sede_extra AS pg_precio_sede_extra
         FROM sedes s
         JOIN negocios n ON n.id = s.negocio_id
         JOIN planes p ON p.id = n.plan_id
+        JOIN planes pg ON pg.nombre = 'gratis'
     ";
+
+    /**
+     * Si plan_vence_en ya pasó, pisa los campos efectivos (plan_nombre,
+     * límites, incluye_*) con los del plan Gratis y marca plan_estado como
+     * degradado — sin tocar la base de datos: eso lo hace el cron cuando
+     * corra, esto es solo para que NINGUNA lectura, corra el cron o no,
+     * aplique límites de un plan que ya no está pagado. plan_id y
+     * plan_vence_en crudos se dejan intactos (son el historial real).
+     *
+     * @param array<string, mixed> $fila
+     * @return array<string, mixed>
+     */
+    private static function aplicarVencimiento(array $fila): array
+    {
+        $vencido = !empty($fila['plan_vence_en']) && $fila['plan_vence_en'] < date('Y-m-d');
+
+        if ($vencido) {
+            $fila['plan_nombre'] = $fila['pg_nombre'];
+            $fila['limite_pedidos_mes'] = $fila['pg_limite_pedidos_mes'];
+            $fila['limite_ia_mes'] = $fila['pg_limite_ia_mes'];
+            $fila['incluye_copiloto'] = $fila['pg_incluye_copiloto'];
+            $fila['incluye_estadisticas_completas'] = $fila['pg_incluye_estadisticas_completas'];
+            $fila['incluye_multisede'] = $fila['pg_incluye_multisede'];
+            $fila['sedes_incluidas'] = $fila['pg_sedes_incluidas'];
+            $fila['precio_sede_extra'] = $fila['pg_precio_sede_extra'];
+            $fila['plan_estado'] = 'degradado_a_gratis';
+        }
+
+        foreach (array_keys($fila) as $clave) {
+            if (str_starts_with($clave, 'pg_')) {
+                unset($fila[$clave]);
+            }
+        }
+
+        return $fila;
+    }
 
     /** @return array<int, array<string, mixed>> */
     public static function listarPorNegocio(int $negocioId): array
@@ -85,15 +144,16 @@ class Sede
             self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.negocio_id = :negocio_id ORDER BY s.id ASC'
         );
         $stmt->execute(['negocio_id' => $negocioId]);
-        return $stmt->fetchAll();
+        return array_map([self::class, 'aplicarVencimiento'], $stmt->fetchAll());
     }
 
-    /** Trae la sede con los datos de marca del negocio (tipo_negocio, color_marca) y de su plan ya incluidos. */
+    /** Trae la sede con los datos de marca del negocio (tipo_negocio, color_marca) y de su plan vigente ya incluidos. */
     public static function buscarPorId(int $id): ?array
     {
         $stmt = Database::conexion()->prepare(self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.id = :id');
         $stmt->execute(['id' => $id]);
-        return $stmt->fetch() ?: null;
+        $fila = $stmt->fetch();
+        return $fila === false ? null : self::aplicarVencimiento($fila);
     }
 
     public static function buscarPorIdYNegocio(int $id, int $negocioId): ?array
@@ -108,7 +168,8 @@ class Sede
             self::SELECT_CON_MARCA_Y_PLAN . ' WHERE s.slug = :slug AND s.publicada = 1 AND n.suspendido = 0'
         );
         $stmt->execute(['slug' => $slug]);
-        return $stmt->fetch() ?: null;
+        $fila = $stmt->fetch();
+        return $fila === false ? null : self::aplicarVencimiento($fila);
     }
 
     public static function guardarFotoMenu(int $id, string $rutaRelativa): void
