@@ -4400,3 +4400,34 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 .pq-mas-vendidos-barra { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--marca) calc(var(--parte) * 100%), var(--recibo) 0); }
 .pq-mas-vendidos-veces { color: var(--gris-texto); font-size: 13px; }
 .pq-producto-card-combo { font-size: 12px; font-weight: 700; color: var(--sello); }
+
+/* ==========================================================================
+   CIERRE DE CAJA · panel
+   El tiquete Z de la registradora en el papel de la comanda (se imprime en
+   rollo de 80 mm igual que ella). Al lado, el cuadre: lo que debería haber
+   frente a lo contado, con el resultado en vivo.
+   ========================================================================== */
+.pq-cierre-dias { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); max-width: 420px; margin: var(--esp-4) 0 var(--esp-5); padding: var(--esp-1); border: 1px solid var(--recibo); border-radius: 999px; background: var(--tiquete); }
+.pq-cierre-dias-hoy { font-weight: 700; color: var(--carbon); text-align: center; font-size: 14.5px; }
+.pq-cierre-dias-flecha { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--carbon); }
+.pq-cierre-dias-flecha svg { width: 18px; height: 18px; }
+a.pq-cierre-dias-flecha:hover { background: var(--recibo); }
+a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-cierre { display: grid; gap: var(--esp-6); align-items: start; }
+@media (min-width: 900px) { .pq-cierre { grid-template-columns: minmax(0, 400px) minmax(0, 1fr); } }
+.pq-cierre-z { margin: 0; }
+.pq-cierre-z-cuenta { font-size: 12px; color: var(--gris-suave); font-weight: 500; }
+.pq-cierre-lado { display: flex; flex-direction: column; gap: var(--esp-4); }
+.pq-cierre-aviso { margin: 0; padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-m); background: #FDF1DA; color: #6b4600; font-size: 14px; line-height: 1.45; }
+.pq-cierre-aviso a { color: inherit; font-weight: 700; }
+.pq-cierre-cerrada { display: flex; align-items: center; gap: var(--esp-3); flex-wrap: wrap; }
+.pq-cierre-cerrada .pq-chip { font-size: 14px; padding: 6px 12px; }
+.pq-cierre-cerrada .pq-btn { width: auto; }
+.pq-cierre-form-envoltura > summary { width: auto; display: inline-flex; }
+.pq-cierre-form-envoltura[open] > summary { display: none; }
+.pq-cierre-form { display: flex; flex-direction: column; gap: var(--esp-4); padding: var(--esp-5) var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); box-shadow: var(--sombra-suave); }
+.pq-cierre-contado { font-size: 20px; font-weight: 700; min-height: 52px; }
+.pq-cierre-cuadre { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-1) var(--esp-2); font-size: 14.5px; color: var(--carbon); }
+.pq-cierre-cuadre .pq-chip { font-size: 13.5px; }
+.pq-cierre-historial-enlace { color: inherit; text-decoration: none; }
+.pq-cierre-historial-enlace:hover strong { color: var(--sello); }

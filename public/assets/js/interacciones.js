@@ -117,6 +117,29 @@
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
 
   // ---------------------------------------------------------------------
+  // Cierre de caja: mientras se escribe lo contado, dice si cuadra, si
+  // sobra o si falta (base + efectivo vendido vs. lo que hay en la caja).
+  // ---------------------------------------------------------------------
+  function actualizarCuadreCaja() {
+    var form = document.querySelector('[data-caja-form]');
+    if (!form) return;
+    var numero = function (campo) { return parseInt(((campo && campo.value) || '').replace(/\D+/g, ''), 10) || 0; };
+    var esperado = numero(form.querySelector('[data-caja-base]')) + numero(form.querySelector('[data-caja-servicios]')) + (parseInt(form.getAttribute('data-efectivo-vendido'), 10) || 0);
+    form.querySelector('[data-caja-esperado]').textContent = formatearPesos(esperado);
+    var contadoCampo = form.querySelector('[data-caja-contado]');
+    var resultado = form.querySelector('[data-caja-resultado]');
+    if (!contadoCampo.value.trim()) { resultado.hidden = true; return; }
+    var diferencia = numero(contadoCampo) - esperado;
+    resultado.hidden = false;
+    resultado.className = 'pq-chip ' + (diferencia === 0 ? 'pq-chip-caja' : (diferencia > 0 ? 'pq-chip-pendiente' : 'pq-chip-cancelado'));
+    resultado.textContent = diferencia === 0 ? 'Cuadra' : (diferencia > 0 ? 'Sobran ' + formatearPesos(diferencia) : 'Faltan ' + formatearPesos(-diferencia));
+  }
+  document.addEventListener('input', function (evento) {
+    if (evento.target.matches && evento.target.matches('[data-caja-base], [data-caja-contado], [data-caja-servicios]')) actualizarCuadreCaja();
+  });
+  document.addEventListener('DOMContentLoaded', actualizarCuadreCaja);
+
+  // ---------------------------------------------------------------------
   // Armar combo (formulario de producto): suma en vivo lo que costarían
   // las partes por separado y cuánto ahorra el cliente con el precio del
   // combo; si el combo sale igual o más caro, lo dice.

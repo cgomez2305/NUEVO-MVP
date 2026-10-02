@@ -255,3 +255,20 @@ Hoy  viernes 2 de octubre           ← Bricolage + fecha_larga()
 
 `.pq-vacio-panel`: icono de línea 1.6, frase en negrita + qué hacer, sin
 ilustraciones.
+
+## Cierre de caja (`/panel/caja`, Operación, todos los roles)
+
+- **Tiquete Z**: el mismo papel de la comanda (`.pq-comanda` +
+  `.pq-comanda-imprimible`, sale en rollo de 80 mm con "Imprimir cierre"),
+  con sello "Día abierto" / "Sin cerrar" / "Cerrada". Renglones por forma de
+  pago con cuántos pedidos (`.pq-cierre-z-cuenta`), servicios (citas del
+  día), descuentos y domicilios como ajustes, "Vendido" como total y, ya
+  cerrada, base / esperado / contado / diferencia / quién cerró.
+- Navegación por días tipo talonario (`.pq-cierre-dias`: ‹ hoy ›, sin
+  futuro). Aviso amarillo si hay pedidos del día sin entregar.
+- Cuadre en vivo (`[data-caja-form]` en interacciones.js): base + efectivo
+  de pedidos (+ efectivo de servicios en negocios con citas, que no guardan
+  forma de pago) contra lo contado → chip "Cuadra" / "Sobran $X" /
+  "Faltan $X". Se guarda una foto del resumen: si después cancelan un
+  pedido, el cierre de ese día no cambia. Volver a cerrar reemplaza.
+- Historial de los últimos 14 cierres con su diferencia.

@@ -516,6 +516,24 @@ CREATE TABLE IF NOT EXISTS combo_items (
   FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Cierre de caja diario (ver migrations/2026-10-03_06_cierres_caja.sql).
+CREATE TABLE IF NOT EXISTS cierres_caja (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id           INT UNSIGNED NOT NULL,
+  fecha             DATE         NOT NULL,
+  ventas_total      INT          NOT NULL DEFAULT 0,
+  base              INT          NOT NULL DEFAULT 0,
+  efectivo_esperado INT          NOT NULL DEFAULT 0,
+  efectivo_contado  INT          NOT NULL DEFAULT 0,
+  diferencia        INT          NOT NULL DEFAULT 0,
+  resumen           TEXT         NOT NULL,
+  notas             VARCHAR(255) DEFAULT NULL,
+  usuario_id        INT UNSIGNED DEFAULT NULL,
+  creado_en         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_cierre_sede_fecha (sede_id, fecha)
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -531,4 +549,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_02_fidelidad.sql'),
   ('2026-10-03_03_zonas_domicilio.sql'),
   ('2026-10-03_04_inventario.sql'),
-  ('2026-10-03_05_combos.sql');
+  ('2026-10-03_05_combos.sql'),
+  ('2026-10-03_06_cierres_caja.sql');
