@@ -67,12 +67,24 @@
           <?php endforeach; ?>
 
           <div id="pq-comanda-ajustes"><?php require __DIR__ . '/_comanda_ajustes.php'; ?></div>
+          <?php if ($zonas !== []): ?>
+            <?php // La llena interacciones.js al elegir zona; sin JS el servidor la suma al pedir. ?>
+            <div class="pq-comanda-ajuste" id="pq-comanda-domicilio" hidden>
+              <span>Domicilio · <span data-zona-nombre></span></span>
+              <span class="pq-plato-guia" aria-hidden="true"></span>
+              <span data-zona-costo></span>
+            </div>
+          <?php endif; ?>
 
           <div class="pq-comanda-total">
             <span>Total</span>
-            <span id="pq-carrito-total"><?= pesos($carrito['total']) ?></span>
+            <span id="pq-carrito-total" data-total-base="<?= (int) $carrito['total'] ?>"><?= pesos($carrito['total']) ?></span>
           </div>
-          <p class="pq-comanda-nota" data-mostrar-si="tipo_entrega=domicilio">Si el domicilio tiene costo, el negocio te lo confirma por WhatsApp: no está sumado arriba.</p>
+          <?php if ($zonas !== []): ?>
+            <p class="pq-comanda-nota" data-mostrar-si="tipo_entrega=domicilio" data-nota-zona>El domicilio se suma según tu zona (la eliges abajo).</p>
+          <?php else: ?>
+            <p class="pq-comanda-nota" data-mostrar-si="tipo_entrega=domicilio">Si el domicilio tiene costo, el negocio te lo confirma por WhatsApp: no está sumado arriba.</p>
+          <?php endif; ?>
         </div>
       </div>
       <?php if ($carrito['cupon'] === null): ?>
@@ -142,6 +154,25 @@
       </div>
 
       <div data-mostrar-si="tipo_entrega=domicilio">
+        <?php if ($zonas !== []): ?>
+          <?php
+          // Cada zona como una fila de "tarifa de mensajero": nombre a la
+          // izquierda, valor a la derecha. Se elige antes de la dirección
+          // porque es lo que cambia el total.
+          ?>
+          <fieldset class="pq-campo pq-zonas">
+            <legend class="pq-label">¿A qué zona te lo llevamos?</legend>
+            <?php foreach ($zonas as $zona): ?>
+              <?php $minZona = (int) $zona['minimo_pedido']; ?>
+              <label class="pq-zona">
+                <input type="radio" name="zona_id" value="<?= (int) $zona['id'] ?>" data-costo="<?= (int) $zona['costo'] ?>" data-nombre="<?= e($zona['nombre']) ?>" data-requerido-si-visible>
+                <span class="pq-zona-nombre"><?= e($zona['nombre']) ?><?php if ($minZona > (int) $carrito['minimo']): ?><span class="pq-zona-min">Pedido mínimo <?= pesos($minZona) ?></span><?php endif; ?></span>
+                <span class="pq-zona-costo"><?= e(\App\Models\ZonaDomicilio::etiquetaCosto((int) $zona['costo'])) ?></span>
+              </label>
+            <?php endforeach; ?>
+            <span class="pq-ayuda">¿Tu barrio no está? Escríbele al negocio por WhatsApp antes de pedir.</span>
+          </fieldset>
+        <?php endif; ?>
         <div class="pq-campo">
           <label class="pq-label" for="direccion">Dirección</label>
           <input class="pq-input" type="text" id="direccion" name="direccion" placeholder="Calle 34 #20-15" maxlength="200" data-requerido-si-visible autocomplete="address-line1">

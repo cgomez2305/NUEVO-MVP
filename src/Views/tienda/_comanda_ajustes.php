@@ -1,7 +1,9 @@
 <?php
 /**
  * Líneas de ajuste de la comanda del carrito, entre los productos y el
- * total: subtotal y cupón (y, cuando exista, domicilio). Lo pinta
+ * total: subtotal, cupón y el aviso de pedido mínimo (el domicilio va en
+ * su propia línea, #pq-comanda-domicilio, porque depende de la zona que
+ * se elige en el formulario y el JS la suma en vivo). Lo pinta
  * carrito.php y lo vuelve a mandar TiendaController::responderCarritoJson
  * cuando cambian las cantidades, para que el JS no repita las reglas.
  *
@@ -29,4 +31,9 @@ $pqCupon = $carrito['cupon'] ?? null;
     <?= csrf_campo() ?>
     <button type="submit">Quitar cupón</button>
   </form>
+<?php endif; ?>
+<?php if (($carrito['minimo'] ?? 0) > 0 && $carrito['subtotal'] < $carrito['minimo']): ?>
+  <p class="pq-comanda-nota pq-comanda-nota-aviso pq-comanda-minimo" role="status">
+    El pedido mínimo es de <?= pesos((int) $carrito['minimo']) ?>: te faltan <strong><?= pesos((int) $carrito['minimo'] - (int) $carrito['subtotal']) ?></strong>.
+  </p>
 <?php endif; ?>

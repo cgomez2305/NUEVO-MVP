@@ -106,12 +106,46 @@
       var elegido = document.querySelector('[name="' + nombre + '"]:checked') || document.querySelector('[name="' + nombre + '"]');
       var mostrar = !!elegido && elegido.value === valorEsperado;
       campo.style.display = mostrar ? '' : 'none';
-      var entrada = campo.querySelector('[data-requerido-si-visible]');
-      if (entrada) entrada.required = mostrar;
+      // Todos, no solo el primero: el bloque del domicilio tiene la zona
+      // (radios) y la dirección, y los dos son obligatorios mientras se vea.
+      campo.querySelectorAll('[data-requerido-si-visible]').forEach(function (entrada) {
+        entrada.required = mostrar;
+      });
     });
   }
   document.addEventListener('change', actualizarCamposCondicionales);
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
+
+  // ---------------------------------------------------------------------
+  // Domicilio por zona en el carrito: al elegir zona (y mientras la entrega
+  // sea a domicilio) aparece la línea "Domicilio · zona" y se suma al
+  // total y a la barra pegajosa. data-total-base es el total sin domicilio
+  // que manda el servidor; el servidor vuelve a calcular todo al pedir.
+  // ---------------------------------------------------------------------
+  function actualizarDomicilio() {
+    var total = document.getElementById('pq-carrito-total');
+    var linea = document.getElementById('pq-comanda-domicilio');
+    if (!total || !linea) return;
+    var base = parseInt(total.getAttribute('data-total-base'), 10) || 0;
+    var entrega = document.querySelector('[name="tipo_entrega"]:checked');
+    var zona = document.querySelector('[name="zona_id"]:checked');
+    var aplica = !!zona && (!entrega || entrega.value === 'domicilio');
+    var costo = aplica ? (parseInt(zona.getAttribute('data-costo'), 10) || 0) : 0;
+    linea.hidden = !aplica;
+    if (aplica) {
+      linea.querySelector('[data-zona-nombre]').textContent = zona.getAttribute('data-nombre');
+      linea.querySelector('[data-zona-costo]').textContent = costo === 0 ? 'Gratis' : formatearPesos(costo);
+    }
+    var nota = document.querySelector('[data-nota-zona]');
+    if (nota) nota.hidden = aplica;
+    total.textContent = formatearPesos(base + costo);
+    var sticky = document.getElementById('pq-checkout-sticky-total');
+    if (sticky) sticky.textContent = formatearPesos(base + costo);
+  }
+  document.addEventListener('change', function (evento) {
+    if (evento.target.name === 'zona_id' || evento.target.name === 'tipo_entrega') actualizarDomicilio();
+  });
+  document.addEventListener('DOMContentLoaded', actualizarDomicilio);
 
   // ---------------------------------------------------------------------
   // Precio con puntos de miles mientras se escribe (input data-precio). Es
@@ -214,12 +248,14 @@
     }
 
     total.textContent = formatearPesos(carrito.total);
+    total.setAttribute('data-total-base', carrito.total);
     var ajustes = document.getElementById('pq-comanda-ajustes');
     if (ajustes && typeof carrito.ajustes_html === 'string') ajustes.innerHTML = carrito.ajustes_html;
     var cuentaComanda = document.getElementById('pq-comanda-cuenta');
     if (cuentaComanda) cuentaComanda.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos');
     var stickyTotal = document.getElementById('pq-checkout-sticky-total');
     if (stickyTotal) stickyTotal.textContent = formatearPesos(carrito.total);
+    actualizarDomicilio();
 
     if (tipo === 'quitar') {
       if (fila) fila.remove();
@@ -292,7 +328,7 @@
   // esa fila en vez de en su propia línea); para el consentimiento, la
   // tarjeta completa del checkbox.
   function contenedorDe(campo) {
-    return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo;
+    return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo.closest('.pq-zonas') || campo;
   }
 
   function limpiarErrorCampo(campo) {
@@ -460,8 +496,14 @@
       regla('mesa', '#mesa', function (f) {
         return tipoEntregaDe(f) === 'mesa' ? errorRequerido(f, '#mesa', 'Escribe tu número de mesa.') : null;
       }),
+      {
+        id: 'zona_id', selector: '[name="zona_id"]', enLabel: true,
+        obtenerError: function (f) {
+          return tipoEntregaDe(f) === 'domicilio' && !f.querySelector('[name="zona_id"]:checked') ? 'Elige a qué zona te llevamos el domicilio.' : null;
+        },
+      },
       reglaConsentimiento('Debes aceptar el uso de datos para procesar el pedido.'),
-    ], { revalidarConCambioDe: ['tipo_entrega'] });
+    ], { revalidarConCambioDe: ['tipo_entrega', 'zona_id'] });
   });
 
   // ---------------------------------------------------------------------

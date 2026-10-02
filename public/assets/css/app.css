@@ -4276,3 +4276,69 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 .pq-premio-aviso { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; margin: var(--esp-4) 0; padding: var(--esp-3) var(--esp-4); border: 1.5px dashed var(--marca); border-radius: var(--radio-m); background: var(--marca-suave); }
 .pq-premio-aviso-texto { display: flex; flex-direction: column; gap: 2px; font-size: 14.5px; color: var(--carbon); min-width: 0; }
 .pq-premio-aviso .pq-btn { width: auto; }
+
+/* ==========================================================================
+   DOMICILIOS · tienda
+   La zona se elige en filas tipo tarifa (nombre ← → valor): es lo que cambia
+   el total, por eso va antes de la dirección y con el precio a la vista.
+   ========================================================================== */
+.pq-zonas { border: 0; padding: 0; margin: 0 0 var(--esp-4); min-inline-size: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-zonas legend { padding: 0; margin-bottom: var(--esp-2); }
+.pq-zona {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 52px;
+  padding: var(--esp-3) var(--esp-4) var(--esp-3) 44px;
+  background: #FFFDF8;
+  border: 1.5px solid var(--linea-tienda);
+  border-radius: var(--radio-m);
+  cursor: pointer;
+  transition: border-color var(--rapido), background var(--rapido);
+}
+.pq-zona input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+/* El círculo del radio dibujado, para que se vea igual en todos los celulares. */
+.pq-zona::before {
+  content: "";
+  position: absolute;
+  left: var(--esp-4);
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 50%;
+  border: 2px solid var(--borde);
+  background: #FFFDF8;
+  transition: border-color var(--rapido), box-shadow var(--rapido);
+}
+.pq-zona:hover { border-color: color-mix(in srgb, var(--tinta) 30%, transparent); }
+.pq-zona:has(input:checked) { border-color: var(--marca-texto); background: var(--marca-suave); }
+.pq-zona:has(input:checked)::before { border-color: var(--marca-texto); box-shadow: inset 0 0 0 4px #FFFDF8, inset 0 0 0 9px var(--marca-texto); }
+.pq-zona:has(input:focus-visible) { outline: 2px solid var(--marca-texto); outline-offset: 2px; }
+.pq-zona-nombre { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-zona-min { font-size: 12.5px; font-weight: 500; color: var(--texto-tenue); }
+.pq-zona-costo { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-zonas .pq-ayuda { margin-top: var(--esp-1); }
+.pq-comanda-minimo strong { font-weight: 700; }
+.pq-zonas-info dd { display: flex; flex-direction: column; align-items: flex-end; }
+.pq-zonas-info-min { font-size: 12px; color: var(--texto-tenue); }
+.pq-zonas-info-nota { margin: var(--esp-2) 0 0; }
+
+/* ---------- Domicilios · panel: tarifario ---------- */
+.pq-tarifa-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.pq-tarifa-linea { display: flex; align-items: baseline; gap: var(--esp-2); }
+.pq-tarifa-nombre { font-size: 15px; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-tarifa-guia { flex: 1; min-width: 16px; border-bottom: 2px dotted var(--borde); transform: translateY(-4px); }
+.pq-tarifa-costo { flex: none; font-weight: 700; font-size: 15px; color: var(--carbon); }
+.pq-tarifa-pausada .pq-tarifa-nombre, .pq-tarifa-pausada .pq-tarifa-costo { color: var(--gris-suave); }
+.pq-tarifario .pq-menu-kebab { flex: none; }
+.pq-domicilios-seccion .pq-agregar-panel { margin-top: var(--esp-4); }
+.pq-domicilios-cifras { display: grid; gap: var(--esp-3); }
+@media (min-width: 560px) { .pq-domicilios-cifras { grid-template-columns: 1fr 1fr; } }
+.pq-domicilios-botones { display: flex; gap: var(--esp-2); flex-wrap: wrap; }
+.pq-domicilios-botones .pq-btn { width: auto; }
+.pq-domicilios-minimo { display: flex; gap: var(--esp-2); margin-top: var(--esp-3); max-width: 420px; }
+.pq-domicilios-minimo .pq-input { flex: 1; min-width: 0; }
+.pq-domicilios-minimo .pq-btn { width: auto; flex: none; }

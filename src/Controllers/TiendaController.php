@@ -8,6 +8,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
 use App\Models\Fidelidad;
+use App\Models\ZonaDomicilio;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
 use App\Models\LimiteTasa;
@@ -86,6 +87,7 @@ class TiendaController
             'carrito'         => $carrito,
             'horario'         => horario_resumen($horarioSede),
             'fidelidad'       => Fidelidad::activa((int) $negocio['negocio_id']),
+            'zonas'           => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
             'abiertoAhora'    => $abiertoAhora,
             'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
@@ -542,6 +544,7 @@ class TiendaController
             'titulo'  => 'Tu carrito · ' . nombre_publico_sede($negocio),
             'negocio' => $negocio,
             'carrito' => $carrito,
+            'zonas'   => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
             'error'   => flash_obtener('error'),
             'errorCupon'   => flash_obtener('error_cupon'),
             'cuponEscrito' => flash_obtener('cupon_escrito'),
@@ -607,6 +610,30 @@ class TiendaController
             $metodoPago = 'breb';
         }
 
+        // Pedido mínimo de la sede y, con domicilio, la zona elegida (que
+        // pone el costo y puede pedir un mínimo mayor). Se cuenta sobre los
+        // productos, antes del cupón: el cupón no debe castigar al cliente.
+        $volverAlCarrito = '/t/' . $negocio['slug'] . '/carrito';
+        if ($carrito['minimo'] > 0 && $carrito['subtotal'] < $carrito['minimo']) {
+            flash_set('error', 'El pedido mínimo es de ' . pesos($carrito['minimo']) . '. Te faltan ' . pesos($carrito['minimo'] - $carrito['subtotal']) . '.');
+            redirigir($volverAlCarrito);
+        }
+        $zona = null;
+        if ($tipoEntrega === 'domicilio') {
+            $zonas = ZonaDomicilio::listarPorSede((int) $negocio['id'], true);
+            if ($zonas !== []) {
+                $zona = ZonaDomicilio::buscar((int) ($_POST['zona_id'] ?? 0), (int) $negocio['id']);
+                if ($zona === null || (int) $zona['activa'] !== 1) {
+                    flash_set('error', 'Elige a qué zona te llevamos el domicilio.');
+                    redirigir($volverAlCarrito);
+                }
+                if ($carrito['subtotal'] < (int) $zona['minimo_pedido']) {
+                    flash_set('error', 'Para domicilios a ' . $zona['nombre'] . ' el pedido mínimo es de ' . pesos((int) $zona['minimo_pedido']) . '. Te faltan ' . pesos((int) $zona['minimo_pedido'] - $carrito['subtotal']) . '.');
+                    redirigir($volverAlCarrito);
+                }
+            }
+        }
+
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing);
 
         // El cupón se revisa otra vez, ahora con el cliente: si es personal
@@ -622,6 +649,10 @@ class TiendaController
                 redirigir('/t/' . $negocio['slug'] . '/carrito');
             }
             $ajustes = ['descuento' => $evaluacion['descuento'], 'cupon_codigo' => $cuponUsado['codigo']];
+        }
+        if ($zona !== null) {
+            $ajustes['costo_domicilio'] = (int) $zona['costo'];
+            $ajustes['zona_domicilio'] = (string) $zona['nombre'];
         }
 
         $items = array_map(fn ($linea) => [
@@ -658,6 +689,9 @@ class TiendaController
         }
         if ((int) $pedido['descuento'] > 0) {
             $resumenTexto .= 'Descuento' . ($pedido['cupon_codigo'] ? " (cupón {$pedido['cupon_codigo']})" : '') . ': -' . pesos((int) $pedido['descuento']) . "\n";
+        }
+        if ($zona !== null) {
+            $resumenTexto .= "Domicilio ({$zona['nombre']}): " . ZonaDomicilio::etiquetaCosto((int) $zona['costo']) . "\n";
         }
         $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']) . "\n";
         $resumenTexto .= match ($tipoEntrega) {
@@ -930,7 +964,10 @@ class TiendaController
             'subtotal'  => $total,
             'descuento' => $descuento,
             'cupon'     => $cupon,
+            // Sin domicilio: ese depende de la zona que se elige en el
+            // formulario (el JS lo suma en vivo; el servidor, al pedir).
             'total'     => $total - $descuento,
+            'minimo'    => (int) ($negocio['pedido_minimo'] ?? 0),
         ];
     }
 

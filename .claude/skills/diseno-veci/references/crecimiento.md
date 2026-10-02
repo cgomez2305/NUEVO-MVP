@@ -76,3 +76,25 @@ mínima); cada premio anota los sellos que gastó. Entregar premio lo puede
 hacer dueño o colaborador, revisa de nuevo bajo `FOR UPDATE` (doble clic no
 entrega dos). El mensaje de WhatsApp al negocio dice "Tarjeta de sellos:
 N/M" o "le toca {premio}".
+
+## Domicilios por zona y pedido mínimo (`/panel/domicilios`, Operación)
+
+- Por **sede** (cada sede reparte en su barrio), solo negocios de pedidos.
+  Panel: tarifario (`.pq-tarifario`: zona ← puntos guía → valor, como la
+  lista pegada en la nevera), kebab con editar/pausar/eliminar, formulario
+  colapsable y pedido mínimo de la sede.
+- Carrito: si la sede tiene zonas, en "Entrega → Domicilio" aparece
+  "¿A qué zona te lo llevamos?" (`.pq-zona`, radio dibujado, valor a la
+  derecha, mínimo propio debajo del nombre) antes de la dirección. El JS
+  (`actualizarDomicilio` en interacciones.js) muestra la línea
+  `#pq-comanda-domicilio` y suma al total y a la barra pegajosa a partir de
+  `data-total-base`; sin JS, la nota dice que se suma y el servidor lo hace.
+  Sin zonas el carrito sigue igual que antes ("se acuerda por WhatsApp").
+- Pedido mínimo: aviso dentro de la comanda (`.pq-comanda-minimo`, viene en
+  `_comanda_ajustes.php`, se re-pinta con el JSON del carrito) y el
+  servidor rechaza con el monto que falta. Se mide sobre los productos,
+  antes del cupón.
+- El pedido copia `costo_domicilio` y `zona_domicilio`; `total` ya incluye
+  el domicilio. `_pedido_ajustes.php` pinta subtotal/cupón/domicilio en la
+  confirmación y en el panel. La info de la tienda lista zonas y mínimos
+  (`#domicilios`).

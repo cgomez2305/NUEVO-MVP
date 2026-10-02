@@ -5,14 +5,35 @@
  * cargó; si no hay ni horario ni dirección, no queda una sección vacía.
  *
  * Espera: $negocio; opcional $horario (de horario_resumen()) y
- * $fidelidad (Fidelidad::activa(), la tarjeta de sellos si está prendida).
+ * $fidelidad (Fidelidad::activa(), la tarjeta de sellos si está prendida)
+ * y $zonas (ZonaDomicilio activas de la sede: a dónde llega y cuánto vale).
  */
 $horario = $horario ?? [];
 $direccion = trim((string) ($negocio['direccion'] ?? ''));
 $fidelidad = $fidelidad ?? null;
+$zonas = $zonas ?? [];
+$pedidoMinimo = (int) ($negocio['pedido_minimo'] ?? 0);
 ?>
-<?php if ($horario !== [] || $direccion !== '' || $fidelidad !== null): ?>
+<?php if ($horario !== [] || $direccion !== '' || $fidelidad !== null || $zonas !== [] || $pedidoMinimo > 0): ?>
   <div class="pq-info-grupo">
+    <?php if ($zonas !== [] || $pedidoMinimo > 0): ?>
+      <section class="pq-info" id="domicilios" aria-labelledby="pq-info-domicilios">
+        <h2 class="pq-info-titulo" id="pq-info-domicilios"><?= $zonas !== [] ? 'Domicilios' : 'Pedido mínimo' ?></h2>
+        <?php if ($zonas !== []): ?>
+          <dl class="pq-horario pq-zonas-info">
+            <?php foreach ($zonas as $zona): ?>
+              <div class="pq-horario-fila">
+                <dt><?= e($zona['nombre']) ?></dt>
+                <dd><?= e(\App\Models\ZonaDomicilio::etiquetaCosto((int) $zona['costo'])) ?><?= (int) $zona['minimo_pedido'] > $pedidoMinimo ? '<span class="pq-zonas-info-min">pedido mín. ' . pesos((int) $zona['minimo_pedido']) . '</span>' : '' ?></dd>
+              </div>
+            <?php endforeach; ?>
+          </dl>
+        <?php endif; ?>
+        <?php if ($pedidoMinimo > 0): ?>
+          <p class="pq-ayuda<?= $zonas !== [] ? ' pq-zonas-info-nota' : '' ?>">Pedido mínimo: <?= pesos($pedidoMinimo) ?>.</p>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
     <?php if ($fidelidad !== null): ?>
       <section class="pq-info pq-info-sellos" aria-labelledby="pq-info-sellos">
         <h2 class="pq-info-titulo" id="pq-info-sellos">Tarjeta de sellos</h2>

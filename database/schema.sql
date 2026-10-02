@@ -132,6 +132,9 @@ CREATE TABLE IF NOT EXISTS sedes (
   -- ("Recoges en") con un enlace de búsqueda en Google Maps.
   direccion           VARCHAR(200) DEFAULT NULL,
   publicada           TINYINT(1)   NOT NULL DEFAULT 0,
+  -- Pedido mínimo de la sede (0 = sin mínimo). Cada zona de domicilio
+  -- puede pedir uno mayor (ver zonas_domicilio).
+  pedido_minimo       INT UNSIGNED NOT NULL DEFAULT 0,
   creado_en           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -191,6 +194,9 @@ CREATE TABLE IF NOT EXISTS pedidos (
   total         INT UNSIGNED NOT NULL,
   descuento     INT UNSIGNED NOT NULL DEFAULT 0,
   cupon_codigo  VARCHAR(20)  DEFAULT NULL,
+  -- Lo cobrado de domicilio y la zona, copiados al pedir (ver zonas_domicilio).
+  costo_domicilio INT UNSIGNED NOT NULL DEFAULT 0,
+  zona_domicilio  VARCHAR(80)  DEFAULT NULL,
   metodo_pago   ENUM('breb','nequi','efectivo') NOT NULL DEFAULT 'breb',
   tipo_entrega  ENUM('domicilio','recoger','mesa') NOT NULL DEFAULT 'domicilio',
   direccion     VARCHAR(255) DEFAULT NULL,
@@ -483,6 +489,19 @@ CREATE TABLE IF NOT EXISTS fidelidad_premios (
   INDEX idx_fidelidad_premios_cliente (negocio_id, cliente_id)
 ) ENGINE=InnoDB;
 
+-- Zonas de domicilio por sede (ver migrations/2026-10-03_03_zonas_domicilio.sql).
+CREATE TABLE IF NOT EXISTS zonas_domicilio (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id        INT UNSIGNED     NOT NULL,
+  nombre         VARCHAR(80)      NOT NULL,
+  costo          INT UNSIGNED     NOT NULL DEFAULT 0,
+  minimo_pedido  INT UNSIGNED     NOT NULL DEFAULT 0,
+  activa         TINYINT(1)       NOT NULL DEFAULT 1,
+  creado_en      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  INDEX idx_zonas_sede (sede_id, activa)
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -495,4 +514,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-01_planes_suscripciones.sql'),
   ('2026-10-01_sedes_direccion.sql'),
   ('2026-10-03_01_cupones.sql'),
-  ('2026-10-03_02_fidelidad.sql');
+  ('2026-10-03_02_fidelidad.sql'),
+  ('2026-10-03_03_zonas_domicilio.sql');

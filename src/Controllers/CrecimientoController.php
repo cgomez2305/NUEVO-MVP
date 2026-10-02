@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Auth;
 use App\Models\Cupon;
 use App\Models\Fidelidad;
+use App\Models\ZonaDomicilio;
 
 /**
  * Herramientas para que el negocio venda más y que el cliente vuelva:
@@ -172,6 +173,91 @@ class CrecimientoController
             flash_set('error', $cliente['nombre'] . ' todavía no completa la tarjeta.');
         }
         redirigir($volver);
+    }
+
+    /**
+     * Zonas de domicilio y pedido mínimo de la SEDE activa (cada sede
+     * reparte en su barrio). Solo negocios de pedidos.
+     */
+    public function domicilios(array $parametros): void
+    {
+        $negocio = $this->exigirDuenoDePedidos();
+
+        ver('panel/domicilios', [
+            'titulo'  => 'Domicilios · Veci',
+            'activo'  => 'domicilios',
+            'negocio' => $negocio,
+            'zonas'   => ZonaDomicilio::listarPorSede((int) $negocio['id']),
+            'editar'  => isset($_GET['editar']) ? ZonaDomicilio::buscar((int) $_GET['editar'], (int) $negocio['id']) : null,
+            'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function guardarZona(array $parametros): void
+    {
+        $negocio = $this->exigirDuenoDePedidos();
+        if (!csrf_verificar()) {
+            redirigir('/panel/domicilios');
+        }
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $id = isset($parametros['id']) ? (int) $parametros['id'] : null;
+        if ($id !== null && ZonaDomicilio::buscar($id, (int) $negocio['id']) === null) {
+            redirigir('/panel/domicilios');
+        }
+        if (mb_strlen($nombre) < 2) {
+            flash_set('error', 'Escribe el nombre de la zona: un barrio, un sector o "Hasta 2 km".');
+            redirigir('/panel/domicilios' . ($id !== null ? '?editar=' . $id : ''));
+        }
+        ZonaDomicilio::guardar(
+            (int) $negocio['id'],
+            $id,
+            $nombre,
+            dinero_desde_texto((string) ($_POST['costo'] ?? '')),
+            dinero_desde_texto((string) ($_POST['minimo_pedido'] ?? ''))
+        );
+        flash_set('ok', $id === null ? 'Zona agregada: ya aparece en el carrito.' : 'Zona actualizada.');
+        redirigir('/panel/domicilios');
+    }
+
+    public function alternarZona(array $parametros): void
+    {
+        $negocio = $this->exigirDuenoDePedidos();
+        if (csrf_verificar()) {
+            ZonaDomicilio::alternarActiva((int) $parametros['id'], (int) $negocio['id']);
+        }
+        redirigir('/panel/domicilios');
+    }
+
+    public function eliminarZona(array $parametros): void
+    {
+        $negocio = $this->exigirDuenoDePedidos();
+        if (csrf_verificar()) {
+            ZonaDomicilio::eliminar((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Zona eliminada. Los pedidos que ya la usaron conservan su costo.');
+        }
+        redirigir('/panel/domicilios');
+    }
+
+    public function guardarPedidoMinimo(array $parametros): void
+    {
+        $negocio = $this->exigirDuenoDePedidos();
+        if (csrf_verificar()) {
+            $minimo = dinero_desde_texto((string) ($_POST['pedido_minimo'] ?? ''));
+            ZonaDomicilio::guardarPedidoMinimo((int) $negocio['id'], $minimo);
+            flash_set('ok', $minimo > 0 ? 'Pedido mínimo: ' . pesos($minimo) . '.' : 'Sin pedido mínimo.');
+        }
+        redirigir('/panel/domicilios');
+    }
+
+    private function exigirDuenoDePedidos(): array
+    {
+        $negocio = $this->exigirDueno();
+        if (($negocio['tipo_negocio'] ?? 'pedidos') !== 'pedidos') {
+            redirigir('/panel');
+        }
+
+        return $negocio;
     }
 
     private function exigirDueno(): array
