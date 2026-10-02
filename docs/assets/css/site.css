@@ -73,7 +73,7 @@ nav{
   transition:box-shadow .2s ease,border-color .2s ease,background .2s ease;
 }
 .brand{text-decoration:none;color:inherit;display:inline-flex;align-items:center;flex-shrink:0}
-.brand img{height:32px;width:auto;display:block}
+.brand img{height:36px;width:auto;display:block}
 .nav-derecha{display:flex;align-items:center;gap:16px}
 .nav-links{display:flex;gap:6px;align-items:center}
 .nav-links a{
@@ -278,8 +278,8 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
     radial-gradient(ellipse 620px 360px at 26% 0%, rgba(22,163,106,.16), transparent 65%),
     radial-gradient(ellipse 520px 340px at 98% 4%, rgba(232,69,44,.12), transparent 62%),
     radial-gradient(ellipse 460px 320px at 2% 14%, rgba(59,76,202,.10), transparent 62%);
-  mask-image:linear-gradient(to bottom, #000 0%, transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom, #000 0%, transparent 100%);
+  mask-image:linear-gradient(to bottom, transparent 0%, #000 22%, transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 22%, transparent 100%);
 }
 .reveal-frase-texto{font-family:var(--fuente-titulo);font-weight:700;font-size:clamp(26px,1.8vw + 1.3rem,42px);line-height:1.4;color:var(--texto-tenue);margin:0}
 .reveal-frase-texto .rf-w{color:var(--texto-tenue)}
@@ -294,9 +294,7 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   background-color:var(--bg);
   background-image:
     radial-gradient(ellipse 760px 560px at 8% -10%, rgba(59,76,202,.16), transparent 60%),
-    radial-gradient(ellipse 640px 480px at 92% 5%, rgba(242,182,50,.20), transparent 55%),
-    radial-gradient(ellipse 560px 420px at 30% 108%, rgba(22,163,106,.14), transparent 60%),
-    radial-gradient(ellipse 480px 380px at 100% 100%, rgba(232,69,44,.10), transparent 55%);
+    radial-gradient(ellipse 640px 480px at 92% 5%, rgba(242,182,50,.20), transparent 55%);
 }
 .hero .wrap{width:100%}
 @media (max-width:860px){ .hero{min-height:0;padding:104px 0 48px} }
@@ -311,7 +309,7 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   transition:transform .7s cubic-bezier(.2,.8,.2,1);
 }
 .hero-glow{position:absolute;top:2%;right:-4%;width:46vw;max-width:560px;height:46vw;max-height:560px;border-radius:50%;background:var(--sello);opacity:.15;filter:blur(70px);animation:glowPulso 8s ease-in-out infinite}
-.hero-glow.izq{top:auto;right:auto;bottom:0%;left:-6%;width:38vw;max-width:460px;height:38vw;max-height:460px;background:var(--caja);opacity:.13;animation-delay:-3.5s}
+.hero-glow.izq{top:auto;right:auto;bottom:-60%;left:-10%;width:38vw;max-width:460px;height:38vw;max-height:460px;background:var(--caja);opacity:.1;animation-delay:-3.5s}
 .hero-glow.centro{top:38%;left:38%;width:34vw;max-width:420px;height:34vw;max-height:420px;background:var(--mostaza);opacity:.09;animation-delay:-1.8s;animation-duration:10s}
 @keyframes glowPulso{0%,100%{opacity:.16;transform:scale(1)}50%{opacity:.26;transform:scale(1.12)}}
 .eyebrow{font-family:var(--fuente-texto);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--sello)}
@@ -1087,7 +1085,8 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
 }
 
 /* teaser de demos en el home */
-.demo-teaser{background:var(--bg-suave);border-radius:var(--radio-tarjeta);padding:44px;display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center}
+.demo-teaser{background:var(--bg-suave);border-radius:var(--radio-tarjeta);padding:44px;display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:stretch}
+.demo-teaser-texto{display:flex;flex-direction:column;justify-content:center}
 .demo-teaser h2{margin:10px 0 12px}
 .demo-teaser-tarjetas-wrap{background:var(--bg-suave);border:1px solid var(--borde);border-radius:var(--radio-tarjeta);box-shadow:var(--sombra-media);overflow:hidden}
 .demo-teaser-barra{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--borde);background:linear-gradient(180deg,var(--superficie),var(--bg-suave))}
