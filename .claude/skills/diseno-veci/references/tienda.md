@@ -6,8 +6,12 @@ comparten. CSS: sección "tienda pública v2" de `app.css`. JS:
 `assets/js/tienda.js` (navegación de secciones) e `interacciones.js`
 (carrito sin recargar).
 
-Pendientes de llevar a este lenguaje: `carrito.php`, `reservar.php`,
-`pedido_confirmado.php`, `cita_*.php` (todavía usan mono y cuadros de color).
+Pantallas internas (`carrito.php`, `reservar.php`) usan `_cabecera_corta.php`
+y la sección "tienda v2: pantallas internas" de `app.css`.
+
+Pendientes de llevar a este lenguaje: `pedido_confirmado.php`,
+`cita_confirmada.php`, `cita_gestionar.php`, `cita_reprogramar.php`
+(todavía usan mono y el topbar viejo; reprogramar ya hereda los slots).
 
 ---
 
@@ -134,3 +138,65 @@ luego borra:
   `capturas.js`.
 Inserta texto con tildes usando `mysql --default-character-set=utf8mb4`;
 si no, quedan caracteres dañados ("trifÃ¡sico") que no son un bug de la app.
+
+---
+
+## Cabecera corta (`_cabecera_corta.php`)
+
+Para toda pantalla interna de la tienda. Recibe `$volverUrl` y
+`$volverTexto`. Lleva una franja de toldo de 30px (sin animación, que se
+reserva para la portada) y **un solo enlace** con flecha, insignia de 36px,
+nombre del negocio y "Volver a…". Los selectores llevan doble clase
+(`.pq-toldo.pq-toldo-corto`) para ganarle a la regla de escritorio del
+toldo grande; ese fue un bug real.
+
+## Etapas numeradas (`.pq-etapa`)
+
+`<h2 class="pq-etapa"><span class="pq-etapa-numero">1</span>Tus datos</h2>`.
+El número va en un círculo con `--marca` y `--marca-sobre`. Con un dato a la
+derecha (mes, "35 libres"), envuélvelo en `.pq-etapa-fila`. En la reserva la
+numeración es dinámica (`++$paso`): "¿Con quién?" solo existe si hay
+empleados. (No usar `.pq-paso`: ya existe para otra pantalla.)
+
+## Comanda (carrito)
+
+```
+ ┌─────────────────────────────┐
+ │ COMANDA          3 PRODUCTOS │
+ │ - - - - - - - - - - - - - - -│
+ │ Bandeja paisa ······ $56.000 │
+ │ $28.000 c/u      (− 2 +)  🗑 │
+ │ ═════════════════════════════│ ← doble línea
+ │ Total             $61.000    │
+ └/\/\/\/\/\/\/\/\/\/\/\/\/\/\/┘ ← borde rasgado
+```
+- Borde rasgado: máscara `conic-gradient(from -45deg at bottom, …)` con
+  `--diente`. La sombra va en `.pq-comanda` (contenedor) por la máscara.
+- Sin imágenes: es un papelito. Mismos puntos guía que la carta.
+- IDs que actualiza el JS: `#pq-comanda-cuenta`, `#pq-cantidad-{id}`,
+  `#pq-subtotal-{id}`, `#pq-carrito-total`, `#pq-checkout-sticky-total`;
+  la fila es `[data-fila-producto]` (de ahí la saca el JS al quitar).
+- En escritorio: formulario a la izquierda y comanda pegada a la derecha
+  (340px).
+
+## Hojitas de almanaque (reserva)
+
+`$hojaDia($fecha)` en `reservar.php` arma cada fecha: día de la semana
+("hoy" si aplica), número grande en Bricolage y mes. El "lomo" de arriba es
+`box-shadow: inset 0 4px 0 var(--marca-claro)`; la hoja activa se llena con
+la marca. **Sin sombra exterior:** el carrusel tiene overflow y la recorta.
+La misma hoja se usa en "Ver todas las fechas" (grilla `auto-fill`).
+`interacciones.js` centra `.pq-dia-activo` al cargar.
+
+## Turno elegido (`.pq-turno`)
+
+Antes del formulario: la hora en grande, la fecha y "servicio · con
+persona", sobre `--marca-suave`. Primero se confirma qué y cuándo; después
+se piden los datos.
+
+## Formularios en la tienda
+Overrides bajo `.pq-shell-tienda`: campos de 16px (evita el zoom del
+iPhone), foco y opción elegida con la marca, prefijo +57 y teléfono con
+`tabular-nums`, casillas con `accent-color: var(--marca-texto)`. El botón
+final sigue siendo el verde de WhatsApp: la acción ocurre allá.
+

@@ -1826,6 +1826,295 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
    salta, la única señal de que el clic sí hizo algo. */
 .pq-barra-carrito-pulso .pq-barra-carrito-bolsa { animation: pqPop .35s var(--curva); }
 
+/* ---------- tienda v2: pantallas internas (carrito, reservar) ----------
+   Mismo lenguaje que la portada: la marca del negocio arriba (toldo
+   delgado), títulos en Bricolage, pasos numerados con la marca, y un solo
+   detalle propio por pantalla — la comanda en el carrito, las hojitas de
+   almanaque en la reserva. Los overrides van bajo .pq-shell-tienda para
+   que los mismos componentes del panel no cambien. */
+
+.pq-toldo.pq-toldo-corto { --feston: 7px; height: 30px; filter: drop-shadow(0 3px 3px rgba(27, 26, 23, .12)); }
+.pq-toldo.pq-toldo-corto::before {
+  animation: none; /* se despliega solo en la portada, no en cada pantalla */
+  background:
+    linear-gradient(var(--marca-texto) 0 4px, transparent 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, .18), transparent 45%, rgba(27, 26, 23, .12)),
+    repeating-linear-gradient(90deg, var(--marca) 0 calc(var(--feston) * 2), var(--marca-claro) calc(var(--feston) * 2) calc(var(--feston) * 4));
+}
+/* Un solo enlace grande (flecha + insignia + nombre) en vez de un "‹ Volver"
+   suelto: más fácil de acertar con el pulgar y recuerda en qué tienda se está. */
+.pq-cabecera-corta-enlace {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 56px;
+  padding: var(--esp-2) var(--esp-5) 0;
+  color: inherit;
+  text-decoration: none;
+}
+.pq-cabecera-corta-enlace:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; border-radius: var(--radio-m); }
+.pq-cabecera-corta-flecha {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  transition: transform var(--rapido) ease, border-color var(--rapido) ease;
+}
+.pq-cabecera-corta-flecha svg { width: 18px; height: 18px; }
+.pq-cabecera-corta-enlace:hover .pq-cabecera-corta-flecha { transform: translateX(-2px); border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
+.pq-letrero-insignia.pq-letrero-insignia-chica { width: 36px; height: 36px; flex-shrink: 0; font-size: 16px; animation: none; box-shadow: 0 0 0 2px var(--papel), 0 4px 10px -4px rgba(27, 26, 23, .4); }
+.pq-cabecera-corta-texto { display: flex; flex-direction: column; min-width: 0; }
+.pq-cabecera-corta-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 15px/1.25 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-cabecera-corta-volver { font-size: 12.5px; color: var(--texto-tenue); }
+
+.pq-pagina-titulo {
+  margin: var(--esp-6) 0 0;
+  font: 700 clamp(26px, 7vw, 32px)/1.08 'Bricolage Grotesque', sans-serif;
+  letter-spacing: -.02em;
+  color: var(--tinta);
+  text-wrap: balance;
+}
+.pq-pagina-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-4); margin: var(--esp-2) 0 0; font-size: 14.5px; color: var(--texto-calido); font-variant-numeric: tabular-nums; }
+.pq-pagina-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.pq-pagina-meta svg { width: 16px; height: 16px; }
+.pq-pagina-meta-precio { color: var(--tinta); font-weight: 650; }
+.pq-flujo > .pq-alerta { margin-top: var(--esp-4); }
+
+/* Pasos numerados: el número lleva la marca del negocio, así el recorrido
+   (1 datos → 2 entrega → 3 pago) se lee de un vistazo. */
+.pq-etapa { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--esp-3); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-etapa-numero { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--marca); color: var(--marca-sobre); font: 700 13px/1 'Inter Tight', sans-serif; }
+.pq-etapa-fila { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); margin-bottom: var(--esp-3); }
+.pq-etapa-fila .pq-etapa { margin-bottom: 0; }
+.pq-checkout-form .pq-etapa { margin-top: var(--esp-8); }
+.pq-checkout-form .pq-etapa:first-of-type { margin-top: var(--esp-6); }
+
+/* La comanda: el papelito del pedido con borde rasgado abajo (máscara en
+   zigzag). La sombra va en el contenedor porque la máscara la recortaría. */
+.pq-checkout { margin-top: var(--esp-5); }
+.pq-comanda { filter: drop-shadow(0 1px 1px rgba(27, 26, 23, .06)) drop-shadow(0 10px 14px rgba(27, 26, 23, .12)); }
+.pq-comanda-hoja {
+  --diente: 9px;
+  padding: var(--esp-4) var(--esp-4) calc(var(--esp-5) + var(--diente));
+  background: #FFFDF8;
+  border-radius: var(--radio-m) var(--radio-m) 0 0;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
+}
+.pq-comanda-cabeza {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  margin: 0;
+  padding-bottom: var(--esp-3);
+  border-bottom: 1.5px dashed var(--linea-tienda);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--texto-tenue);
+}
+.pq-comanda-cabeza span:last-child { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pq-comanda-linea { padding: var(--esp-3) 0; }
+.pq-comanda-linea + .pq-comanda-linea { border-top: 1px dashed var(--linea-tienda); }
+.pq-comanda-fila { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+.pq-comanda-nombre { flex: 0 1 auto; max-width: 100%; font-size: 15px; font-weight: 600; color: var(--tinta); overflow-wrap: break-word; }
+.pq-comanda-subtotal { flex-shrink: 0; margin-left: auto; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-comanda-controles { display: flex; align-items: center; gap: var(--esp-2); margin-top: var(--esp-2); }
+.pq-comanda-unitario { flex: 1; font-size: 13px; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
+.pq-comanda .pq-stepper { gap: 0; padding: 2px; border: 1px solid var(--linea-tienda); border-radius: 999px; background: #FFFFFF; }
+.pq-comanda .pq-stepper-boton { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--tinta); }
+.pq-comanda .pq-stepper-boton svg { width: 16px; height: 16px; }
+.pq-comanda .pq-stepper-boton:hover { background: var(--papel-hondo); }
+.pq-comanda .pq-stepper-boton:focus-visible { outline: 3px solid var(--marca); outline-offset: 1px; }
+.pq-comanda .pq-stepper-cantidad { min-width: 24px; font: 650 15px/1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-comanda-quitar button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--texto-tenue);
+  cursor: pointer;
+  transition: background var(--rapido) ease, color var(--rapido) ease;
+}
+.pq-comanda-quitar svg { width: 18px; height: 18px; }
+.pq-comanda-quitar button:hover { background: var(--tinte-aji); color: #9c2c17; }
+.pq-comanda-quitar button:focus-visible { outline: 3px solid var(--marca); outline-offset: 1px; }
+.pq-comanda-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--esp-1);
+  padding-top: var(--esp-3);
+  border-top: 4px double color-mix(in srgb, var(--tinta) 22%, transparent);
+  font: 700 17px/1.2 'Bricolage Grotesque', sans-serif;
+  color: var(--tinta);
+}
+.pq-comanda-total span:last-child { font: 700 21px/1.1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-comanda-nota { margin: var(--esp-2) 0 0; font-size: 12.5px; line-height: 1.45; color: var(--texto-tenue); }
+.pq-comanda-seguir { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: var(--esp-1); color: var(--marca-texto); font-size: 14px; font-weight: 600; text-decoration: none; }
+.pq-comanda-seguir svg { width: 16px; height: 16px; }
+.pq-comanda-seguir:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pq-vacio-tienda-accion { width: auto; margin-top: var(--esp-5); }
+
+/* Formularios de la tienda: tokens cálidos y la marca en el foco y en lo
+   elegido. 16px en los campos evita que el iPhone haga zoom al tocarlos. */
+.pq-shell-tienda .pq-label { color: var(--texto-calido); }
+.pq-shell-tienda .pq-input { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 16px; color: var(--tinta); }
+.pq-shell-tienda .pq-input:focus { border-color: var(--marca-texto); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 30%, transparent); }
+.pq-shell-tienda .pq-input[type="tel"] { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.pq-shell-tienda .pq-input-telefono-prefijo { border-color: var(--linea-tienda); border-radius: var(--radio-m); background: var(--papel-hondo); color: var(--tinta); font-size: 15px; font-variant-numeric: tabular-nums; }
+.pq-shell-tienda .pq-opcion-entrega { justify-content: center; min-height: 76px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); color: var(--texto-calido); }
+.pq-shell-tienda .pq-opcion-entrega:hover { border-color: color-mix(in srgb, var(--tinta) 30%, transparent); }
+.pq-shell-tienda .pq-opcion-entrega:has(input:checked) { border-color: var(--marca-texto); background: var(--marca-suave); color: var(--tinta); }
+.pq-shell-tienda .pq-opcion-entrega:has(input:checked) svg { color: var(--marca-texto); }
+.pq-shell-tienda .pq-opcion-entrega:has(input:focus-visible) { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-shell-tienda .pq-opcion-entrega-check { color: var(--marca-texto); }
+.pq-shell-tienda .pq-consentimiento-requerido { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); }
+.pq-shell-tienda .pq-consentimiento-titulo { color: var(--tinta); }
+.pq-shell-tienda .pq-consentimiento input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--marca-texto); }
+.pq-consentimientos { display: flex; flex-direction: column; gap: var(--esp-3); margin: var(--esp-6) 0 var(--esp-1); }
+.pq-enlace-suave { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.pq-recoger-nombre { display: block; font-size: 15px; font-weight: 600; color: var(--tinta); }
+.pq-recoger-direccion { display: block; margin-top: 2px; font-size: 13.5px; color: var(--texto-tenue); }
+.pq-checkout-pie { margin: var(--esp-3) 0 0; text-align: center; }
+
+.pq-shell-tienda .pq-checkout-sticky {
+  background: color-mix(in srgb, var(--papel) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top-color: var(--linea-tienda);
+}
+.pq-checkout-sticky-resumen { display: flex; flex-direction: column; }
+.pq-checkout-sticky-etiqueta { font-size: 12px; font-weight: 600; color: var(--texto-tenue); }
+.pq-checkout-sticky-total { font: 700 19px/1.15 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-checkout-sticky-boton { width: auto; flex-grow: 1; max-width: 280px; }
+
+/* Reserva */
+.pq-reserva-bloque { margin-top: var(--esp-8); scroll-margin-top: var(--esp-4); }
+.pq-shell-tienda .pq-mes-actual { font-size: 13px; font-weight: 600; color: var(--texto-tenue); }
+.pq-reserva-nota { margin-top: var(--esp-2); }
+
+.pq-opciones-persona { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.pq-persona {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px 0 6px;
+  border-radius: 999px;
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  color: var(--tinta);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pq-persona-inicial { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--papel-hondo); font: 700 13px/1 'Bricolage Grotesque', sans-serif; }
+.pq-persona:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
+.pq-persona-activa, .pq-persona-activa:hover { border-color: var(--marca-texto); background: var(--marca-suave); }
+.pq-persona-activa .pq-persona-inicial { background: var(--marca); color: var(--marca-sobre); }
+.pq-persona:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+
+/* Hojitas de almanaque: cada fecha es una hoja con el "lomo" del color del
+   negocio arriba, como el almanaque de pared de la tienda del barrio. */
+.pq-shell-tienda .pq-dias-scroll { display: flex; gap: var(--esp-2); padding: 4px 2px 8px; margin-left: -2px; }
+.pq-dia {
+  flex-shrink: 0;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 10px 0 8px;
+  border-radius: var(--radio-m);
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  box-shadow: inset 0 4px 0 var(--marca-claro);
+  color: var(--tinta);
+  text-decoration: none;
+  transition: transform var(--rapido) ease, border-color var(--rapido) ease, background var(--rapido) ease;
+}
+.pq-dia-semana { font-size: 11.5px; font-weight: 700; color: var(--texto-tenue); }
+.pq-dia-numero { font: 700 22px/1.1 'Bricolage Grotesque', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-dia-mes { font-size: 11px; color: var(--texto-tenue); }
+.pq-dia:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
+.pq-dia:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-dia-activo, .pq-dia-activo:hover {
+  background: var(--marca);
+  border-color: var(--marca);
+  color: var(--marca-sobre);
+  /* Sin sombra exterior: el carrusel tiene overflow y la recortaría. */
+  box-shadow: inset 0 4px 0 var(--marca-texto);
+}
+.pq-dia-activo .pq-dia-semana, .pq-dia-activo .pq-dia-mes { color: inherit; opacity: .8; }
+.pq-shell-tienda .pq-calendario-detalle > summary { min-height: 44px; color: var(--marca-texto); font-size: 14px; }
+.pq-shell-tienda .pq-calendario-detalle > summary svg { width: 16px; height: 16px; }
+.pq-shell-tienda .pq-calendario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: var(--esp-2); border-top-color: var(--linea-tienda); }
+.pq-calendario-grid .pq-dia { width: auto; }
+
+.pq-shell-tienda .pq-slot { min-height: 48px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-variant-numeric: tabular-nums; }
+.pq-shell-tienda .pq-slot:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
+.pq-shell-tienda .pq-slot:focus-visible { outline: 3px solid var(--marca); }
+.pq-shell-tienda .pq-slot-seleccionado, .pq-shell-tienda .pq-slot-seleccionado:hover { background: var(--marca); border-color: var(--marca); color: var(--marca-sobre); }
+.pq-shell-tienda .pq-slot-grupo-titulo { font: 600 13px/1.2 'Inter Tight', sans-serif; letter-spacing: 0; color: var(--texto-calido); margin-bottom: var(--esp-2); }
+
+.pq-sin-cupos { padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
+.pq-sin-cupos-titulo { display: block; font: 700 16px/1.25 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-sin-cupos-proximo { display: flex; flex-direction: column; gap: 2px; margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px dashed var(--linea-tienda); }
+.pq-sin-cupos-fecha { font-size: 15.5px; font-weight: 650; color: var(--tinta); }
+.pq-sin-cupos > .pq-ayuda { margin-top: 6px; }
+.pq-btn-alto { width: auto; min-height: 46px; margin-top: var(--esp-4); }
+.pq-btn-ancho { width: 100%; }
+.pq-disponibilidad-error .pq-ayuda { margin-top: 4px; }
+.pq-shell-tienda .pq-lista-espera-detalle { margin-top: var(--esp-3); }
+.pq-shell-tienda .pq-lista-espera-detalle > summary { min-height: 48px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 14px; color: var(--tinta); }
+.pq-shell-tienda .pq-lista-espera-detalle[open] > summary { border-radius: var(--radio-m) var(--radio-m) 0 0; }
+.pq-shell-tienda .pq-lista-espera-detalle[open] form { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: 0 0 var(--radio-m) var(--radio-m); }
+.pq-reserva-espera { margin-top: var(--esp-3); }
+.pq-reserva-espera-titulo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.pq-reserva-espera-servicio { margin: 8px 0 0; font-size: 14px; }
+.pq-reserva-espera-fecha { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+.pq-botones-par { display: flex; gap: var(--esp-2); margin-top: 10px; }
+.pq-botones-par > * { flex: 1; }
+
+/* El turno elegido, en grande y con la marca, antes de pedir datos: lo
+   primero que se confirma es "qué y cuándo", no el formulario. */
+.pq-turno {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--esp-4) var(--esp-5);
+  border-radius: var(--radio-l);
+  background: var(--marca-suave);
+  border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
+}
+.pq-turno-hora { font: 700 28px/1.1 'Bricolage Grotesque', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-turno-fecha { font-size: 15px; font-weight: 600; color: var(--tinta); }
+.pq-turno-servicio { font-size: 13.5px; color: var(--texto-calido); }
+.pq-turno-anticipo { margin: var(--esp-3) 0 0; font-size: 13.5px; line-height: 1.45; color: #8a5a00; }
+.pq-confirmar-form { margin-top: var(--esp-5); }
+.pq-confirmar-boton { margin-top: var(--esp-5); }
+
+@media (min-width: 860px) {
+  .pq-flujo-angosto { width: 100%; max-width: 680px; margin: 0 auto; }
+  .pq-cabecera-corta-enlace { padding-left: 32px; padding-right: 32px; }
+
+  /* Carrito en escritorio: el formulario a la izquierda y la comanda a la
+     derecha, pegada mientras se llena el formulario. */
+  .pq-checkout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--esp-10); align-items: start; }
+  .pq-checkout-resumen { grid-column: 2; grid-row: 1; position: sticky; top: var(--esp-6); }
+  .pq-checkout-form { grid-column: 1; grid-row: 1; }
+  .pq-checkout-form .pq-etapa:first-of-type { margin-top: 0; }
+}
+
 @keyframes pqAparece { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes pqSube { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 

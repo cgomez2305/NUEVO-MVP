@@ -79,6 +79,12 @@ componentes en `references/tokens.md` y `references/tienda.md`.
    - Estilos inline en vistas solo para valores que vienen de la base de
      datos (p. ej. `style="--marca: ..."`). Nada de `style="font-size..."`
      nuevo en vistas.
+   - **Antes de crear una clase nueva, búscala** (`grep -n "\.pq-nombre\b"
+     public/assets/css/app.css`). El archivo tiene más de 2.500 líneas y
+     nombres genéricos como `.pq-paso` ya existían para otra pantalla: una
+     colisión mezcla estilos sin avisar. Si existe, usa otro nombre.
+   - Para ajustar un componente compartido solo en la tienda, sobrescríbelo
+     bajo `.pq-shell-tienda` en vez de cambiar la regla base (el panel la usa).
    - Partes repetidas entre vistas → parcial PHP (`src/Views/tienda/_*.php`).
    - Escapar todo con `e()`; precios con `pesos()`.
    - No romper los ganchos de JS: `#pq-barra-carrito`,
@@ -110,6 +116,10 @@ componentes en `references/tokens.md` y `references/tienda.md`.
       `safe-area-inset-bottom` del iPhone.
 - [ ] Cero colores o tamaños sueltos nuevos fuera de los tokens.
 - [ ] `php -l` limpio en las vistas tocadas.
+- [ ] Flujo completo probado en navegador (no solo capturas): agregar,
+      sumar/restar/quitar, enviar el formulario y llegar a la confirmación.
+      En scripts de prueba, las tarjetas de opción se tocan por su `<label>`:
+      el radio está oculto y no recibe clics.
 
 ## Señales de diseño genérico (evitar)
 

@@ -211,6 +211,8 @@
     }
 
     total.textContent = formatearPesos(carrito.total);
+    var cuentaComanda = document.getElementById('pq-comanda-cuenta');
+    if (cuentaComanda) cuentaComanda.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos');
     var stickyTotal = document.getElementById('pq-checkout-sticky-total');
     if (stickyTotal) stickyTotal.textContent = formatearPesos(carrito.total);
 
@@ -244,7 +246,7 @@
 
     evento.preventDefault();
     var tipo = form.getAttribute('data-carrito-form');
-    var fila = form.closest('.pq-fila-carrito');
+    var fila = form.closest('[data-fila-producto]');
     var campoProducto = form.querySelector('[name="producto_id"]');
     var productoId = campoProducto ? campoProducto.value : null;
     // El listener de "enviando…" de arriba ya deshabilitó este botón; como
@@ -491,7 +493,7 @@
   // a mano, no se pierde información, solo el centrado automático.
   // ---------------------------------------------------------------------
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.pq-dias-scroll .pq-chip-caja').forEach(function (chip) {
+    document.querySelectorAll('.pq-dias-scroll .pq-dia-activo').forEach(function (chip) {
       if (typeof chip.scrollIntoView === 'function') {
         chip.scrollIntoView({ inline: 'center', block: 'nearest' });
       }

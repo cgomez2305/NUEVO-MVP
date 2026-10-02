@@ -45,9 +45,10 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Fuentes ahora alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
-0. Diseño: llevar `carrito.php`, `reservar.php`, `pedido_confirmado.php`,
-   `cita_*.php` al lenguaje tienda v2 (siguen con mono y cuadros de color);
-   luego el panel. Bug que ya existía: `/panel/productos` desborda 33–63px
+0. Diseño: carrito y reservar YA están en tienda v2 (comanda con borde
+   rasgado, hojitas de almanaque, etapas numeradas, cabecera corta).
+   Faltan `pedido_confirmado.php` y `cita_*.php` (confirmaciones y gestión
+   de cita); luego el panel. Bug que ya existía: `/panel/productos` desborda 33–63px
    en celular (detectado por capturas.js).
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
