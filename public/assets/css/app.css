@@ -4431,3 +4431,67 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-cierre-cuadre .pq-chip { font-size: 13.5px; }
 .pq-cierre-historial-enlace { color: inherit; text-decoration: none; }
 .pq-cierre-historial-enlace:hover strong { color: var(--sello); }
+
+/* ==========================================================================
+   RESEÑAS · tienda
+   Estrellas en el color del negocio (oscurecido para contraste sobre papel).
+   Para calificar son radios reales, al revés en el HTML: con :has() se pinta
+   la elegida y todas las de su izquierda.
+   ========================================================================== */
+.pq-resena-form { display: flex; flex-direction: column; gap: var(--esp-4); margin-top: var(--esp-5); }
+.pq-resena-estrellas { display: flex; flex-direction: row-reverse; justify-content: center; gap: var(--esp-2); border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+.pq-resena-estrellas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-resena-estrellas label { width: 52px; height: 52px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; transition: transform var(--rapido) var(--curva); }
+.pq-resena-estrellas svg { width: 44px; height: 44px; fill: transparent; stroke: var(--linea-tienda); stroke-width: 1.6; stroke-linejoin: round; transition: fill var(--rapido), stroke var(--rapido); }
+/* La elegida y las de antes (que en el DOM van después). */
+.pq-resena-estrellas input:checked ~ label svg,
+.pq-resena-estrellas label:hover svg, .pq-resena-estrellas label:hover ~ label svg { fill: var(--marca); stroke: var(--marca-texto); }
+.pq-resena-estrellas input:checked + label { transform: scale(1.08); }
+.pq-resena-estrellas input:focus-visible + label { outline: 2px solid var(--marca-texto); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .pq-resena-estrellas label, .pq-resena-estrellas svg { transition: none; } }
+.pq-resena-escala { display: flex; justify-content: space-between; max-width: 300px; width: 100%; margin: calc(var(--esp-2) * -1) auto 0; font-size: 12px; color: var(--texto-tenue); }
+.pq-resena-enviar, .pq-resena-volver { width: 100%; }
+.pq-resena-estrellas-fijas { display: flex; gap: var(--esp-1); margin: var(--esp-5) 0 var(--esp-3); }
+.pq-resena-estrellas-fijas svg { width: 32px; height: 32px; }
+.pq-resena-cita { margin: 0 0 var(--esp-6); padding: var(--esp-3) var(--esp-4); border-left: 3px solid var(--marca); background: var(--marca-suave); border-radius: 0 var(--radio-m) var(--radio-m) 0; font-size: 15px; color: var(--tinta); }
+
+/* Estrellas pequeñas (resumen y lista). */
+.pq-resenas-mini, .pq-resena-estrellas-fijas { display: inline-flex; gap: 2px; }
+.pq-resenas-mini svg { width: 15px; height: 15px; }
+.pq-resenas-mini svg, .pq-resena-estrellas-fijas svg { fill: var(--linea-tienda); }
+.pq-resena-llena svg { fill: var(--marca); stroke: var(--marca-texto); stroke-width: 1; }
+.pq-resenas-tienda { margin-top: var(--esp-8); padding: var(--esp-4) var(--esp-5); border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); scroll-margin-top: 72px; }
+.pq-resenas-nota { display: flex; align-items: center; flex-wrap: wrap; gap: var(--esp-2); margin: 0; }
+.pq-resenas-promedio { font: 800 28px/1 var(--fuente-titulo); color: var(--tinta); font-variant-numeric: tabular-nums; }
+.pq-resenas-lista { list-style: none; margin: var(--esp-4) 0 0; padding: 0; }
+.pq-resenas-lista li { padding: var(--esp-3) 0; border-top: 1px dashed var(--linea-tienda); }
+.pq-resenas-lista p { margin: var(--esp-1) 0; font-size: 14.5px; line-height: 1.5; color: var(--tinta); }
+.pq-letrero-resenas { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--esp-2); color: var(--tinta); text-decoration: none; font-size: 14px; }
+.pq-letrero-resenas svg { width: 16px; height: 16px; fill: var(--marca); stroke: var(--marca-texto); stroke-width: 1; }
+.pq-letrero-resenas span { color: var(--texto-calido); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Reseñas · panel ---------- */
+.pq-panel-estrellas { display: inline-flex; gap: 2px; }
+.pq-panel-estrellas svg { width: 16px; height: 16px; fill: var(--recibo); }
+.pq-panel-estrella-llena svg { fill: var(--mostaza); stroke: #b5860f; stroke-width: 1; }
+.pq-resenas-resumen { display: grid; gap: var(--esp-5); margin: var(--esp-5) 0; padding: var(--esp-5) var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); }
+@media (min-width: 640px) { .pq-resenas-resumen { grid-template-columns: auto 1fr; align-items: center; } }
+.pq-resenas-resumen-nota { display: flex; flex-direction: column; gap: var(--esp-1); }
+.pq-resenas-resumen-promedio { font: 800 44px/1 var(--fuente-titulo); color: var(--carbon); font-variant-numeric: tabular-nums; }
+.pq-resenas-resumen-nota .pq-panel-estrellas svg { width: 20px; height: 20px; }
+.pq-resenas-resumen-aviso { color: #8a5a00; }
+.pq-resenas-barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pq-resenas-barras li { display: grid; grid-template-columns: 34px 1fr 28px; align-items: center; gap: var(--esp-2); font-size: 13px; color: var(--gris-texto); }
+.pq-resenas-barras li > span:first-child { display: inline-flex; align-items: center; gap: 2px; }
+.pq-resenas-barras svg { width: 12px; height: 12px; fill: var(--mostaza); }
+.pq-resenas-barra { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--mostaza) calc(var(--parte) * 100%), var(--recibo) 0); }
+.pq-resenas-barras li > span:last-child { text-align: right; }
+.pq-resenas-panel-lista { list-style: none; padding: 0 var(--esp-4); }
+.pq-resenas-panel-lista li { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-4) 0; }
+.pq-resenas-panel-lista li + li { border-top: 1px dashed var(--borde); }
+.pq-resenas-panel-fila { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; }
+.pq-resenas-panel-texto { margin: 0; font-size: 15px; line-height: 1.5; color: var(--carbon); }
+.pq-resenas-panel-texto-oculto { color: var(--gris-suave); text-decoration: line-through; }
+.pq-resenas-panel-acciones { display: inline-flex; gap: var(--esp-3); align-items: center; }
+.pq-resenas-panel-nota { margin-top: var(--esp-3); }
+.pq-detalle-secundarias form { display: contents; }

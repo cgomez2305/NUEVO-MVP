@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Auth;
 use App\Models\Cupon;
 use App\Models\Fidelidad;
+use App\Models\Resena;
 use App\Models\ZonaDomicilio;
 
 /**
@@ -248,6 +249,68 @@ class CrecimientoController
             flash_set('ok', $minimo > 0 ? 'Pedido mínimo: ' . pesos($minimo) . '.' : 'Sin pedido mínimo.');
         }
         redirigir('/panel/domicilios');
+    }
+
+    public function resenas(array $parametros): void
+    {
+        $negocio = $this->exigirDueno();
+        $negocioId = (int) $negocio['negocio_id'];
+
+        ver('panel/resenas', [
+            'titulo'     => 'Reseñas · Veci',
+            'activo'     => 'resenas',
+            'negocio'    => $negocio,
+            'resumen'    => Resena::resumen($negocioId),
+            'resenas'    => Resena::listar($negocioId),
+            'pendientes' => Resena::pendientes($negocioId),
+            'ok'         => flash_obtener('ok'),
+        ], 'panel');
+    }
+
+    /** Ocultar (o volver a mostrar) el comentario; las estrellas siempre cuentan. */
+    public function alternarComentarioResena(array $parametros): void
+    {
+        $negocio = $this->exigirDueno();
+        if (csrf_verificar()) {
+            Resena::alternarComentario((int) $parametros['id'], (int) $negocio['negocio_id']);
+        }
+        redirigir('/panel/resenas');
+    }
+
+    /**
+     * "Pedir reseña" desde un pedido entregado o una cita atendida (dueño o
+     * colaborador): crea el enlace de un solo uso y abre WhatsApp con el
+     * mensaje para ese cliente.
+     */
+    public function pedirResenaPedido(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $pedido = \App\Models\Pedido::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($pedido === null || !csrf_verificar() || $pedido['estado'] !== 'entregado') {
+            redirigir('/panel/pedidos/' . (int) $parametros['id']);
+        }
+        $resena = Resena::pedir((int) $negocio['negocio_id'], (int) $negocio['id'], (int) $pedido['cliente_id'], (int) $pedido['id'], null);
+        $this->abrirWhatsappResena($negocio, (string) $pedido['cliente_nombre'], (string) $pedido['cliente_telefono'], 'tu pedido', (string) $resena['token']);
+    }
+
+    public function pedirResenaCita(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $cita = \App\Models\Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
+        if ($cita === null || !csrf_verificar() || $cita['estado'] !== 'completada') {
+            redirigir('/panel/citas');
+        }
+        $resena = Resena::pedir((int) $negocio['negocio_id'], (int) $negocio['id'], (int) $cita['cliente_id'], null, (int) $cita['id']);
+        $this->abrirWhatsappResena($negocio, (string) $cita['cliente_nombre'], (string) $cita['cliente_telefono'], 'tu ' . mb_strtolower((string) $cita['nombre_servicio']), (string) $resena['token']);
+    }
+
+    private function abrirWhatsappResena(array $negocio, string $nombre, string $telefono, string $que, string $token): never
+    {
+        $primerNombre = explode(' ', trim($nombre))[0];
+        $texto = "Hola {$primerNombre}, gracias por elegir " . nombre_publico_sede($negocio) . ". ¿Cómo te fue con {$que}? "
+            . 'Califícanos en 10 segundos: ' . url_publica('/r/' . $token);
+        header('Location: https://wa.me/57' . preg_replace('/\D+/', '', $telefono) . '?text=' . rawurlencode($texto));
+        exit;
     }
 
     private function exigirDuenoDePedidos(): array

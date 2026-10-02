@@ -103,6 +103,10 @@ $router->post('/panel/cupones/{id}/eliminar', [$crecimiento, 'eliminarCupon']);
 $router->get('/panel/fidelidad', [$crecimiento, 'fidelidad']);
 $router->post('/panel/fidelidad', [$crecimiento, 'guardarFidelidad']);
 $router->post('/panel/fidelidad/{cliente}/premio', [$crecimiento, 'entregarPremio']);
+$router->get('/panel/resenas', [$crecimiento, 'resenas']);
+$router->post('/panel/resenas/{id}/comentario', [$crecimiento, 'alternarComentarioResena']);
+$router->post('/panel/pedidos/{id}/resena', [$crecimiento, 'pedirResenaPedido']);
+$router->post('/panel/citas/{id}/resena', [$crecimiento, 'pedirResenaCita']);
 $router->get('/panel/caja', [$caja, 'ver']);
 $router->post('/panel/caja', [$caja, 'cerrar']);
 $router->get('/panel/domicilios', [$crecimiento, 'domicilios']);
@@ -149,6 +153,8 @@ $router->post('/t/{slug}/lista-espera/salir', [$tienda, 'salirListaEspera']);
 
 // --- Gestión de cita por el cliente, sin login (enlace con token) -------
 $router->get('/cita/{token}', [$tienda, 'gestionarCita']);
+$router->get('/r/{token}', [$tienda, 'verResena']);
+$router->post('/r/{token}', [$tienda, 'responderResena']);
 $router->post('/cita/{token}/cancelar', [$tienda, 'cancelarCitaCliente']);
 $router->get('/cita/{token}/reprogramar', [$tienda, 'reprogramarCitaVista']);
 $router->post('/cita/{token}/reprogramar', [$tienda, 'guardarReprogramacion']);

@@ -64,8 +64,8 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   Luego el panel de administración: hecho (ver `references/admin.md`).
   Con esto tienda, panel, onboarding y admin están todos en v2.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
-- Ahora: "empieza a hacer todos los features" (12). Orden: cupones ✓ → fidelidad ✓ → zonas de domicilio ✓ → agotado hoy + inventario ✓ → combos y lo más pedido ✓ → cierre de caja ✓ →
-  reseñas → paquetes → avisos de estado →
+- Ahora: "empieza a hacer todos los features" (12). Orden: cupones ✓ → fidelidad ✓ → zonas de domicilio ✓ → agotado hoy + inventario ✓ → combos y lo más pedido ✓ → cierre de caja ✓ → reseñas ✓ →
+  paquetes → avisos de estado →
   Wompi → referidos. Una migración `database/migrations/2026-10-03_NN_*.sql`
   por feature + `schema.sql` y sus `INSERT IGNORE INTO migraciones` al día;
   `php bin/migrar.php` las aplica. Detalle en `references/crecimiento.md`.

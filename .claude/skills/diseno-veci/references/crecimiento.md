@@ -133,3 +133,19 @@ N/M" o "le toca {premio}".
   se ilumina con `:target`), solo con ≥ 3 pedidos reales en 30 días;
   etiqueta "Lo más pedido" en el plato. Panel: barras "Lo que más sale ·
   30 días" arriba del catálogo.
+
+## Reseñas por WhatsApp
+
+- Solo opina quien compró: "Pedir reseña" sale en un pedido entregado
+  (detalle) y en una cita atendida (agenda); crea un enlace de un solo uso
+  `/r/{token}` y abre WhatsApp con el mensaje. Pedirla otra vez reusa el enlace.
+- `/r/{token}` (Ruta 1, cabecera corta): estrellas grandes que son radios
+  reales al revés en el HTML (`row-reverse`, se pintan con `~`), del color
+  del negocio; comentario opcional ("se publica con tu nombre y la
+  inicial"). Respondida, muestra las estrellas fijas y la cita.
+- Tienda: con ≥ 3 reseñas, la cabecera lleva "★ 4,7 · 23 reseñas" que baja
+  a `#resenas` ("Lo que dicen los vecinos": promedio + últimas 3 con
+  comentario). Nunca se rellena con menos.
+- Panel `/panel/resenas`: promedio grande + barras por estrella (mostaza),
+  lista con "Escribirle" y "Ocultar comentario". Ocultar quita el texto de
+  la tienda pero las estrellas siguen contando: el promedio no se maquilla.

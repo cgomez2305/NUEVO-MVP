@@ -52,5 +52,6 @@
     </section>
   <?php endif; ?>
 
+  <?php require __DIR__ . '/_resenas.php'; ?>
   <?php require __DIR__ . '/_informacion.php'; ?>
 </main>

@@ -132,6 +132,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
     <?php $i++; endforeach; ?>
   <?php endif; ?>
 
+  <?php require __DIR__ . '/_resenas.php'; ?>
   <?php require __DIR__ . '/_informacion.php'; ?>
 </main>
 

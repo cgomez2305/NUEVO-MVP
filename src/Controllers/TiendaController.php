@@ -8,6 +8,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
 use App\Models\Fidelidad;
+use App\Models\Resena;
 use App\Models\ZonaDomicilio;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
@@ -66,6 +67,7 @@ class TiendaController
                 'servicios'        => $servicios,
                 'horario'          => horario_resumen($horarioSede),
                 'fidelidad'        => Fidelidad::activa((int) $negocio['negocio_id']),
+                'resenas'          => $this->resenasParaTienda($negocio),
                 'abiertoAhora'     => $abiertoAhora,
                 'proximaApertura'  => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
                 'disponibilidadHoy' => $disponibilidadHoy,
@@ -87,6 +89,7 @@ class TiendaController
             'carrito'         => $carrito,
             'horario'         => horario_resumen($horarioSede),
             'fidelidad'       => Fidelidad::activa((int) $negocio['negocio_id']),
+            'resenas'         => $this->resenasParaTienda($negocio),
             'zonas'           => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
             'masPedidos'      => Producto::masPedidos((int) $negocio['id']),
             'abiertoAhora'    => $abiertoAhora,
@@ -747,6 +750,55 @@ class TiendaController
             'enlaceWhatsapp' => $enlaceWhatsapp,
             'tarjeta'        => $tarjeta,
         ], 'tienda');
+    }
+
+    /** @return array{resumen: array, lista: array}|null — null si todavía no hay suficientes para que el promedio diga algo. */
+    private function resenasParaTienda(array $negocio): ?array
+    {
+        $resumen = Resena::resumen((int) $negocio['negocio_id']);
+        if ($resumen['total'] < Resena::MINIMO_PARA_MOSTRAR) {
+            return null;
+        }
+
+        return ['resumen' => $resumen, 'lista' => Resena::paraTienda((int) $negocio['negocio_id'])];
+    }
+
+    /** /r/{token}: la página donde el cliente califica su pedido o su cita. */
+    public function verResena(array $parametros): void
+    {
+        $resena = Resena::buscarPorToken((string) $parametros['token']);
+        if ($resena === null) {
+            abortar404();
+        }
+        $sede = Sede::buscarPorId((int) $resena['sede_id']);
+        $cita = $resena['cita_id'] !== null ? Cita::buscar((int) $resena['cita_id'], (int) $resena['sede_id']) : null;
+
+        ver('tienda/resena', [
+            'titulo'  => '¿Cómo te fue? · ' . nombre_publico_sede($sede),
+            'negocio' => $sede,
+            'resena'  => $resena,
+            'que'     => $cita !== null ? 'tu ' . mb_strtolower((string) $cita['nombre_servicio']) : 'tu pedido',
+            'error'   => flash_obtener('error'),
+        ], 'tienda');
+    }
+
+    public function responderResena(array $parametros): void
+    {
+        $resena = Resena::buscarPorToken((string) $parametros['token']);
+        if ($resena === null) {
+            abortar404();
+        }
+        $volver = '/r/' . $resena['token'];
+        if (!csrf_verificar()) {
+            redirigir($volver);
+        }
+        $estrellas = (int) ($_POST['estrellas'] ?? 0);
+        if ($estrellas < 1 || $estrellas > 5) {
+            flash_set('error', 'Toca las estrellas para calificar.');
+            redirigir($volver);
+        }
+        Resena::responder((int) $resena['id'], $estrellas, (string) ($_POST['comentario'] ?? ''));
+        redirigir($volver);
     }
 
     public function gestionarCita(array $parametros): void

@@ -5,7 +5,7 @@
  * rápidos (WhatsApp, cómo llegar, horario). Compartida por mostrar.php
  * (pedidos) y servicios.php (reservas).
  *
- * Espera: $negocio; opcionales $abiertoAhora, $proximaApertura, $horario.
+ * Espera: $negocio; opcionales $abiertoAhora, $proximaApertura, $horario, $resenas.
  */
 $abiertoAhora = $abiertoAhora ?? null;
 $proximaApertura = $proximaApertura ?? null;
@@ -24,6 +24,14 @@ $direccion = trim((string) ($negocio['direccion'] ?? ''));
     <h1 class="pq-letrero-nombre"><?= e(nombre_publico_sede($negocio)) ?></h1>
     <?php if (!empty($negocio['descripcion'])): ?>
       <p class="pq-letrero-desc"><?= e($negocio['descripcion']) ?></p>
+    <?php endif; ?>
+
+    <?php if (!empty($resenas)): ?>
+      <a class="pq-letrero-resenas" href="#resenas">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.1l-5.7 3.2 1.2-6.4-4.7-4.4 6.4-.8L12 2.8Z"/></svg>
+        <strong><?= e(number_format((float) $resenas['resumen']['promedio'], 1, ',', '')) ?></strong>
+        <span><?= (int) $resenas['resumen']['total'] ?> reseñas</span>
+      </a>
     <?php endif; ?>
 
     <?php if ($abiertoAhora !== null): ?>

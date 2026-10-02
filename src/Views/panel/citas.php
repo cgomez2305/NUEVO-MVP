@@ -122,6 +122,12 @@
                     <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguientePasoCita['texto']) ?> →</button>
                   </form>
                 <?php endif; ?>
+                <?php if ($cita['estado'] === 'completada'): ?>
+                  <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/resena')) ?>" target="_blank">
+                    <?= csrf_campo() ?>
+                    <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Pedir reseña</button>
+                  </form>
+                <?php endif; ?>
                 <details class="pq-agenda-mas">
                   <summary>Cambiar estado</summary>
                   <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/estado')) ?>" class="pq-detalle-estado-fila">
