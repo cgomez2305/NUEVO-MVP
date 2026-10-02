@@ -10,3 +10,6 @@
 !/public/uploads/productos/.htaccess
 .DS_Store
 *.log
+
+# Capturas de revisión de diseño (se generan con .claude/skills/diseno-veci/scripts/capturas.js)
+/capturas-diseno/
