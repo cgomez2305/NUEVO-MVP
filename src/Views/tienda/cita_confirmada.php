@@ -31,6 +31,10 @@ $mostrarPago = !empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] 
     ?>
   <?php endif; ?>
 
+  <?php if (!empty($tarjeta)): ?>
+    <?php $pqSellos = $tarjeta['sellos']; $pqMeta = $tarjeta['meta']; $pqPremio = $tarjeta['premio']; $pqNuevo = $tarjeta['nuevo']; require __DIR__ . '/_tarjeta_sellos.php'; ?>
+  <?php endif; ?>
+
   <a href="<?= e($enlaceWhatsapp) ?>" target="_blank" rel="noopener" class="pq-btn pq-btn-whatsapp pq-confirmar-boton">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
     <?= $mostrarPago ? 'Enviar reserva y comprobante' : 'Enviar reserva por WhatsApp' ?>

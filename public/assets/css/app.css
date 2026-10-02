@@ -4195,3 +4195,84 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 /* Copiloto: el código del cupón personal bajo la burbuja del mensaje. */
 .pq-wa-cupon { display: flex; align-items: flex-start; gap: var(--esp-3); margin: var(--esp-3) 0 0; }
 .pq-wa-cupon-codigo { flex: none; padding: 4px 10px; border: 1.5px dashed var(--sello); border-radius: var(--radio-s); color: var(--sello); font-weight: 700; letter-spacing: .06em; font-size: 13px; }
+
+/* ==========================================================================
+   TARJETA DE SELLOS · tienda (y vista previa en el panel)
+   La tarjeta de cartón del mostrador: casillas redondas punteadas; cada
+   compra es un sello de caucho del color del negocio, puesto un poco
+   torcido (--giro sale de la posición, no al azar). La última casilla es
+   el premio. El sello nuevo "cae" una vez al confirmar la compra.
+   ========================================================================== */
+.pq-tarjeta-sellos {
+  margin: var(--esp-6) 0;
+  padding: var(--esp-4) var(--esp-4) var(--esp-5);
+  background: var(--tiquete);
+  border: 1px solid var(--linea-tienda);
+  border-radius: var(--radio-l);
+  box-shadow: 0 1px 0 var(--linea-tienda), 0 10px 24px -16px rgba(27, 26, 23, .35);
+}
+.pq-tarjeta-sellos-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-3); margin-bottom: var(--esp-4); }
+.pq-tarjeta-sellos-titulo { font: 700 15px/1.3 var(--fuente-titulo); color: var(--tinta); }
+.pq-tarjeta-sellos-cuenta { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--marca-texto); font-size: 14px; }
+.pq-casillas-sello {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--columnas, 4), minmax(0, 1fr));
+  gap: var(--esp-3) var(--esp-2);
+  justify-items: center;
+}
+.pq-casilla-sello {
+  width: 100%;
+  max-width: 52px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px dashed var(--linea-tienda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--texto-tenue);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pq-casilla-sello svg { width: 52%; height: 52%; }
+.pq-casilla-sello-premio { border-color: var(--marca-claro); color: var(--marca-texto); background: var(--marca-suave); }
+.pq-casilla-sello-puesta {
+  border: 2px solid color-mix(in oklab, var(--marca) 70%, var(--tinta));
+  background: var(--marca);
+  color: var(--marca-sobre);
+  transform: rotate(var(--giro, 0deg));
+  /* Doble aro interno: lo que hace que parezca sello de caucho y no un punto. */
+  box-shadow: inset 0 0 0 3px var(--marca), inset 0 0 0 4.5px color-mix(in oklab, var(--marca-sobre) 45%, transparent);
+}
+.pq-casilla-sello-nueva { animation: pq-sello-cae var(--lento) var(--curva) both; animation-delay: 250ms; }
+@keyframes pq-sello-cae {
+  0%   { transform: rotate(calc(var(--giro, 0deg) - 18deg)) scale(1.9); opacity: 0; }
+  60%  { transform: rotate(var(--giro, 0deg)) scale(.92); opacity: 1; }
+  100% { transform: rotate(var(--giro, 0deg)) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .pq-casilla-sello-nueva { animation: none; } }
+.pq-tarjeta-sellos-texto { margin: var(--esp-4) 0 0; font-size: 14.5px; line-height: 1.45; color: var(--tinta); }
+.pq-tarjeta-sellos-completa { border-color: var(--marca-claro); background: linear-gradient(180deg, var(--marca-suave), var(--tiquete) 70%); }
+.pq-info-sellos .pq-ayuda { margin: var(--esp-2) 0 0; }
+
+/* ---------- Tarjeta de sellos · panel ---------- */
+.pq-fidelidad { display: grid; gap: var(--esp-6); margin-top: var(--esp-6); }
+.pq-fidelidad-form { display: flex; flex-direction: column; gap: var(--esp-4); padding: var(--esp-5) var(--esp-4); }
+.pq-fidelidad-meta { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.pq-fidelidad-meta legend { padding: 0; margin-bottom: var(--esp-2); }
+.pq-fidelidad-meta .pq-cupon-tipo { flex-wrap: wrap; }
+.pq-fidelidad-meta .pq-ayuda { display: block; margin-top: var(--esp-2); }
+.pq-fidelidad-vista-nota { margin: 0 0 var(--esp-2); }
+/* La vista previa se pinta sobre papel de la tienda: es la Ruta 1, no el panel. */
+.pq-fidelidad-papel { padding: var(--esp-1) var(--esp-4); background: var(--papel); border-radius: var(--radio-l); }
+@media (min-width: 900px) {
+  .pq-fidelidad { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .pq-fidelidad-vista { position: sticky; top: 88px; }
+}
+/* Aviso en el detalle del pedido: el cliente completó la tarjeta de sellos. */
+.pq-premio-aviso { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; margin: var(--esp-4) 0; padding: var(--esp-3) var(--esp-4); border: 1.5px dashed var(--marca); border-radius: var(--radio-m); background: var(--marca-suave); }
+.pq-premio-aviso-texto { display: flex; flex-direction: column; gap: 2px; font-size: 14.5px; color: var(--carbon); min-width: 0; }
+.pq-premio-aviso .pq-btn { width: auto; }

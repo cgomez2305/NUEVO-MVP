@@ -32,6 +32,27 @@ $nivel = nivel_espera($minutosEspera, 20);
   </div>
 </div>
 
+<?php if (!empty($ok)): ?>
+  <div class="pq-alerta pq-alerta-ok" role="status"><?= e($ok) ?></div>
+<?php endif; ?>
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
+
+<?php if (!empty($premio)): ?>
+  <div class="pq-premio-aviso" role="status">
+    <span class="pq-premio-aviso-texto">
+      <strong>Le toca premio:</strong> <?= e($premio['premio']) ?>
+      <span class="pq-ayuda">Completó su tarjeta de <?= (int) $premio['meta'] ?> sellos.</span>
+    </span>
+    <form method="post" action="<?= e(base_url('/panel/fidelidad/' . $pedido['cliente_id'] . '/premio')) ?>" data-confirmar="¿Le entregaste <?= e($premio['premio']) ?>? Su tarjeta vuelve a empezar.">
+      <?= csrf_campo() ?>
+      <input type="hidden" name="volver" value="/panel/pedidos/<?= (int) $pedido['id'] ?>">
+      <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Entregar premio</button>
+    </form>
+  </div>
+<?php endif; ?>
+
 <?php if ($pedidoActivo): ?>
   <span class="pq-tiempo-espera pq-tiempo-<?= e($nivel) ?> pq-detalle-espera">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>

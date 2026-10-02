@@ -16,6 +16,7 @@ $pqIconos = [
     'citas'          => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     'recordatorios'  => '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     'copiloto'       => '<path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/>',
+    'fidelidad'      => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="7.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="16.5" cy="12" r="1.6"/>',
     'cupones'        => '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M9.5 14.5l5-5"/><circle cx="9.5" cy="9.5" r=".6"/><circle cx="14.5" cy="14.5" r=".6"/>',
     'servicios'      => '<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="M3 16l9 5 9-5M3 12l9 5 9-5"/>',
     'empleados'      => '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="18" cy="8.5" r="2.6"/><path d="M16.5 14.3c2.3.5 4 2.5 4.5 5.7"/>',
@@ -66,6 +67,7 @@ $navCrecimiento = $esDueno
     ? [
         ['copiloto', empty($negocio['incluye_copiloto']) ? 'Copiloto · Barrio+' : 'Copiloto', base_url('/panel/copiloto')],
         ['cupones', 'Cupones', base_url('/panel/cupones')],
+        ['fidelidad', 'Tarjeta de sellos', base_url('/panel/fidelidad')],
     ]
     : [];
 

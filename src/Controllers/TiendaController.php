@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
+use App\Models\Fidelidad;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
 use App\Models\LimiteTasa;
@@ -63,6 +64,7 @@ class TiendaController
                 'negocio'          => $negocio,
                 'servicios'        => $servicios,
                 'horario'          => horario_resumen($horarioSede),
+                'fidelidad'        => Fidelidad::activa((int) $negocio['negocio_id']),
                 'abiertoAhora'     => $abiertoAhora,
                 'proximaApertura'  => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
                 'disponibilidadHoy' => $disponibilidadHoy,
@@ -83,6 +85,7 @@ class TiendaController
             'productos'       => $productos,
             'carrito'         => $carrito,
             'horario'         => horario_resumen($horarioSede),
+            'fidelidad'       => Fidelidad::activa((int) $negocio['negocio_id']),
             'abiertoAhora'    => $abiertoAhora,
             'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
@@ -335,6 +338,10 @@ class TiendaController
             . 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita)
             . ($descuentoCita > 0 ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
             . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '');
+        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $servicio['precio'] - $descuentoCita);
+        if ($tarjeta !== null) {
+            $resumenTexto .= "\n" . $tarjeta['texto'];
+        }
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
@@ -344,6 +351,7 @@ class TiendaController
             'negocio'        => $negocio,
             'cita'           => $cita,
             'enlaceWhatsapp' => $enlaceWhatsapp,
+            'tarjeta'        => $tarjeta,
         ], 'tienda');
     }
 
@@ -660,6 +668,10 @@ class TiendaController
         if ($notas !== '') {
             $resumenTexto .= "\nNota: {$notas}";
         }
+        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $pedido['total']);
+        if ($tarjeta !== null) {
+            $resumenTexto .= "\n" . $tarjeta['texto'];
+        }
 
         $this->guardarCarrito((int) $negocio['id'], []);
 
@@ -672,6 +684,7 @@ class TiendaController
             'pedido'         => $pedido,
             'items'          => $items,
             'enlaceWhatsapp' => $enlaceWhatsapp,
+            'tarjeta'        => $tarjeta,
         ], 'tienda');
     }
 
@@ -922,6 +935,30 @@ class TiendaController
     }
 
     /** Aplica un cupón al carrito de esta sesión (se vuelve a validar al pedir, ya con el cliente). */
+    /**
+     * La tarjeta de sellos del cliente justo después de su compra (ya
+     * contada), para la confirmación y para el mensaje al negocio: así el
+     * dueño ve en el chat "le toca el premio" sin abrir el panel.
+     *
+     * @return array{sellos: int, meta: int, premio: string, nuevo: bool, texto: string}|null
+     */
+    private function tarjetaDeSellos(array $negocio, int $clienteId, int $monto): ?array
+    {
+        $config = Fidelidad::activa((int) $negocio['negocio_id']);
+        if ($config === null) {
+            return null;
+        }
+        $sellos = Fidelidad::sellosDe((int) $negocio['negocio_id'], $config, $clienteId);
+
+        return [
+            'sellos' => $sellos,
+            'meta'   => (int) $config['meta'],
+            'premio' => (string) $config['premio'],
+            'nuevo'  => Fidelidad::cuenta($config, $monto),
+            'texto'  => Fidelidad::textoProgreso($config, $sellos),
+        ];
+    }
+
     public function aplicarCupon(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);

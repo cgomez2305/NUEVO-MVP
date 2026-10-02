@@ -11,6 +11,7 @@ use App\Models\Copiloto;
 use App\Models\Cupon;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\Fidelidad;
 use App\Models\ListaEspera;
 use App\Models\Negocio;
 use App\Models\PagoPlan;
@@ -183,7 +184,26 @@ class PanelController
             'pedido'  => $pedido,
             'items'   => Pedido::items((int) $pedido['id']),
             'siguientePaso' => Pedido::siguientePaso($pedido),
+            'premio'  => $this->premioPendiente($negocio, (int) $pedido['cliente_id']),
+            'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
         ], 'panel');
+    }
+
+    /**
+     * Si el cliente completó la tarjeta de sellos, lo que le toca: así quien
+     * despacha el pedido lo ve y lo entrega ahí mismo.
+     *
+     * @return array{premio: string, meta: int}|null
+     */
+    private function premioPendiente(array $negocio, int $clienteId): ?array
+    {
+        $config = Fidelidad::config((int) $negocio['negocio_id']);
+        if ($config === null || Fidelidad::sellosDe((int) $negocio['negocio_id'], $config, $clienteId) < (int) $config['meta']) {
+            return null;
+        }
+
+        return ['premio' => (string) $config['premio'], 'meta' => (int) $config['meta']];
     }
 
     /** Exporta exactamente lo que el filtro actual del historial está mostrando, no todo el histórico a ciegas. */

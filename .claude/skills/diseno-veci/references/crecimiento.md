@@ -49,3 +49,30 @@ sede: un cupón sirve en todas las sedes.
   (`ajustes_html`) para que el JS no duplique reglas.
 - Reservar: el mismo `<details>` dentro del formulario (`name="cupon"`).
 - Pedido confirmado y detalle del panel: `tienda/_pedido_ajustes.php`.
+
+## Tarjeta de sellos (`/panel/fidelidad`, `panel/fidelidad.php`)
+
+- Componente compartido `tienda/_tarjeta_sellos.php` (`.pq-tarjeta-sellos`):
+  casillas redondas punteadas; cada compra es un sello de caucho del color
+  del negocio (`.pq-casilla-sello-puesta`: relleno `--marca`, doble aro
+  interno, girado `--giro` según la posición — nunca al azar, para que no
+  "baile" al recargar). La última casilla es el premio (regalo sobre
+  `--marca-suave`). Hasta 6 casillas en una fila; más, en dos filas.
+  El sello que acaba de ganar cae una vez (`.pq-casilla-sello-nueva`,
+  400 ms, sin animación con `prefers-reduced-motion`).
+- Dónde sale: confirmación de pedido y de cita (después del "cómo
+  pagar"), info de la tienda (`.pq-info-sellos`), vista previa del panel
+  sobre papel de la tienda (`.pq-fidelidad-papel`, es Ruta 1).
+- Panel: formulario (activa, meta 5/6/8/10/12 con el mismo segmentado de
+  cupones, premio, compra mínima) + vista previa pegajosa en escritorio;
+  "Listos para premio" con **Entregar premio**; "A punto de completarla"
+  con **Avisarle** por WhatsApp.
+- Detalle del pedido: `.pq-premio-aviso` (borde punteado de marca) si el
+  cliente completó la tarjeta, con el botón para entregarlo ahí mismo.
+
+Reglas: los sellos no se guardan, se cuentan (pedidos no cancelados y citas
+no canceladas, en cualquier sede, desde `fidelidad.desde` y desde la compra
+mínima); cada premio anota los sellos que gastó. Entregar premio lo puede
+hacer dueño o colaborador, revisa de nuevo bajo `FOR UPDATE` (doble clic no
+entrega dos). El mensaje de WhatsApp al negocio dice "Tarjeta de sellos:
+N/M" o "le toca {premio}".

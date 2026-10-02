@@ -456,6 +456,33 @@ CREATE TABLE IF NOT EXISTS cupon_usos (
   INDEX idx_cupon_usos_cupon (cupon_id, cliente_id)
 ) ENGINE=InnoDB;
 
+-- Tarjeta de sellos (ver migrations/2026-10-03_02_fidelidad.sql).
+-- Los sellos no se guardan: se cuentan de pedidos y citas desde que el
+
+CREATE TABLE IF NOT EXISTS fidelidad (
+  negocio_id     INT UNSIGNED PRIMARY KEY,
+  activa         TINYINT(1)       NOT NULL DEFAULT 1,
+  meta           TINYINT UNSIGNED NOT NULL DEFAULT 8,
+  premio         VARCHAR(120)     NOT NULL,
+  minimo_compra  INT UNSIGNED     NOT NULL DEFAULT 0,
+  desde          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS fidelidad_premios (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id   INT UNSIGNED     NOT NULL,
+  cliente_id   INT UNSIGNED     NOT NULL,
+  sellos       TINYINT UNSIGNED NOT NULL,
+  premio       VARCHAR(120)     NOT NULL,
+  usuario_id   INT UNSIGNED     DEFAULT NULL,
+  entregado_en DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  INDEX idx_fidelidad_premios_cliente (negocio_id, cliente_id)
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -467,4 +494,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-01_blindaje_planes.sql'),
   ('2026-10-01_planes_suscripciones.sql'),
   ('2026-10-01_sedes_direccion.sql'),
-  ('2026-10-03_01_cupones.sql');
+  ('2026-10-03_01_cupones.sql'),
+  ('2026-10-03_02_fidelidad.sql');

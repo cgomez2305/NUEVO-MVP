@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Cupon;
+use App\Models\Fidelidad;
 
 /**
  * Herramientas para que el negocio venda más y que el cliente vuelva:
@@ -95,6 +96,82 @@ class CrecimientoController
             }
         }
         redirigir('/panel/cupones');
+    }
+
+    public function fidelidad(array $parametros): void
+    {
+        $negocio = $this->exigirDueno();
+        $negocioId = (int) $negocio['negocio_id'];
+        $config = Fidelidad::config($negocioId);
+        $tarjetas = $config !== null ? Fidelidad::tarjetas($negocioId, $config) : [];
+        $meta = (int) ($config['meta'] ?? 8);
+
+        ver('panel/fidelidad', [
+            'titulo'    => 'Tarjeta de sellos · Veci',
+            'activo'    => 'fidelidad',
+            'negocio'   => $negocio,
+            'config'    => $config,
+            'listos'    => array_values(array_filter($tarjetas, fn ($t) => $t['sellos'] >= $meta)),
+            'cerca'     => array_values(array_filter($tarjetas, fn ($t) => $t['sellos'] < $meta && $t['sellos'] >= $meta - 2)),
+            'conSellos' => count(array_filter($tarjetas, fn ($t) => $t['sellos'] > 0)),
+            'premios'   => Fidelidad::premiosEntregados($negocioId),
+            'ok'        => flash_obtener('ok'),
+            'error'     => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function guardarFidelidad(array $parametros): void
+    {
+        $negocio = $this->exigirDueno();
+        if (!csrf_verificar()) {
+            redirigir('/panel/fidelidad');
+        }
+
+        $premio = trim((string) ($_POST['premio'] ?? ''));
+        $activa = isset($_POST['activa']);
+        if ($activa && mb_strlen($premio) < 3) {
+            flash_set('error', 'Escribe el premio: es lo que el cliente quiere ganarse (p. ej. "un almuerzo gratis").');
+            redirigir('/panel/fidelidad');
+        }
+        $antes = Fidelidad::config((int) $negocio['negocio_id']);
+        Fidelidad::guardar(
+            (int) $negocio['negocio_id'],
+            $activa,
+            (int) ($_POST['meta'] ?? 8),
+            $premio !== '' ? $premio : (string) ($antes['premio'] ?? ''),
+            dinero_desde_texto((string) ($_POST['minimo_compra'] ?? ''))
+        );
+        flash_set('ok', match (true) {
+            $antes === null => 'Tarjeta de sellos activada. Tus clientes la ven en la tienda y al confirmar cada compra.',
+            !$activa        => 'Tarjeta en pausa: no se suman sellos nuevos y los que llevan se guardan.',
+            default         => 'Cambios guardados.',
+        });
+        redirigir('/panel/fidelidad');
+    }
+
+    /**
+     * Entregar el premio lo puede hacer quien atiende (dueño o colaborador):
+     * pasa en el mostrador. Vuelve a donde se pulsó (detalle del pedido o
+     * la página de la tarjeta).
+     */
+    public function entregarPremio(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = (string) ($_POST['volver'] ?? '');
+        $volver = preg_match('#^/panel/[a-z0-9/_-]*$#', $volver) ? $volver : '/panel/fidelidad';
+
+        $config = Fidelidad::config((int) $negocio['negocio_id']);
+        $cliente = \App\Models\Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
+        if (!csrf_verificar() || $config === null || $cliente === null) {
+            redirigir($volver);
+        }
+
+        if (Fidelidad::entregarPremio((int) $negocio['negocio_id'], $config, (int) $cliente['id'], (int) $negocio['usuario_id'])) {
+            flash_set('ok', 'Premio entregado a ' . $cliente['nombre'] . '. Su tarjeta vuelve a empezar.');
+        } else {
+            flash_set('error', $cliente['nombre'] . ' todavía no completa la tarjeta.');
+        }
+        redirigir($volver);
     }
 
     private function exigirDueno(): array
