@@ -652,6 +652,7 @@ class PanelController
             'negocio' => $negocio,
             'horario' => Sede::horario($negocio),
             'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -661,12 +662,18 @@ class PanelController
         Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
+            $avisos = [];
             Sede::guardarHorario(
                 (int) $negocio['id'],
-                Sede::horarioDesdePost($_POST),
+                Sede::horarioDesdePost($_POST, $avisos),
                 Sede::intervaloDesdePost($_POST)
             );
-            flash_set('ok', 'Horario actualizado.');
+            $aviso = aviso_pausas_invalidas($avisos);
+            if ($aviso !== null) {
+                flash_set('error', $aviso);
+            } else {
+                flash_set('ok', 'Horario actualizado.');
+            }
         }
 
         redirigir('/panel/horario');

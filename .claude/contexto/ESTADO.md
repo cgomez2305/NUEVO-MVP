@@ -56,6 +56,12 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   claude-opus-5-5, salida JSON estructurada, fallbacks "default"), ítems sin
   precio bloquean abrir, llave Bre-B validada y editable en Sedes, PRG al
   publicar, onboarding solo para el dueño. Detalle en `references/onboarding.md`.
+- Luego pidió (1) que las tipografías del cliente y del dueño coincidan:
+  hecho, una sola familia (Bricolage títulos + Inter Tight texto/cifras
+  tabulares, tokens `--fuente-titulo`/`--fuente-texto`), se quitaron
+  Instrument Serif, Inter y JetBrains Mono; y (2) horarios con pausa de
+  almuerzo por día: hecho (franjas, ver `references/panel.md` → Horario).
+  Sigue el panel de administración.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)

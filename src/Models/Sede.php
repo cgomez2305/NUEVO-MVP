@@ -224,7 +224,13 @@ class Sede
         return 'pago';
     }
 
-    /** @param array<string, array{0:string,1:string}> $horario día ISO (1-7) => [inicio, fin] */
+    /**
+     * Guarda el horario semanal. Formato: día ISO (1=lunes..7=domingo) =>
+     * lista de franjas [inicio, fin], ordenadas. Un día sin pausa tiene una
+     * franja; uno con almuerzo, dos ({"1":[["08:00","12:00"],["14:00","18:00"]]}).
+     *
+     * @param array<string, array<int, array{0:string,1:string}>> $horario
+     */
     public static function guardarHorario(int $id, array $horario, int $intervaloMin): void
     {
         $stmt = Database::conexion()->prepare(
@@ -237,25 +243,71 @@ class Sede
         ]);
     }
 
-    /** @return array<string, array{0:string,1:string}> */
+    /**
+     * Horario semanal de la sede, siempre en el formato de franjas (ver
+     * guardarHorario). Las sedes guardadas antes de que existiera la pausa
+     * tienen un solo rango por día (["09:00","18:00"]): se leen igual.
+     *
+     * @return array<string, array<int, array{0:string,1:string}>>
+     */
     public static function horario(array $sede): array
     {
         if (empty($sede['horario_atencion'])) {
             return [];
         }
         $decodificado = json_decode((string) $sede['horario_atencion'], true);
-        return is_array($decodificado) ? $decodificado : [];
+
+        return is_array($decodificado) ? self::normalizarHorario($decodificado) : [];
     }
 
     /**
-     * Arma el JSON de horario a partir de un formulario con campos
-     * abierto_1..abierto_7, inicio_1..inicio_7, fin_1..fin_7 (1=lunes..7=domingo).
+     * @param array<mixed> $crudo
+     * @return array<string, array<int, array{0:string,1:string}>>
+     */
+    public static function normalizarHorario(array $crudo): array
+    {
+        $horario = [];
+        for ($dia = 1; $dia <= 7; $dia++) {
+            $valor = $crudo[(string) $dia] ?? $crudo[$dia] ?? null;
+            if (!is_array($valor)) {
+                continue;
+            }
+            // Formato viejo: un solo rango ["09:00","18:00"].
+            $lista = isset($valor[0]) && is_string($valor[0]) ? [$valor] : $valor;
+            $franjas = [];
+            foreach ($lista as $franja) {
+                if (is_array($franja) && count($franja) === 2 && self::esHora($franja[0] ?? null) && self::esHora($franja[1] ?? null)
+                    && self::aMinutos($franja[0]) < self::aMinutos($franja[1])) {
+                    $franjas[] = [self::conCero($franja[0]), self::conCero($franja[1])];
+                }
+            }
+            if ($franjas !== []) {
+                usort($franjas, fn ($x, $y) => strcmp($x[0], $y[0]));
+                $horario[(string) $dia] = $franjas;
+            }
+        }
+
+        return $horario;
+    }
+
+    /**
+     * Arma el horario desde el formulario de la semana (panel/_semana.php):
+     * abierto_N, inicio_N, fin_N y, si ese día cierra al mediodía, pausa_N
+     * con pausa_inicio_N / pausa_fin_N (1=lunes..7=domingo). El dueño
+     * piensa "abro a las 8, cierro a las 6 y almuerzo de 12 a 2"; aquí se
+     * convierte en dos franjas (8–12 y 2–6), que es lo que usan los cupos.
+     *
+     * Una pausa que no cabe dentro del día (o que termina antes de empezar)
+     * no se aplica: el día queda corrido y su nombre se agrega a $avisos
+     * para decírselo al dueño en vez de guardarla mal en silencio.
      *
      * @param array<string, mixed> $post
-     * @return array<string, array{0:string,1:string}>
+     * @param array<int, string> $avisos
+     * @return array<string, array<int, array{0:string,1:string}>>
      */
-    public static function horarioDesdePost(array $post): array
+    public static function horarioDesdePost(array $post, array &$avisos = []): array
     {
+        $nombres = [1 => 'lunes', 2 => 'martes', 3 => 'miércoles', 4 => 'jueves', 5 => 'viernes', 6 => 'sábado', 7 => 'domingo'];
         $horario = [];
         for ($dia = 1; $dia <= 7; $dia++) {
             if (empty($post["abierto_{$dia}"])) {
@@ -263,11 +315,69 @@ class Sede
             }
             $inicio = (string) ($post["inicio_{$dia}"] ?? '');
             $fin = (string) ($post["fin_{$dia}"] ?? '');
-            if (preg_match('/^\d{1,2}:\d{2}$/', $inicio) && preg_match('/^\d{1,2}:\d{2}$/', $fin) && $inicio < $fin) {
-                $horario[(string) $dia] = [$inicio, $fin];
+            if (!self::esHora($inicio) || !self::esHora($fin) || self::aMinutos($inicio) >= self::aMinutos($fin)) {
+                continue;
+            }
+            $inicio = self::conCero($inicio);
+            $fin = self::conCero($fin);
+            $horario[(string) $dia] = [[$inicio, $fin]];
+
+            if (empty($post["pausa_{$dia}"])) {
+                continue;
+            }
+            $pausaInicio = (string) ($post["pausa_inicio_{$dia}"] ?? '');
+            $pausaFin = (string) ($post["pausa_fin_{$dia}"] ?? '');
+            $valida = self::esHora($pausaInicio) && self::esHora($pausaFin)
+                && self::aMinutos($inicio) < self::aMinutos($pausaInicio)
+                && self::aMinutos($pausaInicio) < self::aMinutos($pausaFin)
+                && self::aMinutos($pausaFin) < self::aMinutos($fin);
+            if ($valida) {
+                $horario[(string) $dia] = [[$inicio, self::conCero($pausaInicio)], [self::conCero($pausaFin), $fin]];
+            } else {
+                $avisos[] = $nombres[$dia];
             }
         }
+
         return $horario;
+    }
+
+    /**
+     * Lo que muestra el formulario para un día: apertura, cierre y la pausa
+     * (el hueco entre la primera y la segunda franja), si la hay.
+     *
+     * @param array<int, array{0:string,1:string}> $franjas
+     * @return array{inicio:string, fin:string, pausa:?array{0:string,1:string}}
+     */
+    public static function diaParaFormulario(array $franjas): array
+    {
+        if ($franjas === []) {
+            return ['inicio' => '08:00', 'fin' => '18:00', 'pausa' => null];
+        }
+        $ultima = $franjas[count($franjas) - 1];
+
+        return [
+            'inicio' => $franjas[0][0],
+            'fin'    => $ultima[1],
+            'pausa'  => count($franjas) > 1 ? [$franjas[0][1], $franjas[1][0]] : null,
+        ];
+    }
+
+    private static function esHora(mixed $valor): bool
+    {
+        return is_string($valor) && preg_match('/^([01]?\d|2[0-3]):[0-5]\d$/', $valor) === 1;
+    }
+
+    private static function aMinutos(string $hora): int
+    {
+        [$h, $m] = array_map('intval', explode(':', $hora));
+
+        return $h * 60 + $m;
+    }
+
+    /** "8:00" → "08:00": así las horas se comparan bien como texto. */
+    private static function conCero(string $hora): string
+    {
+        return str_pad($hora, 5, '0', STR_PAD_LEFT);
     }
 
     /** @param array<string, mixed> $post */

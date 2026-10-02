@@ -574,6 +574,13 @@
       if (abierto) abierto.checked = abiertoLunes.checked;
       if (inicio) inicio.value = inicioLunes.value;
       if (fin) fin.value = finLunes.value;
+      // La pausa del almuerzo viaja con el horario.
+      ['pausa-dia', 'pausa-inicio-dia', 'pausa-fin-dia'].forEach(function (clave) {
+        var origen = document.querySelector('input[data-' + clave + '="1"]');
+        var destino = document.querySelector('input[data-' + clave + '="' + dia + '"]');
+        if (!origen || !destino) return;
+        if (origen.type === 'checkbox') destino.checked = origen.checked; else destino.value = origen.value;
+      });
     });
     var detalle = boton.closest('details');
     if (detalle) detalle.removeAttribute('open');

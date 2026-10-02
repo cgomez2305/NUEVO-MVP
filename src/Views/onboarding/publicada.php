@@ -57,6 +57,14 @@ $queEs = $esReservas ? 'agenda' : 'tienda';
           ?>
           <span>Cobras a tu llave Bre-B <span class="pq-mono"><?= e($llaveVisible) ?></span></span>
         </li>
+        <?php if (!$esReservas && empty($negocio['horario_atencion'])): ?>
+          <li>
+            <a href="<?= e(base_url('/panel/horario')) ?>" class="pq-publicada-check pq-publicada-check-pendiente">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>
+              Pon tu horario (y si cierras a almorzar) →
+            </a>
+          </li>
+        <?php endif; ?>
         <?php if (empty($negocio['direccion'])): ?>
           <li>
             <a href="<?= e(base_url('/panel/sedes/' . $negocio['id'] . '/editar')) ?>" class="pq-publicada-check pq-publicada-check-pendiente">

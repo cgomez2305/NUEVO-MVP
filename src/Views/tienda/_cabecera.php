@@ -27,11 +27,14 @@ $direccion = trim((string) ($negocio['direccion'] ?? ''));
     <?php endif; ?>
 
     <?php if ($abiertoAhora !== null): ?>
-      <p class="pq-letrero-estado <?= $abiertoAhora['abierto'] ? 'pq-letrero-estado-abierto' : '' ?>">
+      <p class="pq-letrero-estado <?= $abiertoAhora['abierto'] ? 'pq-letrero-estado-abierto' : (!empty($abiertoAhora['pausa']) ? 'pq-letrero-estado-pausa' : '') ?>">
         <span class="pq-letrero-estado-punto" aria-hidden="true"></span>
         <span>
           <?php if ($abiertoAhora['abierto']): ?>
             <strong>Abierto</strong> · hasta las <?= e(hora_legible($abiertoAhora['hasta'])) ?>
+          <?php elseif (!empty($abiertoAhora['pausa'])): ?>
+            <?php // El almuerzo no es "cerrado": hoy vuelven a abrir. ?>
+            <strong>En pausa</strong> · vuelve a las <?= e(hora_legible($abiertoAhora['vuelve'])) ?>
           <?php elseif ($proximaApertura !== null): ?>
             <strong>Cerrado</strong> · abre <?= e($proximaApertura['dia']) ?> a las <?= e($proximaApertura['hora']) ?>
           <?php else: ?>

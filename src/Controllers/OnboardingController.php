@@ -303,13 +303,22 @@ class OnboardingController
 
         // Sin ningún día abierto, mostrarPago() devolvía aquí sin decir por
         // qué: el dueño tocaba "Continuar" y volvía a la misma pantalla.
-        $horario = Sede::horarioDesdePost($_POST);
+        $avisos = [];
+        $horario = Sede::horarioDesdePost($_POST, $avisos);
         if ($horario === []) {
             flash_set('error', 'Abre al menos un día (con la hora de cierre después de la de apertura) para que tus clientes puedan reservar.');
             redirigir('/panel/onboarding/horario');
         }
 
         Sede::guardarHorario((int) $negocio['id'], $horario, Sede::intervaloDesdePost($_POST));
+
+        // Una pausa mal puesta no se guarda a medias: se vuelve a mostrar
+        // el horario (ya guardado sin ella) con el aviso, para corregirla.
+        $aviso = aviso_pausas_invalidas($avisos);
+        if ($aviso !== null) {
+            flash_set('error', $aviso);
+            redirigir('/panel/onboarding/horario');
+        }
 
         redirigir('/panel/onboarding/pago');
     }

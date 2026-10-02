@@ -1486,6 +1486,8 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-letrero-estado-punto { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--texto-tenue); flex-shrink: 0; }
 .pq-letrero-estado-abierto strong { color: #0f7a4f; }
 .pq-letrero-estado-abierto .pq-letrero-estado-punto { background: var(--caja); }
+/* En pausa (almuerzo): ni verde ni gris — hoy vuelven a abrir. */
+.pq-letrero-estado-pausa .pq-letrero-estado-punto { background: var(--mostaza); }
 .pq-letrero-estado-abierto .pq-letrero-estado-punto::after {
   content: "";
   position: absolute;
@@ -3524,7 +3526,9 @@ body.pq-auth-bg {
 
 /* Horario: interruptor por día; apagado esconde las horas y dice "Cerrado". */
 .pq-horario-form { margin-top: var(--esp-5); }
-.pq-semana { margin: 0; padding: 0 var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); }
+/* min-inline-size: 0 porque un <fieldset> no se encoge por debajo del
+   ancho mínimo de su contenido: con la fila de la pausa se salía 10 px a 360. */
+.pq-semana { min-inline-size: 0; margin: 0; padding: 0 var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); }
 .pq-semana-dia { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 60px; padding: var(--esp-2) 0; border-top: 1px dashed var(--borde); flex-wrap: wrap; }
 .pq-semana-dia:first-of-type { border-top: 0; }
 .pq-interruptor { display: inline-flex; align-items: center; gap: var(--esp-3); min-height: 44px; cursor: pointer; }
@@ -3561,6 +3565,20 @@ body.pq-auth-bg {
 .pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-cerrado { display: inline; }
 .pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-nombre { color: var(--gris-texto); font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { .pq-interruptor-pista, .pq-interruptor-pista::after { transition: none; } }
+/* Pausa del mediodía: muchos negocios de barrio cierran a almorzar. Va
+   debajo de las horas, alineada con ellas (después del interruptor), y
+   el rango se dibuja como el letrerito "Volvemos a las…" que cuelgan en
+   la puerta: campos de borde punteado y una taza (la taza solo con espacio). Solo se ve si el día está abierto
+   y la casilla marcada (CSS :has, sin JS). */
+.pq-semana-pausa { flex: 1 1 100%; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2) var(--esp-3); padding-left: 52px; }
+.pq-semana-pausa-casilla { display: inline-flex; align-items: center; gap: var(--esp-2); min-height: 44px; font-size: 13.5px; font-weight: 500; color: var(--gris-texto); cursor: pointer; }
+.pq-semana-pausa-casilla input { width: 18px; height: 18px; margin: 0; accent-color: var(--sello); }
+.pq-semana-pausa-horas { min-width: 0; display: flex; align-items: center; gap: var(--esp-2); }
+.pq-semana-pausa-horas > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--gris-texto); }
+.pq-semana-pausa-horas .pq-input { width: 116px; padding-left: 10px; padding-right: 6px; border-style: dashed; background: var(--tiquete); }
+.pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-pausa,
+.pq-semana-pausa:has(.pq-semana-pausa-casilla input:not(:checked)) .pq-semana-pausa-horas { display: none; }
+.pq-semana-pausa:has(.pq-semana-pausa-casilla input:checked) .pq-semana-pausa-casilla { color: var(--carbon); }
 .pq-horario-intervalo { margin-top: var(--esp-5); max-width: 320px; }
 .pq-horario-guardar { margin-top: var(--esp-5); }
 @media (min-width: 640px) { .pq-horario-guardar { width: auto; } }
@@ -3624,6 +3642,10 @@ body.pq-auth-bg {
 @media (max-width: 559px) {
   .pq-semana-horas { flex: 1 1 100%; }
   .pq-semana-horas .pq-input { flex: 1 1 0; width: auto; min-width: 0; font-size: 15px; }
+  .pq-semana-pausa { padding-left: 0; }
+  .pq-semana-pausa-horas { flex: 1 1 100%; }
+  .pq-semana-pausa-horas > svg { display: none; }
+  .pq-semana-pausa-horas .pq-input { flex: 1 1 0; width: auto; min-width: 0; font-size: 15px; }
 }
 
 /* ---------- Copiloto ---------- */
@@ -3910,3 +3932,7 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 /* El logo de la app es logo-veci-lockup-transparente.png (generado desde
    el original quitándole el fondo casi blanco): el PNG original pintaba un
    recuadro blanco sobre el papel crema del login, el panel y el onboarding. */
+
+/* Un día con pausa del mediodía muestra cada tramo en su línea
+   ("8 a. m. – 12 m." / "2 – 6 p. m."): en una sola línea no cabía a 360 px. */
+.pq-horario-franja { display: block; }

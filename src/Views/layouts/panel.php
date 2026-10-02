@@ -51,6 +51,11 @@ if ($tipoReservas) {
 } else {
     $navOperacion[] = ['pedidos', 'Pedidos', base_url('/panel/pedidos')];
     $navOperacion[] = ['productos', 'Menú', base_url('/panel/productos')];
+    // Antes solo los negocios de reservas podían poner horario: una tienda
+    // de pedidos nunca mostraba "Abierto ahora" ni su hora de almuerzo.
+    if ($esDueno) {
+        $navOperacion[] = ['horario', 'Horario', base_url('/panel/horario')];
+    }
 }
 
 // Si el plan no incluye el copiloto (Gratis), el link sigue llevando ahí —

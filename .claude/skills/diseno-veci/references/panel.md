@@ -171,6 +171,21 @@ guarda el anticipo junto al servicio solo si es el dueño.
 - `.pq-semana`: un día por fila con interruptor; apagado, las horas se
   esconden y aparece "Cerrado" (CSS `:has`, sin JS). En celular las horas
   bajan a su línea y se reparten el ancho (si no, se corta "a. m.").
+- **Pausa del mediodía** (`.pq-semana-pausa`): casilla "Cierra al mediodía"
+  por día; marcada, aparece el rango con campos de borde punteado y una
+  taza (el letrerito "Volvemos a las…"; la taza se oculta en celular). Se
+  guarda como franjas: `{"1":[["08:00","12:00"],["14:00","18:00"]]}`;
+  `Sede::horario()` sigue leyendo el formato viejo `["08:00","18:00"]`.
+  Una pausa fuera del día no se guarda y se avisa
+  (`aviso_pausas_invalidas()`). "Copiar el lunes" copia también la pausa.
+- Cupos (`Cita::calcularDisponibilidad`): un servicio cabe entero en una
+  franja; la tarde arranca a la hora de regreso. Tienda: "En pausa · vuelve
+  a las 2 p. m." con punto mostaza; horario con un tramo por línea y
+  "12 m." para el mediodía.
+- La pantalla de horario es también para negocios de **pedidos** (sin
+  turnos ni días bloqueados): antes no podían poner horario.
+- `.pq-semana` lleva `min-inline-size: 0`: un `<fieldset>` no se encoge
+  por debajo de su contenido y la fila de la pausa se salía a 360 px.
 - Debajo, escaparate con el horario guardado tal como lo ve el cliente.
 - Días bloqueados: `.pq-dia.pq-dia-bloqueado` (hojita tachada en ají).
 

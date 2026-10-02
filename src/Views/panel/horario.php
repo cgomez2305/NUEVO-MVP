@@ -1,13 +1,22 @@
 <?php
 $resumen = horario_resumen($horario);
+$esReservas = $negocio['tipo_negocio'] === 'reservas';
 ?>
 <div class="pq-pagina-cabeza">
   <div>
     <span class="pq-eyebrow">Horario de atención</span>
-    <h1 class="pq-h1">¿Cuándo pueden reservar?</h1>
+    <h1 class="pq-h1"><?= $esReservas ? '¿Cuándo pueden reservar?' : '¿Cuándo atiendes?' ?></h1>
   </div>
 </div>
-<p class="pq-lead pq-pagina-bajada-panel">Los días apagados se ven como cerrados en tu agenda online.</p>
+<p class="pq-lead pq-pagina-bajada-panel">
+  <?= $esReservas
+    ? 'Los días apagados se ven como cerrados en tu agenda online. Si cierras al mediodía, marca la pausa de ese día: nadie podrá reservar en ese rato.'
+    : 'Tu tienda muestra si estás abierto ahora y a qué hora abres. Si cierras al mediodía, marca la pausa: tus clientes verán "En pausa · vuelve a las…".' ?>
+</p>
+
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
 
 <?php
 // Una fila por día con un interruptor: apagado, las horas se esconden y
@@ -19,6 +28,7 @@ $resumen = horario_resumen($horario);
 
   <?php require __DIR__ . '/_semana.php'; ?>
 
+  <?php if ($esReservas): ?>
   <div class="pq-campo pq-horario-intervalo">
     <label class="pq-label" for="intervalo">Cada cuánto abres un turno</label>
     <select class="pq-select" id="intervalo" name="intervalo">
@@ -27,6 +37,10 @@ $resumen = horario_resumen($horario);
       <?php endforeach; ?>
     </select>
   </div>
+  <?php else: ?>
+    <?php // Los pedidos no usan turnos: se conserva el valor guardado. ?>
+    <input type="hidden" name="intervalo" value="<?= (int) ($negocio['intervalo_citas_min'] ?? 30) ?>">
+  <?php endif; ?>
 
   <button type="submit" class="pq-btn pq-btn-sello pq-horario-guardar">Guardar horario</button>
 </form>
@@ -41,7 +55,7 @@ $resumen = horario_resumen($horario);
         <?php foreach ($resumen as $linea): ?>
           <div class="pq-horario-fila<?= $linea['hoy'] ? ' pq-horario-hoy' : '' ?><?= $linea['rango'] === 'Cerrado' ? ' pq-horario-cerrado' : '' ?>">
             <dt><?= e($linea['dia']) ?><?php if ($linea['hoy']): ?> <span class="pq-horario-etiqueta">hoy</span><?php endif; ?></dt>
-            <dd><?= e($linea['rango']) ?></dd>
+            <dd><?php foreach ($linea['franjas'] as $franja): ?><span class="pq-horario-franja"><?= e($franja) ?></span><?php endforeach; ?></dd>
           </div>
         <?php endforeach; ?>
       </dl>
@@ -49,6 +63,7 @@ $resumen = horario_resumen($horario);
   </section>
 <?php endif; ?>
 
+<?php if ($esReservas): ?>
 <a href="<?= e(base_url('/panel/horario/fechas')) ?>" class="pq-enlace-fila">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 14l6 4M15 14l-6 4"/></svg>
   <span>
@@ -57,6 +72,7 @@ $resumen = horario_resumen($horario);
   </span>
   <svg class="pq-enlace-fila-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
 </a>
+<?php endif; ?>
 
 <?php if (!empty($ok)): ?>
   <div class="pq-toast" role="status">

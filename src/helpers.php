@@ -276,32 +276,46 @@ function nombre_publico_sede(array $sede): string
 }
 
 /**
- * Si la sede está abierta en este preciso momento, según su horario crudo
- * (día ISO 1=lunes..7=domingo => [inicio, fin], igual que Sede::horario()
- * — no el ya agrupado de horario_resumen()). Null si el negocio no tiene
+ * Si la sede está abierta en este preciso momento, según su horario
+ * (Sede::horario(): día ISO 1=lunes..7=domingo => franjas [inicio, fin]).
+ * "pausa" es true si hoy ya abrió y vuelve a abrir más tarde (el almuerzo):
+ * la tienda dice "En pausa · vuelve a las 2 p. m." en vez de un "Cerrado"
+ * que hace pensar que ya no atienden hoy. Null si el negocio no tiene
  * horario configurado: en ese caso no hay nada honesto que mostrar.
  *
- * @param array<string, array{0:string,1:string}> $horario
- * @return array{abierto: bool, desde: ?string, hasta: ?string}|null
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
+ * @return array{abierto: bool, desde: ?string, hasta: ?string, pausa: bool, vuelve: ?string}|null
  */
 function negocio_abierto_ahora(array $horario): ?array
 {
     if ($horario === []) {
         return null;
     }
-    $diaHoy = (string) date('N');
-    if (!isset($horario[$diaHoy])) {
-        return ['abierto' => false, 'desde' => null, 'hasta' => null];
-    }
-    [$inicio, $fin] = $horario[$diaHoy];
+    $franjas = $horario[(string) date('N')] ?? [];
     $ahora = date('H:i');
-    return ['abierto' => $ahora >= $inicio && $ahora < $fin, 'desde' => $inicio, 'hasta' => $fin];
+    foreach ($franjas as $i => [$inicio, $fin]) {
+        if ($ahora >= $inicio && $ahora < $fin) {
+            return ['abierto' => true, 'desde' => $inicio, 'hasta' => $fin, 'pausa' => false, 'vuelve' => null];
+        }
+        if ($i > 0 && $ahora < $inicio && $ahora >= $franjas[$i - 1][1]) {
+            return ['abierto' => false, 'desde' => null, 'hasta' => null, 'pausa' => true, 'vuelve' => $inicio];
+        }
+    }
+
+    return ['abierto' => false, 'desde' => null, 'hasta' => null, 'pausa' => false, 'vuelve' => null];
 }
 
-/** "18:00" → "6:00 p. m." (sin minutos si son :00 → "6 p. m."). */
+/**
+ * "18:00" → "6 p. m."; "9:30" → "9:30 a. m.". El mediodía exacto se
+ * escribe "12 m.", como se dice en Colombia (y como sale en los letreros
+ * de "Cerrado de 12 m. a 2 p. m.").
+ */
 function hora_legible(string $hora): string
 {
     $ts = strtotime($hora) ?: 0;
+    if (date('H:i', $ts) === '12:00') {
+        return '12 m.';
+    }
     $minutos = date('i', $ts);
     $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
     return date('g', $ts) . ($minutos !== '00' ? ':' . $minutos : '') . ' ' . $meridiano;
@@ -309,12 +323,12 @@ function hora_legible(string $hora): string
 
 /**
  * Cuándo vuelve a abrir, para completar "Cerrado ahora" con algo útil
- * ("Abre mañana a las 9:00 a. m.") en vez de dejar al cliente adivinando.
- * Solo tiene sentido llamarla cuando ya se sabe que el negocio está
- * cerrado ahora mismo (ver negocio_abierto_ahora()). Null si no hay
- * horario configurado o si no abre ningún día de la semana siguiente.
+ * ("Abre mañana a las 9 a. m.", o "hoy a las 2 p. m." después del
+ * almuerzo) en vez de dejar al cliente adivinando. Solo tiene sentido
+ * llamarla cuando ya se sabe que está cerrado ahora mismo. Null si no hay
+ * horario o si no abre ningún día de la semana siguiente.
  *
- * @param array<string, array{0:string,1:string}> $horario
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
  * @return array{dia: string, hora: string}|null
  */
 function negocio_proxima_apertura(array $horario): ?array
@@ -328,36 +342,32 @@ function negocio_proxima_apertura(array $horario): ?array
 
     for ($offset = 0; $offset <= 7; $offset++) {
         $diaIso = (($diaHoyIso - 1 + $offset) % 7) + 1;
-        $rango = $horario[(string) $diaIso] ?? null;
-        if ($rango === null) {
-            continue;
+        foreach ($horario[(string) $diaIso] ?? [] as [$inicio]) {
+            if ($offset === 0 && $ahora >= $inicio) {
+                continue; // esa franja de hoy ya empezó (o pasó)
+            }
+            $etiqueta = $offset === 0 ? 'hoy' : ($offset === 1 ? 'mañana' : $diasNombre[$diaIso - 1]);
+            return ['dia' => $etiqueta, 'hora' => hora_legible($inicio)];
         }
-        if ($offset === 0 && $ahora >= $rango[1]) {
-            continue; // hoy ya cerró; sigue buscando el próximo día
-        }
-        $etiqueta = $offset === 0 ? 'hoy' : ($offset === 1 ? 'mañana' : $diasNombre[$diaIso - 1]);
-        return ['dia' => $etiqueta, 'hora' => hora_legible($rango[0])];
     }
 
     return null;
 }
 
 /**
- * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
- * legibles, uniendo días consecutivos con el mismo horario en un solo rango
- * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir
- * aparecen como "Cerrado" (agrupados igual que los abiertos) en vez de
- * desaparecer — un negocio que no trabaja domingo necesita poder decirlo,
- * no solo omitir el día y dejar que el cliente adivine. Única excepción:
- * si el negocio no tiene NINGÚN horario configurado todavía, devuelve []
- * en vez de un "Lun-Dom: Cerrado" que daría a entender que cerró para
- * siempre. Devuelve {dia, rango} en vez de un string ya armado para que la
- * vista no tenga que volver a separar nombre de horas.
+ * Agrupa Sede::horario() en líneas legibles, uniendo días consecutivos con
+ * el mismo horario (y la misma pausa) en un solo rango ("Lun-Vie"). Los
+ * días sin abrir aparecen como "Cerrado" en vez de desaparecer — un
+ * negocio que no trabaja domingo necesita poder decirlo. Única excepción:
+ * sin NINGÚN horario configurado devuelve [] en vez de un "Lun-Dom:
+ * Cerrado" que daría a entender que cerró para siempre.
  *
- * @param array<string, array{0:string,1:string}> $horario
- * "hoy" marca la línea que incluye el día de hoy, para resaltarla.
+ * Cada línea trae "franjas" (una por tramo: "8 a. m. – 12 m.", "2 – 6 p. m.")
+ * para que la vista las ponga una debajo de otra, y "rango" con todo junto
+ * para quien necesite una sola cadena. "hoy" marca la línea de hoy.
  *
- * @return array<int, array{dia: string, rango: string, hoy: bool}>
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
+ * @return array<int, array{dia: string, rango: string, franjas: array<int, string>, hoy: bool}>
  */
 function horario_resumen(array $horario): array
 {
@@ -371,25 +381,49 @@ function horario_resumen(array $horario): array
 
     $lineas = [];
     $inicioGrupo = 1;
-    $rangoActual = $SIN_INICIAR;
+    $actual = $SIN_INICIAR;
 
     for ($dia = 1; $dia <= 8; $dia++) {
-        $rango = $dia <= 7 ? ($horario[(string) $dia] ?? null) : $FIN;
-        $cambia = $rango !== $rangoActual;
+        $franjas = $dia <= 7 ? ($horario[(string) $dia] ?? null) : $FIN;
+        $cambia = $franjas !== $actual;
 
-        if ($cambia && $rangoActual !== $SIN_INICIAR) {
+        if ($cambia && $actual !== $SIN_INICIAR) {
             $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
-            $rangoTexto = $rangoActual === null ? 'Cerrado' : hora_legible($rangoActual[0]) . ' – ' . hora_legible($rangoActual[1]);
+            $textos = $actual === null ? ['Cerrado'] : array_map('franja_legible', $actual);
             $hoyIso = (int) date('N');
-            $lineas[] = ['dia' => $nombre, 'rango' => $rangoTexto, 'hoy' => $hoyIso >= $inicioGrupo && $hoyIso <= $dia - 1];
+            $lineas[] = [
+                'dia'     => $nombre,
+                'rango'   => implode(' y ', $textos),
+                'franjas' => $textos,
+                'hoy'     => $hoyIso >= $inicioGrupo && $hoyIso <= $dia - 1,
+            ];
         }
         if ($cambia) {
             $inicioGrupo = $dia;
         }
-        $rangoActual = $rango;
+        $actual = $franjas;
     }
 
     return $lineas;
+}
+
+/**
+ * ["14:00","18:00"] → "2 – 6 p. m." (el meridiano una vez si es el mismo);
+ * ["08:00","12:00"] → "8 a. m. – 12 m.".
+ *
+ * @param array{0:string,1:string} $franja
+ */
+function franja_legible(array $franja): string
+{
+    $inicio = hora_legible($franja[0]);
+    $fin = hora_legible($franja[1]);
+    foreach ([' a. m.', ' p. m.'] as $meridiano) {
+        if (str_ends_with($inicio, $meridiano) && str_ends_with($fin, $meridiano)) {
+            $inicio = substr($inicio, 0, -strlen($meridiano));
+        }
+    }
+
+    return $inicio . ' – ' . $fin;
 }
 
 /**
@@ -533,4 +567,20 @@ function llave_breb_normalizada(string $tipo, string $valor): ?string
     }
 
     return null;
+}
+
+/**
+ * "El almuerzo del martes y jueves no cabía…": aviso cuando una pausa del
+ * formulario de la semana no se pudo aplicar (ver Sede::horarioDesdePost).
+ *
+ * @param array<int, string> $dias
+ */
+function aviso_pausas_invalidas(array $dias): ?string
+{
+    if ($dias === []) {
+        return null;
+    }
+    $lista = count($dias) === 1 ? $dias[0] : implode(', ', array_slice($dias, 0, -1)) . ' y ' . end($dias);
+
+    return 'La pausa del ' . $lista . ' no quedaba dentro del horario de ese día (tiene que empezar después de abrir y terminar antes de cerrar), así que ese día quedó corrido. Revísala.';
 }

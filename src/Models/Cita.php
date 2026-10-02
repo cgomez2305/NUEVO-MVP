@@ -336,7 +336,13 @@ class Cita
      * que ya existen ese día. Devuelve horas "HH:MM" que el cliente puede
      * elegir en la tienda pública.
      *
-     * @param array<string, array{0:string,1:string}> $horarioAtencion día ISO (1-7) => [inicio, fin]
+     * Con pausa (almuerzo) el día tiene varias franjas: un cupo tiene que
+     * caber entero en una de ellas — un corte de 60 minutos no puede
+     * empezar a las 11:30 si a las 12 cierran a almorzar. Cada franja
+     * arranca su propia grilla desde su hora de inicio (si vuelven a las
+     * 2:15, el primer cupo de la tarde es 2:15, no 2:30).
+     *
+     * @param array<string, array<int, array{0:string,1:string}>> $horarioAtencion día ISO (1-7) => franjas (Sede::horario())
      * @param array<int, array{inicio:string, duracion_min:int}> $ocupados
      * @return array<int, string>
      */
@@ -348,14 +354,8 @@ class Cita
         array $ocupados
     ): array {
         $diaSemana = (string) (int) date('N', strtotime($fecha));
-        if (!isset($horarioAtencion[$diaSemana]) || !is_array($horarioAtencion[$diaSemana])) {
-            return [];
-        }
-
-        [$horaInicio, $horaFin] = $horarioAtencion[$diaSemana];
-        $inicioMin = self::horaAMinutos($horaInicio);
-        $finMin = self::horaAMinutos($horaFin);
-        if ($inicioMin === null || $finMin === null || $intervaloMin < 5) {
+        $franjas = $horarioAtencion[$diaSemana] ?? [];
+        if (!is_array($franjas) || $franjas === [] || $intervaloMin < 5) {
             return [];
         }
 
@@ -371,21 +371,28 @@ class Cita
         }
 
         $slots = [];
-        for ($minuto = $inicioMin; $minuto + $duracionServicioMin <= $finMin; $minuto += $intervaloMin) {
-            if ($ahora !== null && $minuto <= $ahora) {
+        foreach ($franjas as $franja) {
+            $inicioMin = is_array($franja) ? self::horaAMinutos((string) ($franja[0] ?? '')) : null;
+            $finMin = is_array($franja) ? self::horaAMinutos((string) ($franja[1] ?? '')) : null;
+            if ($inicioMin === null || $finMin === null) {
                 continue;
             }
-
-            $seSolapa = false;
-            foreach ($ocupadosMin as $bloque) {
-                if ($minuto < $bloque['fin'] && ($minuto + $duracionServicioMin) > $bloque['inicio']) {
-                    $seSolapa = true;
-                    break;
+            for ($minuto = $inicioMin; $minuto + $duracionServicioMin <= $finMin; $minuto += $intervaloMin) {
+                if ($ahora !== null && $minuto <= $ahora) {
+                    continue;
                 }
-            }
 
-            if (!$seSolapa) {
-                $slots[] = sprintf('%02d:%02d', intdiv($minuto, 60), $minuto % 60);
+                $seSolapa = false;
+                foreach ($ocupadosMin as $bloque) {
+                    if ($minuto < $bloque['fin'] && ($minuto + $duracionServicioMin) > $bloque['inicio']) {
+                        $seSolapa = true;
+                        break;
+                    }
+                }
+
+                if (!$seSolapa) {
+                    $slots[] = sprintf('%02d:%02d', intdiv($minuto, 60), $minuto % 60);
+                }
             }
         }
 

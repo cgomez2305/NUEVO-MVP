@@ -18,7 +18,7 @@ $direccion = trim((string) ($negocio['direccion'] ?? ''));
           <?php foreach ($horario as $linea): ?>
             <div class="pq-horario-fila<?= !empty($linea['hoy']) ? ' pq-horario-hoy' : '' ?><?= $linea['rango'] === 'Cerrado' ? ' pq-horario-cerrado' : '' ?>">
               <dt><?= e($linea['dia']) ?><?php if (!empty($linea['hoy'])): ?> <span class="pq-horario-etiqueta">hoy</span><?php endif; ?></dt>
-              <dd><?= e($linea['rango']) ?></dd>
+              <dd><?php foreach ($linea['franjas'] as $franja): ?><span class="pq-horario-franja"><?= e($franja) ?></span><?php endforeach; ?></dd>
             </div>
           <?php endforeach; ?>
         </dl>
