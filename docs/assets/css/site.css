@@ -133,10 +133,10 @@ body.sin-nav-espacio{padding-top:0}
 .nav-oscura .btn-login:hover{color:var(--tiquete);background:rgba(255,255,255,.08)}
 .btn-nav{padding:11px 22px;font-size:13.5px;white-space:nowrap;margin-left:6px;box-shadow:0 6px 16px -6px rgba(59,76,202,.45)}
 @media (max-width:860px){
-  .nav-auth{width:100%;flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px 4px;border-top:1px solid var(--borde);margin-top:6px}
+  .nav-auth{width:100%;flex-direction:column;align-items:stretch;gap:8px;padding:14px 4px 4px;border-top:1px solid var(--borde);margin-top:8px}
   .nav-oscura .nav-auth{border-top-color:rgba(255,255,255,.1)}
-  .nav-auth .btn-login{text-align:center;padding:10px 0}
-  .nav-auth .btn-nav{width:100%;justify-content:center;margin-left:0}
+  .nav-auth .btn-login{text-align:center;padding:12px 0;border-radius:14px}
+  .nav-auth .btn-nav{width:100%;justify-content:center;margin-left:0;padding:14px 22px}
 }
 
 /* mega menú */
@@ -165,11 +165,14 @@ body.sin-nav-espacio{padding-top:0}
 .mega-menu a.item strong{display:block;font-size:13.5px;font-weight:600}
 .mega-menu a.item span{display:block;font-size:12px;color:var(--texto-suave);margin-top:1px}
 @media (max-width:860px){
-  .mega-menu{position:static;transform:none;width:auto;box-shadow:none;border:none;background:transparent;padding:8px 0 0;grid-template-columns:1fr;opacity:1;visibility:visible;pointer-events:auto;display:none}
+  .mega-menu{position:static;transform:none;width:auto;box-shadow:none;border:none;background:transparent;padding:4px 0 6px;grid-template-columns:1fr;opacity:1;visibility:visible;pointer-events:auto;display:none}
   .nav-item-menu.abierto .mega-menu{display:grid}
+  .mega-menu .columna{gap:1px}
+  .mega-menu .titulo-col{padding:6px 10px 4px}
+  .mega-menu a.item{padding:9px 10px}
 }
 
-/* nav en mobile: hamburguesa (que se convierte en X al abrir) + panel deslizante */
+/* nav en mobile: hamburguesa (que se convierte en X al abrir) + tarjeta flotante */
 .btn-hamburguesa{display:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--borde);background:var(--superficie);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;transition:background .15s ease,border-color .15s ease}
 .btn-hamburguesa svg{width:18px;height:18px}
 .btn-hamburguesa .linea{transform-origin:center;transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s ease}
@@ -179,18 +182,33 @@ body.sin-nav-espacio{padding-top:0}
 .nav-oscura .btn-hamburguesa{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#C9CCD6}
 .nav-trigger{background:none;border:none;font:inherit;font-size:14px;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:0}
 body.menu-abierto{overflow:hidden}
+
+/* scrim detrás del panel: lo inyecta tema.js una sola vez, reusado por cualquier nav de la página */
+.nav-backdrop{
+  position:fixed;inset:0;z-index:58;background:rgba(16,17,20,.4);backdrop-filter:blur(2px);
+  opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s;
+}
+.nav-backdrop.visible{opacity:1;visibility:visible}
+
 @media (max-width:860px){
   .btn-hamburguesa{display:inline-flex}
+
+  /* el panel es una tarjeta flotante (mismo lenguaje que .mega-menu: radio-tarjeta,
+     sombra-media, borde) que sobresale sobre el scrim, no una franja a todo el alto. */
   .nav-links{
-    position:fixed;top:72px;left:0;right:0;bottom:0;z-index:59;
-    background:var(--superficie);flex-direction:column;align-items:stretch;gap:0;padding:6px 22px 28px;
-    transform:translateY(-14px);opacity:0;visibility:hidden;pointer-events:none;overflow-y:auto;
-    transition:opacity .22s ease,transform .22s ease,visibility .22s;
-    box-shadow:0 24px 40px -20px rgba(0,0,0,.25);
+    position:fixed;top:68px;left:12px;right:12px;z-index:59;
+    max-height:calc(100vh - 84px);
+    background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio-tarjeta);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.35);
+    display:flex;flex-direction:column;gap:2px;align-items:stretch;
+    padding:10px 10px 14px;overflow-y:auto;overscroll-behavior:contain;
+    transform-origin:top center;transform:translateY(-10px) scale(.97);
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .25s cubic-bezier(.16,1,.3,1),transform .25s cubic-bezier(.16,1,.3,1),visibility .25s;
   }
-  .nav-oscura .nav-links{background:var(--carbon)}
-  .nav-links.abierto{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
-  .nav-links > a,.nav-item-menu{opacity:0;transform:translateY(8px);transition:opacity .3s ease,transform .3s ease}
+  .nav-oscura .nav-links{background:var(--carbon);border-color:rgba(255,255,255,.1)}
+  .nav-links.abierto{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+  .nav-links > a,.nav-item-menu{opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease}
   .nav-links.abierto > a,.nav-links.abierto .nav-item-menu{opacity:1;transform:translateY(0)}
   .nav-links > a:nth-child(1),.nav-item-menu:nth-child(1){transition-delay:.03s}
   .nav-links > a:nth-child(2),.nav-item-menu:nth-child(2){transition-delay:.07s}
@@ -198,14 +216,31 @@ body.menu-abierto{overflow:hidden}
   .nav-links > a:nth-child(4),.nav-item-menu:nth-child(4){transition-delay:.15s}
   .nav-links > a:nth-child(5){transition-delay:.19s}
   .nav-auth{transition-delay:.2s !important}
-  .nav-links > a{padding:15px 2px;border-bottom:1px solid var(--borde);font-size:15px;display:flex;align-items:center;justify-content:space-between}
-  .nav-links > a::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sello);opacity:0;transform:scale(0);transition:all .15s ease}
-  .nav-links > a:active::before{opacity:1;transform:scale(1)}
-  .nav-oscura .nav-links > a{border-bottom-color:rgba(255,255,255,.1)}
+
+  /* filas del menú: mismo trato que .mega-menu a.item (fila redondeada, fondo al
+     presionar), en vez de texto suelto con un divisor a todo el ancho. */
+  .nav-links > a{
+    padding:14px 14px;border-radius:14px;font-size:15.5px;font-weight:500;
+    display:flex;align-items:center;justify-content:flex-start;gap:10px;
+  }
+  .nav-links > a:active{background:var(--bg-suave)}
+  .nav-oscura .nav-links > a:active{background:rgba(255,255,255,.08)}
   .nav-links a::after{display:none}
-  .nav-item-menu{order:-1;border-bottom:1px solid var(--borde)}
-  .nav-oscura .nav-item-menu{border-bottom-color:rgba(255,255,255,.1)}
-  .nav-item-menu .nav-trigger{width:100%;justify-content:space-between;padding:15px 2px;font-size:15px;font-weight:500}
+
+  .nav-item-menu{order:-1}
+  .nav-item-menu .nav-trigger{
+    width:100%;justify-content:space-between;padding:14px 14px;font-size:15.5px;font-weight:600;border-radius:14px;
+  }
+  .nav-item-menu .nav-trigger:active{background:var(--bg-suave)}
+  .nav-oscura .nav-item-menu .nav-trigger:active{background:rgba(255,255,255,.08)}
+  .nav-item-menu.abierto .nav-trigger{color:var(--sello)}
+  .nav-oscura .nav-item-menu.abierto .nav-trigger{color:var(--sello-claro)}
+  /* el contenido expandido vive en una bandeja propia, para marcar que cuelga
+     del trigger y no es otra fila más del mismo nivel. */
+  .nav-item-menu .mega-menu{background:var(--bg-suave);border-radius:14px;margin-top:2px;padding:6px}
+  .nav-oscura .nav-item-menu .mega-menu{background:rgba(255,255,255,.045)}
+
+  .nav-links a.nav-chip{margin-left:0;padding:14px 14px;justify-content:flex-start}
 }
 
 footer{padding:32px 0;border-top:1px solid var(--borde)}

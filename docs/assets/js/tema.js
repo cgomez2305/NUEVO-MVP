@@ -49,9 +49,32 @@
       });
     });
 
-    // Hamburguesa: abre/cierra el panel de navegación en mobile, y el ícono
-    // se convierte en una X (las tres líneas del SVG, ver site.css) en vez
-    // de quedarse como hamburguesa con el menú ya abierto.
+    // Hamburguesa: abre/cierra el panel de navegación en mobile (una tarjeta
+    // flotante con su propio scrim), y el ícono se convierte en una X (las
+    // tres líneas del SVG, ver site.css) en vez de quedarse como hamburguesa
+    // con el menú ya abierto.
+    var scrim = document.querySelector('.nav-backdrop');
+    if (!scrim) {
+      scrim = document.createElement('div');
+      scrim.className = 'nav-backdrop';
+      document.body.appendChild(scrim);
+    }
+
+    function cerrarMenuMovil() {
+      document.querySelectorAll('.nav-links.abierto').forEach(function (links) {
+        links.classList.remove('abierto');
+        var nav = links.closest('nav');
+        var boton = nav ? nav.querySelector('.btn-hamburguesa') : null;
+        if (boton) {
+          boton.classList.remove('abierto');
+          boton.setAttribute('aria-label', 'Abrir menú');
+          boton.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.body.classList.remove('menu-abierto');
+      scrim.classList.remove('visible');
+    }
+
     document.querySelectorAll('.btn-hamburguesa').forEach(function (boton) {
       boton.addEventListener('click', function () {
         var nav = boton.closest('nav');
@@ -62,23 +85,20 @@
         boton.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
         boton.setAttribute('aria-expanded', abierto ? 'true' : 'false');
         document.body.classList.toggle('menu-abierto', abierto);
+        scrim.classList.toggle('visible', abierto);
       });
     });
 
-    // Cerrar el menú mobile al elegir un enlace (evita quedarse con el
-    // panel abierto y el scroll bloqueado después de navegar).
+    // Cerrar el panel al tocar el scrim, al presionar Escape, o al elegir
+    // un enlace (evita quedarse con el panel abierto y el scroll bloqueado
+    // después de navegar).
+    scrim.addEventListener('click', cerrarMenuMovil);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') cerrarMenuMovil();
+    });
     document.querySelectorAll('.nav-links').forEach(function (links) {
       links.querySelectorAll('a:not(.nav-trigger)').forEach(function (enlace) {
-        enlace.addEventListener('click', function () {
-          links.classList.remove('abierto');
-          document.body.classList.remove('menu-abierto');
-          var boton = links.closest('nav').querySelector('.btn-hamburguesa');
-          if (boton) {
-            boton.classList.remove('abierto');
-            boton.setAttribute('aria-label', 'Abrir menú');
-            boton.setAttribute('aria-expanded', 'false');
-          }
-        });
+        enlace.addEventListener('click', cerrarMenuMovil);
       });
     });
 
