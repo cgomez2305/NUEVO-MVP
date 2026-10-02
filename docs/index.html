@@ -246,7 +246,7 @@
   </div>
 </section>
 
-<section class="reveal">
+<section class="reveal seccion-dolor">
   <div class="wrap">
     <h2>¿Te suena familiar?</h2>
     <p class="lead">Los mismos dolores de siempre, casi todos los días.</p>
@@ -307,7 +307,7 @@
         </div>
       </div>
       <div class="recibo-card">
-        <span class="recibo-badge mono">RECIBO EN VIVO</span>
+        <span class="recibo-badge mono"><span class="dot"></span> RECIBO EN VIVO</span>
         <div class="recibo-linea">
           <span class="etiqueta">VENDES</span>
           <span class="valor" id="reciboVentas">$0</span>
@@ -346,7 +346,7 @@
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
               </div>
               <svg class="mm-flecha" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-              <div style="background:var(--bg-suave);border-radius:10px;padding:10px 12px;text-align:left">
+              <div class="mm-recibo-mini" style="background:var(--bg-suave);border-radius:10px;padding:10px 12px;text-align:left">
                 <div class="mm-linea"><span>Bandeja paisa</span><span class="precio">$28.000</span></div>
                 <div class="mm-linea"><span>Arepa con queso</span><span class="precio">$6.000</span></div>
                 <div class="mm-linea"><span>Jugo natural</span><span class="precio">$5.000</span></div>
@@ -503,7 +503,12 @@
         <p class="lead" style="margin-bottom:24px">Cinco negocios de ejemplo, de industrias distintas, corriendo ahora mismo en tu navegador. Prueba la tienda tal como la vería tu cliente, y el panel tal como lo verías tú.</p>
         <a href="demo.html" class="btn btn-sello">Abrir las demos en vivo →</a>
       </div>
-      <div class="demo-teaser-tarjetas">
+      <div class="demo-teaser-tarjetas-wrap">
+        <div class="demo-teaser-barra">
+          <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
+          <span class="demo-teaser-en-vivo mono"><span class="dot"></span> EN VIVO</span>
+        </div>
+        <div class="demo-teaser-tarjetas">
         <a href="demo.html#pedidos" class="demo-teaser-card">
           <span class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></svg></span>
           <strong>Doña María</strong>
@@ -529,6 +534,7 @@
           <strong>Sonrisa Dental</strong>
           <span>Odontología · reservas →</span>
         </a>
+        </div>
       </div>
     </div>
   </div>
@@ -649,7 +655,8 @@
 
 <section id="precios" class="reveal">
   <div class="wrap">
-    <h2>Precios</h2>
+    <span class="eyebrow" style="color:var(--sello)">PRECIOS</span>
+    <h2>Paga una cuota fija. Nunca un porcentaje.</h2>
     <p class="lead">0% de comisión por pedido en todos los planes. Eso es lo que cambia frente a las apps.</p>
 
     <div class="precio-toggle" role="group" aria-label="Ciclo de facturación">
@@ -735,8 +742,10 @@
 </section>
 
 <div class="cierre">
+  <div class="cierre-glow cierre-glow-sello" aria-hidden="true"></div>
+  <div class="cierre-glow cierre-glow-caja" aria-hidden="true"></div>
   <div class="wrap">
-    <h2>Tu clientela es tuya.</h2>
+    <h2>Tu clientela es <em>tuya</em>.</h2>
     <p>Publica tu tienda hoy y empieza a cobrar por Bre-B sin pagar comisión. Sin intermediarios, sin letra pequeña.</p>
     <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
       <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
@@ -817,9 +826,11 @@
     var pctSlider = ((venta - input.min) / (input.max - input.min)) * 100;
     input.style.setProperty('--val', pctSlider + '%');
 
-    elValorGrande.classList.remove('calc-pulso');
-    void elValorGrande.offsetWidth;
-    elValorGrande.classList.add('calc-pulso');
+    [elValorGrande, elVentas, elComision, elAhorro].forEach(function (el) {
+      el.classList.remove('calc-pulso');
+      void el.offsetWidth;
+      el.classList.add('calc-pulso');
+    });
   }
 
   input.addEventListener('input', calcular);
