@@ -1,51 +1,50 @@
 <?php
-$estadoLegible = ['pendiente' => 'Pendiente', 'confirmada' => 'Confirmada', 'completada' => 'Completada', 'cancelada' => 'Cancelada'];
-?>
-<div class="pq-content-tienda" style="padding-top: 24px">
+$volverUrl = '/t/' . $negocio['slug'];
+$volverTexto = 'Ir a la tienda';
+require __DIR__ . '/_cabecera_corta.php';
 
-  <div class="pq-centro" style="margin-bottom: 20px">
-    <h1 class="pq-tienda-nombre" style="font-size: 24px">Tu cita en <?= e($cita['negocio_nombre']) ?></h1>
-  </div>
+$sellos = [
+    'pendiente'  => ['Pendiente', ''],
+    'confirmada' => ['Confirmada', 'ok'],
+    'completada' => ['Atendida', 'ok'],
+    'cancelada'  => ['Cancelada', 'no'],
+];
+[$selloTexto, $selloTono] = $sellos[$cita['estado']] ?? [ucfirst((string) $cita['estado']), ''];
+$activa = !in_array($cita['estado'], ['cancelada', 'completada'], true);
+?>
+<div class="pq-content-tienda pq-flujo pq-flujo-angosto">
+  <h1 class="pq-pagina-titulo">Tu cita</h1>
+  <p class="pq-pagina-bajada">
+    <?php if ($cita['estado'] === 'cancelada'): ?>
+      Esta cita fue cancelada. Si quieres, puedes reservar otra cuando gustes.
+    <?php elseif ($cita['estado'] === 'completada'): ?>
+      Esta cita ya fue atendida. ¡Gracias por venir!
+    <?php else: ?>
+      Guarda este enlace: desde aquí puedes cambiar la hora o cancelarla.
+    <?php endif; ?>
+  </p>
 
   <?php if (!empty($ok)): ?>
-    <div class="pq-card" style="margin-bottom: 12px; border: 1px solid var(--caja); color: var(--caja)"><?= e($ok) ?></div>
+    <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso"><?= e($ok) ?></div>
   <?php endif; ?>
   <?php if (!empty($error)): ?>
-    <div class="pq-alerta"><?= e($error) ?></div>
+    <div class="pq-alerta pq-confirmacion-aviso"><?= e($error) ?></div>
   <?php endif; ?>
 
-  <div class="pq-card" style="background: #FFFFFF; border: 1px solid #E7E0CF">
-    <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0">
-      <span><?= e($cita['nombre_servicio']) ?></span>
-      <span class="pq-mono"><?= pesos((int) $cita['precio']) ?></span>
-    </div>
-    <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #C9BFA4">
-      <span>Cuándo</span>
-      <span class="pq-mono"><?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?></span>
-    </div>
-    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 8px">
-      <span>Estado</span>
-      <span class="pq-chip <?= chip_estado($cita['estado']) ?>"><?= e($estadoLegible[$cita['estado']] ?? $cita['estado']) ?></span>
-    </div>
-    <?php if ((int) $cita['anticipo_monto'] > 0): ?>
-      <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 8px">
-        <span>Anticipo (<?= pesos((int) $cita['anticipo_monto']) ?>)</span>
-        <span class="pq-chip <?= $cita['anticipo_estado'] === 'pagado' ? 'pq-chip-caja' : 'pq-chip-pendiente' ?>">
-          <?= $cita['anticipo_estado'] === 'pagado' ? 'Pagado' : 'Pendiente' ?>
-        </span>
-      </div>
-    <?php endif; ?>
-  </div>
+  <?php require __DIR__ . '/_tiquete_cita.php'; ?>
 
-  <?php if (!in_array($cita['estado'], ['cancelada', 'completada'], true)): ?>
-    <div style="display: flex; gap: 10px; margin-top: 20px">
-      <a href="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/reprogramar')) ?>" class="pq-btn pq-btn-oscuro" style="flex-grow: 1">Reprogramar</a>
+  <?php if ($activa): ?>
+    <div class="pq-gestion-acciones">
+      <a href="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/reprogramar')) ?>" class="pq-btn pq-btn-oscuro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+        Cambiar día u hora
+      </a>
+      <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" data-confirmar="¿Seguro que quieres cancelar tu cita?">
+        <?= csrf_campo() ?>
+        <button type="submit" class="pq-boton-peligro">Cancelar cita</button>
+      </form>
     </div>
-
-    <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" style="margin-top: 10px" data-confirmar="¿Seguro que quieres cancelar tu cita?">
-      <?= csrf_campo() ?>
-      <button type="submit" class="pq-mono pq-centro" style="display: block; width: 100%; background: none; border: none; color: #9c2c17; font-size: 13px; cursor: pointer; padding: 10px">Cancelar cita</button>
-    </form>
+  <?php else: ?>
+    <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-btn pq-btn-oscuro pq-gestion-acciones">Reservar otra cita</a>
   <?php endif; ?>
-
 </div>

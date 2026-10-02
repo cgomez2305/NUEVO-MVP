@@ -50,13 +50,16 @@
       if (boton.dataset.copiando === '1') return; // ya está mostrando el check
       boton.dataset.copiando = '1';
       boton.dataset.iconoOriginal = boton.innerHTML;
+      // Se guarda la etiqueta propia de cada botón ("Copiar la llave",
+      // "Copiar la referencia"...) en vez de pisarla siempre con "enlace".
+      var etiquetaOriginal = boton.getAttribute('aria-label') || 'Copiar';
       boton.innerHTML = ICONO_CHECK;
       boton.classList.add('pq-copiado');
-      boton.setAttribute('aria-label', 'Enlace copiado');
+      boton.setAttribute('aria-label', 'Copiado');
       window.setTimeout(function () {
         boton.innerHTML = boton.dataset.iconoOriginal || ICONO_COPIAR;
         boton.classList.remove('pq-copiado');
-        boton.setAttribute('aria-label', 'Copiar enlace');
+        boton.setAttribute('aria-label', etiquetaOriginal);
         delete boton.dataset.copiando;
       }, 1700);
     });

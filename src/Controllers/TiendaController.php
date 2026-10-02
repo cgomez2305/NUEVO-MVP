@@ -666,7 +666,11 @@ class TiendaController
 
         $negocio = Sede::buscarPorId((int) $cita['sede_id']);
 
-        $fecha = (string) ($_GET['fecha'] ?? date('Y-m-d'));
+        // Sin ?fecha, se abre en el día que ya tiene la cita (si no pasó):
+        // casi siempre se cambia la hora dentro del mismo día o uno cercano,
+        // y abrir en "hoy" mostraba un día vacío sin contexto.
+        $diaCita = date('Y-m-d', strtotime((string) $cita['fecha_hora']) ?: time());
+        $fecha = (string) ($_GET['fecha'] ?? ($diaCita >= date('Y-m-d') ? $diaCita : date('Y-m-d')));
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
             $fecha = date('Y-m-d');
         }

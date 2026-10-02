@@ -1,27 +1,12 @@
 <?php $volverUrl = '/t/' . $negocio['slug']; $volverTexto = 'Volver a los servicios'; require __DIR__ . '/_cabecera_corta.php'; ?>
 
 <?php
-$diasCorto = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 $diasLargo = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 $diasPlural = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
-$mesesCorto = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 $mesesLargo = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 $sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '';
 $fechaEsHoy = $fecha === date('Y-m-d');
-$fechaCorta = static function (string $f) use ($diasCorto, $mesesCorto): string {
-    $ts = strtotime($f);
-    return mb_strtolower($diasCorto[(int) date('w', $ts)]) . '. ' . (int) date('j', $ts) . ' ' . $mesesCorto[(int) date('n', $ts) - 1] . '.';
-};
-// A diferencia de hora_legible() (usada en servicios.php, donde "9 a. m."
-// sin minutos es deliberado), aquí conviven horas "en punto" y horas con
-// minutos en la misma pantalla (grilla de horarios + próximo disponible +
-// resumen de confirmación) — mostrar siempre los minutos evita mezclar
-// "9 a. m." con "09:00" como si fueran formatos distintos.
-$horaCompleta = static function (string $hora): string {
-    $ts = strtotime($hora) ?: 0;
-    $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
-    return date('g:i', $ts) . ' ' . $meridiano;
-};
+$horaCompleta = 'hora_completa';
 $mesActual = ucfirst($mesesLargo[(int) date('n', strtotime($fecha)) - 1]) . ' ' . date('Y', strtotime($fecha));
 // Mañana/tarde para escanear la grilla más rápido cuando hay muchos cupos
 // — el corte es mediodía, no la hora de cierre del negocio.
@@ -30,22 +15,13 @@ $slotsTarde = array_values(array_filter($slots, static fn (string $s) => (int) s
 // Los pasos se numeran según lo que de verdad hay que hacer: "¿Con quién?"
 // solo existe si el negocio tiene empleados.
 $paso = 0;
-// Cada fecha es una hojita de almanaque (día de la semana arriba, número
-// grande): el detalle propio de esta pantalla. Mismo marcado en el
-// carrusel y en la grilla de "Ver más fechas".
-$hojaDia = static function (string $opcion) use ($negocio, $servicio, $fecha, $sufijoEmpleado, $diasCorto, $mesesCorto): string {
-    $ts = strtotime($opcion);
-    $esHoy = $opcion === date('Y-m-d');
-    $activo = $opcion === $fecha;
-    $href = e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado);
-    $etiqueta = $esHoy ? 'hoy' : mb_strtolower($diasCorto[(int) date('w', $ts)]);
-    return '<a href="' . $href . '" class="pq-dia' . ($activo ? ' pq-dia-activo' : '') . '"' . ($activo ? ' aria-current="date"' : '')
-        . ' aria-label="' . e(($esHoy ? 'Hoy, ' : '') . fecha_larga($opcion)) . '">'
-        . '<span class="pq-dia-semana">' . e($etiqueta) . '</span>'
-        . '<span class="pq-dia-numero">' . (int) date('j', $ts) . '</span>'
-        . '<span class="pq-dia-mes">' . e($mesesCorto[(int) date('n', $ts) - 1]) . '</span>'
-        . '</a>';
-};
+// Cada fecha es una hojita de almanaque (ver hoja_almanaque()): mismo
+// marcado en el carrusel, en "Ver todas las fechas" y en reprogramar.
+$hojaDia = static fn (string $opcion): string => hoja_almanaque(
+    $opcion,
+    $fecha,
+    base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $opcion . $sufijoEmpleado
+);
 ?>
 <div class="pq-content-tienda pq-flujo pq-flujo-angosto">
   <h1 class="pq-pagina-titulo"><?= e($servicio['nombre']) ?></h1>

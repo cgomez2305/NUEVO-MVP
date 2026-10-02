@@ -888,12 +888,6 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-chip-pendiente { background: #FDF1DA; color: #8a5a00; }
 .pq-chip-cancelado { background: #FBE3E0; color: #9c2c17; }
 
-/* A diferencia de .pq-chip como insignia de estado (no interactiva, se usa
-   en pedidos/citas), los chips de fecha en reservar.php SÍ son botones — un
-   blanco real (no el mismo crema del fondo) para que se noten como
-   superficies táctiles, con un borde que se oscurece al tocar/hover. */
-.pq-chip-dia { border: 1.5px solid #D8CDBC; background: #FFFFFF; font-weight: 600; }
-.pq-chip-dia:hover, .pq-chip-dia:focus-visible { border-color: var(--tinta); }
 /* El chip de fecha activo reusa .pq-chip-caja (mismo mint que el resto de
    la app) pero con más definición: borde del mismo verde y texto más
    pesado, para que no dependa solo del cambio de fondo. */
@@ -1076,26 +1070,6 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 @media (prefers-reduced-motion: reduce) {
   .pq-salir-confirm[open] .pq-salir-confirm-caja, .pq-content-tienda:has(.pq-salir-confirm[open])::after { animation: none; }
 }
-
-/* Cabecera de las pantallas de reserva/reprogramar: el mismo fondo crema
-   del resto de la pantalla (antes usaba --tiquete, casi blanco puro, y se
-   veía como una franja de otra pantalla pegada encima). El área de "volver"
-   tiene que sentirse como navegación real, no un breadcrumb técnico. */
-.pq-topbar-tienda { background: var(--papel); border-bottom: 1px solid var(--recibo); padding: 10px 20px; }
-.pq-volver {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tinta);
-  text-decoration: none;
-}
-.pq-volver:hover { color: var(--sello); }
-.pq-volver:active { background: var(--recibo); border-radius: 8px; }
-.pq-volver svg { flex-shrink: 0; }
 
 /* El form de confirmación aparece de golpe apenas se elige un horario
    (recarga completa de página, no hay transición de "antes/después" como
@@ -1424,15 +1398,6 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-avatar-chico { width: 34px; height: 34px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; }
 
 /* ---------- tienda pública (Ruta 1) ---------- */
-
-.pq-tienda-nombre {
-  margin: 0;
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  color: var(--tinta);
-}
-.pq-tienda-desc { font-size: 13px; color: #6b6350; }
 
 /* ---------- tienda pública v2: fachada, carta y barra del pedido ----------
    Ruta 1 "Letrero de barrio". La tienda es del negocio, no de Veci: todo el
@@ -2103,6 +2068,87 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-confirmar-form { margin-top: var(--esp-5); }
 .pq-confirmar-boton { margin-top: var(--esp-5); }
 
+/* ---------- tienda v2: confirmaciones y gestión de la cita ----------
+   El detalle propio: el sello de caucho sobre la comanda/tiquete ("Por
+   enviar", "Confirmada", "Cancelada"), como el sello de la caja del
+   negocio. Comunica el estado de un vistazo y "cae" una vez al cargar. */
+.pq-pagina-bajada { margin: var(--esp-2) 0 0; font-size: 15px; line-height: 1.5; color: var(--texto-calido); text-wrap: pretty; }
+.pq-comanda-final { margin-top: var(--esp-6); }
+.pq-comanda-final .pq-comanda-hoja { position: relative; }
+.pq-comanda-cantidad { color: var(--texto-tenue); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pq-comanda-datos { display: grid; gap: var(--esp-2); margin: var(--esp-4) 0 0; padding-top: var(--esp-3); border-top: 1.5px dashed var(--linea-tienda); }
+/* Espacio reservado para el sello, que va abajo a la derecha: así nunca
+   tapa un precio ni un dato, por largo que sea. */
+.pq-comanda-final .pq-comanda-datos { padding-right: 112px; min-height: 64px; }
+.pq-comanda-datos > div { display: grid; grid-template-columns: 76px 1fr; gap: var(--esp-3); font-size: 14px; line-height: 1.4; }
+.pq-comanda-datos dt { color: var(--texto-tenue); }
+.pq-comanda-datos dd { margin: 0; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-tiquete-turno { display: flex; flex-direction: column; gap: 2px; padding: var(--esp-4) 0 var(--esp-2); }
+
+.pq-sello {
+  position: absolute;
+  right: var(--esp-4);
+  bottom: calc(var(--diente) + var(--esp-5));
+  z-index: 1;
+  padding: 5px 10px 4px;
+  border: 2.5px solid currentColor;
+  border-radius: var(--radio-s);
+  color: var(--marca-texto);
+  font: 800 12px/1 'Bricolage Grotesque', sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transform: rotate(-9deg);
+  opacity: .82;
+  /* Tinta gastada: la máscara de puntitos deja huecos como un sello real. */
+  -webkit-mask: radial-gradient(circle at 30% 40%, #000 0 55%, rgba(0, 0, 0, .8) 56% 100%) 0 0 / 5px 5px;
+  mask: radial-gradient(circle at 30% 40%, #000 0 55%, rgba(0, 0, 0, .8) 56% 100%) 0 0 / 5px 5px;
+  animation: pqSellar .38s .25s var(--curva) both;
+  pointer-events: none;
+}
+.pq-sello-ok { color: #0f7a4f; }
+.pq-sello-no { color: #9c2c17; }
+@keyframes pqSellar { from { opacity: 0; transform: rotate(-9deg) scale(1.6); } to { opacity: .82; transform: rotate(-9deg) scale(1); } }
+
+.pq-confirmacion-aviso { margin-top: var(--esp-4); }
+
+/* Pasos de pago: misma numeración con la marca que las etapas. */
+.pq-pago { margin-top: var(--esp-6); padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
+.pq-pago-titulo { margin: 0 0 var(--esp-4); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-pago-pasos { display: grid; gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
+.pq-pago-paso { display: flex; gap: var(--esp-3); align-items: flex-start; }
+.pq-pago-paso-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pq-pago-paso-titulo { font-size: 15px; font-weight: 600; color: var(--tinta); }
+.pq-pago-dato { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: 6px 6px 6px 12px; background: var(--papel); border: 1px dashed var(--linea-tienda); border-radius: var(--radio-m); font-size: 15px; font-variant-numeric: tabular-nums; }
+.pq-pago-dato > span, .pq-pago-dato > strong { min-width: 0; overflow-wrap: anywhere; }
+.pq-pago-dato-etiqueta { color: var(--texto-tenue); font-size: 13px; }
+.pq-pago-referencia { letter-spacing: .06em; }
+.pq-shell-tienda .pq-btn-icono { width: 40px; height: 40px; background: #FFFFFF; color: var(--tinta); border: 1px solid var(--linea-tienda); box-shadow: none; }
+.pq-shell-tienda .pq-btn-icono:hover { transform: none; border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
+.pq-shell-tienda .pq-btn-icono:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-shell-tienda .pq-btn-icono.pq-copiado { background: var(--caja); border-color: var(--caja); color: #FFFFFF; }
+
+.pq-enlace-accion { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin-top: var(--esp-4); color: var(--marca-texto); font-size: 14.5px; font-weight: 600; text-decoration: none; }
+.pq-enlace-accion svg { width: 18px; height: 18px; }
+.pq-enlace-accion:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.pq-gestion-acciones { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-6); }
+/* Cancelar es destructivo pero secundario: texto rojo con área táctil
+   completa, sin competir con "Cambiar día u hora". */
+.pq-boton-peligro { width: 100%; min-height: 48px; border: 0; border-radius: var(--radio-m); background: none; color: #9c2c17; font: 600 15px/1 'Inter Tight', sans-serif; cursor: pointer; transition: background var(--rapido) ease; }
+.pq-boton-peligro:hover { background: var(--tinte-aji); }
+.pq-boton-peligro:focus-visible { outline: 3px solid #9c2c17; outline-offset: 2px; }
+
+.pq-reprogramar-actual { display: flex; flex-direction: column; gap: 2px; margin: var(--esp-4) 0 0; padding: var(--esp-3) var(--esp-4); background: var(--marca-suave); border-radius: var(--radio-m); font-size: 14px; line-height: 1.45; color: var(--texto-calido); }
+.pq-reprogramar-actual strong { font-size: 15.5px; color: var(--tinta); }
+.pq-reprogramar-actual-etiqueta { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--marca-texto); }
+/* En reprogramar cada horario es un botón dentro de su propio form (se
+   guarda al tocarlo): el form desaparece de la grilla y el botón ocupa la celda. */
+.pq-slots-grid form { display: contents; }
+button.pq-slot { width: 100%; font-family: inherit; cursor: pointer; }
+button.pq-slot:disabled { cursor: default; }
+button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height: 1.15; }
+.pq-slot-nota { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+
 @media (min-width: 860px) {
   .pq-flujo-angosto { width: 100%; max-width: 680px; margin: 0 auto; }
   .pq-cabecera-corta-enlace { padding-left: 32px; padding-right: 32px; }
@@ -2118,22 +2164,6 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 @keyframes pqAparece { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes pqSube { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-.pq-fila-carrito {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #E7E0CF;
-}
-.pq-fila-carrito-icono { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
-
-/* Fila de producto del carrito (checkout): a diferencia de la fila de
-   servicio (una sola línea), acá hay nombre + precio unitario + el stepper
-   de cantidad, así que el ícono se alinea arriba en vez de centrado. */
-.pq-fila-carrito-producto { align-items: flex-start; }
-.pq-fila-carrito-producto .pq-fila-carrito-icono { margin-top: 2px; }
-
-.pq-stepper-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; }
 .pq-stepper { display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--borde); border-radius: 9px; padding: 2px; }
 .pq-stepper form { display: contents; }
 .pq-stepper-boton {
@@ -2151,40 +2181,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-stepper-boton:hover { background: var(--recibo); }
 .pq-stepper-cantidad { min-width: 20px; text-align: center; font-size: 13px; font-weight: 600; }
 
-/* Tacho de eliminar: mismo tamaño táctil que el resto de botones-icono de
-   la fila, pero sin el fondo circular (es una acción secundaria y
-   destructiva, no debería competir visualmente con el stepper). */
-.pq-fila-carrito-eliminar { flex-shrink: 0; margin-top: 2px; }
-.pq-fila-carrito-eliminar button {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--gris-suave);
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background .15s ease, color .15s ease;
-}
-.pq-fila-carrito-eliminar button:hover { background: var(--recibo); color: #9c2c17; }
-.pq-fila-carrito-eliminar svg { width: 16px; height: 16px; }
-
 /* ---------- checkout público: secciones, teléfono, pago, CTA sticky ---------- */
-
-.pq-seccion-checkout {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--gris-texto);
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  margin: 28px 0 12px;
-  padding-bottom: 6px;
-  border-bottom: 1.5px solid rgba(27, 26, 23, .1);
-}
-.pq-seccion-checkout:first-of-type { margin-top: 20px; }
 
 .pq-input-telefono { display: flex; align-items: stretch; gap: 8px; }
 .pq-input-telefono-prefijo {
@@ -2226,7 +2223,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-consentimiento-titulo { display: block; font-size: 13px; font-weight: 600; color: var(--carbon); }
 /* El consentimiento REQUERIDO lleva una caja sutil (fondo + borde) para que
    no se lea como un trámite más al mismo nivel que el opcional de abajo,
-   que se queda plano. Mismo lenguaje visual que .pq-aviso-sutil. */
+   que se queda plano. */
 .pq-consentimiento-requerido { padding: 10px 12px; border-radius: 10px; background: var(--tiquete); border: 1px solid var(--recibo); }
 
 /* Lista de espera en reservar.php: secundaria a propósito frente a "ver el
@@ -2253,31 +2250,6 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-lista-espera-detalle[open] > summary::after { content: "–"; }
 .pq-lista-espera-detalle[open] > summary { border-radius: 10px 10px 0 0; border-bottom: none; }
 .pq-lista-espera-detalle[open] form { padding: 12px; background: var(--tiquete); border: 1px solid var(--recibo); border-top: none; border-radius: 0 0 10px 10px; }
-
-/* Pasos numerados de pago (pedido_confirmado.php / cita_confirmada.php):
-   la llave, la referencia y "envía el comprobante" eran un bloque de texto
-   que había que interpretar; como pasos 1-2-3 con numeración visible se
-   leen de un vistazo y en orden. */
-.pq-paso-pago { display: flex; gap: 12px; align-items: flex-start; }
-.pq-paso-pago-numero {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--tinta);
-  color: var(--papel);
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Caja informativa sutil para avisos tipo "esto puede cambiar" (p. ej. el
-   costo de domicilio): un fondo tenue para que no se pierda como texto
-   gris suelto, pero sin el tono amarillo de advertencia de .pq-alerta-aviso
-   (no es una alerta, es solo contexto). */
-.pq-aviso-sutil { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--tiquete); border: 1px solid var(--recibo); font-size: 12px; color: var(--gris-texto); line-height: 1.4; }
 
 /* Validación del checkout: mensaje propio bajo el campo en vez del globo
    genérico del navegador. Vive junto al resto del checkout porque solo
@@ -2317,13 +2289,6 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 }
 @media (min-width: 860px) {
   .pq-checkout-sticky { max-width: 900px; padding-left: 32px; padding-right: 32px; }
-
-  /* Sin este límite, la columna nombre/precio/stepper se estira hasta los
-     ~836px del contenedor (flex-grow:1 heredado del celular, donde SÍ tiene
-     sentido) y dejaba un vacío enorme entre el stepper y el total — la fila
-     se leía como "producto ................... $28.000" en vez de un
-     bloque compacto. */
-  .pq-fila-carrito-producto .pq-stack { max-width: 420px; }
 }
 
 /* La barra fija SIEMPRE tapa algo del fondo de la pantalla (es su trabajo);

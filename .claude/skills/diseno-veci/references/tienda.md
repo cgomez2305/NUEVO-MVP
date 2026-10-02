@@ -6,12 +6,11 @@ comparten. CSS: sección "tienda pública v2" de `app.css`. JS:
 `assets/js/tienda.js` (navegación de secciones) e `interacciones.js`
 (carrito sin recargar).
 
-Pantallas internas (`carrito.php`, `reservar.php`) usan `_cabecera_corta.php`
-y la sección "tienda v2: pantallas internas" de `app.css`.
-
-Pendientes de llevar a este lenguaje: `pedido_confirmado.php`,
-`cita_confirmada.php`, `cita_gestionar.php`, `cita_reprogramar.php`
-(todavía usan mono y el topbar viejo; reprogramar ya hereda los slots).
+Pantallas internas (carrito, reservar, confirmaciones, gestión y
+reprogramación de cita) usan `_cabecera_corta.php` y las secciones "tienda
+v2: pantallas internas" y "tienda v2: confirmaciones" de `app.css`. **Toda
+la tienda pública ya está en este lenguaje**; no queda ninguna vista con el
+topbar viejo, monoespaciada ni cuadros de color.
 
 ---
 
@@ -199,4 +198,37 @@ Overrides bajo `.pq-shell-tienda`: campos de 16px (evita el zoom del
 iPhone), foco y opción elegida con la marca, prefijo +57 y teléfono con
 `tabular-nums`, casillas con `accent-color: var(--marca-texto)`. El botón
 final sigue siendo el verde de WhatsApp: la acción ocurre allá.
+
+## Sello de caucho (`.pq-sello`)
+
+El detalle propio de las confirmaciones y de la gestión de cita: un sello
+girado (-9°), con borde de 2,5px y tinta "gastada" (máscara de puntitos),
+que "cae" una vez al cargar (`pqSellar`). Dice el estado: "Por enviar"
+(tono marca), "Confirmada"/"Atendida" (`.pq-sello-ok`, verde), "Cancelada"
+(`.pq-sello-no`, rojo). Va **abajo a la derecha** del tiquete, sobre
+`.pq-comanda-datos`, que le reserva 112px a la derecha: arriba tapaba el
+precio de la primera línea (bug real que se encontró en las capturas).
+
+## Tiquete final (`.pq-comanda-final`)
+
+La misma comanda del carrito, sin controles: cabeza con "Pedido #N" y la
+fecha, líneas "1× producto ···· $precio", total y un `<dl
+class="pq-comanda-datos">` con entrega, pago y nota. Para citas,
+`_tiquete_cita.php` cambia las líneas por la hora en grande
+(`.pq-tiquete-turno`) y agrega duración, persona y anticipo.
+
+## Pasos de pago (`_pasos_pago.php`)
+
+Lo usan ambas confirmaciones. Variables: `$pagoTitulo`, `$pagoMetodo`
+("Bre-B"/"Nequi", nunca "BREB"), `$pagoLlave`, `$pagoReferencia` (solo
+Bre-B), `$pagoMonto`, `$pagoPara`. Cada dato copiable va en una caja
+punteada con su botón `[data-copiar]` y su propio `aria-label` ("Copiar la
+llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
+
+## Helpers de fecha de la tienda
+- `hora_completa('09:30')` → "9:30 a. m." (en grillas, siempre con minutos).
+- `hoja_almanaque($fecha, $activa, $href)` → la hojita de almanaque;
+  reservar y reprogramar la comparten.
+- Reprogramar abre en el **día que ya tiene la cita** (no en "hoy") y marca
+  el turno actual con la etiqueta "actual" y deshabilitado.
 

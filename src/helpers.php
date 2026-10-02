@@ -425,3 +425,37 @@ function color_seguro(?string $hex, string $respaldo = '#F2B632'): string
 {
     return is_string($hex) && preg_match('/^#[0-9a-f]{6}$/i', trim($hex)) ? trim($hex) : $respaldo;
 }
+
+/**
+ * "09:30" → "9:30 a. m.", siempre con minutos. A diferencia de hora_legible()
+ * (que omite ":00" en textos sueltos como "abre a las 9 a. m."), aquí se usa
+ * donde conviven horas en punto y con minutos en la misma grilla — mostrar
+ * siempre los minutos evita mezclar "9 a. m." con "9:30 a. m.".
+ */
+function hora_completa(string $hora): string
+{
+    $ts = strtotime($hora) ?: 0;
+    return date('g:i', $ts) . ' ' . (date('a', $ts) === 'am' ? 'a. m.' : 'p. m.');
+}
+
+/**
+ * Una fecha como hojita de almanaque (día de la semana, número grande, mes)
+ * para los selectores de día de la tienda: reservar y reprogramar usan
+ * exactamente el mismo marcado. $href ya debe venir armado (sin escapar).
+ */
+function hoja_almanaque(string $fecha, string $fechaActiva, string $href): string
+{
+    $dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    $ts = strtotime($fecha) ?: 0;
+    $esHoy = $fecha === date('Y-m-d');
+    $activo = $fecha === $fechaActiva;
+
+    return '<a href="' . e($href) . '" class="pq-dia' . ($activo ? ' pq-dia-activo' : '') . '"'
+        . ($activo ? ' aria-current="date"' : '')
+        . ' aria-label="' . e(($esHoy ? 'Hoy, ' : '') . fecha_larga($fecha)) . '">'
+        . '<span class="pq-dia-semana">' . ($esHoy ? 'hoy' : $dias[(int) date('w', $ts)]) . '</span>'
+        . '<span class="pq-dia-numero">' . (int) date('j', $ts) . '</span>'
+        . '<span class="pq-dia-mes">' . $meses[(int) date('n', $ts) - 1] . '</span>'
+        . '</a>';
+}

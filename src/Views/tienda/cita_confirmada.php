@@ -1,81 +1,44 @@
-<div class="pq-content-tienda" style="padding-top: 24px">
+<?php
+$volverUrl = '/t/' . $negocio['slug'];
+$volverTexto = 'Volver a la tienda';
+require __DIR__ . '/_cabecera_corta.php';
 
-  <div class="pq-centro" style="margin-bottom: 20px">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="#16A36A" style="margin: 0 auto 10px" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-    <h1 class="pq-tienda-nombre" style="font-size: 24px">Tu cita está preparada</h1>
-    <span class="pq-tienda-desc" style="display: block">Solo falta confirmarla por WhatsApp</span>
-    <span class="pq-chip pq-chip-pendiente" style="margin-top: 8px; display: inline-block">Reserva #<?= (int) $cita['id'] ?> · Pendiente de envío</span>
-    <p class="pq-ayuda" style="margin-top: 6px"><?= e(nombre_publico_sede($negocio)) ?> todavía no ha recibido tu reserva.</p>
-  </div>
+$nombreNegocio = nombre_publico_sede($negocio);
+$pideAnticipo = (int) $cita['anticipo_monto'] > 0;
+$mostrarPago = !empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] !== 'pagado';
+?>
+<div class="pq-content-tienda pq-flujo pq-flujo-angosto">
+  <h1 class="pq-pagina-titulo">Tu reserva está lista para enviar</h1>
+  <p class="pq-pagina-bajada"><?= e($nombreNegocio) ?> todavía no la ha recibido: se la mandas tú por WhatsApp, ya escrita.</p>
 
-  <div class="pq-card" style="background: #FFFFFF; border: 1px solid #E7E0CF">
-    <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0">
-      <span><?= e($cita['nombre_servicio']) ?></span>
-      <span class="pq-mono"><?= pesos((int) $cita['precio']) ?></span>
-    </div>
-    <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #C9BFA4">
-      <span>Cuándo</span>
-      <span class="pq-mono"><?= e(fecha_corta((string) $cita['fecha_hora'], ', ')) ?></span>
-    </div>
-  </div>
+  <?php $selloTexto = 'Por enviar'; $selloTono = ''; require __DIR__ . '/_tiquete_cita.php'; ?>
 
-  <?php if ((int) $cita['anticipo_monto'] > 0): ?>
-    <div class="pq-alerta pq-alerta-aviso" style="margin-top: 14px">
-      Esta cita necesita un anticipo de <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong> para quedar confirmada.
-      <?php if ($cita['anticipo_estado'] === 'pagado'): ?>
-        <strong>· Ya lo registramos, ¡gracias!</strong>
-      <?php endif; ?>
-    </div>
+  <?php if ($pideAnticipo && $cita['anticipo_estado'] === 'pagado'): ?>
+    <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso">Ya registramos tu anticipo de <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong>. ¡Gracias!</div>
+  <?php elseif ($pideAnticipo): ?>
+    <div class="pq-alerta pq-alerta-aviso pq-confirmacion-aviso">Esta cita queda confirmada cuando pagues el anticipo de <strong><?= pesos((int) $cita['anticipo_monto']) ?></strong>.</div>
   <?php endif; ?>
 
-  <?php if (!empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] !== 'pagado'): ?>
-    <?php $referenciaCita = 'VECI-C' . (int) $cita['id']; ?>
-    <div class="pq-card" style="margin-top: 14px; display: flex; flex-direction: column; gap: 14px">
-      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">
-        ANTICIPO POR BRE-B<?= (int) $cita['anticipo_monto'] === 0 ? ' (OPCIONAL)' : '' ?>
-      </span>
-      <div class="pq-paso-pago">
-        <span class="pq-paso-pago-numero">1</span>
-        <div class="pq-stack" style="gap: 2px; flex-grow: 1">
-          <span style="font-size: 13px; font-weight: 600">Realiza el pago por Bre-B<?= (int) $cita['anticipo_monto'] > 0 ? ' · ' . pesos((int) $cita['anticipo_monto']) : '' ?></span>
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
-            <span style="font-size: 14px">Llave: <strong><?= e($negocio['llave_breb_valor']) ?></strong></span>
-            <button type="button" class="pq-btn-icono" data-copiar="<?= e($negocio['llave_breb_valor']) ?>" title="Copiar llave" aria-label="Copiar llave" style="flex-shrink: 0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="pq-paso-pago">
-        <span class="pq-paso-pago-numero">2</span>
-        <div class="pq-stack" style="gap: 2px; flex-grow: 1">
-          <span style="font-size: 13px; font-weight: 600">Incluye esta referencia</span>
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
-            <span class="pq-mono" style="font-size: 14px; font-weight: 700"><?= e($referenciaCita) ?></span>
-            <button type="button" class="pq-btn-icono" data-copiar="<?= e($referenciaCita) ?>" title="Copiar referencia" aria-label="Copiar referencia" style="flex-shrink: 0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="10" height="14" rx="2"/><path d="M8 8H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/></svg>
-            </button>
-          </div>
-          <span class="pq-ayuda">En el concepto de tu transferencia.</span>
-        </div>
-      </div>
-      <div class="pq-paso-pago">
-        <span class="pq-paso-pago-numero">3</span>
-        <div class="pq-stack" style="gap: 2px; flex-grow: 1">
-          <span style="font-size: 13px; font-weight: 600">Envía el comprobante por WhatsApp</span>
-          <span class="pq-ayuda">Para que confirmen tu reserva.</span>
-        </div>
-      </div>
-    </div>
+  <?php if ($mostrarPago): ?>
+    <?php
+    $pagoTitulo = $pideAnticipo ? 'Cómo pagar el anticipo' : 'Si quieres, adelanta el pago';
+    $pagoMetodo = 'Bre-B';
+    $pagoLlave = (string) $negocio['llave_breb_valor'];
+    $pagoReferencia = 'VECI-C' . (int) $cita['id'];
+    $pagoMonto = $pideAnticipo ? (int) $cita['anticipo_monto'] : null;
+    $pagoPara = 'reserva';
+    require __DIR__ . '/_pasos_pago.php';
+    ?>
   <?php endif; ?>
 
-  <a href="<?= e($enlaceWhatsapp) ?>" target="_blank" rel="noopener" class="pq-btn pq-btn-whatsapp" style="margin-top: 20px">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="#0b3d24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-    <?= !empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] !== 'pagado' ? 'Enviar reserva y comprobante por WhatsApp' : 'Enviar reserva por WhatsApp' ?>
+  <a href="<?= e($enlaceWhatsapp) ?>" target="_blank" rel="noopener" class="pq-btn pq-btn-whatsapp pq-confirmar-boton">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
+    <?= $mostrarPago ? 'Enviar reserva y comprobante' : 'Enviar reserva por WhatsApp' ?>
   </a>
-  <p class="pq-ayuda pq-centro" style="margin-top: 10px">Se abrirá WhatsApp con tu reserva ya escrita. Revísala y pulsa Enviar para que <?= e(nombre_publico_sede($negocio)) ?> la reciba.</p>
+  <p class="pq-ayuda pq-checkout-pie">Se abre WhatsApp con la reserva escrita. Revísala y pulsa Enviar para que <?= e($nombreNegocio) ?> la reciba.</p>
 
-  <a href="<?= e(base_url('/cita/' . $cita['token_gestion'])) ?>" class="pq-mono pq-centro" style="display: block; margin-top: 20px; font-size: 12px; color: var(--gris-suave)">reprogramar o cancelar esta cita</a>
-  <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-mono pq-centro" style="display: block; margin-top: 10px; font-size: 12px; color: var(--gris-suave)">volver a la tienda</a>
-
+  <a href="<?= e(base_url('/cita/' . $cita['token_gestion'])) ?>" class="pq-enlace-accion">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    Reprogramar o cancelar esta cita
+  </a>
 </div>

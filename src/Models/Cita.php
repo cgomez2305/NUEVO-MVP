@@ -54,9 +54,11 @@ class Cita
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono,
-                    s.slug AS sede_slug, s.nombre AS sede_nombre, n.nombre AS negocio_nombre
+                    s.slug AS sede_slug, s.nombre AS sede_nombre, n.nombre AS negocio_nombre,
+                    e.nombre AS empleado_nombre
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
+             LEFT JOIN empleados e ON e.id = c.empleado_id
              JOIN sedes s ON s.id = c.sede_id
              JOIN negocios n ON n.id = s.negocio_id
              WHERE c.token_gestion = :token'
@@ -114,8 +116,9 @@ class Cita
     public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
+            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
+             LEFT JOIN empleados e ON e.id = c.empleado_id
              WHERE c.id = :id AND c.sede_id = :sede_id'
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
