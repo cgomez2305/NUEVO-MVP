@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
+use App\Models\Bono;
 use App\Models\Cupon;
 use App\Models\Fidelidad;
 use App\Models\Resena;
@@ -311,6 +312,97 @@ class CrecimientoController
             . 'Califícanos en 10 segundos: ' . url_publica('/r/' . $token);
         header('Location: https://wa.me/57' . preg_replace('/\D+/', '', $telefono) . '?text=' . rawurlencode($texto));
         exit;
+    }
+
+    /** Paquetes y bonos (solo negocios de reservas). Cualquiera del equipo vende; el dueño arma los paquetes. */
+    public function paquetes(array $parametros): void
+    {
+        $negocio = $this->exigirReservas();
+        $sedeId = (int) $negocio['id'];
+        $vendido = isset($_GET['vendido']) ? Bono::buscarPorToken((string) $_GET['vendido']) : null;
+
+        ver('panel/paquetes', [
+            'titulo'    => 'Paquetes y bonos · Veci',
+            'activo'    => 'paquetes',
+            'negocio'   => $negocio,
+            'paquetes'  => Bono::paquetes($sedeId),
+            'servicios' => \App\Models\Servicio::listarPorSede($sedeId),
+            'bonos'     => Bono::listar($sedeId),
+            'vendido'   => $vendido !== null && (int) $vendido['sede_id'] === $sedeId ? $vendido : null,
+            'ok'        => flash_obtener('ok'),
+            'error'     => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function crearPaquete(array $parametros): void
+    {
+        $negocio = $this->exigirReservas();
+        Auth::exigirDueno($negocio);
+        if (!csrf_verificar()) {
+            redirigir('/panel/paquetes');
+        }
+        $servicio = \App\Models\Servicio::buscar((int) ($_POST['servicio_id'] ?? 0), (int) $negocio['id']);
+        $sesiones = (int) ($_POST['sesiones'] ?? 0);
+        $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
+        $vigencia = (int) ($_POST['vigencia_dias'] ?? 0);
+        if ($servicio === null || $sesiones < 2 || $sesiones > 30 || $precio <= 0) {
+            flash_set('error', 'Elige el servicio, de 2 a 30 sesiones y el precio del paquete.');
+            redirigir('/panel/paquetes');
+        }
+        Bono::crearPaquete((int) $negocio['id'], (int) $servicio['id'], $sesiones, $precio, $vigencia > 0 ? $vigencia : null);
+        flash_set('ok', 'Paquete creado: ya aparece en tu tienda.');
+        redirigir('/panel/paquetes');
+    }
+
+    public function alternarPaquete(array $parametros): void
+    {
+        $negocio = $this->exigirReservas();
+        Auth::exigirDueno($negocio);
+        if (csrf_verificar()) {
+            Bono::alternarPaquete((int) $parametros['id'], (int) $negocio['id']);
+        }
+        redirigir('/panel/paquetes');
+    }
+
+    public function eliminarPaquete(array $parametros): void
+    {
+        $negocio = $this->exigirReservas();
+        Auth::exigirDueno($negocio);
+        if (csrf_verificar()) {
+            Bono::eliminarPaquete((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Paquete eliminado. Los bonos ya vendidos siguen valiendo.');
+        }
+        redirigir('/panel/paquetes');
+    }
+
+    /** Registra la venta (el cliente pagó en el local) y deja el enlace del bono listo para mandarle. */
+    public function venderBono(array $parametros): void
+    {
+        $negocio = $this->exigirReservas();
+        if (!csrf_verificar()) {
+            redirigir('/panel/paquetes');
+        }
+        $paquete = Bono::paquete((int) ($_POST['paquete_id'] ?? 0), (int) $negocio['id']);
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $telefono = preg_replace('/\D+/', '', (string) ($_POST['telefono'] ?? '')) ?? '';
+        if ($paquete === null || $nombre === '' || strlen($telefono) < 10) {
+            flash_set('error', 'Elige el paquete y escribe el nombre y el WhatsApp (10 dígitos) del cliente.');
+            redirigir('/panel/paquetes');
+        }
+        // El cliente autoriza sus datos en el local al comprar (lo pide quien vende).
+        $clienteId = \App\Models\Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $bono = Bono::vender($paquete, $clienteId, (int) $negocio['usuario_id']);
+        redirigir('/panel/paquetes?vendido=' . $bono['token']);
+    }
+
+    private function exigirReservas(): array
+    {
+        $negocio = Auth::exigirSesion();
+        if (($negocio['tipo_negocio'] ?? 'pedidos') !== 'reservas') {
+            redirigir('/panel');
+        }
+
+        return $negocio;
     }
 
     private function exigirDuenoDePedidos(): array

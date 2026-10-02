@@ -559,6 +559,51 @@ CREATE TABLE IF NOT EXISTS resenas (
   INDEX idx_resenas_negocio (negocio_id, respondida_en)
 ) ENGINE=InnoDB;
 
+-- Paquetes y bonos de sesiones (ver migrations/2026-10-03_08_paquetes_bonos.sql).
+CREATE TABLE IF NOT EXISTS paquetes (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id        INT UNSIGNED      NOT NULL,
+  servicio_id    INT UNSIGNED      NOT NULL,
+  sesiones       TINYINT UNSIGNED  NOT NULL,
+  precio         INT UNSIGNED      NOT NULL,
+  vigencia_dias  SMALLINT UNSIGNED DEFAULT NULL,
+  activo         TINYINT(1)        NOT NULL DEFAULT 1,
+  creado_en      DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bonos (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id         INT UNSIGNED     NOT NULL,
+  paquete_id      INT UNSIGNED     DEFAULT NULL,
+  cliente_id      INT UNSIGNED     NOT NULL,
+  servicio_id     INT UNSIGNED     DEFAULT NULL,
+  nombre_servicio VARCHAR(120)     NOT NULL,
+  sesiones_total  TINYINT UNSIGNED NOT NULL,
+  precio_pagado   INT UNSIGNED     NOT NULL,
+  vence_en        DATE             DEFAULT NULL,
+  token           CHAR(32)         NOT NULL,
+  usuario_id      INT UNSIGNED     DEFAULT NULL,
+  creado_en       DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_bono_token (token),
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE SET NULL,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
+  INDEX idx_bonos_cliente (sede_id, cliente_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bono_usos (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  bono_id   INT UNSIGNED NOT NULL,
+  cita_id   INT UNSIGNED NOT NULL,
+  creado_en DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_bono_uso_cita (cita_id),
+  FOREIGN KEY (bono_id) REFERENCES bonos(id) ON DELETE CASCADE,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -576,4 +621,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_04_inventario.sql'),
   ('2026-10-03_05_combos.sql'),
   ('2026-10-03_06_cierres_caja.sql'),
-  ('2026-10-03_07_resenas.sql');
+  ('2026-10-03_07_resenas.sql'),
+  ('2026-10-03_08_paquetes_bonos.sql');

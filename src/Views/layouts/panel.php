@@ -19,6 +19,7 @@ $pqIconos = [
     'domicilios'     => '<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     'caja'           => '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V5h10v3"/><path d="M3 13h18"/><path d="M10 16.5h4"/>',
     'resenas'        => '<path d="M12 3.5l2.5 5.2 5.7.7-4.2 3.9 1.1 5.6L12 16.1l-5.1 2.8 1.1-5.6-4.2-3.9 5.7-.7L12 3.5Z"/>',
+    'paquetes'       => '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
     'fidelidad'      => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="7.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="16.5" cy="12" r="1.6"/>',
     'cupones'        => '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M9.5 14.5l5-5"/><circle cx="9.5" cy="9.5" r=".6"/><circle cx="14.5" cy="14.5" r=".6"/>',
     'servicios'      => '<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="M3 16l9 5 9-5M3 12l9 5 9-5"/>',
@@ -49,6 +50,7 @@ if ($tipoReservas) {
     $navOperacion[] = ['citas', 'Agenda', base_url('/panel/citas')];
     $navOperacion[] = ['recordatorios', 'Recordatorios', base_url('/panel/recordatorios')];
     $navOperacion[] = ['servicios', 'Servicios', base_url('/panel/servicios')];
+    $navOperacion[] = ['paquetes', 'Paquetes y bonos', base_url('/panel/paquetes')];
     if ($esDueno) {
         $navOperacion[] = ['empleados', 'Empleados', base_url('/panel/empleados')];
         $navOperacion[] = ['horario', 'Horario', base_url('/panel/horario')];

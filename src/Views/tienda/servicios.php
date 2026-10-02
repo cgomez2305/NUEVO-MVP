@@ -52,6 +52,35 @@
     </section>
   <?php endif; ?>
 
+  <?php if (!empty($paquetes)): ?>
+    <?php
+    // Paquetes: el ahorro solo si es real; se piden por WhatsApp (se pagan
+    // en el local) y después cada reserva con ese número usa una sesión.
+    $whatsappPaquetes = preg_replace('/\D+/', '', (string) ($negocio['whatsapp'] ?? '')) ?? '';
+    ?>
+    <section class="pq-carta pq-paquetes" aria-labelledby="titulo-paquetes">
+      <h2 class="pq-carta-titulo" id="titulo-paquetes">Paquetes</h2>
+      <ul class="pq-paquetes-lista">
+        <?php foreach ($paquetes as $paquete): ?>
+          <?php
+          $ahorro = (int) $paquete['precio_suelto'] - (int) $paquete['precio'];
+          $mensaje = 'Hola, quiero el paquete de ' . (int) $paquete['sesiones'] . ' ' . mb_strtolower((string) $paquete['servicio_nombre']) . ' por ' . pesos((int) $paquete['precio']) . '.';
+          ?>
+          <li class="pq-paquete">
+            <span class="pq-paquete-cuantas" aria-hidden="true"><?= (int) $paquete['sesiones'] ?><small>×</small></span>
+            <span class="pq-paquete-texto">
+              <strong><?= (int) $paquete['sesiones'] ?> <?= e(mb_strtolower((string) $paquete['servicio_nombre'])) ?></strong>
+              <span class="pq-ayuda"><?= pesos((int) $paquete['precio']) ?><?= $ahorro > 0 ? ' · ahorras ' . pesos($ahorro) : '' ?><?= $paquete['vigencia_dias'] !== null ? ' · se usan en ' . (int) $paquete['vigencia_dias'] . ' días' : '' ?></span>
+            </span>
+            <?php if ($whatsappPaquetes !== ''): ?>
+              <a class="pq-paquete-pedir" href="https://wa.me/57<?= e($whatsappPaquetes) ?>?text=<?= rawurlencode($mensaje) ?>" target="_blank" rel="noopener">Lo quiero</a>
+            <?php endif; ?>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <p class="pq-ayuda pq-paquetes-nota">Lo pagas en el local y luego, al reservar con tu WhatsApp, cada cita usa una sesión sola.</p>
+    </section>
+  <?php endif; ?>
   <?php require __DIR__ . '/_resenas.php'; ?>
   <?php require __DIR__ . '/_informacion.php'; ?>
 </main>

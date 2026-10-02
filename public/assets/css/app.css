@@ -4495,3 +4495,40 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-resenas-panel-acciones { display: inline-flex; gap: var(--esp-3); align-items: center; }
 .pq-resenas-panel-nota { margin-top: var(--esp-3); }
 .pq-detalle-secundarias form { display: contents; }
+
+/* ==========================================================================
+   PAQUETES Y BONOS
+   Tienda: cada paquete con el número grande de sesiones a la izquierda
+   (lo que se compra es "cuántas"). Panel: las sesiones de cada bono como
+   puntos, llenos los usados.
+   ========================================================================== */
+.pq-paquetes-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); background: #FFFDF8; }
+.pq-paquete { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); }
+.pq-paquete + .pq-paquete { border-top: 1px dashed var(--linea-tienda); }
+.pq-paquete-cuantas { flex: none; width: 48px; height: 48px; border-radius: var(--radio-m); display: grid; place-items: center; background: var(--marca-suave); color: var(--marca-texto); font: 800 22px/1 var(--fuente-titulo); font-variant-numeric: tabular-nums; }
+.pq-paquete-cuantas small { font-size: 13px; margin-left: 1px; }
+.pq-paquete-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pq-paquete-texto strong { color: var(--tinta); font-size: 15px; overflow-wrap: anywhere; }
+.pq-paquete-pedir { flex: none; min-height: 40px; display: inline-flex; align-items: center; padding: 0 var(--esp-3); border: 1.5px solid var(--marca-texto); border-radius: 999px; color: var(--marca-texto); font-weight: 700; font-size: 13.5px; text-decoration: none; }
+.pq-paquete-pedir:hover { background: var(--marca-suave); }
+.pq-paquetes-nota { margin: var(--esp-2) 0 0; }
+.pq-bono-tarjeta { margin-top: var(--esp-5); }
+.pq-bono-reservar { width: 100%; }
+
+.pq-paquetes-panel { display: grid; gap: var(--esp-8); margin-top: var(--esp-5); }
+@media (min-width: 1000px) { .pq-paquetes-panel { grid-template-columns: 1fr 1fr; align-items: start; } }
+.pq-paquetes-form { padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); }
+.pq-paquetes-opciones { border: 0; padding: 0; margin: 0; min-inline-size: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-paquetes-opciones legend { padding: 0; margin-bottom: var(--esp-2); }
+.pq-paquetes-opcion { display: flex; align-items: center; gap: var(--esp-3); min-height: 48px; padding: var(--esp-2) var(--esp-3); border: 1.5px solid var(--borde); border-radius: var(--radio-m); cursor: pointer; font-size: 14px; color: var(--carbon); }
+.pq-paquetes-opcion:has(input:checked) { border-color: var(--sello); background: var(--tinte-sello); }
+.pq-paquetes-opcion input { accent-color: var(--sello); width: 18px; height: 18px; flex: none; }
+.pq-paquetes-opcion .pq-mono { margin-left: var(--esp-1); color: var(--gris-texto); }
+.pq-bono-vendido { display: flex; flex-direction: column; gap: var(--esp-2); align-items: flex-start; margin: var(--esp-4) 0; padding: var(--esp-4); border: 1.5px dashed var(--caja); border-radius: var(--radio-m); background: var(--tinte-caja); }
+.pq-bono-vendido .pq-btn { width: auto; }
+.pq-bono-puntos { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.pq-bono-puntos > span:not(.pq-ayuda) { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--borde); }
+.pq-bono-puntos .pq-bono-punto-usado { background: var(--sello); border-color: var(--sello); }
+.pq-bono-puntos .pq-ayuda { margin-left: 4px; }
+.pq-paquetes-panel .pq-admin-fila { flex-wrap: nowrap; }
+.pq-paquetes-panel .pq-menu-kebab { flex: none; }

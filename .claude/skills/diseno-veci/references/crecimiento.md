@@ -149,3 +149,20 @@ N/M" o "le toca {premio}".
 - Panel `/panel/resenas`: promedio grande + barras por estrella (mostaza),
   lista con "Escribirle" y "Ocultar comentario". Ocultar quita el texto de
   la tienda pero las estrellas siguen contando: el promedio no se maquilla.
+
+## Paquetes y bonos de sesiones (`/panel/paquetes`, reservas)
+
+- Paquete = N sesiones de un servicio a un precio (y días para usarlo).
+  El dueño los arma; cualquiera del equipo **vende** un bono (el cliente
+  paga en el local) y le manda por WhatsApp el enlace `/bono/{token}`.
+- El bono copia servicio, sesiones y precio: cambiar o borrar el paquete
+  no le quita nada. Las sesiones usadas se cuentan de `bono_usos` (una fila
+  por cita): reservar con ese WhatsApp ese servicio usa una sola
+  (`Bono::paraCita`, el que vence primero), sin anticipo ni cupón; cancelar
+  la cita (negocio o cliente, `Cita::actualizarEstado`) la devuelve.
+- Tienda: sección "Paquetes" en servicios con el número grande de sesiones
+  (`.pq-paquete-cuantas`), ahorro solo si es real y "Lo quiero" por WhatsApp.
+  `/bono/{token}` reutiliza la tarjeta de sellos: las sesiones usadas llevan
+  el sello. Confirmación de la cita: "va por cuenta de tu bono: sesión 1 de 3".
+- Panel: vender (paquete como opciones, nombre, WhatsApp), lista de paquetes
+  con ahorro y vendidos, y bonos vendidos con las sesiones como puntos.

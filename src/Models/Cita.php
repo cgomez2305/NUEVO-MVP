@@ -194,6 +194,11 @@ class Cita
             'UPDATE citas SET estado = :estado WHERE id = :id AND sede_id = :sede_id'
         );
         $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
+        // Cancelada (por el negocio o por el cliente): si se pagó con un
+        // bono, la sesión vuelve al bono.
+        if ($estado === 'cancelada' && $stmt->rowCount() > 0) {
+            Bono::devolverPorCita($id);
+        }
     }
 
     /**

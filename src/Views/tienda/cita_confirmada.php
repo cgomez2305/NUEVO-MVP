@@ -31,6 +31,14 @@ $mostrarPago = !empty($negocio['llave_breb_valor']) && $cita['anticipo_estado'] 
     ?>
   <?php endif; ?>
 
+  <?php if (!empty($usoBono)): ?>
+    <?php $quedanBono = (int) $usoBono['sesiones_total'] - (int) $usoBono['usadas']; ?>
+    <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso">
+      Esta cita va por cuenta de tu bono: es la sesión <?= (int) $usoBono['usadas'] ?> de <?= (int) $usoBono['sesiones_total'] ?>.
+      <?= $quedanBono === 0 ? 'Era la última.' : ($quedanBono === 1 ? 'Te queda 1.' : 'Te quedan ' . $quedanBono . '.') ?>
+      <a href="<?= e(base_url('/bono/' . $usoBono['token'])) ?>">Ver mi bono</a>
+    </div>
+  <?php endif; ?>
   <?php if (!empty($tarjeta)): ?>
     <?php $pqSellos = $tarjeta['sellos']; $pqMeta = $tarjeta['meta']; $pqPremio = $tarjeta['premio']; $pqNuevo = $tarjeta['nuevo']; require __DIR__ . '/_tarjeta_sellos.php'; ?>
   <?php endif; ?>

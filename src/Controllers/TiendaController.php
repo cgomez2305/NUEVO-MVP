@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\Bono;
 use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
@@ -68,6 +69,7 @@ class TiendaController
                 'horario'          => horario_resumen($horarioSede),
                 'fidelidad'        => Fidelidad::activa((int) $negocio['negocio_id']),
                 'resenas'          => $this->resenasParaTienda($negocio),
+                'paquetes'         => Bono::paquetes((int) $negocio['id'], true),
                 'abiertoAhora'     => $abiertoAhora,
                 'proximaApertura'  => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
                 'disponibilidadHoy' => $disponibilidadHoy,
@@ -299,9 +301,16 @@ class TiendaController
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
         $anticipo = Servicio::calcularAnticipo($servicio);
 
-        $codigoCupon = Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? ''));
+        // Bono de sesiones: si el cliente tiene uno vigente de este servicio,
+        // la cita va por cuenta del bono (sin anticipo ni cupón).
+        $bono = Bono::paraCita((int) $negocio['id'], $clienteId, (int) $servicio['id'], $fecha);
+        $codigoCupon = $bono === null ? Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? '')) : '';
         $cuponUsado = null;
         $descuentoCita = 0;
+        if ($bono !== null) {
+            $descuentoCita = (int) $servicio['precio'];
+            $anticipo = 0;
+        }
         if ($codigoCupon !== '') {
             $cuponUsado = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigoCupon);
             $evaluacion = Cupon::evaluar($cuponUsado, (int) $servicio['precio'], $clienteId);
@@ -331,6 +340,11 @@ class TiendaController
         if ($cuponUsado !== null && $descuentoCita > 0) {
             Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $descuentoCita, null, $citaId);
         }
+        $usoBono = null;
+        if ($bono !== null) {
+            Bono::usar((int) $bono['id'], $citaId);
+            $usoBono = Bono::usoDeCita($citaId);
+        }
 
         WebPush::notificarSede(
             (int) $negocio['id'],
@@ -343,7 +357,8 @@ class TiendaController
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
             . 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita)
             . ($descuentoCita > 0 ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
-            . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '');
+            . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '')
+            . ($usoBono !== null ? "\nCon bono: sesión {$usoBono['usadas']} de {$usoBono['sesiones_total']}" : '');
         $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $servicio['precio'] - $descuentoCita);
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
@@ -358,6 +373,7 @@ class TiendaController
             'cita'           => $cita,
             'enlaceWhatsapp' => $enlaceWhatsapp,
             'tarjeta'        => $tarjeta,
+            'usoBono'        => $usoBono,
         ], 'tienda');
     }
 
@@ -799,6 +815,22 @@ class TiendaController
         }
         Resena::responder((int) $resena['id'], $estrellas, (string) ($_POST['comentario'] ?? ''));
         redirigir($volver);
+    }
+
+    /** /bono/{token}: el cliente ve cuántas sesiones le quedan y reserva la siguiente. */
+    public function verBono(array $parametros): void
+    {
+        $bono = Bono::buscarPorToken((string) $parametros['token']);
+        if ($bono === null) {
+            abortar404();
+        }
+        $sede = Sede::buscarPorId((int) $bono['sede_id']);
+
+        ver('tienda/bono', [
+            'titulo'  => 'Tu bono · ' . nombre_publico_sede($sede),
+            'negocio' => $sede,
+            'bono'    => $bono,
+        ], 'tienda');
     }
 
     public function gestionarCita(array $parametros): void
