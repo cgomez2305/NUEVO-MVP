@@ -73,11 +73,19 @@ $estaAtrasado = $contexto !== null && $segmento === 'inactivo' && $contexto['fre
     </form>
   </div>
 
-  <form method="get" action="<?= e($cliente['telefono'] ? $waBase : '#') ?>" class="pq-wa-form">
+  <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/whatsapp')) ?>" class="pq-wa-form">
+    <?= csrf_campo() ?>
+    <input type="hidden" name="descuento" value="<?= (int) $descuento ?>">
     <div class="pq-wa-fondo">
       <label class="pq-sr-solo" for="mensaje-copiloto">Texto del mensaje</label>
       <textarea name="text" id="mensaje-copiloto" class="pq-burbuja-out pq-wa-editable" rows="4" maxlength="500" data-contador><?= e($mensaje) ?></textarea>
     </div>
+    <?php if ($cupon !== null): ?>
+      <p class="pq-wa-cupon">
+        <span class="pq-wa-cupon-codigo pq-mono"><?= e($cupon['codigo']) ?></span>
+        <span class="pq-ayuda">Cupón personal de <?= (int) $descuento ?>%: solo sirve con su número de WhatsApp, una vez, hasta el <?= e(fecha_larga($cupon['vence_en'])) ?>. Se crea al abrir WhatsApp.</span>
+      </p>
+    <?php endif; ?>
     <p class="pq-ayuda pq-wa-nota">Puedes editarlo. Veci nunca ofrece descuentos por su cuenta: solo si los eliges arriba.</p>
     <div class="pq-wa-secundarias">
       <a href="<?= e($urlActual) ?>" class="pq-enlace-boton">Otra versión</a>

@@ -189,6 +189,8 @@ CREATE TABLE IF NOT EXISTS pedidos (
   sede_id       INT UNSIGNED NOT NULL,
   cliente_id    INT UNSIGNED NOT NULL,
   total         INT UNSIGNED NOT NULL,
+  descuento     INT UNSIGNED NOT NULL DEFAULT 0,
+  cupon_codigo  VARCHAR(20)  DEFAULT NULL,
   metodo_pago   ENUM('breb','nequi','efectivo') NOT NULL DEFAULT 'breb',
   tipo_entrega  ENUM('domicilio','recoger','mesa') NOT NULL DEFAULT 'domicilio',
   direccion     VARCHAR(255) DEFAULT NULL,
@@ -284,6 +286,8 @@ CREATE TABLE IF NOT EXISTS citas (
   empleado_id   INT UNSIGNED DEFAULT NULL,
   nombre_servicio VARCHAR(120) NOT NULL,
   precio        INT UNSIGNED NOT NULL,
+  descuento     INT UNSIGNED NOT NULL DEFAULT 0,
+  cupon_codigo  VARCHAR(20)  DEFAULT NULL,
   fecha_hora    DATETIME     NOT NULL,
   duracion_min  SMALLINT UNSIGNED NOT NULL DEFAULT 30,
   estado        ENUM('pendiente','confirmada','completada','cancelada')
@@ -405,3 +409,62 @@ CREATE TABLE IF NOT EXISTS usos_ia (
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   INDEX idx_usos_ia_negocio_fecha (negocio_id, creado_en)
 ) ENGINE=InnoDB;
+
+-- Cupones de descuento del negocio.
+--
+-- Dos orígenes:
+--   'panel'    el dueño crea un código para todos (VECI10, DIADELAMADRE…)
+--              y lo comparte en sus estados o redes.
+--   'copiloto' cupón personal que nace cuando el dueño le manda a un
+--              cliente un mensaje con descuento desde el copiloto: solo
+--              sirve para ese cliente (cliente_id) y una vez.
+--
+-- valor: porcentaje (1–90) si tipo = 'porcentaje'; pesos si tipo = 'monto'.
+-- usos_maximos NULL = sin tope. vence_en NULL = no vence.
+CREATE TABLE IF NOT EXISTS cupones (
+  id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id           INT UNSIGNED NOT NULL,
+  codigo               VARCHAR(20)  NOT NULL,
+  tipo                 ENUM('porcentaje','monto') NOT NULL DEFAULT 'porcentaje',
+  valor                INT UNSIGNED NOT NULL,
+  minimo_compra        INT UNSIGNED NOT NULL DEFAULT 0,
+  vence_en             DATE         DEFAULT NULL,
+  usos_maximos         INT UNSIGNED DEFAULT NULL,
+  una_vez_por_cliente  TINYINT(1)   NOT NULL DEFAULT 1,
+  cliente_id           INT UNSIGNED DEFAULT NULL,
+  origen               ENUM('panel','copiloto') NOT NULL DEFAULT 'panel',
+  activo               TINYINT(1)   NOT NULL DEFAULT 1,
+  creado_en            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_cupon_codigo (negocio_id, codigo)
+) ENGINE=InnoDB;
+
+-- Cada vez que un cupón se usó, en un pedido o en una cita.
+CREATE TABLE IF NOT EXISTS cupon_usos (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  cupon_id    INT UNSIGNED NOT NULL,
+  cliente_id  INT UNSIGNED NOT NULL,
+  pedido_id   INT UNSIGNED DEFAULT NULL,
+  cita_id     INT UNSIGNED DEFAULT NULL,
+  descuento   INT UNSIGNED NOT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cupon_id) REFERENCES cupones(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE,
+  INDEX idx_cupon_usos_cupon (cupon_id, cliente_id)
+) ENGINE=InnoDB;
+
+-- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
+-- instalación nueva nace al día y el migrador no intenta repetirlas.
+CREATE TABLE IF NOT EXISTS migraciones (
+  nombre      VARCHAR(190) PRIMARY KEY,
+  aplicada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+INSERT IGNORE INTO migraciones (nombre) VALUES
+  ('2026-10-01_acepta_mesa_acepta_marketing.sql'),
+  ('2026-10-01_blindaje_planes.sql'),
+  ('2026-10-01_planes_suscripciones.sql'),
+  ('2026-10-01_sedes_direccion.sql'),
+  ('2026-10-03_01_cupones.sql');

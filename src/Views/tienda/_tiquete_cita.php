@@ -25,6 +25,18 @@ $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
         <span class="pq-comanda-subtotal"><?= pesos((int) $cita['precio']) ?></span>
       </div>
     </div>
+    <?php if ((int) ($cita['descuento'] ?? 0) > 0): ?>
+      <div class="pq-comanda-ajuste pq-comanda-ajuste-cupon">
+        <span><?= !empty($cita['cupon_codigo']) ? 'Cupón <strong>' . e($cita['cupon_codigo']) . '</strong>' : 'Descuento' ?></span>
+        <span class="pq-plato-guia" aria-hidden="true"></span>
+        <span>−<?= pesos((int) $cita['descuento']) ?></span>
+      </div>
+      <div class="pq-comanda-ajuste">
+        <span><strong>A pagar</strong></span>
+        <span class="pq-plato-guia" aria-hidden="true"></span>
+        <span><strong><?= pesos((int) $cita['precio'] - (int) $cita['descuento']) ?></strong></span>
+      </div>
+    <?php endif; ?>
     <dl class="pq-comanda-datos">
       <div>
         <dt>Duración</dt>

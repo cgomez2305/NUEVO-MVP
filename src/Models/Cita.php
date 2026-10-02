@@ -20,15 +20,17 @@ class Cita
         int $duracionMin,
         ?string $notas = null,
         ?int $empleadoId = null,
-        int $anticipoMonto = 0
+        int $anticipoMonto = 0,
+        int $descuento = 0,
+        ?string $cuponCodigo = null
     ): int {
         $pdo = Database::conexion();
         $token = bin2hex(random_bytes(16));
         $anticipoEstado = $anticipoMonto > 0 ? 'pendiente' : 'no_requerido';
 
         $stmt = $pdo->prepare(
-            'INSERT INTO citas (sede_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
-             VALUES (:sede_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
+            'INSERT INTO citas (sede_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, descuento, cupon_codigo, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
+             VALUES (:sede_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :descuento, :cupon_codigo, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
         );
         $stmt->execute([
             'sede_id'      => $sedeId,
@@ -37,6 +39,8 @@ class Cita
             'empleado_id'     => $empleadoId,
             'nombre_servicio' => $nombreServicio,
             'precio'          => $precio,
+            'descuento'       => max(0, min($precio, $descuento)),
+            'cupon_codigo'    => $cuponCodigo,
             'fecha_hora'      => $fechaHora,
             'duracion_min'    => $duracionMin,
             'pendiente'       => 'pendiente',
@@ -256,7 +260,7 @@ class Cita
     public static function ventasHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT COALESCE(SUM(precio), 0) AS total FROM citas
+            'SELECT COALESCE(SUM(precio - descuento), 0) AS total FROM citas
              WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
         );
         $stmt->execute(['sede_id' => $sedeId]);
@@ -274,7 +278,7 @@ class Cita
         $stmt = Database::conexion()->prepare(
             'SELECT
                 COUNT(*) AS citas,
-                COALESCE(SUM(c.precio), 0) AS ventas,
+                COALESCE(SUM(c.precio - c.descuento), 0) AS ventas,
                 COUNT(DISTINCT CASE WHEN historico.total_citas >= 2 THEN c.cliente_id END) AS recurrentes
              FROM citas c
              JOIN (SELECT cliente_id, COUNT(*) AS total_citas FROM citas WHERE sede_id = :sede_id_h GROUP BY cliente_id) historico

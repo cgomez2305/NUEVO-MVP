@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Models\Cita;
 use App\Models\Cliente;
+use App\Models\Cupon;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
 use App\Models\LimiteTasa;
@@ -289,6 +290,19 @@ class TiendaController
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
         $anticipo = Servicio::calcularAnticipo($servicio);
 
+        $codigoCupon = Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? ''));
+        $cuponUsado = null;
+        $descuentoCita = 0;
+        if ($codigoCupon !== '') {
+            $cuponUsado = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigoCupon);
+            $evaluacion = Cupon::evaluar($cuponUsado, (int) $servicio['precio'], $clienteId);
+            if (!$evaluacion['ok']) {
+                flash_set('error', 'Cupón ' . $codigoCupon . ': ' . $evaluacion['mensaje']);
+                redirigir($volverAReservar . '&hora=' . rawurlencode($hora));
+            }
+            $descuentoCita = $evaluacion['descuento'];
+        }
+
         $this->registrarTasaPublica('cita', $negocio);
         $citaId = Cita::crear(
             (int) $negocio['id'],
@@ -301,8 +315,13 @@ class TiendaController
             null,
             $empleadoId,
             $anticipo,
+            $descuentoCita,
+            $cuponUsado['codigo'] ?? null,
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
+        if ($cuponUsado !== null && $descuentoCita > 0) {
+            Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $descuentoCita, null, $citaId);
+        }
 
         WebPush::notificarSede(
             (int) $negocio['id'],
@@ -313,7 +332,8 @@ class TiendaController
 
         $resumenTexto = "Reserva nueva de {$nombre}:\n"
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
-            . 'Valor: ' . pesos((int) $servicio['precio'])
+            . 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita)
+            . ($descuentoCita > 0 ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
             . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '');
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
@@ -495,8 +515,13 @@ class TiendaController
             'cantidad'    => $linea['cantidad'],
             'subtotal'    => (int) $linea['producto']['precio'] * $linea['cantidad'],
         ], $carrito['lineas']);
+        // Las líneas de ajuste de la comanda (subtotal, cupón, domicilio) las
+        // arma el mismo parcial que la página: así el JS no repite reglas.
+        ob_start();
+        require __DIR__ . '/../Views/tienda/_comanda_ajustes.php';
+        $ajustesHtml = (string) ob_get_clean();
         header('Content-Type: application/json');
-        echo json_encode(['cantidad' => $carrito['cantidad'], 'total' => $carrito['total'], 'lineas' => $lineas]);
+        echo json_encode(['cantidad' => $carrito['cantidad'], 'total' => $carrito['total'], 'lineas' => $lineas, 'ajustes_html' => $ajustesHtml]);
     }
 
     public function verCarrito(array $parametros): void
@@ -510,6 +535,8 @@ class TiendaController
             'negocio' => $negocio,
             'carrito' => $carrito,
             'error'   => flash_obtener('error'),
+            'errorCupon'   => flash_obtener('error_cupon'),
+            'cuponEscrito' => flash_obtener('cupon_escrito'),
         ], 'tienda');
     }
 
@@ -574,6 +601,21 @@ class TiendaController
 
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing);
 
+        // El cupón se revisa otra vez, ahora con el cliente: si es personal
+        // de otro número o ya lo usó, se le devuelve al carrito explicando.
+        $ajustes = ['descuento' => 0, 'cupon_codigo' => null];
+        $cuponUsado = null;
+        if ($carrito['cupon'] !== null) {
+            $cuponUsado = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $carrito['cupon']['codigo']);
+            $evaluacion = Cupon::evaluar($cuponUsado, $carrito['subtotal'], $clienteId);
+            if (!$evaluacion['ok']) {
+                unset($_SESSION['cupon'][(int) $negocio['id']]);
+                flash_set('error', $evaluacion['mensaje'] . ' Quitamos el cupón: revisa el total y vuelve a enviar.');
+                redirigir('/t/' . $negocio['slug'] . '/carrito');
+            }
+            $ajustes = ['descuento' => $evaluacion['descuento'], 'cupon_codigo' => $cuponUsado['codigo']];
+        }
+
         $items = array_map(fn ($linea) => [
             'producto_id' => $linea['producto']['id'],
             'nombre'      => $linea['producto']['nombre'],
@@ -582,8 +624,12 @@ class TiendaController
         ], $carrito['lineas']);
 
         $this->registrarTasaPublica('pedido', $negocio);
-        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas);
+        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas, $ajustes);
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
+        if ($cuponUsado !== null && $ajustes['descuento'] > 0) {
+            Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $ajustes['descuento'], $pedidoId);
+        }
+        unset($_SESSION['cupon'][(int) $negocio['id']]);
 
         $etiquetaEntrega = match ($tipoEntrega) {
             'recoger' => 'recoge en el local',
@@ -601,6 +647,9 @@ class TiendaController
         $resumenTexto = "Pedido nuevo de {$nombre}:\n";
         foreach ($items as $item) {
             $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}\n";
+        }
+        if ((int) $pedido['descuento'] > 0) {
+            $resumenTexto .= 'Descuento' . ($pedido['cupon_codigo'] ? " (cupón {$pedido['cupon_codigo']})" : '') . ': -' . pesos((int) $pedido['descuento']) . "\n";
         }
         $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']) . "\n";
         $resumenTexto .= match ($tipoEntrega) {
@@ -844,6 +893,63 @@ class TiendaController
             $total += (int) $producto['precio'] * $cantidad;
         }
 
-        return ['lineas' => $lineas, 'cantidad' => $cantidadTotal, 'total' => $total];
+        // Cupón aplicado en esta sesión: se revisa con el subtotal actual
+        // (si el cliente quita productos y ya no alcanza el mínimo, se le
+        // dice por qué dejó de aplicar en vez de quitarlo en silencio).
+        $cupon = null;
+        $descuento = 0;
+        $codigo = $_SESSION['cupon'][(int) $negocio['id']] ?? null;
+        if (is_string($codigo) && $codigo !== '' && $lineas !== []) {
+            $registro = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigo);
+            $evaluacion = Cupon::evaluar($registro, $total);
+            $descuento = $evaluacion['descuento'];
+            $cupon = [
+                'codigo'   => $codigo,
+                'etiqueta' => $registro !== null ? Cupon::etiqueta($registro) : '',
+                'ok'       => $evaluacion['ok'],
+                'mensaje'  => $evaluacion['mensaje'],
+            ];
+        }
+
+        return [
+            'lineas'    => $lineas,
+            'cantidad'  => $cantidadTotal,
+            'subtotal'  => $total,
+            'descuento' => $descuento,
+            'cupon'     => $cupon,
+            'total'     => $total - $descuento,
+        ];
+    }
+
+    /** Aplica un cupón al carrito de esta sesión (se vuelve a validar al pedir, ya con el cliente). */
+    public function aplicarCupon(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+
+        if (csrf_verificar()) {
+            $codigo = Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? ''));
+            $productos = Producto::listarPorSede((int) $negocio['id'], true);
+            $subtotal = $this->resumenCarrito($negocio, $productos)['subtotal'];
+            $evaluacion = Cupon::evaluar(Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigo), $subtotal);
+            if ($codigo === '') {
+                flash_set('error_cupon', 'Escribe el código del cupón.');
+            } elseif (!$evaluacion['ok']) {
+                flash_set('error_cupon', $evaluacion['mensaje']);
+                flash_set('cupon_escrito', $codigo);
+            } else {
+                $_SESSION['cupon'][(int) $negocio['id']] = $codigo;
+            }
+        }
+
+        redirigir('/t/' . $negocio['slug'] . '/carrito');
+    }
+
+    public function quitarCupon(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+        if (csrf_verificar()) {
+            unset($_SESSION['cupon'][(int) $negocio['id']]);
+        }
+        redirigir('/t/' . $negocio['slug'] . '/carrito');
     }
 }

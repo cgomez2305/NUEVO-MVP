@@ -30,6 +30,7 @@ $nombreNegocio = nombre_publico_sede($negocio);
           </div>
         </div>
       <?php endforeach; ?>
+      <?php require __DIR__ . '/_pedido_ajustes.php'; ?>
       <div class="pq-comanda-total">
         <span>Total</span>
         <span><?= pesos((int) $pedido['total']) ?></span>

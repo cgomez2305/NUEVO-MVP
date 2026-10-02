@@ -66,6 +66,8 @@
             </div>
           <?php endforeach; ?>
 
+          <div id="pq-comanda-ajustes"><?php require __DIR__ . '/_comanda_ajustes.php'; ?></div>
+
           <div class="pq-comanda-total">
             <span>Total</span>
             <span id="pq-carrito-total"><?= pesos($carrito['total']) ?></span>
@@ -73,6 +75,22 @@
           <p class="pq-comanda-nota" data-mostrar-si="tipo_entrega=domicilio">Si el domicilio tiene costo, el negocio te lo confirma por WhatsApp: no está sumado arriba.</p>
         </div>
       </div>
+      <?php if ($carrito['cupon'] === null): ?>
+        <?php
+        // El cupón se escribe en un recorte punteado bajo la comanda: está
+        // a la mano para quien lo tiene y no estorba a quien no.
+        ?>
+        <details class="pq-cupon-entrada"<?= !empty($errorCupon) ? ' open' : '' ?>>
+          <summary>¿Tienes un cupón de descuento?</summary>
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/cupon')) ?>" class="pq-cupon-form">
+            <?= csrf_campo() ?>
+            <label class="pq-sr-solo" for="cupon">Código del cupón</label>
+            <input class="pq-input<?= !empty($errorCupon) ? ' pq-input-invalido' : '' ?>" type="text" id="cupon" name="cupon" value="<?= e($cuponEscrito ?? '') ?>" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VECI10"<?= !empty($errorCupon) ? ' aria-describedby="cupon-error" aria-invalid="true"' : '' ?>>
+            <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico">Aplicar</button>
+          </form>
+          <?php if (!empty($errorCupon)): ?><p class="pq-campo-error" id="cupon-error"><?= e($errorCupon) ?></p><?php endif; ?>
+        </details>
+      <?php endif; ?>
       <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-comanda-seguir">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         Agregar algo más

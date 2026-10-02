@@ -258,6 +258,15 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
           </div>
         </div>
 
+        <details class="pq-cupon-entrada pq-cupon-entrada-reserva"<?= !empty($error) && str_starts_with((string) $error, 'Cupón') ? ' open' : '' ?>>
+          <summary>¿Tienes un cupón de descuento?</summary>
+          <div class="pq-cupon-form">
+            <label class="pq-sr-solo" for="cupon">Código del cupón</label>
+            <input class="pq-input" type="text" id="cupon" name="cupon" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VECI10">
+          </div>
+          <p class="pq-ayuda pq-cupon-nota">Se descuenta del valor del servicio al confirmar.</p>
+        </details>
+
         <label class="pq-consentimiento pq-consentimiento-requerido">
           <input type="checkbox" name="autorizo_datos" value="1" required>
           <span>

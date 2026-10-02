@@ -8,6 +8,7 @@ use App\Auth;
 use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Copiloto;
+use App\Models\Cupon;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
 use App\Models\ListaEspera;
@@ -941,7 +942,8 @@ class PanelController
 
         $segmento = $this->segmentoValido($_GET['segmento'] ?? null);
         $descuento = $this->descuentoValido($_GET['descuento'] ?? null);
-        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento, $descuento);
+        $cupon = $descuento > 0 ? $this->cuponCopiloto($negocioId, (int) $cliente['id'], $descuento) : null;
+        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
 
         $clienteId = (int) $cliente['id'];
@@ -957,6 +959,7 @@ class PanelController
             'cliente'        => $cliente,
             'segmento'       => $segmento,
             'descuento'      => $descuento,
+            'cupon'          => $cupon,
             'mensaje'        => $mensaje,
             'waBase'         => 'https://wa.me/57' . $telefonoWa,
             'contexto'       => Copiloto::contextoCliente($negocioId, $clienteId, $negocio['tipo_negocio']),
@@ -976,16 +979,82 @@ class PanelController
             $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
             if ($cliente !== null) {
                 $descuento = $this->descuentoValido($_POST['descuento'] ?? null);
+                // "Ya le escribí" también vale si copió el texto en vez de
+                // usar el botón de WhatsApp: el cupón que nombra tiene que existir.
+                $cupon = $descuento > 0 ? $this->crearCuponCopiloto((int) $negocio['negocio_id'], (int) $cliente['id'], $descuento) : null;
                 Copiloto::registrarEnvio(
                     (int) $negocio['negocio_id'],
                     (int) $cliente['id'],
-                    Copiloto::mensajeSugerido($cliente, $segmento, $descuento)
+                    Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null)
                 );
                 flash_set('ok', 'Quedó registrado el contacto con ' . $cliente['nombre'] . ' hoy.');
             }
         }
 
         redirigir('/panel/copiloto?segmento=' . $segmento);
+    }
+
+    /**
+     * El botón "Abrir WhatsApp" pasa por aquí antes de ir a wa.me: con
+     * descuento, crea el cupón personal que el mensaje nombra (no antes: ver
+     * otra versión o cambiar el % no deja cupones sueltos) y luego abre el
+     * chat con el texto tal como el dueño lo dejó.
+     */
+    public function abrirWhatsappCopiloto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $cliente = Cliente::buscar((int) $parametros['cliente'], $negocioId);
+
+        if ($cliente === null || !csrf_verificar()) {
+            redirigir('/panel/copiloto');
+        }
+
+        $descuento = $this->descuentoValido($_POST['descuento'] ?? null);
+        if ($descuento > 0) {
+            $this->crearCuponCopiloto($negocioId, (int) $cliente['id'], $descuento);
+        }
+        $texto = mb_substr(trim((string) ($_POST['text'] ?? '')), 0, 500);
+        $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
+
+        header('Location: https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($texto));
+        exit;
+    }
+
+    /**
+     * Código y vencimiento que el mensaje va a nombrar: el del cupón personal
+     * que ya tiene sin usar, o uno reservado en la sesión (todavía sin crear)
+     * para que "Otra versión" y recargar no cambien el código a cada rato.
+     *
+     * @return array{codigo: string, vence_en: string}
+     */
+    private function cuponCopiloto(int $negocioId, int $clienteId, int $porcentaje): array
+    {
+        $vigente = Cupon::personalVigente($negocioId, $clienteId, $porcentaje);
+        if ($vigente !== null) {
+            return ['codigo' => (string) $vigente['codigo'], 'vence_en' => (string) $vigente['vence_en']];
+        }
+        $codigo = $_SESSION['copiloto_cupon'][$clienteId][$porcentaje] ?? null;
+        if (!is_string($codigo) || Cupon::existeCodigo($negocioId, $codigo)) {
+            do {
+                $codigo = Cupon::codigoAleatorio('VUELVE');
+            } while (Cupon::existeCodigo($negocioId, $codigo));
+            $_SESSION['copiloto_cupon'][$clienteId][$porcentaje] = $codigo;
+        }
+
+        return ['codigo' => $codigo, 'vence_en' => date('Y-m-d', strtotime('+' . Cupon::DIAS_COPILOTO . ' days'))];
+    }
+
+    /** @return array<string, mixed> el cupón personal ya guardado */
+    private function crearCuponCopiloto(int $negocioId, int $clienteId, int $porcentaje): array
+    {
+        $reservado = $this->cuponCopiloto($negocioId, $clienteId, $porcentaje);
+        $cupon = Cupon::asegurarPersonal($negocioId, $clienteId, $porcentaje, $reservado['codigo']);
+        unset($_SESSION['copiloto_cupon'][$clienteId][$porcentaje]);
+
+        return $cupon;
     }
 
     /** Todas las sedes del negocio, con el botón para cambiar de una a otra. Cualquier rol puede entrar. */

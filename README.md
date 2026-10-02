@@ -160,9 +160,16 @@ lo vuelvas a importar sobre una base que ya tiene datos. Cuando una
 actualización del código agrega columnas o tablas, el cambio queda
 también como un archivo en `database/migrations/` (nombrado por fecha)
 que solo tiene el `ALTER TABLE`/`CREATE TABLE` necesario. Para aplicarlo:
-con un backup reciente a mano, cPanel → phpMyAdmin → tu base → pestaña
-*Import* → sube ese archivo (o pégalo en la pestaña *SQL* y ejecútalo).
-Cada migración se aplica una sola vez.
+con un backup reciente a mano, corre:
+
+```bash
+php bin/migrar.php
+```
+
+Aplica en orden las migraciones que falten y las anota en la tabla
+`migraciones`; correrlo otra vez no hace nada. Sin consola (hosting solo
+con cPanel), sube cada archivo pendiente en phpMyAdmin → tu base →
+*Import*, en orden de nombre, una sola vez.
 
 ## Recuperación de contraseña, panel interno y legal
 

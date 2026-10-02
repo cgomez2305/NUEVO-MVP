@@ -36,7 +36,12 @@ class Pedido
     }
 
     /**
+     * $ajustes: lo que cambia el total además de los productos —
+     *   descuento (pesos, por cupón y/o premio de fidelidad) y cupon_codigo.
+     * total = suma de los productos − descuento (nunca negativo).
+     *
      * @param array<int, array{producto_id:int, nombre:string, precio:int, cantidad:int}> $items
+     * @param array{descuento?:int, cupon_codigo?:?string} $ajustes
      */
     public static function crear(
         int $sedeId,
@@ -46,22 +51,27 @@ class Pedido
         string $tipoEntrega = 'domicilio',
         ?string $direccion = null,
         ?string $mesa = null,
-        ?string $notas = null
+        ?string $notas = null,
+        array $ajustes = []
     ): int {
         $pdo = Database::conexion();
-        $total = array_sum(array_map(fn ($it) => $it['precio'] * $it['cantidad'], $items));
+        $subtotal = array_sum(array_map(fn ($it) => $it['precio'] * $it['cantidad'], $items));
+        $descuento = max(0, min($subtotal, (int) ($ajustes['descuento'] ?? 0)));
+        $total = $subtotal - $descuento;
 
         $pdo->beginTransaction();
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO pedidos (sede_id, cliente_id, total, metodo_pago, tipo_entrega, direccion, mesa, notas, estado)
-                 VALUES (:sede_id, :cliente_id, :total, :metodo_pago, :tipo_entrega, :direccion, :mesa, :notas, :pendiente)'
+                'INSERT INTO pedidos (sede_id, cliente_id, total, descuento, cupon_codigo, metodo_pago, tipo_entrega, direccion, mesa, notas, estado)
+                 VALUES (:sede_id, :cliente_id, :total, :descuento, :cupon_codigo, :metodo_pago, :tipo_entrega, :direccion, :mesa, :notas, :pendiente)'
             );
             $stmt->execute([
                 'sede_id'      => $sedeId,
                 'cliente_id'   => $clienteId,
                 'total'        => $total,
+                'descuento'    => $descuento,
+                'cupon_codigo' => $ajustes['cupon_codigo'] ?? null,
                 'metodo_pago'  => $metodoPago,
                 'tipo_entrega' => $tipoEntrega,
                 'direccion'    => $tipoEntrega === 'domicilio' ? $direccion : null,

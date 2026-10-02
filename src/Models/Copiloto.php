@@ -49,10 +49,20 @@ class Copiloto
      * que el copiloto inventa solo: si viene en 0, el mensaje no promete
      * ningún descuento.
      */
-    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo', int $descuentoPct = 0): string
+    /**
+     * Con descuento, el mensaje lleva el código del cupón personal (ver
+     * Cupon::asegurarPersonal): sin código el cliente no tiene cómo cobrarlo
+     * en la tienda, y "tienes 10%" quedaba como una promesa de palabra.
+     */
+    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo', int $descuentoPct = 0, ?string $codigo = null, ?string $venceEn = null): string
     {
         $nombreParaSaludo = self::nombreParaSaludo((string) $cliente['nombre']);
-        $fraseDescuento = $descuentoPct > 0 ? "Tienes {$descuentoPct}% en tu próximo pedido." : null;
+        $fraseDescuento = null;
+        if ($descuentoPct > 0) {
+            $fraseDescuento = $codigo !== null
+                ? "Tienes {$descuentoPct}% en tu próxima compra con el código {$codigo}" . ($venceEn !== null ? ' (vale hasta el ' . fecha_larga($venceEn) . ').' : '.')
+                : "Tienes {$descuentoPct}% en tu próxima compra.";
+        }
 
         $partes = match ($segmento) {
             'vip'   => [

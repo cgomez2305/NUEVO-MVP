@@ -67,6 +67,7 @@ $selloTono = match ($pedido['estado']) {
         </div>
       </div>
     <?php endforeach; ?>
+    <?php require __DIR__ . '/../tienda/_pedido_ajustes.php'; ?>
     <div class="pq-comanda-total">
       <span>Total</span>
       <span><?= pesos((int) $pedido['total']) ?></span>

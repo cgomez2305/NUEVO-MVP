@@ -152,6 +152,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/admin.md` — panel interno del equipo de Veci: sello
   "Interno", consignación de pagos por confirmar, lista con filtros y
   ficha del negocio con la zona delicada al final.
+- `references/crecimiento.md` — herramientas de crecimiento del dueño
+  (cupones como tiquete recortable, cupón personal del Copiloto) y sus
+  reglas de negocio.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 

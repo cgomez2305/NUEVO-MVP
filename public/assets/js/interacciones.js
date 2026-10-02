@@ -214,6 +214,8 @@
     }
 
     total.textContent = formatearPesos(carrito.total);
+    var ajustes = document.getElementById('pq-comanda-ajustes');
+    if (ajustes && typeof carrito.ajustes_html === 'string') ajustes.innerHTML = carrito.ajustes_html;
     var cuentaComanda = document.getElementById('pq-comanda-cuenta');
     if (cuentaComanda) cuentaComanda.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos');
     var stickyTotal = document.getElementById('pq-checkout-sticky-total');

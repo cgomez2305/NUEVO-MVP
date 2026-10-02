@@ -4078,3 +4078,120 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
   .pq-admin-hoja { max-width: 1120px; min-height: calc(100vh - 64px); margin: 0 auto; border-radius: 22px; overflow: clip; box-shadow: 0 30px 70px -30px rgba(32, 33, 36, .28); }
   .pq-admin-cabeza { padding: var(--esp-4) var(--esp-6); }
 }
+
+/* =====================================================================
+   CUPONES · tienda
+   El descuento es una línea más de la comanda (con sus puntos guía) y el
+   cupón se escribe en un recorte punteado con tijeras bajo el papel.
+   ===================================================================== */
+.pq-comanda-ajuste { display: flex; align-items: baseline; gap: var(--esp-2); padding: 3px 0; font-size: 14px; color: var(--texto-calido); }
+.pq-comanda-ajuste > span:last-child { flex-shrink: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-comanda-ajuste-cupon { color: var(--marca-texto); font-weight: 600; }
+.pq-comanda-ajuste-aviso { color: #8a5a00; }
+.pq-comanda-nota-aviso { color: #8a5a00; }
+.pq-comanda-quitar-cupon { margin: 0 0 var(--esp-2); }
+.pq-comanda-quitar-cupon button { min-height: 32px; padding: 0; border: 0; background: none; color: var(--texto-tenue); font: 600 12.5px/1 var(--fuente-texto); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pq-cupon-entrada { margin-top: var(--esp-3); padding: 0 var(--esp-3); border: 1.5px dashed var(--linea-tienda); border-radius: var(--radio-m); background: var(--papel); }
+.pq-cupon-entrada > summary { display: flex; align-items: center; gap: var(--esp-2); min-height: 44px; list-style: none; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--tinta); }
+.pq-cupon-entrada > summary::-webkit-details-marker { display: none; }
+.pq-cupon-entrada > summary::before { content: "✂"; color: var(--marca-texto); font-size: 16px; transform: rotate(-90deg); }
+.pq-cupon-entrada > summary:focus-visible { outline: 2px solid var(--marca-texto); outline-offset: 2px; border-radius: 6px; }
+.pq-cupon-form { display: flex; gap: var(--esp-2); padding-bottom: var(--esp-3); }
+.pq-cupon-form .pq-input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.pq-cupon-form .pq-btn { width: auto; flex-shrink: 0; }
+.pq-cupon-entrada .pq-campo-error { margin: calc(var(--esp-1) * -1) 0 var(--esp-3); }
+.pq-cupon-entrada-reserva { margin: 0 0 var(--esp-4); }
+.pq-cupon-nota { margin: calc(var(--esp-1) * -1) 0 var(--esp-3); }
+
+/* ==========================================================================
+   CUPONES · panel
+   El cupón es un tiquete recortable: talón con el valor grande a la
+   izquierda, línea punteada con dos muescas donde se "corta" y el cuerpo con
+   el código y las condiciones. Es el único adorno de la pantalla; todo lo
+   demás (formulario, lista de personales) es panel plano.
+   ========================================================================== */
+.pq-cupon-nuevo { margin-bottom: var(--esp-6); }
+.pq-cupon-codigo-input { text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.pq-cupon-valor { display: flex; gap: var(--esp-2); align-items: stretch; border: 0; padding: 0; margin: 0; min-inline-size: 0; flex-wrap: wrap; }
+.pq-cupon-valor legend { width: 100%; padding: 0; margin-bottom: var(--esp-2); }
+.pq-cupon-valor .pq-input { flex: 1 1 120px; min-width: 0; }
+.pq-cupon-tipo { display: inline-flex; border: 1px solid var(--borde); border-radius: var(--radio-m); padding: 3px; background: var(--tiquete); }
+.pq-cupon-tipo label { position: relative; display: flex; }
+.pq-cupon-tipo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-cupon-tipo span { min-width: 44px; min-height: 38px; display: flex; align-items: center; justify-content: center; border-radius: var(--radio-s); font-weight: 700; color: var(--gris-texto); cursor: pointer; transition: background var(--rapido), color var(--rapido); }
+.pq-cupon-tipo input:checked + span { background: var(--sello); color: #fff; }
+.pq-cupon-tipo input:focus-visible + span { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-cupon-valor-ayuda { margin-top: calc(var(--esp-1) * -1); }
+.pq-cupon-reglas { border-top: 1px dashed var(--recibo); padding-top: var(--esp-3); }
+.pq-cupon-reglas > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--carbon); min-height: 32px; display: flex; align-items: center; gap: var(--esp-1); }
+.pq-cupon-reglas-campos { display: grid; gap: var(--esp-3); padding-top: var(--esp-3); }
+@media (min-width: 640px) {
+  .pq-cupon-reglas-campos { grid-template-columns: 1fr 1fr; }
+  .pq-cupon-una-vez { grid-column: 1 / -1; }
+}
+
+.pq-cupones { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-4); }
+@media (min-width: 1100px) { .pq-cupones { grid-template-columns: 1fr 1fr; } }
+.pq-cupon {
+  --muesca: 9px;
+  --talon: 84px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--talon) 1fr;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+  border-radius: var(--radio-m);
+  box-shadow: var(--sombra-suave);
+}
+/* Las dos muescas sobre la línea de corte: círculos del color del fondo. */
+.pq-cupon::before, .pq-cupon::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--talon) - var(--muesca));
+  width: calc(var(--muesca) * 2);
+  height: calc(var(--muesca) * 2);
+  border-radius: 50%;
+  background: var(--tiquete);
+  border: 1px solid var(--recibo);
+}
+.pq-cupon::before { top: calc(var(--muesca) * -1); border-top-color: transparent; border-left-color: transparent; border-right-color: transparent; }
+.pq-cupon::after { bottom: calc(var(--muesca) * -1); border-bottom-color: transparent; border-left-color: transparent; border-right-color: transparent; }
+.pq-cupon-talon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--esp-4) var(--esp-1);
+  border-right: 2px dashed var(--recibo);
+  background: var(--tinte-sello);
+  border-radius: var(--radio-m) 0 0 var(--radio-m);
+  color: var(--sello);
+  text-align: center;
+}
+.pq-cupon-cifra { font-family: var(--fuente-titulo); font-weight: 800; font-size: 26px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pq-cupon-off { font-size: 11px; font-weight: 600; line-height: 1.2; }
+.pq-cupon-cuerpo { padding: var(--esp-4); min-width: 0; display: flex; flex-direction: column; gap: var(--esp-1); }
+.pq-cupon-fila { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-2); }
+.pq-cupon-codigo { font-size: 17px; letter-spacing: .08em; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-cupon-condiciones { margin: 0; font-size: 13.5px; color: var(--gris-texto); line-height: 1.45; }
+.pq-cupon-uso { margin: 0; font-size: 13px; color: var(--carbon); }
+.pq-cupon-acciones { display: flex; align-items: center; gap: var(--esp-2); margin-top: var(--esp-2); }
+/* "$10.000" no cabe al tamaño de "10%": baja de cuerpo pero no se parte en dos líneas. */
+.pq-cupon-cifra-monto { font-size: 18px; white-space: nowrap; letter-spacing: -.03em; }
+@media (min-width: 480px) { .pq-cupon { --talon: 104px; } .pq-cupon-cifra { font-size: 30px; } .pq-cupon-cifra-monto { font-size: 22px; } }
+.pq-cupon-kebab { margin-left: auto; }
+/* Pausado, vencido o agotado: el tiquete se apaga, pero el código sigue legible. */
+.pq-cupon-pausado .pq-cupon-talon, .pq-cupon-vencido .pq-cupon-talon, .pq-cupon-agotado .pq-cupon-talon { background: var(--recibo); color: var(--gris-texto); }
+.pq-cupon-vencido .pq-cupon-cifra, .pq-cupon-agotado .pq-cupon-cifra { text-decoration: line-through; text-decoration-thickness: 2px; }
+.pq-cupones-vacio { padding: var(--esp-4) 0; }
+
+.pq-cupones-personales { margin-top: var(--esp-10); }
+.pq-cupones-personales-lista { list-style: none; margin: var(--esp-3) 0 0; padding: 0; border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); }
+.pq-cupones-personales-lista li { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); }
+.pq-cupones-personales-lista li + li { border-top: 1px solid var(--recibo); }
+.pq-cupones-personales-quien { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+/* Copiloto: el código del cupón personal bajo la burbuja del mensaje. */
+.pq-wa-cupon { display: flex; align-items: flex-start; gap: var(--esp-3); margin: var(--esp-3) 0 0; }
+.pq-wa-cupon-codigo { flex: none; padding: 4px 10px; border: 1.5px dashed var(--sello); border-radius: var(--radio-s); color: var(--sello); font-weight: 700; letter-spacing: .06em; font-size: 13px; }
