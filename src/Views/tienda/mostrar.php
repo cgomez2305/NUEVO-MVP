@@ -18,6 +18,12 @@ foreach ($carrito['lineas'] as $linea) {
     $enCarrito[(int) $linea['producto']['id']] = (int) $linea['cantidad'];
 }
 $contador = 0;
+
+// "Lo más pedido": solo con pedidos reales de los últimos 30 días (ver
+// Producto::masPedidos). Sin datos suficientes no se muestra nada.
+$masPedidos = $masPedidos ?? [];
+$porId = array_column($productos, null, 'id');
+$destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => isset($porId[$id]) && (int) $porId[$id]['agotado'] === 0));
 ?>
 
 <?php if ($mostrarTitulos): ?>
@@ -35,6 +41,30 @@ $contador = 0;
       <p><strong>El menú está en preparación.</strong><br>Mientras tanto, puedes escribirle al negocio por WhatsApp.</p>
     </div>
   <?php else: ?>
+    <?php if ($destacados !== []): ?>
+      <?php
+      // El cliente nuevo no sabe qué pedir: esto se lo dice con lo que de
+      // verdad piden los demás. Son enlaces a la carta, no una copia de los
+      // productos (un solo botón "+" por producto en toda la página).
+      ?>
+      <section class="pq-mas-pedido" aria-labelledby="pq-mas-pedido-titulo">
+        <h2 class="pq-mas-pedido-titulo" id="pq-mas-pedido-titulo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.5 2 1.5 3 2.5 3 0-3-1-5.5.5-8.5Z"/></svg>
+          Lo más pedido
+        </h2>
+        <ol class="pq-mas-pedido-lista">
+          <?php foreach ($destacados as $posicion => $idDestacado): ?>
+            <li>
+              <a href="#producto-<?= (int) $idDestacado ?>" class="pq-mas-pedido-item">
+                <span class="pq-mas-pedido-puesto"><?= $posicion + 1 ?></span>
+                <span class="pq-mas-pedido-nombre"><?= e($porId[$idDestacado]['nombre']) ?></span>
+                <span class="pq-mas-pedido-precio"><?= pesos((int) $porId[$idDestacado]['precio']) ?></span>
+              </a>
+            </li>
+          <?php endforeach; ?>
+        </ol>
+      </section>
+    <?php endif; ?>
     <?php $i = 0; foreach ($porCategoria as $categoria => $items): ?>
       <section class="pq-carta" id="seccion-<?= $i ?>" <?= $mostrarTitulos ? 'aria-labelledby="titulo-seccion-' . $i . '"' : 'aria-label="Menú"' ?>>
         <?php if ($mostrarTitulos): ?>
@@ -47,15 +77,28 @@ $contador = 0;
             $agotado = (int) $producto['agotado'] === 1;
             $cantidad = $enCarrito[$id] ?? 0;
             ?>
-            <article class="pq-plato<?= $agotado ? ' pq-plato-agotado' : '' ?><?= !empty($producto['imagen']) ? ' pq-plato-con-foto' : '' ?>" style="--i: <?= $contador++ % 8 ?>">
+            <article class="pq-plato<?= $agotado ? ' pq-plato-agotado' : '' ?><?= !empty($producto['imagen']) ? ' pq-plato-con-foto' : '' ?>" id="producto-<?= $id ?>" style="--i: <?= $contador++ % 8 ?>">
               <div class="pq-plato-cuerpo">
                 <div class="pq-plato-linea">
                   <h3 class="pq-plato-nombre"><?= e($producto['nombre']) ?></h3>
                   <span class="pq-plato-guia" aria-hidden="true"></span>
                   <span class="pq-plato-precio"><?= pesos((int) $producto['precio']) ?></span>
                 </div>
+                <?php if (!empty($producto['combo'])): ?>
+                  <?php // El combo dice qué trae y, si es verdad, cuánto se ahorra frente a pedirlo suelto. ?>
+                  <p class="pq-plato-combo">
+                    <span class="pq-plato-combo-sello">Combo</span>
+                    <?= e(\App\Models\Producto::textoCombo($producto)) ?>
+                  </p>
+                  <?php if ((int) $producto['precio_separado'] > (int) $producto['precio']): ?>
+                    <span class="pq-plato-ahorro">Ahorras <?= pesos((int) $producto['precio_separado'] - (int) $producto['precio']) ?></span>
+                  <?php endif; ?>
+                <?php endif; ?>
                 <?php if (!empty($producto['descripcion'])): ?>
                   <p class="pq-plato-desc"><?= e($producto['descripcion']) ?></p>
+                <?php endif; ?>
+                <?php if (isset($masPedidos[$id]) && !$agotado): ?>
+                  <span class="pq-plato-favorito">Lo más pedido</span>
                 <?php endif; ?>
                 <?php if ($agotado): ?>
                   <?php // Solo "por hoy" si de verdad vuelve mañana; un agotado indefinido no promete fecha. ?>

@@ -88,6 +88,7 @@ class TiendaController
             'horario'         => horario_resumen($horarioSede),
             'fidelidad'       => Fidelidad::activa((int) $negocio['negocio_id']),
             'zonas'           => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
+            'masPedidos'      => Producto::masPedidos((int) $negocio['id']),
             'abiertoAhora'    => $abiertoAhora,
             'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
@@ -678,6 +679,7 @@ class TiendaController
             'nombre'      => $linea['producto']['nombre'],
             'precio'      => (int) $linea['producto']['precio'],
             'cantidad'    => $linea['cantidad'],
+            'combo'       => Producto::textoCombo($linea['producto']),
         ], $carrito['lineas']);
 
         $this->registrarTasaPublica('pedido', $negocio);
@@ -710,7 +712,7 @@ class TiendaController
 
         $resumenTexto = "Pedido nuevo de {$nombre}:\n";
         foreach ($items as $item) {
-            $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}\n";
+            $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}" . ($item['combo'] !== '' ? " ({$item['combo']})" : '') . "\n";
         }
         if ((int) $pedido['descuento'] > 0) {
             $resumenTexto .= 'Descuento' . ($pedido['cupon_codigo'] ? " (cupón {$pedido['cupon_codigo']})" : '') . ': -' . pesos((int) $pedido['descuento']) . "\n";

@@ -28,6 +28,25 @@
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico pq-filtro-boton">Buscar</button>
 </form>
 
+<?php if (!empty($masVendidos)): ?>
+  <?php $tope = max($masVendidos); ?>
+  <?php // Lo que más sale en 30 días: barras simples con el número real de pedidos. ?>
+  <section class="pq-mas-vendidos" aria-labelledby="pq-titulo-mas-vendidos">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-mas-vendidos">Lo que más sale · 30 días</h2>
+    <ol class="pq-mas-vendidos-lista">
+      <?php foreach ($masVendidos as $idVendido => $veces): ?>
+        <?php if (!isset($nombresPorId[$idVendido])) { continue; } ?>
+        <li style="--parte: <?= round($veces / $tope, 3) ?>">
+          <span class="pq-mas-vendidos-nombre"><?= e($nombresPorId[$idVendido]) ?></span>
+          <span class="pq-mas-vendidos-barra" aria-hidden="true"></span>
+          <span class="pq-mas-vendidos-veces pq-mono"><?= $veces ?> pedido<?= $veces === 1 ? '' : 's' ?></span>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+    <p class="pq-ayuda">Los 3 primeros con 3 o más pedidos salen en tu tienda como "Lo más pedido".</p>
+  </section>
+<?php endif; ?>
+
 <?php if ($porCategoria === []): ?>
   <?php if ($totalProductos === 0): ?>
     <div class="pq-catalogo-vacio">
@@ -63,13 +82,16 @@
                 <?php if ($oculto): ?>
                   <span class="pq-chip pq-chip-cancelado">Oculto de la tienda</span>
                 <?php elseif ($agotado): ?>
-                  <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => 'Sin unidades', default => 'Agotado' } ?></span>
+                  <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => 'Sin unidades', 'combo' => 'Le falta una parte', default => 'Agotado' } ?></span>
                 <?php elseif ($producto['stock'] !== null): ?>
                   <span class="pq-chip <?= (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES ? 'pq-chip-pendiente' : 'pq-chip-caja' ?>"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
                 <?php else: ?>
                   <span class="pq-chip pq-chip-caja">Disponible</span>
                 <?php endif; ?>
                 <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?></span>
+                <?php if (!empty($producto['combo'])): ?>
+                  <span class="pq-producto-card-combo">Combo · <?= count($producto['combo']) ?> productos</span>
+                <?php endif; ?>
               </span>
             </a>
             <div class="pq-producto-card-acciones">

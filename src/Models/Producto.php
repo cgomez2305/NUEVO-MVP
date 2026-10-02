@@ -67,7 +67,7 @@ class Producto
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['sede_id' => $sedeId]);
 
-        return $stmt->fetchAll();
+        return self::conCombos($stmt->fetchAll(), $sedeId);
     }
 
     public static function buscar(int $id, int $sedeId): ?array
@@ -76,8 +76,143 @@ class Producto
             'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE id = :id AND sede_id = :sede_id'
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+        $producto = $stmt->fetch();
 
-        return $stmt->fetch() ?: null;
+        return $producto ? self::conCombos([$producto], $sedeId)[0] : null;
+    }
+
+    /**
+     * Partes de cada combo de la sede: [combo_id => [[id, nombre, cantidad,
+     * precio, agotado, stock], ...]].
+     *
+     * @return array<int, array<int, array<string, mixed>>>
+     */
+    public static function componentesPorCombo(int $sedeId): array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT ci.combo_id, ci.cantidad, ' . self::COLUMNAS . '
+             FROM combo_items ci JOIN productos p ON p.id = ci.producto_id
+             WHERE p.sede_id = :sede_id ORDER BY ci.combo_id, p.nombre'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+        $porCombo = [];
+        foreach ($stmt->fetchAll() as $fila) {
+            $porCombo[(int) $fila['combo_id']][] = $fila;
+        }
+
+        return $porCombo;
+    }
+
+    /**
+     * Le pone a cada combo sus partes (`combo`), lo que costarían por
+     * separado (`precio_separado`) y la disponibilidad real: agotado si
+     * falta cualquier parte; si alguna parte lleva inventario, `stock` del
+     * combo son los combos que alcanzan a armarse con lo que hay.
+     *
+     * @param array<int, array<string, mixed>> $productos
+     * @return array<int, array<string, mixed>>
+     */
+    private static function conCombos(array $productos, int $sedeId): array
+    {
+        $porCombo = self::componentesPorCombo($sedeId);
+        foreach ($productos as &$producto) {
+            $partes = $porCombo[(int) $producto['id']] ?? [];
+            $producto['combo'] = $partes;
+            $producto['precio_separado'] = 0;
+            if ($partes === []) {
+                continue;
+            }
+            $alcanzan = null;
+            foreach ($partes as $parte) {
+                $producto['precio_separado'] += (int) $parte['precio'] * (int) $parte['cantidad'];
+                if ($parte['stock'] !== null) {
+                    $alcanzan = min($alcanzan ?? PHP_INT_MAX, intdiv(max(0, (int) $parte['stock']), max(1, (int) $parte['cantidad'])));
+                }
+                if ((int) $parte['agotado'] === 1 && (int) $producto['agotado'] === 0) {
+                    $producto['agotado'] = 1;
+                    $producto['motivo_agotado'] = $parte['motivo_agotado'] === 'hoy' ? 'hoy' : 'combo';
+                }
+            }
+            if ($alcanzan !== null) {
+                $producto['stock'] = $producto['stock'] === null ? $alcanzan : min((int) $producto['stock'], $alcanzan);
+                if ($producto['stock'] <= 0 && (int) $producto['agotado'] === 0) {
+                    $producto['agotado'] = 1;
+                    $producto['motivo_agotado'] = 'combo';
+                }
+            }
+        }
+        unset($producto);
+
+        return $productos;
+    }
+
+    /**
+     * Arma (o desarma, con todo en 0) el combo. Solo con productos de la
+     * misma sede que no sean combos ni el combo mismo.
+     *
+     * @param array<int|string, mixed> $cantidades producto_id => unidades
+     */
+    public static function guardarComponentes(int $comboId, int $sedeId, array $cantidades): void
+    {
+        $pdo = Database::conexion();
+        $validos = [];
+        $porCombo = self::componentesPorCombo($sedeId);
+        foreach (self::listarPorSede($sedeId) as $producto) {
+            $id = (int) $producto['id'];
+            if ($id !== $comboId && !isset($porCombo[$id])) {
+                $validos[$id] = true;
+            }
+        }
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM combo_items WHERE combo_id = :c')->execute(['c' => $comboId]);
+            $insertar = $pdo->prepare('INSERT INTO combo_items (combo_id, producto_id, cantidad) VALUES (:c, :p, :n)');
+            foreach ($cantidades as $productoId => $cantidad) {
+                $cantidad = min(20, max(0, (int) $cantidad));
+                if ($cantidad > 0 && isset($validos[(int) $productoId])) {
+                    $insertar->execute(['c' => $comboId, 'p' => (int) $productoId, 'n' => $cantidad]);
+                }
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /** "Bandeja paisa + 2 Jugo natural" — lo que trae el combo, para la tienda y el WhatsApp. */
+    public static function textoCombo(array $producto): string
+    {
+        return implode(' + ', array_map(
+            fn ($parte) => ((int) $parte['cantidad'] > 1 ? $parte['cantidad'] . ' ' : '') . $parte['nombre'],
+            $producto['combo'] ?? []
+        ));
+    }
+
+    /**
+     * Lo más pedido de verdad: productos en más pedidos (no cancelados) de
+     * los últimos 30 días, con un mínimo para no destacar algo pedido dos
+     * veces. Sin datos suficientes, no hay sección (nada inventado).
+     *
+     * @return array<int, int> producto_id => número de pedidos
+     */
+    public static function masPedidos(int $sedeId, int $limite = 3, int $minimoPedidos = 3, int $dias = 30): array
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT i.producto_id, COUNT(DISTINCT i.pedido_id) AS veces
+             FROM pedido_items i JOIN pedidos pe ON pe.id = i.pedido_id
+             WHERE pe.sede_id = :sede_id AND pe.estado <> 'cancelado'
+               AND pe.creado_en >= NOW() - INTERVAL {$dias} DAY AND i.producto_id IS NOT NULL
+             GROUP BY i.producto_id HAVING veces >= :minimo
+             ORDER BY veces DESC LIMIT {$limite}"
+        );
+        $stmt->execute(['sede_id' => $sedeId, 'minimo' => $minimoPedidos]);
+        $resultado = [];
+        foreach ($stmt->fetchAll() as $fila) {
+            $resultado[(int) $fila['producto_id']] = (int) $fila['veces'];
+        }
+
+        return $resultado;
     }
 
     public static function actualizar(
@@ -251,7 +386,7 @@ class Producto
             'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE ' . implode(' AND ', $condiciones) . ' ORDER BY ' . $ordenSql
         );
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        return self::conCombos($stmt->fetchAll(), $sedeId);
     }
 
     /**

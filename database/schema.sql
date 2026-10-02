@@ -506,6 +506,16 @@ CREATE TABLE IF NOT EXISTS zonas_domicilio (
   INDEX idx_zonas_sede (sede_id, activa)
 ) ENGINE=InnoDB;
 
+-- Combos (ver migrations/2026-10-03_05_combos.sql).
+CREATE TABLE IF NOT EXISTS combo_items (
+  combo_id    INT UNSIGNED     NOT NULL,
+  producto_id INT UNSIGNED     NOT NULL,
+  cantidad    TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (combo_id, producto_id),
+  FOREIGN KEY (combo_id) REFERENCES productos(id) ON DELETE CASCADE,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -520,4 +530,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_01_cupones.sql'),
   ('2026-10-03_02_fidelidad.sql'),
   ('2026-10-03_03_zonas_domicilio.sql'),
-  ('2026-10-03_04_inventario.sql');
+  ('2026-10-03_04_inventario.sql'),
+  ('2026-10-03_05_combos.sql');

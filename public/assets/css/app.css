@@ -4351,3 +4351,52 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 /* ---------- Inventario · panel ---------- */
 .pq-campo-unidades { max-width: 180px; }
 .pq-switch-texto .pq-switch-nota { margin-top: 2px; color: #8a5a00; font-weight: 600; }
+
+/* ==========================================================================
+   COMBOS Y LO MÁS PEDIDO · tienda
+   "Lo más pedido" es la pizarra del mostrador: tres renglones numerados en
+   el color del negocio que llevan al plato en la carta (no lo duplican).
+   ========================================================================== */
+.pq-mas-pedido { margin-top: var(--esp-6); padding: var(--esp-4) var(--esp-4) var(--esp-3); background: var(--marca-suave); border: 1px solid var(--marca-claro); border-radius: var(--radio-l); }
+.pq-mas-pedido-titulo { display: flex; align-items: center; gap: var(--esp-2); margin: 0 0 var(--esp-2); font: 700 15px/1.3 var(--fuente-titulo); color: var(--tinta); }
+.pq-mas-pedido-titulo svg { width: 18px; height: 18px; color: var(--marca-texto); }
+.pq-mas-pedido-lista { list-style: none; margin: 0; padding: 0; }
+.pq-mas-pedido-item { display: flex; align-items: center; gap: var(--esp-3); min-height: 44px; color: var(--tinta); text-decoration: none; }
+.pq-mas-pedido-lista li + li .pq-mas-pedido-item { border-top: 1px dashed var(--marca-claro); }
+.pq-mas-pedido-puesto { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--marca); color: var(--marca-sobre); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pq-mas-pedido-nombre { flex: 1; min-width: 0; font-weight: 600; font-size: 14.5px; overflow-wrap: anywhere; }
+.pq-mas-pedido-precio { flex: none; font-weight: 650; font-variant-numeric: tabular-nums; font-size: 14px; }
+.pq-mas-pedido-item:hover .pq-mas-pedido-nombre { text-decoration: underline; text-underline-offset: 3px; }
+.pq-mas-pedido-item:focus-visible { outline: 2px solid var(--marca-texto); outline-offset: 2px; border-radius: var(--radio-s); }
+.pq-plato { scroll-margin-top: 80px; }
+.pq-plato:target { animation: pq-plato-senalado 1.2s var(--curva) 1; }
+@keyframes pq-plato-senalado { 0%, 40% { background: var(--marca-suave); } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .pq-plato:target { animation: none; background: var(--marca-suave); } }
+.pq-plato-favorito { display: inline-block; margin-top: 8px; padding: 3px 9px; border-radius: 999px; background: var(--marca-suave); color: var(--marca-texto); font-size: 12px; font-weight: 700; }
+
+/* Combo: qué trae, con un sello pequeño, y el ahorro solo si es real. */
+.pq-plato-combo { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--texto-calido); }
+.pq-plato-combo-sello { display: inline-block; margin-right: 4px; padding: 1px 7px; border: 1.5px solid var(--marca-texto); border-radius: 6px; color: var(--marca-texto); font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; transform: rotate(-2deg); }
+.pq-plato-ahorro { display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--aguacate); }
+.pq-comanda-combo { margin: 2px 0 0; font-size: 12.5px; color: var(--texto-tenue); }
+
+/* ---------- Combos · panel ---------- */
+.pq-combo-armar { border: 1px solid var(--recibo); border-radius: var(--radio-m); padding: var(--esp-3) var(--esp-4); background: var(--tiquete); }
+.pq-combo-armar > summary { cursor: pointer; display: flex; flex-direction: column; gap: 2px; min-height: 36px; justify-content: center; }
+.pq-combo-armar-titulo { font-weight: 700; color: var(--carbon); font-size: 14.5px; }
+.pq-combo-armar[open] > summary { margin-bottom: var(--esp-2); }
+.pq-combo-partes { list-style: none; margin: var(--esp-3) 0 0; padding: 0; }
+.pq-combo-partes li { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-2) 0; }
+.pq-combo-partes li + li { border-top: 1px dashed var(--recibo); }
+.pq-combo-partes label { display: flex; flex-direction: column; min-width: 0; }
+.pq-combo-parte-nombre { font-size: 14px; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-combo-partes .pq-input { width: 76px; flex: none; text-align: center; }
+.pq-combo-resumen { margin: var(--esp-3) 0 0; padding-top: var(--esp-3); border-top: 1px solid var(--recibo); font-size: 14px; color: var(--gris-texto); }
+.pq-combo-resumen strong { color: var(--carbon); }
+.pq-mas-vendidos { margin: var(--esp-4) 0 var(--esp-6); padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); }
+.pq-mas-vendidos-lista { list-style: none; margin: var(--esp-3) 0 var(--esp-2); padding: 0; display: grid; gap: var(--esp-2); }
+.pq-mas-vendidos-lista li { display: grid; grid-template-columns: minmax(0, 9rem) 1fr auto; align-items: center; gap: var(--esp-3); font-size: 14px; }
+.pq-mas-vendidos-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--carbon); font-weight: 600; }
+.pq-mas-vendidos-barra { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--marca) calc(var(--parte) * 100%), var(--recibo) 0); }
+.pq-mas-vendidos-veces { color: var(--gris-texto); font-size: 13px; }
+.pq-producto-card-combo { font-size: 12px; font-weight: 700; color: var(--sello); }

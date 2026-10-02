@@ -117,6 +117,31 @@
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
 
   // ---------------------------------------------------------------------
+  // Armar combo (formulario de producto): suma en vivo lo que costarían
+  // las partes por separado y cuánto ahorra el cliente con el precio del
+  // combo; si el combo sale igual o más caro, lo dice.
+  // ---------------------------------------------------------------------
+  function actualizarResumenCombo() {
+    var partes = document.querySelector('[data-combo-partes]');
+    var resumen = document.querySelector('[data-combo-resumen]');
+    if (!partes || !resumen) return;
+    var separado = 0;
+    partes.querySelectorAll('[data-precio-unidad]').forEach(function (campo) {
+      separado += (parseInt(campo.value, 10) || 0) * (parseInt(campo.getAttribute('data-precio-unidad'), 10) || 0);
+    });
+    var precio = parseInt(((document.getElementById('precio') || {}).value || '').replace(/\D+/g, ''), 10) || 0;
+    resumen.hidden = separado === 0;
+    resumen.querySelector('[data-combo-separado]').textContent = formatearPesos(separado);
+    var ahorro = resumen.querySelector('[data-combo-ahorro]');
+    if (precio > 0 && separado > precio) ahorro.textContent = '· tu cliente ahorra ' + formatearPesos(separado - precio);
+    else if (precio > 0 && separado > 0) ahorro.textContent = '· ojo: el combo no sale más barato que por separado';
+    else ahorro.textContent = '';
+  }
+  document.addEventListener('input', function (evento) {
+    if (evento.target.matches && (evento.target.matches('[data-precio-unidad]') || evento.target.id === 'precio')) actualizarResumenCombo();
+  });
+
+  // ---------------------------------------------------------------------
   // Domicilio por zona en el carrito: al elegir zona (y mientras la entrega
   // sea a domicilio) aparece la línea "Domicilio · zona" y se suma al
   // total y a la barra pegajosa. data-total-base es el total sin domicilio

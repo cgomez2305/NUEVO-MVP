@@ -35,6 +35,9 @@
                 <span class="pq-plato-guia" aria-hidden="true"></span>
                 <span class="pq-comanda-subtotal" id="pq-subtotal-<?= $id ?>"><?= pesos((int) $producto['precio'] * $linea['cantidad']) ?></span>
               </div>
+              <?php if (!empty($producto['combo'])): ?>
+                <p class="pq-comanda-combo"><?= e(\App\Models\Producto::textoCombo($producto)) ?></p>
+              <?php endif; ?>
               <div class="pq-comanda-controles">
                 <span class="pq-comanda-unitario"><?= pesos((int) $producto['precio']) ?> c/u</span>
                 <div class="pq-stepper">

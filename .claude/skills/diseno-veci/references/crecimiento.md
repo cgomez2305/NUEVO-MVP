@@ -115,3 +115,21 @@ N/M" o "le toca {premio}".
   acabó por hoy" / "Agotado hasta nuevo aviso"; sin unidades, el kebab
   lleva a "Cargar unidades" en vez de un "Marcar disponible" que no
   serviría. Chips: Quedan N / Agotado hoy / Sin unidades / Agotado.
+
+## Combos y lo más pedido
+
+- Combo = producto con filas en `combo_items` (partes de la misma sede, sin
+  combos dentro de combos). `Producto::conCombos` le pone `combo`,
+  `precio_separado` y la disponibilidad real (agotado si falta una parte;
+  `stock` virtual = combos que alcanzan con las partes). Vender un combo
+  descuenta las partes (`Pedido::demandaDeUnidades`, bloqueo en orden fijo).
+- Tienda: sello "COMBO" ligeramente girado + qué trae + "Ahorras $X" solo
+  si es verdad. La comanda y el WhatsApp dicen qué trae cada combo.
+- Panel: "Es un combo" colapsable en el formulario, con unidades por parte
+  y resumen en vivo ("por separado $X · tu cliente ahorra $Y" o el aviso
+  si no sale más barato).
+- "Lo más pedido" (tienda): pizarra con hasta 3 renglones numerados en el
+  color del negocio (`.pq-mas-pedido`), enlaces a `#producto-ID` (el plato
+  se ilumina con `:target`), solo con ≥ 3 pedidos reales en 30 días;
+  etiqueta "Lo más pedido" en el plato. Panel: barras "Lo que más sale ·
+  30 días" arriba del catálogo.

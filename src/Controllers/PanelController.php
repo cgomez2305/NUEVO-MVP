@@ -275,6 +275,8 @@ class PanelController
             'disponibilidad' => $disponibilidad,
             'orden'          => $orden,
             'ok'             => flash_obtener('ok'),
+            'masVendidos'    => Producto::masPedidos($sedeId, 5, 1),
+            'nombresPorId'   => array_column(Producto::listarPorSede($sedeId), 'nombre', 'id'),
         ], 'panel');
     }
 
@@ -288,6 +290,7 @@ class PanelController
             'negocio'    => $negocio,
             'producto'   => null,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
+            'partesPosibles' => $this->partesPosiblesDeCombo((int) $negocio['id'], null),
         ], 'panel');
     }
 
@@ -305,7 +308,23 @@ class PanelController
             'negocio'    => $negocio,
             'producto'   => $producto,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
+            'partesPosibles' => $this->partesPosiblesDeCombo((int) $negocio['id'], (int) $producto['id']),
         ], 'panel');
+    }
+
+    /**
+     * Productos que pueden ir dentro de un combo: los de la sede que no son
+     * combos ni el producto que se está editando. Un combo de combos se
+     * vuelve imposible de explicar en la tienda.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function partesPosiblesDeCombo(int $sedeId, ?int $productoId): array
+    {
+        return array_values(array_filter(
+            Producto::listarPorSede($sedeId),
+            fn ($p) => (int) $p['id'] !== $productoId && $p['combo'] === []
+        ));
     }
 
     /** El <select> de categoría manda '__otra__' cuando el dueño escribió una categoría nueva en vez de elegir una existente. */
@@ -345,6 +364,7 @@ class PanelController
                 Producto::establecerActivo($id, (int) $negocio['id'], false);
             }
             Producto::establecerStock($id, (int) $negocio['id'], $this->stockDelFormulario());
+            Producto::guardarComponentes($id, (int) $negocio['id'], (array) ($_POST['combo'] ?? []));
             flash_set('ok', "«{$nombre}» se agregó a tu catálogo.");
         }
 
@@ -372,6 +392,11 @@ class PanelController
             Producto::establecerAgotado($id, $sedeId, !isset($_POST['disponible']));
             Producto::establecerActivo($id, $sedeId, isset($_POST['visible']));
             Producto::establecerStock($id, $sedeId, $this->stockDelFormulario());
+            // Solo si el formulario trae la sección: un producto que ya está
+            // dentro de un combo no la muestra y no debe perder nada.
+            if (isset($_POST['combo_presente'])) {
+                Producto::guardarComponentes($id, $sedeId, (array) ($_POST['combo'] ?? []));
+            }
             if (!empty($_POST['quitar_imagen'])) {
                 Producto::eliminarImagen($id, $sedeId);
             }

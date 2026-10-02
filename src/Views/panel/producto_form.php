@@ -72,6 +72,50 @@ $volver = base_url('/panel/productos');
     <?php endif; ?>
   </div>
 
+  <?php
+  // Combo: solo si este producto no está ya DENTRO de otro combo (un combo
+  // de combos no hay cómo explicarlo en la tienda) y hay con qué armarlo.
+  $esParteDeCombo = false;
+  foreach (\App\Models\Producto::componentesPorCombo((int) $negocio['id']) as $partesDeOtro) {
+      foreach ($partesDeOtro as $parte) {
+          if (!$esNuevo && (int) $parte['id'] === (int) $producto['id']) {
+              $esParteDeCombo = true;
+          }
+      }
+  }
+  $cantidadesCombo = [];
+  foreach ($producto['combo'] ?? [] as $parte) {
+      $cantidadesCombo[(int) $parte['id']] = (int) $parte['cantidad'];
+  }
+  $precioSeparado = (int) ($producto['precio_separado'] ?? 0);
+  ?>
+  <?php if (!$esParteDeCombo && $partesPosibles !== []): ?>
+    <details class="pq-combo-armar"<?= $cantidadesCombo !== [] ? ' open' : '' ?>>
+      <summary>
+        <span class="pq-combo-armar-titulo">Es un combo</span>
+        <span class="pq-ayuda"><?= $cantidadesCombo !== [] ? count($cantidadesCombo) . ' productos adentro' : 'Opcional: varios productos a un precio' ?></span>
+      </summary>
+      <input type="hidden" name="combo_presente" value="1">
+      <p class="pq-ayuda">Elige qué trae. Si alguna parte se agota, el combo también; y vender el combo descuenta las unidades de sus partes.</p>
+      <ul class="pq-combo-partes" data-combo-partes>
+        <?php foreach ($partesPosibles as $parte): ?>
+          <?php $idParte = (int) $parte['id']; ?>
+          <li>
+            <label for="combo-<?= $idParte ?>">
+              <span class="pq-combo-parte-nombre"><?= e($parte['nombre']) ?></span>
+              <span class="pq-ayuda pq-mono"><?= pesos((int) $parte['precio']) ?></span>
+            </label>
+            <input class="pq-input pq-mono" type="number" inputmode="numeric" min="0" max="20" step="1" id="combo-<?= $idParte ?>" name="combo[<?= $idParte ?>]" value="<?= $cantidadesCombo[$idParte] ?? '' ?>" placeholder="0" data-precio-unidad="<?= (int) $parte['precio'] ?>" aria-label="Unidades de <?= e($parte['nombre']) ?> en el combo">
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <p class="pq-combo-resumen" data-combo-resumen<?= $precioSeparado === 0 ? ' hidden' : '' ?>>
+        Por separado: <strong class="pq-mono" data-combo-separado><?= pesos($precioSeparado) ?></strong>
+        <span data-combo-ahorro><?php if ($precioSeparado > (int) ($producto['precio'] ?? 0)): ?>· tu cliente ahorra <strong class="pq-mono"><?= pesos($precioSeparado - (int) $producto['precio']) ?></strong><?php endif; ?></span>
+      </p>
+    </details>
+  <?php endif; ?>
+
   <div class="pq-campo">
     <label class="pq-label" for="stock">Unidades disponibles <span class="pq-ayuda">(opcional)</span></label>
     <input class="pq-input pq-mono pq-campo-unidades" type="number" inputmode="numeric" min="0" step="1" id="stock" name="stock" value="<?= isset($producto['stock']) && $producto['stock'] !== null ? (int) $producto['stock'] : '' ?>" placeholder="Sin contar">

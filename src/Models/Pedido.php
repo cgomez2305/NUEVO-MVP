@@ -88,20 +88,25 @@ class Pedido
             // Inventario: se bloquea la fila de cada producto con stock y se
             // descuenta dentro de la misma transacción, así dos clientes a
             // la vez no se llevan la última unidad los dos.
+            // Un combo descuenta también sus partes (ver demandaDeUnidades).
             $stmtStock = $pdo->prepare('SELECT nombre, stock FROM productos WHERE id = :id AND sede_id = :sede FOR UPDATE');
             $stmtDescontar = $pdo->prepare('UPDATE productos SET stock = stock - :cantidad WHERE id = :id');
+            $pedidas = [];
             foreach ($items as $item) {
-                $stmtStock->execute(['id' => $item['producto_id'], 'sede' => $sedeId]);
+                $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0) + (int) $item['cantidad'];
+            }
+            foreach (self::demandaDeUnidades($pdo, $pedidas) as $productoId => $unidades) {
+                $stmtStock->execute(['id' => $productoId, 'sede' => $sedeId]);
                 $fila = $stmtStock->fetch();
                 if ($fila === false || $fila['stock'] === null) {
                     continue;
                 }
-                if ((int) $fila['stock'] < (int) $item['cantidad']) {
+                if ((int) $fila['stock'] < $unidades) {
                     throw new \DomainException((int) $fila['stock'] <= 0
-                        ? "Se acabó {$fila['nombre']} mientras pedías. Lo quitamos: revisa tu pedido."
+                        ? "Se acabó {$fila['nombre']} mientras pedías. Revisa tu pedido."
                         : "Solo quedan {$fila['stock']} de {$fila['nombre']}. Ajusta la cantidad y vuelve a enviar.");
                 }
-                $stmtDescontar->execute(['cantidad' => $item['cantidad'], 'id' => $item['producto_id']]);
+                $stmtDescontar->execute(['cantidad' => $unidades, 'id' => $productoId]);
             }
 
             $stmtItem = $pdo->prepare(
@@ -296,17 +301,48 @@ class Pedido
                 default => null,
             };
             if ($signo !== null) {
-                $pdo->prepare(
-                    "UPDATE productos p JOIN pedido_items i ON i.producto_id = p.id
-                     SET p.stock = p.stock {$signo} i.cantidad
-                     WHERE i.pedido_id = :id AND p.stock IS NOT NULL"
-                )->execute(['id' => $id]);
+                $stmtItems = $pdo->prepare('SELECT producto_id, cantidad FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
+                $stmtItems->execute(['id' => $id]);
+                $pedidas = [];
+                foreach ($stmtItems->fetchAll() as $item) {
+                    $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0) + (int) $item['cantidad'];
+                }
+                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
+                foreach (self::demandaDeUnidades($pdo, $pedidas) as $productoId => $unidades) {
+                    $ajustar->execute(['n' => $unidades, 'p' => $productoId]);
+                }
             }
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Unidades que mueve un pedido por producto: lo pedido directo más, por
+     * cada combo, sus partes × cantidad. Así "2 Almuerzos" descuenta 2
+     * bandejas y 2 jugos aunque la bandeja también se pidiera suelta.
+     *
+     * @param array<int, int> $pedidas producto_id => cantidad
+     * @return array<int, int>
+     */
+    private static function demandaDeUnidades(\PDO $pdo, array $pedidas): array
+    {
+        $demanda = $pedidas;
+        if ($pedidas === []) {
+            return $demanda;
+        }
+        $marcas = implode(',', array_fill(0, count($pedidas), '?'));
+        $stmt = $pdo->prepare("SELECT combo_id, producto_id, cantidad FROM combo_items WHERE combo_id IN ({$marcas})");
+        $stmt->execute(array_keys($pedidas));
+        foreach ($stmt->fetchAll() as $parte) {
+            $unidades = (int) $parte['cantidad'] * $pedidas[(int) $parte['combo_id']];
+            $demanda[(int) $parte['producto_id']] = ($demanda[(int) $parte['producto_id']] ?? 0) + $unidades;
+        }
+        ksort($demanda); // mismo orden de bloqueo en todos los pedidos: sin interbloqueos
+
+        return $demanda;
     }
 
     /** Pedidos creados después de cierto ID, para el polling de notificaciones del panel. */
