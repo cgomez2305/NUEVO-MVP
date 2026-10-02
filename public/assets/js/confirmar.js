@@ -12,9 +12,16 @@
  *   <input data-seleccionar-al-tocar>              en vez de onclick="this.select()"
  *   <button data-imprimir>                         en vez de onclick="window.print()"
  *   <tr data-href="/panel/pedidos/1">               en vez de onclick="location.href=..."
+ *   <button class="pq-sin-js">                     solo hace falta sin JS (p. ej. "Aplicar"
+ *                                                  junto a un select con data-autoenviar)
  */
 (function () {
   'use strict';
+
+  // Con JS, el select ya se envía solo: el botón de respaldo sobra.
+  Array.prototype.forEach.call(document.querySelectorAll('.pq-sin-js'), function (elemento) {
+    elemento.hidden = true;
+  });
 
   document.addEventListener('submit', function (evento) {
     var mensaje = evento.target.getAttribute && evento.target.getAttribute('data-confirmar');

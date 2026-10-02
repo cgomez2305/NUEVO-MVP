@@ -194,10 +194,10 @@ class Copiloto
 
             $fila['tags'] = $tags;
             $fila['motivo'] = match (true) {
-                $esInactivo => "No pide hace {$fila['dias_sin_pedir']} días · antes pedía cada {$fila['frecuencia_prom']} días",
-                $esNuevo    => "Su primera compra fue hace {$fila['dias_sin_pedir']} días",
-                $esVip      => "{$fila['total_compras']} compras · " . number_format($fila['gasto_total'], 0, ',', '.') . ' en total',
-                default     => "{$fila['total_compras']} compras · última hace {$fila['dias_sin_pedir']} días",
+                $esInactivo => "Lleva {$fila['dias_sin_pedir']} días sin pedir · antes pedía cada {$fila['frecuencia_prom']}",
+                $esNuevo    => 'Su primera compra fue ' . hace_dias((int) $fila['dias_sin_pedir']),
+                $esVip      => "{$fila['total_compras']} compras · " . pesos((int) $fila['gasto_total']) . ' en total',
+                default     => "{$fila['total_compras']} compras · la última " . hace_dias((int) $fila['dias_sin_pedir']),
             };
         }
         unset($fila);

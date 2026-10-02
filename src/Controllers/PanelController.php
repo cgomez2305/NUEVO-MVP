@@ -441,6 +441,7 @@ class PanelController
             'negocio'   => $negocio,
             'servicios' => Servicio::listarPorSede((int) $negocio['id']),
             'volver'    => '/panel/servicios',
+            'ok'        => flash_obtener('ok'),
         ], 'panel');
     }
 
@@ -454,7 +455,9 @@ class PanelController
         }
 
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
-        $precio = (int) ($_POST['precio'] ?? 0);
+        // Igual que en productos: el campo llega como "20.000" (data-precio-cop
+        // y el valor precargado), y (int) "20.000" es 20, no 20000.
+        $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
         $duracion = (int) ($_POST['duracion_min'] ?? 30);
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
@@ -474,11 +477,26 @@ class PanelController
         }
 
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
-        $precio = (int) ($_POST['precio'] ?? 0);
+        $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
         $duracion = (int) ($_POST['duracion_min'] ?? 30);
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
+
+            // El panel guarda servicio y anticipo con un solo botón. El anticipo
+            // es plata del negocio: solo el dueño lo cambia (igual que en
+            // actualizarDepositoServicio); a un colaborador se le ignora.
+            if (isset($_POST['deposito_tipo']) && $negocio['rol'] === 'dueno') {
+                Servicio::actualizarDeposito(
+                    (int) $parametros['id'],
+                    (int) $negocio['id'],
+                    (string) $_POST['deposito_tipo'],
+                    dinero_desde_texto((string) ($_POST['deposito_valor'] ?? ''))
+                );
+            }
+            if ($volver === '/panel/servicios') {
+                flash_set('ok', 'Servicio actualizado.'); // el onboarding no muestra avisos
+            }
         }
 
         redirigir($volver);
@@ -700,7 +718,7 @@ class PanelController
 
         ver('panel/fechas_bloqueadas', [
             'titulo'  => 'Días no disponibles · Veci',
-            'activo'  => 'fechas_bloqueadas',
+            'activo'  => 'horario',
             'negocio' => $negocio,
             'fechas'  => FechaBloqueada::listarPorSede((int) $negocio['id']),
         ], 'panel');

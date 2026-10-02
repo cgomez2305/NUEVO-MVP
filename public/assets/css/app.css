@@ -3220,38 +3220,18 @@ body.pq-auth-bg {
 .pq-detalle-titulo { margin: 0; font: 400 24px/1.1 'Instrument Serif', serif; color: var(--carbon); }
 .pq-detalle-espera { margin-top: var(--esp-3); }
 
-/* La comanda: papel térmico (blanco puro, monoespaciada, línea punteada y
-   borde rasgado abajo). En la pantalla es la tarjeta del pedido; al imprimir
-   es lo único que sale, en el ancho de un rollo de 80 mm. */
-.pq-comanda-panel {
-  --diente: 8px;
-  max-width: 420px;
-  margin-top: var(--esp-4);
-  padding: var(--esp-4) var(--esp-4) calc(var(--esp-4) + var(--diente));
-  background: #FFFFFF;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: #1a1a1a;
-  border-radius: var(--radio-s) var(--radio-s) 0 0;
-  filter: drop-shadow(0 1px 1px rgba(32, 33, 36, .08)) drop-shadow(0 8px 14px rgba(32, 33, 36, .1));
-  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
-}
-.pq-comanda-panel-cabeza { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-bottom: var(--esp-3); border-bottom: 1px dashed #b9b9b9; text-align: center; }
-.pq-comanda-panel-cabeza strong { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
-.pq-comanda-panel-cabeza span { font-size: 12px; color: #555; }
-.pq-comanda-panel-cliente { margin: var(--esp-3) 0 0; font-weight: 600; }
-.pq-comanda-panel-items { list-style: none; margin: var(--esp-2) 0 0; padding: 0; }
-.pq-comanda-panel-items li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; padding: 5px 0; align-items: baseline; }
-.pq-comanda-panel-cant { font-weight: 700; }
-.pq-comanda-panel-nombre { overflow-wrap: anywhere; }
-.pq-comanda-panel-precio { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pq-comanda-panel-total { display: flex; justify-content: space-between; margin: var(--esp-2) 0 0; padding-top: var(--esp-2); border-top: 1px dashed #b9b9b9; font-size: 15px; font-weight: 700; }
-.pq-comanda-panel-datos { display: grid; gap: 4px; margin: var(--esp-3) 0 0; padding-top: var(--esp-3); border-top: 1px dashed #b9b9b9; }
-.pq-comanda-panel-datos > div { display: grid; grid-template-columns: 68px 1fr; gap: 8px; }
-.pq-comanda-panel-datos dt { color: #666; }
-.pq-comanda-panel-datos dd { margin: 0; overflow-wrap: anywhere; }
-.pq-comanda-panel-nota dd { font-weight: 700; }
+/* La comanda del panel es la misma de la tienda (.pq-comanda-final, ver
+   "tienda v2: confirmaciones"): mismo papel, puntos guía, doble raya en el
+   total y sello de caucho con el estado. Aquí solo se le da la letra de la
+   tienda (el panel usa Inter) y el nombre del negocio arriba. */
+.pq-comanda-imprimible { max-width: 420px; margin-top: var(--esp-4); font-family: 'Inter Tight', sans-serif; color: var(--tinta); }
+.pq-comanda-negocio { margin: 0 0 var(--esp-2); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-comanda-dato-nota dd { font-weight: 600; }
+/* En el panel el sello va arriba a la derecha, junto al nombre: abajo le
+   quitaba 112px a los datos (cliente, dirección), que aquí son más largos. */
+.pq-comanda-imprimible .pq-sello { top: var(--esp-4); bottom: auto; }
+.pq-comanda-imprimible .pq-comanda-negocio { padding-right: 120px; min-height: 30px; }
+.pq-comanda-imprimible .pq-comanda-datos { padding-right: 0; min-height: 0; }
 
 .pq-detalle-accion { margin-top: var(--esp-5); max-width: 420px; }
 .pq-detalle-secundarias { display: flex; gap: 8px; margin-top: 10px; max-width: 420px; }
@@ -3266,8 +3246,13 @@ body.pq-auth-bg {
 @media print {
   @page { size: 80mm auto; margin: 4mm; }
   body * { visibility: hidden; }
-  .pq-comanda-panel, .pq-comanda-panel * { visibility: visible; }
-  .pq-comanda-panel { position: absolute; top: 0; left: 0; width: 72mm; max-width: none; margin: 0; padding: 0; filter: none; -webkit-mask: none; mask: none; box-shadow: none; font-size: 11.5px; }
+  .pq-comanda-imprimible, .pq-comanda-imprimible * { visibility: visible; }
+  .pq-comanda-imprimible { position: absolute; top: 0; left: 0; width: 72mm; max-width: none; margin: 0; filter: none; font-size: 12px; color: #000; }
+  .pq-comanda-imprimible .pq-comanda-hoja { padding: 0; background: none; border-radius: 0; -webkit-mask: none; mask: none; }
+  .pq-comanda-imprimible .pq-sello { display: none; } /* el estado no le sirve a la cocina */
+  .pq-comanda-imprimible .pq-comanda-negocio { padding-right: 0; min-height: 0; }
+  .pq-comanda-imprimible .pq-comanda-datos { padding-right: 0; min-height: 0; }
+  .pq-comanda-imprimible .pq-comanda-nombre, .pq-comanda-imprimible .pq-comanda-subtotal { font-size: 13px; }
 }
 
 /* ---------- Productos ---------- */
@@ -3332,3 +3317,437 @@ body.pq-auth-bg {
 .pq-cuenta-push[hidden] { display: none; }
 .pq-cuenta-push-titulo { font-size: 13px; font-weight: 600; }
 .pq-cuenta-push .pq-btn { width: auto; align-self: flex-start; }
+
+/* =====================================================================
+   PANEL v2 · PUENTE CON LA TIENDA
+   El panel sigue en la ruta "Tiquete y papel", pero la marca del negocio
+   aparece donde el dueño piensa en SU tienda: la insignia del selector de
+   sede, la cenefa bajo la cabecera y el escaparate del inicio. --marca y
+   --marca-sobre llegan en el <body> desde layouts/panel.php.
+   ===================================================================== */
+.pq-panel-bg {
+  --marca-claro: color-mix(in oklab, var(--marca) 34%, #FFFFFF);
+  --marca-suave: color-mix(in oklab, var(--marca) 13%, var(--tiquete));
+  --marca-texto: color-mix(in oklab, var(--marca) 52%, var(--carbon));
+}
+
+/* La inicial de la sede es la misma insignia redonda de la tienda. */
+.pq-panel-bg .pq-switcher-avatar {
+  border-radius: 50%;
+  background: var(--marca);
+  color: var(--marca-sobre);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  box-shadow: inset 0 0 0 1px rgba(27, 26, 23, .08);
+}
+
+/* Cenefa: el borde de arriba del toldo de la tienda, en una franja de 4px
+   bajo la cabecera. Va pegada con la cabecera, así que acompaña siempre. */
+.pq-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--marca) 0 14px, var(--marca-claro) 14px 28px);
+  pointer-events: none;
+}
+@media (min-width: 960px) {
+  .pq-header { position: relative; }
+}
+
+/* Inicio: las cifras del día como la tira de una registradora. */
+.pq-inicio-bajada { margin-top: 2px; }
+.pq-inicio-limite { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; margin-top: var(--esp-4); }
+.pq-caja-dia {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: var(--esp-5);
+  background: #FFFFFF;
+  border: 1px solid var(--recibo);
+  border-radius: var(--radio-m);
+  box-shadow: var(--sombra-suave);
+  overflow: hidden;
+}
+.pq-caja-casilla {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: var(--esp-4);
+  border-left: 1px dashed var(--borde);
+  color: inherit;
+  text-decoration: none;
+}
+.pq-caja-casilla:first-child { border-left: 0; }
+.pq-caja-valor { font: 700 22px/1.1 'JetBrains Mono', monospace; color: var(--carbon); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pq-caja-etiqueta { font-size: 12px; font-weight: 500; line-height: 1.3; color: var(--gris-texto); }
+.pq-caja-casilla-alerta .pq-caja-valor { color: var(--aji); }
+.pq-caja-casilla-alerta .pq-caja-etiqueta { color: var(--carbon); font-weight: 600; }
+.pq-caja-casilla-alerta { transition: background var(--rapido) ease; }
+.pq-caja-casilla-alerta:hover { background: var(--tinte-aji); }
+.pq-caja-casilla-alerta:focus-visible { outline: 2px solid var(--sello); outline-offset: -2px; }
+@media (max-width: 599px) {
+  .pq-caja-dia { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pq-caja-casilla { padding: var(--esp-3) var(--esp-4); }
+  .pq-caja-casilla:nth-child(odd) { border-left: 0; }
+  .pq-caja-casilla:nth-child(n + 3) { border-top: 1px dashed var(--borde); }
+  .pq-caja-valor { font-size: 20px; }
+}
+
+.pq-recomendacion .pq-btn { width: auto; }
+.pq-recomendacion-espera { background: var(--tinte-aji); border-color: color-mix(in srgb, var(--aji) 35%, transparent); }
+
+/* Escaparate: un pedazo de la tienda dentro del panel (papel, toldo,
+   insignia y Bricolage de la tienda). Es el detalle propio del inicio. */
+.pq-escaparate {
+  margin-top: var(--esp-6);
+  background: var(--papel);
+  border: 1px solid var(--linea-tienda);
+  border-radius: var(--radio-l);
+  overflow: hidden;
+  scroll-margin-top: 80px;
+}
+.pq-escaparate-cuerpo { padding: 0 var(--esp-4) var(--esp-4); }
+.pq-escaparate-letrero { display: flex; align-items: flex-end; gap: var(--esp-3); }
+.pq-escaparate .pq-letrero-insignia { width: 48px; height: 48px; margin-top: -16px; flex-shrink: 0; position: relative; font-size: 21px; }
+.pq-escaparate-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 2px; }
+.pq-escaparate-eyebrow { font: 500 12px/1.3 'Inter Tight', sans-serif; color: var(--texto-tenue); }
+.pq-escaparate-nombre { font: 700 19px/1.15 'Bricolage Grotesque', sans-serif; letter-spacing: -.01em; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-escaparate-url {
+  display: block;
+  margin-top: var(--esp-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 600 13.5px/1.4 'Inter Tight', sans-serif;
+  color: var(--marca-texto);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.pq-escaparate-nota { margin-top: var(--esp-1); }
+.pq-escaparate-botones { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-4); }
+.pq-escaparate-botones .pq-btn-ghost { background: #FFFDF8; border-color: var(--linea-tienda); }
+
+/* Listas cortas del inicio: número de pedido u hora en la primera columna. */
+.pq-inicio-bloque { margin-top: var(--esp-8); }
+.pq-inicio-lista { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-3); }
+.pq-inicio-vacio { margin-top: var(--esp-2); }
+.pq-inicio-ver-todo { margin-top: var(--esp-4); }
+.pq-fila-hora { width: 44px; flex-shrink: 0; font: 700 13px/1.2 'JetBrains Mono', monospace; color: var(--gris-texto); font-variant-numeric: tabular-nums; }
+.pq-fila-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.pq-fila-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; font-weight: 600; }
+.pq-fila-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.pq-fila-lado .pq-precio-suave { font-size: 13px; }
+.pq-fila-pedido.pq-card-demorado:hover { box-shadow: inset 4px 0 0 var(--aji), var(--sombra-suave); }
+.pq-fila-fecha { white-space: nowrap; } /* "7:02 a. m." nunca se parte en dos líneas */
+
+/* =====================================================================
+   PANEL v2 · FASE 2 (reservas): servicios, horario, días bloqueados,
+   empleados y recordatorios. Ver references/panel.md.
+   ===================================================================== */
+.pq-pagina-bajada-panel { margin-top: 4px; }
+.pq-eyebrow-tras-volver { display: block; margin-top: var(--esp-3); }
+.pq-sr-solo { white-space: nowrap; }
+
+/* Botón con aspecto de enlace para acciones secundarias (pausar, quitar,
+   eliminar): área táctil de 44px, sin parecer un botón más del montón. */
+.pq-enlace-boton {
+  min-height: 44px;
+  padding: 0 var(--esp-2);
+  border: 0;
+  background: none;
+  color: var(--gris-texto);
+  font: 600 13.5px/1 'Inter', sans-serif;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.pq-enlace-boton:hover { color: var(--carbon); }
+.pq-enlace-boton-peligro { color: #a3361f; }
+.pq-enlace-boton-peligro:hover { color: #7d2614; }
+.pq-enlace-boton:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; border-radius: 6px; }
+
+/* Servicios: una fila por servicio que se lee como la carta de la tienda;
+   tocarla despliega el formulario completo con un solo "Guardar". */
+.pq-servicios-lista { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-5); }
+.pq-servicio-panel { background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); box-shadow: var(--sombra-suave); }
+.pq-servicio-panel[open] { border-color: var(--borde); }
+.pq-servicio-panel-fila {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--esp-3);
+  min-height: 64px;
+  padding: var(--esp-3) var(--esp-4);
+  list-style: none;
+  cursor: pointer;
+}
+.pq-servicio-panel-fila::-webkit-details-marker { display: none; }
+.pq-servicio-panel-fila:focus-visible { outline: 2px solid var(--sello); outline-offset: -2px; border-radius: var(--radio-m); }
+.pq-servicio-panel-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--color-servicio); }
+.pq-servicio-panel-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pq-servicio-panel-nombre { font-size: 15px; font-weight: 600; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-servicio-panel-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--gris-texto); }
+.pq-servicio-panel-precio { font-size: 14px; font-weight: 700; color: var(--carbon); white-space: nowrap; }
+.pq-servicio-panel-editar { grid-column: 3; justify-self: end; font-size: 12px; font-weight: 600; color: var(--sello); }
+.pq-servicio-panel[open] .pq-servicio-panel-editar { visibility: hidden; }
+.pq-servicio-panel-agotado .pq-servicio-panel-nombre, .pq-servicio-panel-agotado .pq-servicio-panel-precio { color: var(--gris-suave); }
+.pq-servicio-panel-agotado .pq-servicio-panel-punto { opacity: .4; }
+.pq-servicio-panel-cuerpo { padding: var(--esp-1) var(--esp-4) var(--esp-3); border-top: 1px dashed var(--borde); }
+.pq-servicio-panel-form, .pq-agregar-panel-form { display: flex; flex-direction: column; gap: var(--esp-3); padding-top: var(--esp-3); }
+.pq-servicio-panel-par { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--esp-3); }
+.pq-servicio-panel-anticipo { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-servicio-panel-anticipo legend { padding: 0; margin-bottom: var(--esp-2); }
+.pq-servicio-panel-anticipo .pq-ayuda { margin: 0; }
+.pq-servicio-panel-secundarias { display: flex; justify-content: space-between; gap: var(--esp-3); margin-top: var(--esp-2); }
+.pq-agregar-panel { margin-top: var(--esp-4); }
+.pq-agregar-panel > summary { list-style: none; width: auto; display: inline-flex; }
+.pq-agregar-panel > summary::-webkit-details-marker { display: none; }
+.pq-agregar-panel[open] > summary { display: none; }
+.pq-agregar-panel-form { padding: var(--esp-4); background: #FFFFFF; border: 1px solid var(--borde); border-radius: var(--radio-m); }
+@media (min-width: 960px) {
+  .pq-servicios-lista, .pq-agregar-panel, .pq-horario-form, .pq-fechas-form, .pq-equipo-lista { max-width: 640px; }
+}
+
+/* Horario: interruptor por día; apagado esconde las horas y dice "Cerrado". */
+.pq-horario-form { margin-top: var(--esp-5); }
+.pq-semana { margin: 0; padding: 0 var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); }
+.pq-semana-dia { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 60px; padding: var(--esp-2) 0; border-top: 1px dashed var(--borde); flex-wrap: wrap; }
+.pq-semana-dia:first-of-type { border-top: 0; }
+.pq-interruptor { display: inline-flex; align-items: center; gap: var(--esp-3); min-height: 44px; cursor: pointer; }
+.pq-interruptor input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-interruptor-pista {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--borde);
+  transition: background var(--rapido) var(--curva);
+}
+.pq-interruptor-pista::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(32, 33, 36, .25);
+  transition: transform var(--rapido) var(--curva);
+}
+.pq-interruptor input:checked + .pq-interruptor-pista { background: var(--caja); } /* mismo verde que .pq-switch del formulario de producto */
+.pq-interruptor input:checked + .pq-interruptor-pista::after { transform: translateX(16px); }
+.pq-interruptor input:focus-visible + .pq-interruptor-pista { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-semana-nombre { min-width: 88px; font-size: 14.5px; font-weight: 600; color: var(--carbon); }
+.pq-semana-horas { display: flex; align-items: center; gap: var(--esp-2); }
+.pq-semana-horas .pq-input { width: 116px; padding-left: 10px; padding-right: 6px; }
+.pq-semana-cerrado { display: none; font-size: 13.5px; color: var(--gris-suave); }
+.pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-horas { display: none; }
+.pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-cerrado { display: inline; }
+.pq-semana-dia:has(.pq-interruptor input:not(:checked)) .pq-semana-nombre { color: var(--gris-texto); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .pq-interruptor-pista, .pq-interruptor-pista::after { transition: none; } }
+.pq-horario-intervalo { margin-top: var(--esp-5); max-width: 320px; }
+.pq-horario-guardar { margin-top: var(--esp-5); }
+@media (min-width: 640px) { .pq-horario-guardar { width: auto; } }
+.pq-escaparate-cuerpo-simple { padding-top: var(--esp-4); font-family: 'Inter Tight', sans-serif; }
+.pq-escaparate-cuerpo-simple .pq-escaparate-eyebrow { display: block; margin-bottom: var(--esp-2); }
+.pq-escaparate .pq-horario-hoy { margin: 0 -10px; }
+
+/* Enlace a otra pantalla con forma de fila: icono, texto en dos líneas, flecha. */
+.pq-enlace-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-top: var(--esp-6);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--recibo);
+  border-radius: var(--radio-m);
+  background: var(--tiquete);
+  color: var(--carbon);
+  text-decoration: none;
+  transition: border-color var(--rapido) ease;
+}
+.pq-enlace-fila > svg { width: 22px; height: 22px; flex-shrink: 0; color: var(--sello); }
+.pq-enlace-fila > span { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; font-size: 14px; }
+.pq-enlace-fila-flecha { color: var(--gris-suave) !important; width: 18px !important; height: 18px !important; }
+.pq-enlace-fila:hover { border-color: var(--sello); }
+.pq-enlace-fila:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+@media (min-width: 960px) { .pq-enlace-fila, .pq-escaparate { max-width: 640px; } }
+
+/* Días bloqueados: la hojita de almanaque de la tienda, tachada. */
+.pq-fechas-form { display: flex; flex-direction: column; gap: var(--esp-3); margin-top: var(--esp-5); }
+.pq-fechas-lista, .pq-equipo-lista { list-style: none; margin: var(--esp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-fecha-bloqueada { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-3); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-dia-bloqueado { position: relative; font-family: 'Inter Tight', sans-serif; box-shadow: inset 0 4px 0 var(--borde); }
+.pq-dia-bloqueado:hover { transform: none; border-color: var(--linea-tienda); }
+.pq-dia-bloqueado .pq-dia-numero { color: var(--gris-suave); }
+.pq-dia-bloqueado::after {
+  content: "";
+  position: absolute;
+  inset: 10px 8px;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), var(--aji) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.pq-fecha-bloqueada-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; font-size: 14px; }
+
+/* Empleados */
+.pq-equipo-lista { margin-top: var(--esp-5); }
+.pq-equipo-fila { display: flex; align-items: center; gap: var(--esp-3); min-height: 60px; padding: 0 var(--esp-2) 0 var(--esp-3); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-equipo-avatar { background: var(--marca); color: var(--marca-sobre); font-family: 'Bricolage Grotesque', sans-serif; }
+.pq-equipo-nombre { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Recordatorios */
+.pq-nota-panel { display: flex; gap: var(--esp-2); margin: var(--esp-4) 0 0; padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-m); background: var(--tinte-sello); font-size: 13.5px; line-height: 1.45; color: var(--carbon); }
+.pq-nota-panel svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--sello); }
+.pq-inicio-lista + .pq-vacio-panel, .pq-nota-panel + .pq-inicio-lista { margin-top: var(--esp-4); }
+.pq-wa-vista { margin-top: var(--esp-5); max-width: 520px; }
+.pq-wa-fondo { margin-top: var(--esp-2); padding: var(--esp-4) var(--esp-3); border-radius: var(--radio-m); background: #ECE5DD; }
+.pq-wa-fondo .pq-burbuja-out { max-width: 92%; margin: 0 0 0 auto; font-size: 14px; color: #111b21; }
+.pq-recordatorio-listo { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-2); max-width: 420px; }
+/* En celular las horas bajan a su propia línea y se reparten el ancho:
+   a 116px fijos el campo cortaba "a. m."/"p. m." (mismo bug que ya se
+   había corregido en el onboarding). */
+@media (max-width: 559px) {
+  .pq-semana-horas { flex: 1 1 100%; }
+  .pq-semana-horas .pq-input { flex: 1 1 0; width: auto; min-width: 0; font-size: 15px; }
+}
+
+/* ---------- Copiloto ---------- */
+.pq-sin-js[hidden] { display: none; }
+.pq-caja-dia-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 599px) {
+  .pq-caja-dia-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pq-caja-dia-3 .pq-caja-casilla { border-top: 0; padding: var(--esp-3); }
+  .pq-caja-dia-3 .pq-caja-casilla + .pq-caja-casilla { border-left: 1px dashed var(--borde); }
+}
+
+/* Grupos de clientes: pestañas en una sola fila (scroll lateral en celular). */
+.pq-segmentos {
+  display: flex;
+  gap: var(--esp-1);
+  margin: var(--esp-6) calc(var(--esp-5) * -1) 0;
+  padding: 0 var(--esp-5) var(--esp-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pq-segmentos::-webkit-scrollbar { display: none; }
+.pq-segmento {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--recibo);
+  border-radius: 999px;
+  background: var(--tiquete);
+  color: var(--gris-texto);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--rapido) ease, background var(--rapido) ease;
+}
+.pq-segmento:hover { border-color: var(--borde); color: var(--carbon); }
+.pq-segmento:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-segmento-activo, .pq-segmento-activo:hover { background: var(--carbon); border-color: var(--carbon); color: #FFFFFF; }
+.pq-segmento-cuenta { font: 600 12px/1 'JetBrains Mono', monospace; opacity: .75; }
+.pq-segmento-ayuda { margin: var(--esp-2) 0 0; }
+@media (min-width: 960px) { .pq-segmentos { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; flex-wrap: wrap; } }
+
+.pq-clientes-lista { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-4); }
+.pq-cliente-fila { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-2) var(--esp-3) var(--esp-4); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-cliente-avatar { background: var(--tinte-sello); color: var(--sello); }
+.pq-cliente-texto { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.pq-cliente-nombre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14.5px; font-weight: 600; color: var(--carbon); }
+.pq-chip-mini { padding: 2px 7px; font-size: 10.5px; }
+.pq-cliente-acciones { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+/* Mensaje del copiloto: contexto en papel y el texto editable dentro de la
+   burbuja verde de WhatsApp. */
+.pq-contexto-cliente { margin-top: var(--esp-5); max-width: 520px; padding: var(--esp-4); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-contexto-titulo { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--gris-texto); }
+.pq-contexto-motivo { margin: var(--esp-2) 0 0; font-size: 15px; line-height: 1.45; color: var(--carbon); }
+.pq-contexto-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-3); margin: var(--esp-3) 0 0; padding-top: var(--esp-3); border-top: 1px dashed var(--borde); }
+.pq-contexto-datos dt { font-size: 12px; color: var(--gris-texto); }
+.pq-contexto-datos dd { margin: 2px 0 0; font-size: 13.5px; font-weight: 600; color: var(--carbon); }
+.pq-contexto-contacto { margin: var(--esp-3) 0 0; }
+.pq-wa-cabeza { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); }
+.pq-wa-descuento { display: flex; gap: var(--esp-2); }
+.pq-wa-descuento .pq-select { width: auto; min-height: 40px; font-size: 13.5px; }
+.pq-wa-form { display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-wa-fondo { position: relative; }
+.pq-wa-editable {
+  display: block;
+  width: 100%;
+  max-width: 100% !important;
+  min-height: 112px;
+  margin: 0 !important;
+  border: 0;
+  resize: vertical;
+  font: 15px/1.45 'Inter', sans-serif;
+  color: #111b21;
+}
+.pq-wa-editable:focus { outline: 2px solid #128C7E; outline-offset: 2px; }
+.pq-wa-fondo .pq-contador-caracteres { display: block; margin-top: 6px; text-align: right; font: 500 11px/1 'JetBrains Mono', monospace; color: #54656f; }
+.pq-wa-nota { margin: 0; }
+.pq-wa-secundarias { display: flex; gap: var(--esp-2); margin-left: calc(var(--esp-2) * -1); }
+.pq-enlace-boton { display: inline-flex; align-items: center; }
+
+/* ---------- Sedes, colaboradores, cuenta, plan, formularios ---------- */
+.pq-sedes-lista { display: grid; gap: var(--esp-4); margin-top: var(--esp-5); }
+@media (min-width: 960px) { .pq-sedes-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 960px; } .pq-sedes-lista .pq-escaparate { max-width: none; } }
+.pq-sede-fachada { margin-top: 0; }
+.pq-sede-fachada-activa { border-color: var(--marca-texto); box-shadow: 0 0 0 1px var(--marca-texto); }
+.pq-escaparate-botones form { display: contents; }
+
+/* Formulario del panel en tarjeta: campos con su etiqueta y botones al pie. */
+.pq-form-panel { display: flex; flex-direction: column; gap: var(--esp-4); margin-top: var(--esp-5); max-width: 520px; }
+.pq-form-panel .pq-campo { margin-bottom: 0; }
+.pq-form-panel-botones { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: var(--esp-3); margin-top: var(--esp-1); }
+.pq-form-panel-botones .pq-btn { width: 100%; }
+.pq-campo-extra { margin-top: var(--esp-2); }
+.pq-interruptor-con-texto { align-items: flex-start; }
+.pq-interruptor-con-texto .pq-interruptor-pista { margin-top: 2px; }
+.pq-interruptor-con-texto > span:last-child { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--carbon); }
+
+/* Colaboradores: cada sede es un chip que se marca. */
+.pq-colaborador { padding: var(--esp-3) var(--esp-4) var(--esp-4); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-colaborador-cabeza { display: flex; align-items: center; gap: var(--esp-3); }
+.pq-colaborador-sedes { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--esp-3); margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px dashed var(--borde); }
+.pq-chips-check { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: 0; padding: 0; border: 0; }
+.pq-chips-check legend { width: 100%; padding: 0; margin-bottom: var(--esp-2); }
+.pq-chip-check { position: relative; cursor: pointer; }
+.pq-chip-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-chip-check span { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--esp-3); border: 1px solid var(--borde); border-radius: 999px; background: var(--tiquete); font-size: 13.5px; font-weight: 500; color: var(--gris-texto); transition: background var(--rapido) ease, border-color var(--rapido) ease; }
+.pq-chip-check input:checked + span { background: var(--tinte-sello); border-color: var(--sello); color: var(--sello); font-weight: 600; }
+.pq-chip-check input:checked + span::before { content: "✓"; font-size: 12px; }
+.pq-chip-check input:focus-visible + span { outline: 2px solid var(--sello); outline-offset: 2px; }
+
+/* Mi cuenta */
+.pq-cuenta-grupo { display: flex; flex-direction: column; gap: var(--esp-4); margin-top: var(--esp-5); max-width: 520px; }
+.pq-cuenta-grupo .pq-form-panel { margin-top: 0; }
+.pq-cuenta-grupo .pq-btn-chico, .pq-cuenta-push .pq-btn-chico { align-self: flex-start; }
+.pq-cuenta-push { margin-top: 0; }
+.pq-cuenta-push-titulo { font-size: 14px; font-weight: 600; }
+.pq-cuenta-salir { margin-top: var(--esp-6); padding-top: var(--esp-3); border-top: 1px dashed var(--borde); max-width: 520px; }
+
+/* Plan */
+.pq-plan-pendiente { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-5); border: 1.5px solid var(--sello); }
+.pq-plan-pendiente-titulo { margin: 0; font-size: 15px; font-weight: 700; color: var(--carbon); }
+.pq-plan-pendiente-texto { margin: 0; font-size: 14px; line-height: 1.5; color: var(--gris-texto); }
+.pq-plan-pendiente form { margin-left: calc(var(--esp-2) * -1); }
+.pq-plan-uso { display: flex; flex-direction: column; gap: var(--esp-3); margin-top: var(--esp-4); }
+.pq-plan-uso-titulo { font-size: 14px; font-weight: 700; }
+.pq-planes-grilla-panel { margin-top: var(--esp-6); }
+.pq-plan-card-precio small { font-size: 13px; font-weight: 600; color: var(--gris-texto); }
+.pq-plan-card-boton { margin-top: var(--esp-3); }
+.pq-plan-pie { margin-top: var(--esp-4); }
+
+/* Colaborador sin sede asignada */
+.pq-sin-sede { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--esp-4); min-height: 100vh; max-width: 420px; margin: 0 auto; padding: var(--esp-6); text-align: center; }
+.pq-sin-sede-logo { height: 28px; width: auto; }
+.pq-sin-sede .pq-btn { width: auto; }

@@ -2,22 +2,26 @@
 $esNuevo = $producto === null;
 $volver = base_url('/panel/productos');
 ?>
-<a href="<?= e($volver) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Productos</a>
+<a href="<?= e($volver) ?>" class="pq-volver-panel">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  Productos
+</a>
 
-<h1 class="pq-h1" style="font-size: 26px; margin-top: 8px"><?= $esNuevo ? 'Nuevo producto' : 'Editar producto' ?></h1>
+<span class="pq-eyebrow pq-eyebrow-tras-volver"><?= $esNuevo ? 'Nuevo producto' : 'Editar producto' ?></span>
+<h1 class="pq-h1"><?= $esNuevo ? '¿Qué vas a vender?' : e($producto['nombre']) ?></h1>
 
 <form method="post"
       action="<?= e($esNuevo ? base_url('/panel/productos') : base_url('/panel/productos/' . $producto['id'] . '/actualizar')) ?>"
-      enctype="multipart/form-data" class="pq-stack" style="gap: 16px; margin-top: 20px; max-width: 460px">
+      enctype="multipart/form-data" class="pq-card pq-form-panel">
   <?= csrf_campo() ?>
   <input type="hidden" name="volver" value="<?= e($volver) ?>">
 
-  <div class="pq-campo" style="margin-bottom: 0">
+  <div class="pq-campo">
     <label class="pq-label" for="nombre">Nombre</label>
     <input class="pq-input" type="text" id="nombre" name="nombre" value="<?= e($producto['nombre'] ?? '') ?>" required maxlength="120">
   </div>
 
-  <div class="pq-campo" style="margin-bottom: 0">
+  <div class="pq-campo">
     <label class="pq-label" for="categoria">Categoría</label>
     <select class="pq-select" id="categoria" name="categoria">
       <?php $categoriaActual = $producto['categoria'] ?? ''; $coincide = false; ?>
@@ -27,14 +31,14 @@ $volver = base_url('/panel/productos');
       <?php endforeach; ?>
       <option value="__otra__" <?= !$coincide ? 'selected' : '' ?>>Otra categoría...</option>
     </select>
-    <div data-mostrar-si="categoria=__otra__" style="margin-top: 8px">
+    <div data-mostrar-si="categoria=__otra__" class="pq-campo-extra">
       <input class="pq-input" type="text" name="categoria_otra"
              value="<?= !$coincide ? e($categoriaActual) : '' ?>" placeholder="Nombre de la nueva categoría"
              data-requerido-si-visible maxlength="60">
     </div>
   </div>
 
-  <div class="pq-campo" style="margin-bottom: 0">
+  <div class="pq-campo">
     <label class="pq-label" for="precio">Precio</label>
     <div class="pq-campo-dinero">
       <input class="pq-input pq-mono" type="text" inputmode="numeric" id="precio" name="precio" data-precio
@@ -42,12 +46,12 @@ $volver = base_url('/panel/productos');
     </div>
   </div>
 
-  <div class="pq-campo" style="margin-bottom: 0">
-    <label class="pq-label" for="descripcion">Descripción (opcional)</label>
+  <div class="pq-campo">
+    <label class="pq-label" for="descripcion">Descripción <span class="pq-ayuda">(opcional)</span></label>
     <textarea class="pq-input" id="descripcion" name="descripcion" rows="2" maxlength="160" placeholder="Una descripción breve del producto..."><?= e($producto['descripcion'] ?? '') ?></textarea>
   </div>
 
-  <div class="pq-campo" style="margin-bottom: 0">
+  <div class="pq-campo">
     <label class="pq-label">Imagen</label>
     <?php if (!empty($producto['imagen'])): ?>
       <div class="pq-foto-actual">
@@ -57,7 +61,7 @@ $volver = base_url('/panel/productos');
           <button type="submit" name="quitar_imagen" value="1" formnovalidate>Eliminar foto</button>
         </div>
       </div>
-      <input id="imagen" type="file" name="imagen" accept="image/jpeg,image/png,image/webp" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+      <input id="imagen" type="file" name="imagen" accept="image/jpeg,image/png,image/webp" class="pq-sr-solo">
     <?php else: ?>
       <label class="pq-subir-foto" for="imagen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -90,8 +94,8 @@ $volver = base_url('/panel/productos');
     </label>
   </div>
 
-  <div style="display: flex; gap: 10px; margin-top: 4px">
-    <a href="<?= e($volver) ?>" class="pq-btn pq-btn-ghost" style="width: auto; flex-grow: 1">Cancelar</a>
-    <button type="submit" class="pq-btn pq-btn-sello" style="width: auto; flex-grow: 1"><?= $esNuevo ? 'Agregar producto' : 'Guardar cambios' ?></button>
+  <div class="pq-form-panel-botones">
+    <a href="<?= e($volver) ?>" class="pq-btn pq-btn-ghost">Cancelar</a>
+    <button type="submit" class="pq-btn pq-btn-sello"><?= $esNuevo ? 'Agregar producto' : 'Guardar cambios' ?></button>
   </div>
 </form>

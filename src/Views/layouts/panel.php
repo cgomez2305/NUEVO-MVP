@@ -101,7 +101,13 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
         . ($esActivo ? ' aria-current="page"' : '') . '>' . $pqIcono($clave) . '<span class="pq-nav-etiqueta">' . e($etiqueta) . '</span></a>';
 };
 ?>
-<body class="pq-panel-bg" data-negocio-id="<?= (int) $negocio['id'] ?>" data-es-reservas="<?= ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas' ? '1' : '0' ?>">
+<?php
+// El color del negocio también vive en el panel (insignia de la sede,
+// cenefa bajo la cabecera, vitrina del inicio): es el puente con la tienda,
+// para que el dueño reconozca su marca. Mismo cálculo que layouts/tienda.php.
+$marcaNegocio = color_seguro($negocio['color_marca'] ?? null);
+?>
+<body class="pq-panel-bg" style="--marca: <?= e($marcaNegocio) ?>; --marca-sobre: <?= e(color_texto_sobre($marcaNegocio)) ?>" data-negocio-id="<?= (int) $negocio['id'] ?>" data-es-reservas="<?= ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas' ? '1' : '0' ?>">
   <script src="<?= e(base_url('assets/js/panel-sidebar-bootstrap.js')) ?>"></script>
   <div class="pq-shell">
     <div class="pq-topbar">

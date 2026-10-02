@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-02 (actualizado tras la fase 1 del panel v2)
+# Estado de la sesión — 2026-10-02 (panel v2 completo)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -39,18 +39,16 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Auditoría sin hallazgos en: SQLi, IDOR, CSRF, XSS, subidas, redirecciones.
 
 ## En curso
-- Nada a medias. Último pedido: "sigue con el panel del dueño". Fase 1
-  hecha (shell fusionado en celular, kanban, historial en tarjetas, comanda
-  imprimible, productos con inicial, agenda por día, push en Mi cuenta);
-  documentada en `.claude/skills/diseno-veci/references/panel.md`.
+- Nada a medias. El usuario preguntó por qué tienda y panel se ven
+  distintos; se explicó (dos rutas a propósito) y pidió "realiza esos
+  ajustes y pasa a la fase 2": puente con la tienda (color del negocio en
+  insignia/cenefa/escaparate + comanda unificada) y fase 2 del panel, todo
+  hecho y documentado en `references/panel.md`.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
-0. Diseño: tienda pública completa en v2. Panel fase 1 completa. Sigue
-   panel fase 2: servicios (varios "Guardar" por tarjeta, formularios
-   densos), horario, fechas bloqueadas, copiloto, recordatorios, sedes,
-   colaboradores, empleados, cuenta, plan, producto_form y
-   productos/_gestor.php. Después onboarding y admin.
+0. Diseño: tienda y panel completos en v2. Sigue onboarding (incluye
+   productos/_gestor.php y servicios/_gestor.php) y después admin.
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
@@ -88,6 +86,9 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Sesiones de prueba del panel: cookie jars de curl (login con CSRF) en el
   scratchpad; `capturas.js --cookies jar`. En Puppeteer, los botones que
   quedan bajo la bottomnav fija se pulsan con `$eval(sel, e => e.click())`.
+- Copiloto bloqueado en plan Gratis: para probarlo, `update negocios set
+  plan_id=3, plan_vence_en='2027-12-31' where id=1` y luego volver a
+  `plan_id=1, plan_vence_en=NULL`.
 - Las citas de prueba de Luis Pérez (3011112222) quedan en el pasado y la
   agenda solo muestra de hoy en adelante: mover `fecha_hora` para probar.
 

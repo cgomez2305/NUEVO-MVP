@@ -5,16 +5,36 @@ Ruta 2 "Tiquete y papel": fondo `--tiquete`, texto `--carbon`, acción
 (precios, horas, números de pedido) en JetBrains Mono. CSS: bloque
 "PANEL v2" al final de `app.css`. Layout: `src/Views/layouts/panel.php`.
 
-Estado del rediseño:
-- **Fase 1 (hecha):** shell, pedidos (kanban + historial), detalle del
-  pedido, productos, agenda de citas, avisos push en Mi cuenta.
-- **Fase 2 (pendiente):** servicios, horario, fechas bloqueadas, copiloto,
-  recordatorios, sedes, colaboradores, empleados, cuenta, plan,
-  `producto_form.php` y `productos/_gestor.php` (sigue con la miniatura
-  vieja de fondo en línea).
+Estado del rediseño: **todo el panel está en v2** (inicio, pedidos,
+detalle, productos y su formulario, agenda, servicios, horario, días
+bloqueados, empleados, recordatorios, copiloto, sedes, colaboradores,
+cuenta, plan). Falta: onboarding (incluye `productos/_gestor.php` y
+`servicios/_gestor.php`, que ahora solo usa el onboarding) y admin.
 
-**Detalle firma del panel: la comanda imprimible** (`.pq-comanda-panel`).
-No se repite en otras pantallas del panel; ahí el detalle propio es otro.
+## El puente con la tienda (decisión del usuario)
+
+El panel NO se vuelve tienda: sigue en "Tiquete y papel". Pero donde el
+dueño piensa en *su* tienda, aparece la marca del negocio con piezas de
+la Ruta 1, para que ambos lados se sientan de la misma familia:
+
+- `layouts/panel.php` pone `--marca` y `--marca-sobre` en el `<body>`;
+  `.pq-panel-bg` deriva `--marca-claro/-suave/-texto` (igual que la tienda).
+- **Insignia**: el avatar del selector de sede es la insignia redonda de
+  la tienda (color del negocio + Bricolage).
+- **Cenefa**: franja de 4px con las rayas del toldo bajo la cabecera.
+- **Escaparate** (`.pq-escaparate`): un pedazo de la tienda dentro del
+  panel — papel, toldo corto, insignia, nombre en Bricolage y "así la ven
+  tus clientes". Se usa en el inicio (enlace para compartir), en el
+  horario (vista previa del horario guardado) y en Sedes (cada sede es una
+  fachada). Ojo: `.pq-vitrina` ya existe en la tienda, no reutilizar ese
+  nombre.
+- **Comanda unificada**: el detalle del pedido usa la MISMA comanda de la
+  confirmación de la tienda (`.pq-comanda.pq-comanda-final`), con sello de
+  caucho mostrando el estado. En el panel el sello va arriba a la derecha.
+- Hojita de almanaque de la reserva, tachada, para los días bloqueados.
+
+Lo demás del panel (navegación, formularios, datos) sigue en Inter +
+JetBrains Mono con el azul sello.
 
 ---
 
@@ -75,27 +95,29 @@ una grilla de 2 columnas con `.pq-filtro-boton`.
 ## Comanda imprimible (`panel/pedido_detalle.php`)
 
 ```
-        DOÑA MARÍA                 ← nombre_publico_sede()
- Pedido #50 · 1 Oct, 7:02 a. m.
- - - - - - - - - - - - - - - - -
- Ana Ruiz · 3009998877
- 1× Bandeja paisa       $28.000
- - - - - - - - - - - - - - - - -
- Total                  $28.000
- - - - - - - - - - - - - - - - -
+ Doña María              [EN COCINA]  ← nombre_publico_sede() + sello
+ PEDIDO #50        1 OCT, 7:02 A. M.
+ - - - - - - - - - - - - - - - - -
+ 1× Bandeja paisa ·········· $28.000  ← puntos guía, igual que la carta
+ ═════════════════════════════════════
+ Total                       $28.000
+ - - - - - - - - - - - - - - - - -
+ Cliente  Ana Ruiz · 3009998877
  Entrega  Recoge en el local
- Pago     Efectivo
- \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/  ← borde rasgado (conic-gradient + mask)
+ \/\/\/\/\/\/\/\/\/\/\/\/\/\/  ← borde rasgado
 ```
 
-- Blanco, todo en mono, líneas punteadas, `max-width: 420px`.
+- Es la comanda de la tienda (`.pq-comanda-imprimible` solo añade la letra
+  Inter Tight y el nombre arriba). Sin chip de estado en la cabecera: el
+  sello ya lo dice.
 - Debajo: botón sello con el siguiente paso, luego "WhatsApp" e "Imprimir"
   (texto corto + `aria-label` largo), y `<details class="pq-detalle-mas">`
   con el cambio de estado manual y "Cancelar este pedido"
   (`.pq-boton-peligro`, con `data-confirmar`). Lo destructivo nunca queda a
   la vista.
 - `@media print`: `@page { size: 80mm auto }`, todo `visibility: hidden`
-  menos la comanda, que se posiciona a 72mm de ancho y sin máscara. Sale
+  menos la comanda, que se posiciona a 72mm de ancho, sin máscara ni sello
+  (a la cocina no le sirve el estado). Sale
   lista para el rollo térmico. Para probarla:
   `page.emulateMediaType('print')` con viewport de ~302px.
 - Mensaje de WhatsApp: el texto va con `rawurlencode()` y **sin** `e()`
@@ -106,6 +128,61 @@ una grilla de 2 columnas con `.pq-filtro-boton`.
 `.pq-detalle-mas` y `.pq-agenda-mas`: el `summary` es flex (pierde el
 triángulo nativo), así que se dibuja un chevron con `::after` que gira al
 abrir. Escape ya cierra cualquier `<details>` del panel.
+
+## Inicio (`panel/dashboard.php`)
+
+- Saludo al negocio (`negocio_nombre`), nunca a la sede ("Hola, Sede
+  Norte" sonaba a saludar un local). La sede va en la bajada si hay varias.
+- Cifras del día en `.pq-caja-dia`: una tira de casillas con divisiones
+  punteadas (registradora), no cuatro tarjetas de color. Solo lleva color
+  la cifra que pide acción (`.pq-caja-casilla-alerta`). `.pq-caja-dia-3`
+  para tres casillas (copiloto).
+- Listas cortas `.pq-fila-pedido` con `#id` u hora en la primera columna
+  (`.pq-fila-hora`) y la fecha sin partir (`.pq-fila-fecha`).
+
+## Formularios del panel
+
+- `.pq-form-panel` (tarjeta con campos y `.pq-form-panel-botones`:
+  Cancelar angosto + acción ancha).
+- Interruptor `.pq-interruptor` (la etiqueta envuelve el texto: área
+  táctil grande) en verde `--caja`, igual que `.pq-switch` del formulario
+  de producto. `.pq-interruptor-con-texto` para título + ayuda.
+- `.pq-agregar-panel`: "+ Nuevo X" como `<details>` que despliega el
+  formulario (se abre solo si la lista está vacía).
+- `.pq-enlace-boton` (y `-peligro`) para acciones secundarias: pausar,
+  quitar, eliminar, cerrar sesión. Nunca un `<button class="pq-mono">`
+  de 11px gris.
+- `.pq-chip-check`: casillas como chips (sedes de un colaborador).
+- Precios: `data-precio-cop` + `dinero_desde_texto()` en el servidor.
+  `(int) "20.000"` es 20: nunca `(int)` sobre un precio con puntos.
+- `.pq-sin-js`: botón de respaldo (p. ej. "Aplicar" junto a un select con
+  `data-autoenviar`) que `confirmar.js` oculta cuando hay JS.
+
+## Servicios (`panel/servicios.php`)
+
+Fila que se lee como la carta (punto de color, nombre, duración · anticipo,
+precio, "Editar"). Es un `<details>`: abre UN formulario con nombre,
+precio, duración y anticipo, y un solo "Guardar cambios". El controlador
+guarda el anticipo junto al servicio solo si es el dueño.
+
+## Horario y días bloqueados
+
+- `.pq-semana`: un día por fila con interruptor; apagado, las horas se
+  esconden y aparece "Cerrado" (CSS `:has`, sin JS). En celular las horas
+  bajan a su línea y se reparten el ancho (si no, se corta "a. m.").
+- Debajo, escaparate con el horario guardado tal como lo ve el cliente.
+- Días bloqueados: `.pq-dia.pq-dia-bloqueado` (hojita tachada en ají).
+
+## Copiloto
+
+- `.pq-segmentos`: grupos como pestañas en una fila con scroll lateral y
+  la explicación del grupo activo a la vista (antes en un `title`).
+- `.pq-cliente-fila`: avatar suave, nombre + chips mini, motivo.
+- Mensaje: la burbuja verde de WhatsApp ES el `<textarea>` editable
+  (`.pq-wa-fondo` + `.pq-burbuja-out.pq-wa-editable`). Recordatorios usan
+  el mismo fondo con la burbuja de solo lectura.
+- Textos: `hace_dias()` ("hoy", "ayer", "hace 5 días"; nunca "hace 1
+  días"); "compraba cada N días" solo si de verdad ya se pasó de su ritmo.
 
 ## Catálogo de productos (`panel/productos.php`)
 

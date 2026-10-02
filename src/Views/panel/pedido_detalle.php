@@ -30,7 +30,6 @@ $nivel = nivel_espera($minutosEspera, 20);
       <span class="pq-ayuda"><?= e($pedido['cliente_telefono']) ?> · <?= e(fecha_corta((string) $pedido['creado_en'], ', ')) ?></span>
     </div>
   </div>
-  <span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']] ?? $pedido['estado']) ?></span>
 </div>
 
 <?php if ($pedidoActivo): ?>
@@ -41,34 +40,47 @@ $nivel = nivel_espera($minutosEspera, 20);
 <?php endif; ?>
 
 <?php
-// La comanda: el pedido como tiquete de impresora térmica. Es lo que se ve
-// en pantalla y lo ÚNICO que sale al imprimir (ver @media print en app.css),
-// con el ancho de un rollo de 80 mm, lista para pegar en la cocina.
+// La comanda: el MISMO papel que el cliente vio al pedir (pedido_confirmado
+// en la tienda), con un sello de caucho que dice en qué va el pedido. Al
+// imprimir sale solo la comanda, sin sello, en el ancho de un rollo de
+// 80 mm (ver @media print en app.css), lista para pegar en la cocina.
+$selloTono = match ($pedido['estado']) {
+    'entregado' => 'ok',
+    'cancelado' => 'no',
+    default     => '',
+};
 ?>
-<article class="pq-comanda-panel" aria-label="Comanda del pedido #<?= (int) $pedido['id'] ?>">
-  <header class="pq-comanda-panel-cabeza">
-    <strong><?= e(nombre_publico_sede($negocio)) ?></strong>
-    <span>Pedido #<?= (int) $pedido['id'] ?> · <?= e(fecha_corta((string) $pedido['creado_en'], ', ')) ?></span>
-  </header>
-  <p class="pq-comanda-panel-cliente"><?= e($pedido['cliente_nombre']) ?> · <?= e($pedido['cliente_telefono']) ?></p>
-  <ul class="pq-comanda-panel-items">
+<div class="pq-comanda pq-comanda-final pq-comanda-imprimible">
+  <article class="pq-comanda-hoja" aria-label="Comanda del pedido #<?= (int) $pedido['id'] ?>">
+    <span class="pq-sello<?= $selloTono !== '' ? ' pq-sello-' . $selloTono : '' ?>" aria-hidden="true"><?= e($etiquetasEstado[$pedido['estado']] ?? $pedido['estado']) ?></span>
+    <p class="pq-comanda-negocio"><?= e(nombre_publico_sede($negocio)) ?></p>
+    <p class="pq-comanda-cabeza">
+      <span>Pedido #<?= (int) $pedido['id'] ?></span>
+      <span><?= e(fecha_corta((string) $pedido['creado_en'], ', ')) ?></span>
+    </p>
     <?php foreach ($items as $item): ?>
-      <li>
-        <span class="pq-comanda-panel-cant"><?= (int) $item['cantidad'] ?>×</span>
-        <span class="pq-comanda-panel-nombre"><?= e($item['nombre_producto']) ?></span>
-        <span class="pq-comanda-panel-precio"><?= pesos((int) $item['precio_unitario'] * (int) $item['cantidad']) ?></span>
-      </li>
+      <div class="pq-comanda-linea">
+        <div class="pq-comanda-fila">
+          <span class="pq-comanda-nombre"><span class="pq-comanda-cantidad"><?= (int) $item['cantidad'] ?>×</span> <?= e($item['nombre_producto']) ?></span>
+          <span class="pq-plato-guia" aria-hidden="true"></span>
+          <span class="pq-comanda-subtotal"><?= pesos((int) $item['precio_unitario'] * (int) $item['cantidad']) ?></span>
+        </div>
+      </div>
     <?php endforeach; ?>
-  </ul>
-  <p class="pq-comanda-panel-total"><span>Total</span><span><?= pesos((int) $pedido['total']) ?></span></p>
-  <dl class="pq-comanda-panel-datos">
-    <div><dt>Entrega</dt><dd><?= e($etiquetaEntregaLarga) ?></dd></div>
-    <div><dt>Pago</dt><dd><?= e(metodo_pago_legible((string) $pedido['metodo_pago'])) ?></dd></div>
-    <?php if (!empty($pedido['notas'])): ?>
-      <div class="pq-comanda-panel-nota"><dt>Nota</dt><dd>"<?= e($pedido['notas']) ?>"</dd></div>
-    <?php endif; ?>
-  </dl>
-</article>
+    <div class="pq-comanda-total">
+      <span>Total</span>
+      <span><?= pesos((int) $pedido['total']) ?></span>
+    </div>
+    <dl class="pq-comanda-datos">
+      <div><dt>Cliente</dt><dd><?= e($pedido['cliente_nombre']) ?> · <?= e($pedido['cliente_telefono']) ?></dd></div>
+      <div><dt>Entrega</dt><dd><?= e($etiquetaEntregaLarga) ?></dd></div>
+      <div><dt>Pago</dt><dd><?= e(metodo_pago_legible((string) $pedido['metodo_pago'])) ?></dd></div>
+      <?php if (!empty($pedido['notas'])): ?>
+        <div class="pq-comanda-dato-nota"><dt>Nota</dt><dd>"<?= e($pedido['notas']) ?>"</dd></div>
+      <?php endif; ?>
+    </dl>
+  </article>
+</div>
 
 <?php if ($siguientePaso !== null): ?>
   <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>" class="pq-detalle-accion">

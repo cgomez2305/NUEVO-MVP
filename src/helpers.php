@@ -460,6 +460,16 @@ function hoja_almanaque(string $fecha, string $fechaActiva, string $href): strin
         . '</a>';
 }
 
+/** 0 → "hoy", 1 → "ayer", 5 → "hace 5 días" (nunca "hace 1 días"). */
+function hace_dias(int $dias): string
+{
+    return match (true) {
+        $dias <= 0 => 'hoy',
+        $dias === 1 => 'ayer',
+        default => "hace {$dias} días",
+    };
+}
+
 /** 'breb' → "Bre-B", 'nequi' → "Nequi"... Nunca mostrar el código crudo ("BREB") al cliente ni al dueño. */
 function metodo_pago_legible(string $metodo): string
 {

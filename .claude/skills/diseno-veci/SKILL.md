@@ -24,7 +24,10 @@ nivel en vez de reinventar (o degradar) lo que existe.
 | Tipografía | Bricolage Grotesque (títulos) + Inter Tight (texto) | Instrument Serif (títulos) + Inter (texto) + JetBrains Mono (datos) |
 
 En la tienda manda la marca del negocio: Veci solo aparece en el sello
-"Hecho con Veci" del plan Gratis. Detalle completo de tokens, escalas y
+"Hecho con Veci" del plan Gratis. En el panel, la marca del negocio
+aparece solo donde el dueño piensa en *su* tienda (insignia de la sede,
+cenefa, escaparate, comanda): ver "El puente con la tienda" en
+`references/panel.md`. Detalle completo de tokens, escalas y
 componentes en `references/tokens.md` y `references/tienda.md`.
 
 ## Principios (el porqué de cada decisión)
@@ -139,9 +142,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/tienda.md` — componentes de la tienda pública (cabecera con
   toldo, navegación de categorías, carta con puntos guía, fila de servicio,
   barra del carrito, tarjetas de información) con su anatomía y estados.
-- `references/panel.md` — componentes del panel del dueño (shell fusionado
-  en celular, kanban, historial en tarjetas, comanda imprimible, catálogo
-  con inicial, agenda por día) y qué pantallas faltan por pasar a v2.
+- `references/panel.md` — el panel del dueño completo: el puente con la
+  tienda (insignia, cenefa, escaparate, comanda unificada), shell, kanban,
+  agenda, servicios, horario, copiloto, formularios e interruptores.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 
