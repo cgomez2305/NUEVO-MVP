@@ -203,16 +203,17 @@ límites y funciones que sí se hacen cumplir en el código (`database/schema.sq
 - **Barrio**: todo ilimitado salvo estadísticas completas (sigue en 30 días
   de historial), incluye el copiloto de recompra.
 - **Pro**: historial completo + exportar a CSV, y es el único con
-  multisede (3 sedes incluidas en el precio, sede extra aparte — el cobro
-  por sede extra todavía no se hace cumplir en el código, es un proyecto
-  aparte).
+  multisede (3 sedes incluidas en el precio). La sede extra ($30.000/mes)
+  todavía no tiene cobro en el código, así que por ahora crear una cuarta
+  sede se bloquea en el servidor.
 
 **Cómo se cobra**: Bre-B y Nequi no tienen cobro automático recurrente, así
 que el cobro es manual verificado. El dueño pide el cambio de plan desde
 `/panel/plan` (queda una fila sin confirmar en `pagos_plan` con lo que se
 espera que transfiera), transfiere por Bre-B a la llave de Veci
 (`config/config.php` → `cobro_planes.llave_breb`), y un admin confirma el
-pago desde `/admin/negocios/{id}` al ver el comprobante — eso activa o
+pago desde `/admin/negocios/{id}` escribiendo el monto que vio llegar
+(si no coincide exacto con lo esperado, no se activa nada) — eso activa o
 extiende el plan. Bajar a Gratis es la excepción: es instantáneo, no hay
 nada que cobrar.
 
@@ -223,6 +224,42 @@ cron diario:
 ```bash
 0 3 * * * php /ruta/al/proyecto/bin/revisar_planes.php
 ```
+
+## Seguridad y anti-abuso
+
+Lo que ya está blindado en el código (para que nadie lo desactive sin
+querer en un cambio futuro):
+
+- **Planes**: el plan vigente se calcula en cada petición (un plan pago
+  vencido ya se comporta como Gratis aunque el cron no haya corrido); el
+  límite de sedes por plan se valida en el servidor; confirmar un pago
+  exige escribir el monto recibido y es atómico (no se puede activar dos
+  veces); el webhook Bre-B verifica firma HMAC **y** que el monto cubra el
+  total.
+- **Límites de tasa** (`limites_tasa`, ver `App\Models\LimiteTasa`):
+  3 cuentas nuevas por IP al día; 20 logins fallidos por IP cada 15 min
+  (además del bloqueo de 5 intentos por cuenta, también en `/admin`);
+  5 correos de recuperación por IP y 3 por cuenta por hora; 5 pedidos,
+  citas o inscripciones a lista de espera por IP y tienda por hora (20 en
+  total entre tiendas), para que nadie agote el cupo Gratis de un negocio
+  con pedidos falsos.
+- **Cuentas**: contraseñas de mínimo 8 caracteres con `password_hash`;
+  los tokens de recuperación se guardan como SHA-256 (un backup filtrado no
+  sirve para tomar cuentas); la sesión de `/admin` se cierra sola a los
+  30 minutos sin actividad.
+- **Aplicación**: consultas 100% preparadas (PDO sin emulación), CSRF en
+  todo POST, escape de salida con `e()`, todo dato de un negocio filtrado
+  por su `negocio_id`/sede, subidas de imagen con lista blanca de tipos y
+  nombres aleatorios, CSV de exportación protegido contra inyección de
+  fórmulas, errores nunca visibles al visitante (van al log del servidor),
+  cabeceras CSP, HSTS (en HTTPS), X-Frame-Options, nosniff y
+  Permissions-Policy, cookie de sesión HttpOnly + SameSite + Secure.
+- **Servidor**: los scripts de `bin/` solo corren por consola, y el
+  `.htaccess` de la raíz bloquea `config/`, `src/`, `database/` y `bin/`
+  por si el dominio no apunta a `public/`.
+
+Pendiente fuera del código: HTTPS obligatorio en el hosting, backups
+diarios de la base y monitorear el log de errores de PHP.
 
 ## Estructura
 

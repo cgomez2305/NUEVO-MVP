@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Solo consola: si el hosting llegara a exponer bin/ por web, nadie puede
+// dispararlo desde un navegador (crear admins, mandar recordatorios...).
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 /**
  * Cron de vencimiento de planes: baja a Gratis todo negocio cuyo plan
  * pago (Barrio/Pro) venció sin que se confirmara un pago nuevo a tiempo

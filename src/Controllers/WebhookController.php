@@ -61,6 +61,7 @@ class WebhookController
         $aprobado = in_array($estado, ['aprobado', 'approved', 'completado', 'completed'], true);
         $tipo = $m[1];
         $id = (int) $m[2];
+        $monto = is_array($datos) && is_numeric($datos['monto'] ?? null) ? (int) $datos['monto'] : 0;
 
         if (!$aprobado) {
             http_response_code(200);
@@ -68,43 +69,53 @@ class WebhookController
             exit;
         }
 
-        if ($tipo === 'P') {
-            $this->confirmarPedido($id);
-        } else {
-            $this->confirmarCita($id);
-        }
+        $marcado = $tipo === 'P' ? $this->confirmarPedido($id, $monto) : $this->confirmarCita($id, $monto);
 
         http_response_code(200);
-        echo json_encode(['ok' => true]);
+        echo json_encode($marcado ? ['ok' => true] : ['ok' => true, 'nota' => 'no se marcó: no existe, ya estaba procesado o el monto no alcanza']);
         exit;
     }
 
-    private function confirmarPedido(int $pedidoId): void
+    /**
+     * Solo marca pagado si el monto transferido cubre el total: una firma
+     * válida prueba que la notificación viene del proveedor, no que el
+     * cliente pagó completo — sin esto, una transferencia de $1.000 con la
+     * referencia correcta dejaría pagado un pedido de $35.000.
+     */
+    private function confirmarPedido(int $pedidoId, int $monto): bool
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT sede_id, estado FROM pedidos WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado, total FROM pedidos WHERE id = :id');
         $stmt->execute(['id' => $pedidoId]);
         $pedido = $stmt->fetch();
 
-        if ($pedido === false || $pedido['estado'] !== 'pendiente') {
-            return; // no existe, o ya se procesó antes (idempotencia).
+        if ($pedido === false || $pedido['estado'] !== 'pendiente' || $monto < (int) $pedido['total']) {
+            return false; // no existe, ya se procesó (idempotencia) o pago incompleto.
         }
 
         Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado');
+        return true;
     }
 
-    private function confirmarCita(int $citaId): void
+    /** Igual que confirmarPedido: el monto tiene que cubrir el anticipo pedido (o el precio, si la cita no pide anticipo). */
+    private function confirmarCita(int $citaId, int $monto): bool
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT sede_id, estado FROM citas WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado, precio, anticipo_monto FROM citas WHERE id = :id');
         $stmt->execute(['id' => $citaId]);
         $cita = $stmt->fetch();
 
         if ($cita === false || $cita['estado'] !== 'pendiente') {
-            return;
+            return false;
+        }
+
+        $requerido = (int) $cita['anticipo_monto'] > 0 ? (int) $cita['anticipo_monto'] : (int) $cita['precio'];
+        if ($monto < $requerido) {
+            return false;
         }
 
         Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada');
         Cita::marcarAnticipoPagado($citaId, (int) $cita['sede_id']);
+        return true;
     }
 }

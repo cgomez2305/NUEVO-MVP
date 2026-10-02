@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\AdminAuth;
 use App\Database;
+use App\Models\LimiteTasa;
 use App\Models\Negocio;
 use App\Models\PagoPlan;
 use App\Models\Plan;
@@ -43,12 +44,14 @@ class AdminController
         $correo = trim((string) ($_POST['correo'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
 
-        if (AdminAuth::estaBloqueado($correo)) {
+        $ip = ip_cliente();
+        if (AdminAuth::estaBloqueado($correo) || LimiteTasa::excedido('login_admin', $ip, 10, 15 * 60)) {
             flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
             redirigir('/admin/login');
         }
 
         if (!AdminAuth::intentarLogin($correo, $password)) {
+            LimiteTasa::registrar('login_admin', $ip);
             flash_set('error', 'Correo o contraseña incorrectos.');
             redirigir('/admin/login');
         }

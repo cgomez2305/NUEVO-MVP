@@ -6,7 +6,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Negocio;
-use App\Models\RegistroIp;
+use App\Models\LimiteTasa;
 use App\Models\Sede;
 use App\Models\Usuario;
 use App\Services\Correo;
@@ -38,8 +38,8 @@ class AuthController
         $tipoNegocio = (string) ($_POST['tipo_negocio'] ?? 'pedidos');
         $correo = trim((string) ($_POST['correo'] ?? ''));
 
-        if ($nombre === '' || $whatsapp === '' || strlen($password) < 6) {
-            flash_set('error', 'Completa el nombre del negocio, tu WhatsApp y una contraseña de al menos 6 caracteres.');
+        if ($nombre === '' || $whatsapp === '' || strlen($password) < 8) {
+            flash_set('error', 'Completa el nombre del negocio, tu WhatsApp y una contraseña de al menos 8 caracteres.');
             redirigir('/registro');
         }
 
@@ -59,7 +59,7 @@ class AuthController
         }
 
         $ip = ip_cliente();
-        if (RegistroIp::demasiadosDesde($ip)) {
+        if (LimiteTasa::excedido('registro', $ip, 3, 24 * 3600)) {
             flash_set('error', 'Ya creaste varias cuentas nuevas en poco tiempo. Espera un día o escríbenos a soporte@tuveci.co si de verdad necesitas otra.');
             redirigir('/registro');
         }
@@ -75,7 +75,7 @@ class AuthController
             Usuario::guardarCorreo($usuarioId, $correo);
         }
 
-        RegistroIp::registrar($ip);
+        LimiteTasa::registrar('registro', $ip);
 
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuarioId;
@@ -105,8 +105,13 @@ class AuthController
 
         $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
         $password = (string) ($_POST['password'] ?? '');
+        $ip = ip_cliente();
 
-        if (Auth::estaBloqueado($whatsapp)) {
+        // El bloqueo por cuenta (5 intentos) no ve a quien prueba UNA
+        // contraseña común contra cientos de números distintos: eso se
+        // frena por IP. 20 fallos en 15 minutos es mucho más de lo que hace
+        // una persona equivocándose, aun detrás de una IP compartida.
+        if (Auth::estaBloqueado($whatsapp) || LimiteTasa::excedido('login', $ip, 20, 15 * 60)) {
             flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
             redirigir('/login');
         }
@@ -117,6 +122,7 @@ class AuthController
         }
 
         if (!Auth::intentarLogin($whatsapp, $password)) {
+            LimiteTasa::registrar('login', $ip);
             flash_set('error', 'WhatsApp o contraseña incorrectos.');
             redirigir('/login');
         }
@@ -161,8 +167,18 @@ class AuthController
 
         $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
+        $ip = ip_cliente();
 
-        if ($usuario !== null && !empty($usuario['correo']) && Correo::disponible()) {
+        // Sin límite, este formulario sirve para bombardear de correos a
+        // cualquier dueño (y para quemar la cuota del SMTP de Veci). Por IP
+        // y por cuenta; el mensaje de abajo es el mismo pase lo que pase,
+        // para no revelar si el número existe.
+        $limitado = LimiteTasa::excedido('reset_ip', $ip, 5, 3600)
+            || LimiteTasa::excedido('reset_cuenta', $whatsapp, 3, 3600);
+        LimiteTasa::registrar('reset_ip', $ip);
+
+        if (!$limitado && $usuario !== null && !empty($usuario['correo']) && Correo::disponible()) {
+            LimiteTasa::registrar('reset_cuenta', $whatsapp);
             $token = Usuario::generarTokenReset((int) $usuario['id']);
             $enlace = url_publica('/reset-password/' . $token);
             Correo::enviar(
@@ -209,8 +225,8 @@ class AuthController
         $password = (string) ($_POST['password'] ?? '');
         $confirmar = (string) ($_POST['password_confirmar'] ?? '');
 
-        if (strlen($password) < 6 || $password !== $confirmar) {
-            flash_set('error', 'La contraseña debe tener al menos 6 caracteres y coincidir en ambos campos.');
+        if (strlen($password) < 8 || $password !== $confirmar) {
+            flash_set('error', 'La contraseña debe tener al menos 8 caracteres y coincidir en ambos campos.');
             redirigir('/reset-password/' . $token);
         }
 

@@ -338,15 +338,18 @@ CREATE TABLE IF NOT EXISTS admins (
   creado_en          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Una cuenta nueva creada desde cada IP, para frenar la multiplicación de
--- cupos del plan Gratis vía multicuenta (ver AuthController::registrar y
--- RegistroIp::demasiadosDesde). Solo se inserta en registros exitosos; no
--- es un log general de tráfico.
-CREATE TABLE IF NOT EXISTS registros_ip (
-  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  ip          VARCHAR(45)  NOT NULL,
+-- Limitador de tasa genérico (ver src/Models/LimiteTasa.php): una fila por
+-- cada vez que una clave (IP, o IP+sede) hizo una acción pública que se
+-- puede abusar repitiéndola — registro, pedido, cita, lista de espera,
+-- login, recuperación de contraseña. Se limpia sola: nunca guarda más de
+-- 24 horas. No es un log de tráfico.
+CREATE TABLE IF NOT EXISTS limites_tasa (
+  id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  accion      VARCHAR(30)  NOT NULL,
+  clave       VARCHAR(80)  NOT NULL,
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_registros_ip_ip_fecha (ip, creado_en)
+  INDEX idx_limites_tasa (accion, clave, creado_en),
+  INDEX idx_limites_tasa_fecha (creado_en)
 ) ENGINE=InnoDB;
 
 -- Suscripciones de Web Push de cada USUARIO del panel (no por sede: un

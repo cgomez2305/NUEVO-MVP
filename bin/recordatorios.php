@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Solo consola: si el hosting llegara a exponer bin/ por web, nadie puede
+// dispararlo desde un navegador (crear admins, mandar recordatorios...).
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 /**
  * Cron de recordatorios de cita: revisa todas las citas de todos los
  * negocios que caen en las próximas 24-30 horas y, si hay una cuenta de

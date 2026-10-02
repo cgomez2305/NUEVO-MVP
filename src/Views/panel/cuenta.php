@@ -20,7 +20,7 @@
   <?= csrf_campo() ?>
   <span style="font-size: 13px; font-weight: 600">Cambiar contraseña</span>
   <input class="pq-input" type="password" name="password_actual" placeholder="Contraseña actual" required>
-  <input class="pq-input" type="password" name="password_nueva" placeholder="Nueva (mínimo 6 caracteres)" required minlength="6">
+  <input class="pq-input" type="password" name="password_nueva" placeholder="Nueva (mínimo 8 caracteres)" required minlength="8">
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cambiar contraseña</button>
 </form>
 

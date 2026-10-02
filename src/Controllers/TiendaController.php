@@ -8,6 +8,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\LimiteTasa;
 use App\Models\ListaEspera;
 use App\Models\Sede;
 use App\Models\Pedido;
@@ -225,6 +226,8 @@ class TiendaController
             redirigir('/t/' . $negocio['slug']);
         }
 
+        $this->exigirTasaPublica('cita', $negocio, $volverAReservar);
+
         if ($this->limiteDelMesAlcanzado($negocio)) {
             flash_set('error', 'Este negocio ya llegó al número de citas que puede recibir este mes. Escríbele directo por WhatsApp para agendar.');
             redirigir($volverAReservar);
@@ -281,6 +284,7 @@ class TiendaController
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
         $anticipo = Servicio::calcularAnticipo($servicio);
 
+        $this->registrarTasaPublica('cita', $negocio);
         $citaId = Cita::crear(
             (int) $negocio['id'],
             $clienteId,
@@ -349,7 +353,10 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
+        $this->exigirTasaPublica('lista_espera', $negocio, $volverAReservar);
+
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $this->registrarTasaPublica('lista_espera', $negocio);
         $listaEsperaId = ListaEspera::crear((int) $negocio['id'], $clienteId, (int) $servicio['id'], $servicio['nombre'], $fecha);
 
         WebPush::notificarSede(
@@ -516,6 +523,8 @@ class TiendaController
             redirigir('/t/' . $negocio['slug']);
         }
 
+        $this->exigirTasaPublica('pedido', $negocio, '/t/' . $negocio['slug'] . '/carrito');
+
         if ($this->limiteDelMesAlcanzado($negocio)) {
             flash_set('error', 'Este negocio ya llegó al número de pedidos que puede recibir este mes. Escríbele directo por WhatsApp para hacer tu pedido.');
             redirigir('/t/' . $negocio['slug'] . '/carrito');
@@ -567,6 +576,7 @@ class TiendaController
             'cantidad'    => $linea['cantidad'],
         ], $carrito['lineas']);
 
+        $this->registrarTasaPublica('pedido', $negocio);
         $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas);
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
 
@@ -718,6 +728,32 @@ class TiendaController
         Cita::reprogramar((int) $cita['id'], (int) $negocio['id'], "{$fecha} {$hora}:00");
         flash_set('ok', 'Tu cita quedó reprogramada.');
         redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /**
+     * Antispam de los formularios públicos (pedido, cita, lista de espera):
+     * máximo 5 por hora desde la misma IP en la misma tienda, y 20 por hora
+     * desde la misma IP en total. Sin esto, cualquiera podía mandarle 50
+     * pedidos falsos a un negocio en el plan Gratis y agotarle el cupo del
+     * mes — dejándole la tienda bloqueada para sus clientes reales.
+     */
+    private function exigirTasaPublica(string $accion, array $negocio, string $volver): void
+    {
+        $ip = ip_cliente();
+        if (
+            LimiteTasa::excedido($accion, $ip . '|' . (int) $negocio['id'], 5, 3600)
+            || LimiteTasa::excedido($accion . '_global', $ip, 20, 3600)
+        ) {
+            flash_set('error', 'Recibimos muchas solicitudes seguidas desde tu conexión. Espera un rato o escríbele al negocio directo por WhatsApp.');
+            redirigir($volver);
+        }
+    }
+
+    private function registrarTasaPublica(string $accion, array $negocio): void
+    {
+        $ip = ip_cliente();
+        LimiteTasa::registrar($accion, $ip . '|' . (int) $negocio['id']);
+        LimiteTasa::registrar($accion . '_global', $ip);
     }
 
     /**

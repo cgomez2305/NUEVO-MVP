@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Solo consola: si el hosting llegara a exponer bin/ por web, nadie puede
+// dispararlo desde un navegador (crear admins, mandar recordatorios...).
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 /**
  * Prueba local del webhook de Bre-B: arma el cuerpo y la firma HMAC igual
  * que las mandaría un proveedor real, y hace el POST contra un servidor

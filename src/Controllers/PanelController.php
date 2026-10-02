@@ -204,9 +204,9 @@ class PanelController
         $pedidos = $resultado['filas'];
 
         $salida = $this->abrirDescargaCsv('pedidos');
-        fputcsv($salida, ['ID', 'Fecha', 'Cliente', 'Teléfono', 'Total', 'Método de pago', 'Estado']);
+        $this->escribirFilaCsv($salida, ['ID', 'Fecha', 'Cliente', 'Teléfono', 'Total', 'Método de pago', 'Estado']);
         foreach ($pedidos as $pedido) {
-            fputcsv($salida, [
+            $this->escribirFilaCsv($salida, [
                 $pedido['id'],
                 $pedido['creado_en'],
                 $pedido['cliente_nombre'],
@@ -580,9 +580,9 @@ class PanelController
         $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
-        fputcsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
+        $this->escribirFilaCsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
         foreach ($citas as $cita) {
-            fputcsv($salida, [
+            $this->escribirFilaCsv($salida, [
                 $cita['id'],
                 $cita['fecha_hora'],
                 $cita['cliente_nombre'],
@@ -608,9 +608,9 @@ class PanelController
         $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
         $salida = $this->abrirDescargaCsv('clientes');
-        fputcsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Cliente desde']);
+        $this->escribirFilaCsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Cliente desde']);
         foreach ($clientes as $cliente) {
-            fputcsv($salida, [
+            $this->escribirFilaCsv($salida, [
                 $cliente['id'],
                 $cliente['nombre'],
                 $cliente['telefono'],
@@ -1114,8 +1114,8 @@ class PanelController
             $password = (string) ($_POST['password'] ?? '');
             $sedeIds = array_map('intval', (array) ($_POST['sedes'] ?? []));
 
-            if ($nombre === '' || $whatsapp === '' || strlen($password) < 6 || $sedeIds === []) {
-                flash_set('error', 'Completa nombre, WhatsApp, una contraseña de al menos 6 caracteres y elige al menos una sede.');
+            if ($nombre === '' || $whatsapp === '' || strlen($password) < 8 || $sedeIds === []) {
+                flash_set('error', 'Completa nombre, WhatsApp, una contraseña de al menos 8 caracteres y elige al menos una sede.');
                 redirigir('/panel/colaboradores');
             }
 
@@ -1216,8 +1216,8 @@ class PanelController
 
             if ($usuario === null || !password_verify($actual, $usuario['password_hash'])) {
                 flash_set('error', 'Tu contraseña actual no coincide.');
-            } elseif (strlen($nueva) < 6) {
-                flash_set('error', 'La contraseña nueva debe tener al menos 6 caracteres.');
+            } elseif (strlen($nueva) < 8) {
+                flash_set('error', 'La contraseña nueva debe tener al menos 8 caracteres.');
             } else {
                 Usuario::cambiarPassword((int) $negocio['usuario_id'], $nueva);
                 flash_set('ok', 'Contraseña actualizada.');
@@ -1399,5 +1399,26 @@ class PanelController
         fwrite($salida, "\xEF\xBB\xBF"); // BOM para que Excel abra los acentos bien.
 
         return $salida;
+    }
+
+    /**
+     * Un cliente puede llamarse "=HYPERLINK(...)" en la tienda pública: si el
+     * dueño abre el CSV en Excel/Sheets, esa celda se ejecuta como fórmula
+     * (CSV injection). Toda celda que empiece con un carácter de fórmula se
+     * antepone con una comilla simple, que la hoja muestra como texto plano.
+     *
+     * @param resource $salida
+     * @param array<int, mixed> $fila
+     */
+    private function escribirFilaCsv($salida, array $fila): void
+    {
+        $segura = array_map(static function (mixed $celda): mixed {
+            if (is_string($celda) && $celda !== '' && strpbrk($celda[0], "=+-@\t\r") !== false) {
+                return "'" . $celda;
+            }
+            return $celda;
+        }, $fila);
+
+        fputcsv($salida, $segura, ',', '"', '');
     }
 }

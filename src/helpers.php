@@ -126,7 +126,7 @@ function csrf_verificar(): bool
 
 /**
  * La IP real de quien hace la petición, para limitar abuso (ver
- * RegistroIp::demasiadosDesde). Lee solo REMOTE_ADDR, nunca cabeceras como
+ * LimiteTasa::excedido). Lee solo REMOTE_ADDR, nunca cabeceras como
  * X-Forwarded-For: esas las puede mandar cualquiera y, sin un proxy
  * confiable configurado delante (no es el caso de este hosting compartido
  * típico), confiar en ellas dejaría falsificar la IP y saltarse el límite.

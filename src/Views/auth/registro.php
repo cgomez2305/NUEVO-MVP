@@ -58,12 +58,12 @@
   <div class="pq-campo">
     <label class="pq-label" for="password">Contraseña</label>
     <div class="pq-input-password">
-      <input class="pq-input" type="password" id="password" name="password" required minlength="6" autocomplete="new-password">
+      <input class="pq-input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
       <button type="button" class="pq-input-password-ojo" data-mostrar-contrasena="#password" aria-label="Mostrar contraseña">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
-    <p class="pq-ayuda" data-requisito-largo="#password" data-largo-minimo="6">Mínimo 6 caracteres.</p>
+    <p class="pq-ayuda" data-requisito-largo="#password" data-largo-minimo="8">Mínimo 8 caracteres.</p>
   </div>
 
   <div class="pq-campo">

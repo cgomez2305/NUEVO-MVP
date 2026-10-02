@@ -11,12 +11,12 @@
 
   <div class="pq-campo">
     <label class="pq-label" for="password">Nueva contraseña</label>
-    <input class="pq-input" type="password" id="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+    <input class="pq-input" type="password" id="password" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
   </div>
 
   <div class="pq-campo">
     <label class="pq-label" for="password_confirmar">Confírmala</label>
-    <input class="pq-input" type="password" id="password_confirmar" name="password_confirmar" required minlength="6">
+    <input class="pq-input" type="password" id="password_confirmar" name="password_confirmar" required minlength="8">
   </div>
 
   <button type="submit" class="pq-btn pq-btn-sello">Guardar contraseña →</button>

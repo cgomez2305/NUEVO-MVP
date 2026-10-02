@@ -75,7 +75,12 @@ class Usuario
         $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
     }
 
-    /** Genera un token de recuperación de contraseña válido por 1 hora y lo devuelve (sin hashear: va en el enlace). */
+    /**
+     * Genera un token de recuperación válido por 1 hora y lo devuelve en
+     * claro (va en el enlace). En la base solo queda su SHA-256: si algún
+     * día se filtra un backup, los tokens vigentes no sirven para tomar
+     * cuentas — igual que una contraseña, el token real nunca se guarda.
+     */
     public static function generarTokenReset(int $id): string
     {
         $token = bin2hex(random_bytes(32));
@@ -83,7 +88,7 @@ class Usuario
             'UPDATE usuarios SET reset_token = :token, reset_token_expira = :expira WHERE id = :id'
         );
         $stmt->execute([
-            'token'  => $token,
+            'token'  => hash('sha256', $token),
             'expira' => date('Y-m-d H:i:s', time() + 3600),
             'id'     => $id,
         ]);
@@ -101,7 +106,10 @@ class Usuario
         $stmt = Database::conexion()->prepare(
             'SELECT * FROM usuarios WHERE reset_token = :token AND reset_token_expira > :ahora'
         );
-        $stmt->execute(['token' => $token, 'ahora' => date('Y-m-d H:i:s')]);
+        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+            return null;
+        }
+        $stmt->execute(['token' => hash('sha256', $token), 'ahora' => date('Y-m-d H:i:s')]);
         return $stmt->fetch() ?: null;
     }
 

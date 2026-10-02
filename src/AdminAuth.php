@@ -15,6 +15,14 @@ use App\Models\Admin;
 class AdminAuth
 {
     /**
+     * Una sesión de /admin puede confirmar pagos y suspender cuentas: si
+     * alguien deja el portátil abierto, a los 30 minutos sin actividad se
+     * cierra sola (la de un negocio no, para no sacar al dueño a mitad de
+     * un turno).
+     */
+    private const INACTIVIDAD_MAXIMA_SEGUNDOS = 30 * 60;
+
+    /**
      * false puede significar credenciales inválidas o cuenta bloqueada
      * temporalmente; usa estaBloqueado() antes de intentar el login para
      * distinguir el mensaje que le muestras al admin.
@@ -34,6 +42,7 @@ class AdminAuth
         Admin::registrarLoginExitoso((int) $admin['id']);
         session_regenerate_id(true);
         $_SESSION['admin_id'] = $admin['id'];
+        $_SESSION['admin_ultima_actividad'] = time();
 
         return true;
     }
@@ -47,13 +56,24 @@ class AdminAuth
 
     public static function cerrarSesion(): void
     {
-        unset($_SESSION['admin_id']);
+        unset($_SESSION['admin_id'], $_SESSION['admin_ultima_actividad']);
         session_regenerate_id(true);
     }
 
     public static function adminId(): ?int
     {
-        return isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null;
+        if (!isset($_SESSION['admin_id'])) {
+            return null;
+        }
+
+        $ultima = (int) ($_SESSION['admin_ultima_actividad'] ?? 0);
+        if (time() - $ultima > self::INACTIVIDAD_MAXIMA_SEGUNDOS) {
+            unset($_SESSION['admin_id'], $_SESSION['admin_ultima_actividad']);
+            return null;
+        }
+
+        $_SESSION['admin_ultima_actividad'] = time();
+        return (int) $_SESSION['admin_id'];
     }
 
     public static function adminActual(): ?array

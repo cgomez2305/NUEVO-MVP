@@ -46,7 +46,7 @@
   <span style="font-size: 13px; font-weight: 600">Nuevo colaborador</span>
   <input class="pq-input" type="text" name="nombre" placeholder="Nombre" required maxlength="120">
   <input class="pq-input pq-mono" type="tel" name="whatsapp" placeholder="WhatsApp" required maxlength="20">
-  <input class="pq-input" type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6">
+  <input class="pq-input" type="password" name="password" placeholder="Contraseña (mínimo 8 caracteres)" required minlength="8">
   <div style="display: flex; flex-wrap: wrap; gap: 10px">
     <?php foreach ($sedes as $sede): ?>
       <label style="display: flex; align-items: center; gap: 6px; font-size: 12px">

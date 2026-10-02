@@ -6,7 +6,7 @@
 # porque Apache nunca sube por encima del docroot del subdominio.
 
 RewriteEngine On
-RewriteCond %{REQUEST_URI} ^/(config|src|database)(/|$) [OR]
+RewriteCond %{REQUEST_URI} ^/(config|src|database|bin)(/|$) [OR]
 RewriteCond %{REQUEST_URI} ^/(\.git|composer\.(json|lock)|serve\.php)(/|$)
 RewriteRule ^ - [F]
 
