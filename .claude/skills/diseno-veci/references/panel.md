@@ -8,8 +8,9 @@ Ruta 2 "Tiquete y papel": fondo `--tiquete`, texto `--carbon`, acción
 Estado del rediseño: **todo el panel está en v2** (inicio, pedidos,
 detalle, productos y su formulario, agenda, servicios, horario, días
 bloqueados, empleados, recordatorios, copiloto, sedes, colaboradores,
-cuenta, plan). Falta: onboarding (incluye `productos/_gestor.php` y
-`servicios/_gestor.php`, que ahora solo usa el onboarding) y admin.
+cuenta, plan) y el onboarding (ver `onboarding.md`). Falta: admin.
+`panel/_semana.php` (días con interruptor + copiar el lunes) lo comparten
+el horario del panel y el del onboarding.
 
 ## El puente con la tienda (decisión del usuario)
 

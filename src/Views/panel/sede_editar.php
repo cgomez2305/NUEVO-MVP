@@ -26,6 +26,20 @@
     <span class="pq-ayuda">Sale en tu tienda con un enlace a Google Maps. Déjala vacía si solo atiendes a domicilio.</span>
   </div>
 
+  <?php $colorActualMarca = strtoupper(color_seguro($sede['color_marca'] ?? null)); ?>
+  <fieldset class="pq-onb-colores">
+    <legend class="pq-label">Color de tu toldo <span class="pq-ayuda">(es el mismo en todas tus sedes)</span></legend>
+    <div class="pq-onb-colores-lista">
+      <?php foreach (paleta_marca() as $hex => $nombreColor): ?>
+        <label class="pq-onb-color" style="--muestra: <?= e($hex) ?>">
+          <input type="radio" name="color_marca" value="<?= e($hex) ?>"<?= $colorActualMarca === $hex ? ' checked' : '' ?>>
+          <span class="pq-onb-color-muestra" aria-hidden="true"></span>
+          <span class="pq-onb-color-nombre"><?= e($nombreColor) ?></span>
+        </label>
+      <?php endforeach; ?>
+    </div>
+  </fieldset>
+
   <?php if ($sede['tipo_negocio'] === 'pedidos'): ?>
     <label class="pq-interruptor pq-interruptor-con-texto">
       <input type="checkbox" name="acepta_mesa" value="1"<?= (int) ($sede['acepta_mesa'] ?? 1) === 1 ? ' checked' : '' ?>>

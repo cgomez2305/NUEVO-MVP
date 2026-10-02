@@ -56,7 +56,7 @@ if ($httpsActivo) {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }
 header(
-    "Content-Security-Policy: default-src 'self'; img-src 'self' data:; "
+    "Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; "
     . "style-src 'self' 'unsafe-inline'; "
     . "font-src 'self'; "
     . "script-src 'self'; frame-ancestors 'none'"

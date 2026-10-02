@@ -28,6 +28,21 @@ class Negocio
         return (int) $pdo->lastInsertId();
     }
 
+    /**
+     * Color del toldo de la tienda (y de la insignia en el panel). Solo
+     * acepta colores de paleta_marca(); cualquier otro valor se ignora.
+     */
+    public static function actualizarColor(int $id, string $color): bool
+    {
+        $color = strtoupper(trim($color));
+        if (!array_key_exists($color, paleta_marca())) {
+            return false;
+        }
+        $stmt = Database::conexion()->prepare('UPDATE negocios SET color_marca = :color WHERE id = :id');
+        $stmt->execute(['color' => $color, 'id' => $id]);
+        return true;
+    }
+
     public static function buscarPorId(int $id): ?array
     {
         $stmt = Database::conexion()->prepare('SELECT * FROM negocios WHERE id = :id');

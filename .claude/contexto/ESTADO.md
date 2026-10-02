@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-02 (panel v2 completo)
+# Estado de la sesión — 2026-10-02 (panel y onboarding v2 completos)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -44,11 +44,16 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   ajustes y pasa a la fase 2": puente con la tienda (color del negocio en
   insignia/cenefa/escaparate + comanda unificada) y fase 2 del panel, todo
   hecho y documentado en `references/panel.md`.
+- Luego "sigue con el onboarding": hecho (ver `references/onboarding.md`),
+  con el color del toldo elegible (antes todo negocio nacía rojo #E8452C y
+  no había dónde cambiarlo) y 5 bugs reales corregidos (foto sin vista
+  previa por CSP, horario sin días = callejón sin salida, cambios del
+  catálogo perdidos, productos agregados nacían agotados y ocultos, 0.0 MB).
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
-0. Diseño: tienda y panel completos en v2. Sigue onboarding (incluye
-   productos/_gestor.php y servicios/_gestor.php) y después admin.
+0. Diseño: tienda, panel y onboarding completos en v2. Sigue el admin
+   (`layouts/admin.php`, `src/Views/admin/`).
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
@@ -86,6 +91,10 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Sesiones de prueba del panel: cookie jars de curl (login con CSRF) en el
   scratchpad; `capturas.js --cookies jar`. En Puppeteer, los botones que
   quedan bajo la bottomnav fija se pulsan con `$eval(sel, e => e.click())`.
+- Onboarding de prueba: `registrar.sh jar nombre tipo 31199900NN` y
+  `flujo-onboarding2.js` en el scratchpad; limpiar con `limpiar-onb.sh`
+  (borra negocios 31199900xx y sus fotos). Registro: 3 por IP al día, así
+  que `DELETE FROM limites_tasa` entre corridas.
 - Copiloto bloqueado en plan Gratis: para probarlo, `update negocios set
   plan_id=3, plan_vence_en='2027-12-31' where id=1` y luego volver a
   `plan_id=1, plan_vence_en=NULL`.

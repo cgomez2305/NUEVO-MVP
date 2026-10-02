@@ -1,6 +1,4 @@
 <?php
-$dias = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
-$porDefecto = ['08:00', '18:00'];
 $resumen = horario_resumen($horario);
 ?>
 <div class="pq-pagina-cabeza">
@@ -19,25 +17,7 @@ $resumen = horario_resumen($horario);
 <form method="post" action="<?= e(base_url('/panel/horario')) ?>" class="pq-horario-form">
   <?= csrf_campo() ?>
 
-  <fieldset class="pq-semana">
-    <legend class="pq-sr-solo">Días y horas de atención</legend>
-    <?php foreach ($dias as $num => $nombre): ?>
-      <?php $abierto = isset($horario[(string) $num]); $rango = $horario[(string) $num] ?? $porDefecto; ?>
-      <div class="pq-semana-dia">
-        <label class="pq-interruptor">
-          <input type="checkbox" name="abierto_<?= $num ?>" value="1" <?= $abierto ? 'checked' : '' ?>>
-          <span class="pq-interruptor-pista" aria-hidden="true"></span>
-          <span class="pq-semana-nombre"><?= e($nombre) ?></span>
-        </label>
-        <div class="pq-semana-horas">
-          <input class="pq-input pq-mono" type="time" name="inicio_<?= $num ?>" value="<?= e($rango[0]) ?>" aria-label="<?= e($nombre) ?>: abre a las">
-          <span class="pq-ayuda" aria-hidden="true">a</span>
-          <input class="pq-input pq-mono" type="time" name="fin_<?= $num ?>" value="<?= e($rango[1]) ?>" aria-label="<?= e($nombre) ?>: cierra a las">
-        </div>
-        <span class="pq-semana-cerrado">Cerrado</span>
-      </div>
-    <?php endforeach; ?>
-  </fieldset>
+  <?php require __DIR__ . '/_semana.php'; ?>
 
   <div class="pq-campo pq-horario-intervalo">
     <label class="pq-label" for="intervalo">Cada cuánto abres un turno</label>

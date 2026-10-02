@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
+use App\Models\Negocio;
 use App\Models\Sede;
 use App\Models\Producto;
 use App\Models\Servicio;
@@ -134,6 +135,54 @@ class OnboardingController
         redirigir('/panel/onboarding/productos');
     }
 
+    /**
+     * Guarda de una vez todo lo que el dueño corrigió en la lista que armó la
+     * IA y pasa al siguiente paso. Antes cada fila tenía su propio botón ✓ y
+     * un cambio sin ese ✓ se perdía al tocar "Continuar", sin aviso.
+     * Solo toca filas de esta sede (el WHERE sede_id de los modelos).
+     */
+    public function guardarCatalogo(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $sedeId = (int) $negocio['id'];
+        $esReservas = $negocio['tipo_negocio'] === 'reservas';
+
+        if (!csrf_verificar()) {
+            redirigir('/panel/onboarding/productos');
+        }
+
+        $filas = $_POST['items'] ?? [];
+        if (is_array($filas)) {
+            foreach ($filas as $id => $fila) {
+                if (!is_array($fila)) {
+                    continue;
+                }
+                $nombre = mb_substr(trim((string) ($fila['nombre'] ?? '')), 0, 120);
+                $precio = dinero_desde_texto((string) ($fila['precio'] ?? ''));
+                if ($nombre === '' || $precio <= 0) {
+                    continue; // fila incompleta: se deja como estaba
+                }
+                if ($esReservas) {
+                    $duracion = max(5, (int) ($fila['duracion_min'] ?? 30));
+                    Servicio::actualizar((int) $id, $sedeId, $nombre, $precio, $duracion);
+                    if (isset($fila['deposito_tipo']) && $negocio['rol'] === 'dueno') {
+                        Servicio::actualizarDeposito((int) $id, $sedeId, (string) $fila['deposito_tipo'], dinero_desde_texto((string) ($fila['deposito_valor'] ?? '')));
+                    }
+                } else {
+                    $actual = Producto::buscar((int) $id, $sedeId);
+                    if ($actual === null) {
+                        continue;
+                    }
+                    $categoria = mb_substr(trim((string) ($fila['categoria'] ?? '')), 0, 60);
+                    // La descripción no se edita en este paso: se conserva la que tenga.
+                    Producto::actualizar((int) $id, $sedeId, $nombre, $precio, $categoria !== '' ? $categoria : $actual['categoria'], $actual['descripcion'] ?? null);
+                }
+            }
+        }
+
+        redirigir($esReservas ? '/panel/onboarding/horario' : '/panel/onboarding/pago');
+    }
+
     /** Registra el uso real de IA, o avisa al dueño por qué salió un catálogo de ejemplo en vez del real. */
     private function avisarUsoIa(bool $limiteAlcanzado, int $negocioId, int $sedeId, ?int $limiteIa): void
     {
@@ -159,6 +208,7 @@ class OnboardingController
             'titulo'  => 'Tu horario de atención · Veci',
             'negocio' => $negocio,
             'horario' => Sede::horario($negocio),
+            'error'   => flash_obtener('error'),
         ], 'onboarding');
     }
 
@@ -170,11 +220,15 @@ class OnboardingController
             redirigir('/panel/onboarding/horario');
         }
 
-        Sede::guardarHorario(
-            (int) $negocio['id'],
-            Sede::horarioDesdePost($_POST),
-            Sede::intervaloDesdePost($_POST)
-        );
+        // Sin ningún día abierto, mostrarPago() devolvía aquí sin decir por
+        // qué: el dueño tocaba "Continuar" y volvía a la misma pantalla.
+        $horario = Sede::horarioDesdePost($_POST);
+        if ($horario === []) {
+            flash_set('error', 'Abre al menos un día (con la hora de cierre después de la de apertura) para que tus clientes puedan reservar.');
+            redirigir('/panel/onboarding/horario');
+        }
+
+        Sede::guardarHorario((int) $negocio['id'], $horario, Sede::intervaloDesdePost($_POST));
 
         redirigir('/panel/onboarding/pago');
     }
@@ -196,7 +250,7 @@ class OnboardingController
         }
 
         ver('onboarding/pago', [
-            'titulo'         => 'Cómo cobras · Veci',
+            'titulo'         => 'Abre tu tienda · Veci',
             'negocio'        => $negocio,
             'tieneAnticipos' => $esReservas && Servicio::tieneAnticipoActivo((int) $negocio['id']),
         ], 'onboarding');
@@ -217,6 +271,7 @@ class OnboardingController
         $valor = trim((string) ($_POST['llave_valor'] ?? $negocio['whatsapp']));
 
         Sede::guardarLlaveBreB((int) $negocio['id'], $tipo, $valor);
+        Negocio::actualizarColor((int) $negocio['negocio_id'], (string) ($_POST['color_marca'] ?? ''));
         Sede::publicar((int) $negocio['id']);
 
         $sedeId = (int) $negocio['id'];

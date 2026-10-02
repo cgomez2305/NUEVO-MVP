@@ -3,10 +3,10 @@
 <p class="pq-lead">Con el WhatsApp y la contraseña de tu negocio.</p>
 
 <?php if (!empty($error)): ?>
-  <div class="pq-alerta" style="margin-top: 20px"><?= e($error) ?></div>
+  <div class="pq-alerta pq-auth-mt5"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="post" action="<?= e(base_url('/login')) ?>" style="margin-top: 20px">
+<form class="pq-auth-mt5" method="post" action="<?= e(base_url('/login')) ?>">
   <?= csrf_campo() ?>
 
   <div class="pq-campo">
@@ -29,19 +29,19 @@
 
   <button type="submit" class="pq-btn pq-btn-sello">Entrar →</button>
 
-  <p class="pq-lead pq-centro" style="margin-top: 16px">
-    <a href="<?= e(base_url('/olvide-password')) ?>" style="color: var(--gris-suave)">¿Olvidaste tu contraseña?</a>
+  <p class="pq-lead pq-centro pq-auth-mt4">
+    <a class="pq-auth-enlace-suave" href="<?= e(base_url('/olvide-password')) ?>">¿Olvidaste tu contraseña?</a>
   </p>
 </form>
 
 <div class="pq-auth-separador"><span>o</span></div>
 
-<p class="pq-ayuda pq-centro" style="font-weight: 600; color: var(--gris-texto)">¿Aún no tienes una cuenta?</p>
-<a href="<?= e(base_url('/registro')) ?>" class="pq-btn pq-btn-ghost" style="margin-top: 8px">Crear mi tienda gratis →</a>
+<p class="pq-ayuda pq-centro pq-auth-pregunta">¿Aún no tienes una cuenta?</p>
+<a href="<?= e(base_url('/registro')) ?>" class="pq-btn pq-btn-ghost pq-auth-mt2">Crear mi tienda gratis →</a>
 
-<form method="post" action="<?= e(base_url('/login')) ?>" style="margin-top: 14px">
+<form class="pq-auth-mt4" method="post" action="<?= e(base_url('/login')) ?>">
   <?= csrf_campo() ?>
   <input type="hidden" name="whatsapp" value="3001234567">
   <input type="hidden" name="password" value="veci123">
-  <button type="submit" class="pq-ayuda pq-centro" style="display: block; width: 100%; background: none; border: none; text-decoration: underline; cursor: pointer; color: var(--gris-suave)">Probar una tienda de ejemplo</button>
+  <button type="submit" class="pq-ayuda pq-centro pq-auth-demo">Probar una tienda de ejemplo</button>
 </form>

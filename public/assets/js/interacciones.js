@@ -664,7 +664,10 @@
       if (dropzone) dropzone.hidden = true;
       if (previa) previa.hidden = false;
       if (previaNombre) previaNombre.textContent = archivo.name;
-      if (previaTamano) previaTamano.textContent = (archivo.size / (1024 * 1024)).toFixed(1) + ' MB';
+      // "0.0 MB" para una foto de 300 KB no dice nada: KB por debajo de 1 MB.
+      if (previaTamano) previaTamano.textContent = archivo.size < 1024 * 1024
+        ? Math.max(1, Math.round(archivo.size / 1024)) + ' KB'
+        : (archivo.size / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
       if (previaImg) previaImg.src = URL.createObjectURL(archivo);
     });
 
@@ -676,6 +679,66 @@
         if (dropzone) dropzone.hidden = false;
         input.click();
       });
+    }
+  });
+})();
+
+/*
+  Guardia de cambios sin guardar (revisión del catálogo en el onboarding):
+  la lista entera se guarda con un solo botón, pero cada fila tiene su menú
+  ⋮ (agotado, quitar) y hay un "agregar" aparte, que recargan la página.
+  Si el dueño ya corrigió algo y usa uno de esos, se le pregunta antes de
+  perder lo escrito. Sin JS no hay guardia, pero tampoco nada se rompe.
+*/
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var zona = document.querySelector('[data-guardia-cambios]');
+    if (!zona) return;
+    var idPrincipal = zona.getAttribute('data-guardia-cambios');
+    var sucio = false;
+    zona.addEventListener('input', function (evento) {
+      if (evento.target.getAttribute && evento.target.getAttribute('form') === idPrincipal) sucio = true;
+    });
+    zona.addEventListener('submit', function (evento) {
+      if (!sucio || evento.target.id === idPrincipal || evento.defaultPrevented) return;
+      if (!window.confirm('Cambiaste cosas en la lista y todavía no las guardas. Si sigues, se pierden. ¿Seguir de todas formas?')) {
+        evento.preventDefault();
+        evento.stopImmediatePropagation();
+      }
+    }, true);
+  });
+})();
+
+/*
+  Onboarding:
+  - Vista previa del toldo: al elegir un color de la paleta se le cambia
+    --marca (y la letra encima, --marca-sobre) a la tienda de muestra.
+  - Formularios con data-enviando="Texto…": al enviarse, el botón se
+    desactiva y muestra ese texto (leer la foto con IA tarda unos segundos;
+    sin esto parecía que no pasaba nada y se tocaba otra vez).
+*/
+(function () {
+  'use strict';
+  document.addEventListener('change', function (evento) {
+    var radio = evento.target.closest && evento.target.closest('[data-color-marca]');
+    if (!radio) return;
+    var vista = document.querySelector('[data-vista-marca]');
+    if (!vista) return;
+    vista.style.setProperty('--marca', radio.value);
+    vista.style.setProperty('--marca-sobre', radio.getAttribute('data-sobre') || '#1B1A17');
+  });
+
+  document.addEventListener('submit', function (evento) {
+    var formulario = evento.target;
+    if (evento.defaultPrevented || !formulario.hasAttribute || !formulario.hasAttribute('data-enviando')) return;
+    var botones = document.querySelectorAll('button[type="submit"][form="' + formulario.id + '"]');
+    var boton = formulario.querySelector('button[type="submit"]') || (formulario.id && botones[0]);
+    formulario.classList.add('pq-enviando');
+    if (boton) {
+      boton.disabled = true;
+      boton.setAttribute('aria-busy', 'true');
+      boton.textContent = formulario.getAttribute('data-enviando');
     }
   });
 })();

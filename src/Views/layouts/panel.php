@@ -113,7 +113,7 @@ $marcaNegocio = color_seguro($negocio['color_marca'] ?? null);
     <div class="pq-topbar">
       <div class="pq-topbar-brand-fila">
         <a href="<?= e(base_url('/panel')) ?>" class="pq-topbar-brand">
-          <img class="pq-topbar-brand-completo" src="<?= e(base_url('assets/img/logo-veci-lockup.png')) ?>" alt="Veci">
+          <img class="pq-topbar-brand-completo" src="<?= e(base_url('assets/img/logo-veci-lockup-transparente.png')) ?>" alt="Veci">
           <img class="pq-topbar-brand-isotipo" src="<?= e(base_url('assets/img/icon-192.png')) ?>" alt="Veci" width="28" height="28">
         </a>
         <button type="button" id="pq-sidebar-toggle" class="pq-sidebar-toggle" aria-label="Colapsar menú" aria-pressed="false" title="Colapsar menú">

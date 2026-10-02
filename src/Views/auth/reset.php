@@ -3,10 +3,10 @@
 <p class="pq-lead">Este enlace es de un solo uso y vence en 1 hora.</p>
 
 <?php if (!empty($error)): ?>
-  <div class="pq-alerta" style="margin-top: 20px"><?= e($error) ?></div>
+  <div class="pq-alerta pq-auth-mt5"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="post" action="<?= e(base_url('/reset-password/' . $token)) ?>" style="margin-top: 20px">
+<form class="pq-auth-mt5" method="post" action="<?= e(base_url('/reset-password/' . $token)) ?>">
   <?= csrf_campo() ?>
 
   <div class="pq-campo">

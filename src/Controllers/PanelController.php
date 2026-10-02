@@ -1091,6 +1091,10 @@ class PanelController
 
             if ($nombre !== '' && $whatsapp !== '') {
                 Sede::actualizar((int) $sede['id'], $nombre, $whatsapp, $aceptaMesa, $direccion !== '' ? $direccion : null);
+                // El color es del negocio (todas sus sedes), no de esta sede.
+                if (isset($_POST['color_marca'])) {
+                    \App\Models\Negocio::actualizarColor((int) $negocio['negocio_id'], (string) $_POST['color_marca']);
+                }
                 flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }
         }

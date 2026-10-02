@@ -3,13 +3,13 @@
 <p class="pq-lead">Si guardaste un correo en "Mi cuenta", te mandamos un enlace para elegir una nueva.</p>
 
 <?php if (!empty($ok)): ?>
-  <div class="pq-alerta pq-alerta-ok" style="margin-top: 20px"><?= e($ok) ?></div>
+  <div class="pq-alerta pq-alerta-ok pq-auth-mt5"><?= e($ok) ?></div>
 <?php endif; ?>
 <?php if (!empty($error)): ?>
-  <div class="pq-alerta" style="margin-top: 20px"><?= e($error) ?></div>
+  <div class="pq-alerta pq-auth-mt5"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="post" action="<?= e(base_url('/olvide-password')) ?>" style="margin-top: 20px">
+<form class="pq-auth-mt5" method="post" action="<?= e(base_url('/olvide-password')) ?>">
   <?= csrf_campo() ?>
 
   <div class="pq-campo">
@@ -20,10 +20,10 @@
   <button type="submit" class="pq-btn pq-btn-sello">Enviar enlace →</button>
 </form>
 
-<p class="pq-ayuda pq-centro" style="margin-top: 24px">
+<p class="pq-ayuda pq-centro pq-auth-mt6">
   ¿No tienes correo registrado? Escríbenos por WhatsApp a soporte y te ayudamos a recuperar el acceso.
 </p>
 
-<p class="pq-lead pq-centro" style="margin-top: 12px">
-  <a href="<?= e(base_url('/login')) ?>" style="color: var(--sello); font-weight: 600">Volver a iniciar sesión</a>
+<p class="pq-lead pq-centro pq-auth-mt3">
+  <a class="pq-enlace-sello" href="<?= e(base_url('/login')) ?>">Volver a iniciar sesión</a>
 </p>

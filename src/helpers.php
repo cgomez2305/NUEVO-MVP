@@ -460,6 +460,29 @@ function hoja_almanaque(string $fecha, string $fechaActiva, string $href): strin
         . '</a>';
 }
 
+/**
+ * Colores de toldo que el dueño puede elegir para su tienda (Negocio::
+ * actualizarColor solo acepta estos). Una paleta cerrada, con nombres de
+ * barrio, en vez de un selector libre: todos funcionan como rayas del toldo
+ * y con color_texto_sobre() siempre dan una letra legible encima.
+ *
+ * @return array<string, string> hex => nombre
+ */
+function paleta_marca(): array
+{
+    return [
+        '#E8452C' => 'Ají',
+        '#F28C28' => 'Mango',
+        '#F2B632' => 'Mostaza',
+        '#3F8F4E' => 'Hoja de plátano',
+        '#1F9AA6' => 'Turquesa',
+        '#3B4CCA' => 'Añil',
+        '#7A4FB5' => 'Mora',
+        '#E85A8B' => 'Guayaba',
+        '#8A5A3C' => 'Café',
+    ];
+}
+
 /** 0 → "hoy", 1 → "ayer", 5 → "hace 5 días" (nunca "hace 1 días"). */
 function hace_dias(int $dias): string
 {

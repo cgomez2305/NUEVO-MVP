@@ -3751,3 +3751,141 @@ body.pq-auth-bg {
 .pq-sin-sede { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--esp-4); min-height: 100vh; max-width: 420px; margin: 0 auto; padding: var(--esp-6); text-align: center; }
 .pq-sin-sede-logo { height: 28px; width: auto; }
 .pq-sin-sede .pq-btn { width: auto; }
+
+/* =====================================================================
+   ONBOARDING v2 · del registro a "¡Ya abriste!"
+   Misma ruta del panel (tiquete y papel), con la marca del negocio
+   entrando al final: vista previa del toldo al elegir color y la tienda
+   real que se abre al publicar. Ver references/onboarding.md.
+   ===================================================================== */
+.pq-onb-shell { padding: 0 var(--esp-5) var(--esp-10); }
+@media (min-width: 640px) { .pq-onb-shell { max-width: 560px; } }
+
+.pq-onb-cabeza { padding: var(--esp-4) 0 var(--esp-2); }
+.pq-onb-cabeza-fila { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.pq-onb-logo { height: 24px; width: auto; }
+.pq-onb-volver { margin-left: calc(var(--esp-1) * -1); }
+.pq-onb-cuenta { font: 600 12px/1 'JetBrains Mono', monospace; color: var(--gris-texto); }
+/* Pasos con nombre: la barra sola no decía qué falta. */
+.pq-onb-pasos { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: var(--esp-3) 0 0; padding: 0; list-style: none; }
+.pq-onb-paso { display: flex; flex-direction: column; gap: 6px; }
+.pq-onb-paso-barra { height: 4px; border-radius: 999px; background: var(--recibo); }
+.pq-onb-paso-hecho .pq-onb-paso-barra { background: var(--caja); }
+.pq-onb-paso-activo .pq-onb-paso-barra { background: var(--sello); }
+.pq-onb-paso-nombre { font-size: 12px; font-weight: 500; color: var(--gris-suave); }
+.pq-onb-paso-hecho .pq-onb-paso-nombre { color: var(--gris-texto); }
+.pq-onb-paso-activo .pq-onb-paso-nombre { color: var(--carbon); font-weight: 700; }
+.pq-onb-aviso { margin-top: var(--esp-3); }
+
+.pq-onb-cuerpo { padding-top: var(--esp-5); }
+.pq-onb-bajada { margin-top: var(--esp-2); }
+.pq-onb-form { display: flex; flex-direction: column; gap: var(--esp-5); margin-top: var(--esp-5); }
+.pq-onb-pie { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-6); }
+.pq-onb-form .pq-onb-pie { margin-top: var(--esp-1); }
+
+/* Foto */
+.pq-onb-consejos { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--gris-texto); }
+.pq-onb-consejos li { display: flex; gap: var(--esp-2); }
+.pq-onb-consejos li::before { content: "✓"; color: var(--caja); font-weight: 700; }
+.pq-onb-foto-guardada { margin-top: var(--esp-5); }
+.pq-onb-foto-mini { width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--radio-s); object-fit: cover; }
+
+/* Leer la foto: una línea la recorre mientras el servidor trabaja. */
+.pq-onb-leer { display: flex; flex-direction: column; align-items: stretch; gap: var(--esp-3); margin-top: var(--esp-6); }
+.pq-onb-escaner { position: relative; align-self: center; width: min(220px, 70%); aspect-ratio: 3 / 4; border-radius: var(--radio-m); overflow: hidden; background: var(--recibo); box-shadow: var(--sombra-suave); }
+.pq-onb-escaner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pq-onb-escaner-linea { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--sello); box-shadow: 0 0 14px 4px color-mix(in srgb, var(--sello) 45%, transparent); opacity: 0; }
+.pq-enviando .pq-onb-escaner-linea { opacity: 1; animation: pqEscanear 1.6s ease-in-out infinite alternate; }
+.pq-enviando .pq-onb-escaner img { filter: saturate(.6); }
+@keyframes pqEscanear { from { top: 0; } to { top: calc(100% - 3px); } }
+@media (prefers-reduced-motion: reduce) { .pq-enviando .pq-onb-escaner-linea { animation: none; top: 50%; } }
+
+/* Revisar la carta / los servicios */
+.pq-onb-lista { display: flex; flex-direction: column; gap: var(--esp-3); margin: var(--esp-5) 0 0; padding: 0; list-style: none; counter-reset: pq-onb; }
+.pq-onb-item { position: relative; padding: var(--esp-3) var(--esp-2) var(--esp-4) var(--esp-4); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); box-shadow: var(--sombra-suave); }
+.pq-onb-item-agotado { background: var(--tiquete); }
+.pq-onb-item-agotado .pq-onb-item-nombre { color: var(--gris-texto); }
+.pq-onb-item-fila { display: flex; align-items: center; gap: var(--esp-1); }
+.pq-onb-item-nombre { flex: 1; min-width: 0; font-weight: 600; }
+.pq-onb-item-campos { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--esp-3); margin-top: var(--esp-3); padding-right: var(--esp-2); }
+.pq-onb-item-campos .pq-campo { margin-bottom: 0; }
+.pq-onb-item-campos .pq-label { font-size: 12px; }
+.pq-onb-item-estado { position: absolute; top: -9px; left: var(--esp-4); }
+.pq-onb-anticipo { margin-top: var(--esp-3); padding-right: var(--esp-2); }
+.pq-onb-anticipo > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--sello); cursor: pointer; list-style: none; }
+.pq-onb-anticipo > summary::-webkit-details-marker { display: none; }
+.pq-onb-anticipo > summary::after { content: "›"; font-size: 16px; transition: transform var(--rapido) var(--curva); }
+.pq-onb-anticipo[open] > summary::after { transform: rotate(90deg); }
+.pq-onb-anticipo .pq-onb-item-campos { margin-top: var(--esp-1); }
+
+/* Elegir color: muestras redondas con el nombre del color. */
+.pq-onb-vista { margin-top: 0; max-width: none; }
+.pq-onb-vista, .pq-onb-abierta {
+  --marca-claro: color-mix(in oklab, var(--marca) 34%, #FFFFFF);
+  --marca-suave: color-mix(in oklab, var(--marca) 13%, var(--papel));
+  --marca-texto: color-mix(in oklab, var(--marca) 52%, var(--tinta));
+}
+.pq-onb-vista .pq-toldo::before, .pq-onb-vista .pq-letrero-insignia { transition: background var(--medio) var(--curva), color var(--medio) var(--curva); }
+.pq-onb-colores { margin: 0; padding: 0; border: 0; }
+.pq-onb-colores legend { padding: 0; margin-bottom: var(--esp-3); }
+.pq-onb-colores-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: var(--esp-3) var(--esp-2); }
+.pq-onb-color { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.pq-onb-color input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-onb-color-muestra { width: 40px; height: 40px; border-radius: 50%; background: var(--muestra); box-shadow: inset 0 0 0 1px rgba(27, 26, 23, .12); transition: transform var(--rapido) var(--curva), box-shadow var(--rapido) ease; }
+.pq-onb-color-nombre { font-size: 11.5px; line-height: 1.2; text-align: center; color: var(--gris-texto); }
+.pq-onb-color:hover .pq-onb-color-muestra { transform: scale(1.06); }
+.pq-onb-color input:checked + .pq-onb-color-muestra { box-shadow: 0 0 0 3px var(--tiquete), 0 0 0 5px var(--carbon); transform: scale(1.04); }
+.pq-onb-color input:checked ~ .pq-onb-color-nombre { color: var(--carbon); font-weight: 700; }
+.pq-onb-color input:focus-visible + .pq-onb-color-muestra { outline: 2px solid var(--sello); outline-offset: 6px; }
+.pq-onb-seccion { display: flex; flex-direction: column; gap: var(--esp-3); padding-top: var(--esp-5); border-top: 1px dashed var(--borde); }
+.pq-onb-seccion .pq-seccion-titulo .pq-ayuda { font-weight: 500; }
+.pq-onb-seccion .pq-campo { margin-bottom: 0; }
+
+/* ¡Ya abriste!: la cabecera real de la tienda, a sangre. */
+.pq-onb-abierta { margin: 0 calc(var(--esp-5) * -1); background: var(--papel); min-height: 100vh; font-family: 'Inter Tight', sans-serif; }
+.pq-onb-abierta-letrero { padding-bottom: var(--esp-2); }
+.pq-onb-abierta-eyebrow { margin: var(--esp-3) 0 0; font: 700 13px/1 'Inter Tight', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--marca-texto); animation: pqAparece .45s .35s var(--curva) both; }
+.pq-onb-abierta .pq-letrero-nombre { margin-top: var(--esp-2); }
+.pq-onb-abierta-texto { margin: var(--esp-2) 0 0; font-size: 15px; line-height: 1.5; color: var(--texto-calido); text-wrap: pretty; }
+.pq-onb-abierta-cuerpo { display: flex; flex-direction: column; gap: var(--esp-5); padding: var(--esp-4) var(--esp-5) var(--esp-10); }
+.pq-onb-abierta-enlace { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-4); background: #FFFDF8; border: 1.5px dashed var(--marca-texto); border-radius: var(--radio-m); }
+.pq-onb-abierta-enlace .pq-mono { min-width: 0; overflow-wrap: anywhere; font-size: 13px; color: var(--tinta); }
+.pq-onb-abierta-enlace .pq-btn { flex-shrink: 0; }
+.pq-onb-abierta-botones { display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-onb-lista-hecho ul { display: flex; flex-direction: column; gap: 6px; margin: var(--esp-2) 0 0; padding: 0; list-style: none; }
+
+/* Los títulos de sección ahora son <h2> de verdad (antes <span>): sin el
+   margen por defecto del navegador, el espacio lo pone cada contenedor. */
+h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
+.pq-semana-sugerencia { margin: 0 0 var(--esp-3); }
+
+/* Copiar el horario del lunes (panel y onboarding) */
+.pq-copiar-lunes { margin-top: var(--esp-3); }
+.pq-copiar-lunes > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; list-style: none; font-size: 14px; font-weight: 600; color: var(--sello); cursor: pointer; }
+.pq-copiar-lunes > summary::-webkit-details-marker { display: none; }
+.pq-copiar-lunes > summary::after { content: ""; width: 7px; height: 7px; margin-top: -3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform var(--rapido) var(--curva); }
+.pq-copiar-lunes[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+.pq-copiar-lunes-cuerpo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+
+/* Entrar / crear cuenta / recuperar: antes con estilos en línea. */
+.pq-auth-shell { justify-content: center; background: transparent; }
+.pq-auth-logo-caja { margin-bottom: var(--esp-8); }
+.pq-auth-logo-enlace { display: inline-flex; text-decoration: none; }
+.pq-auth-logo { height: 30px; width: auto; }
+.pq-auth-mt2 { margin-top: var(--esp-2); }
+.pq-auth-mt3 { margin-top: var(--esp-3); }
+.pq-auth-mt4 { margin-top: var(--esp-4); }
+.pq-auth-mt5 { margin-top: var(--esp-5); }
+.pq-auth-mt6 { margin-top: var(--esp-6); }
+.pq-auth-enlace { color: var(--sello); }
+.pq-auth-enlace-suave { color: var(--gris-suave); }
+.pq-auth-pregunta { font-weight: 600; color: var(--gris-texto); }
+.pq-auth-ayuda-tipo { margin: -4px 0 var(--esp-2); }
+.pq-auth-opciones { display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-tipo-opcion-texto { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; }
+.pq-tipo-opcion-titulo { font-size: 14px; font-weight: 600; }
+.pq-auth-demo { display: block; width: 100%; min-height: 44px; background: none; border: none; text-decoration: underline; cursor: pointer; color: var(--gris-suave); }
+
+/* El logo de la app es logo-veci-lockup-transparente.png (generado desde
+   el original quitándole el fondo casi blanco): el PNG original pintaba un
+   recuadro blanco sobre el papel crema del login, el panel y el onboarding. */

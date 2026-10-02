@@ -40,6 +40,7 @@ $router->post('/reset-password/{token}', [$auth, 'restablecer']);
 $router->get('/panel/onboarding/foto', [$onboarding, 'mostrarFoto']);
 $router->post('/panel/onboarding/foto', [$onboarding, 'subirFoto']);
 $router->post('/panel/onboarding/analizar', [$onboarding, 'analizar']);
+$router->post('/panel/onboarding/catalogo', [$onboarding, 'guardarCatalogo']);
 $router->get('/panel/onboarding/productos', [$onboarding, 'mostrarProductos']);
 $router->get('/panel/onboarding/horario', [$onboarding, 'mostrarHorario']);
 $router->post('/panel/onboarding/horario', [$onboarding, 'guardarHorario']);
