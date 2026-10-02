@@ -49,7 +49,13 @@ $queEs = $esReservas ? 'agenda' : 'tienda';
         <?php endif; ?>
         <li class="pq-publicada-check">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
-          Llave Bre-B para cobrar
+          <?php
+          $llave = (string) ($negocio['llave_breb_valor'] ?? '');
+          $llaveVisible = ($negocio['llave_breb_tipo'] ?? '') === 'celular' && strlen($llave) === 10
+              ? substr($llave, 0, 3) . ' ' . substr($llave, 3, 3) . ' ' . substr($llave, 6)
+              : $llave;
+          ?>
+          <span>Cobras a tu llave Bre-B <span class="pq-mono"><?= e($llaveVisible) ?></span></span>
         </li>
         <?php if (empty($negocio['direccion'])): ?>
           <li>

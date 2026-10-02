@@ -3818,6 +3818,17 @@ body.pq-auth-bg {
 .pq-onb-anticipo[open] > summary::after { transform: rotate(90deg); }
 .pq-onb-anticipo .pq-onb-item-campos { margin-top: var(--esp-1); }
 
+/* Ítem al que la lectura no le vio el precio: borde mostaza a la
+   izquierda (como un tiquete marcado a mano) y el campo de precio
+   resaltado, para que se encuentre de un vistazo en una carta larga. */
+.pq-onb-item-falta { border-color: #F0D9A6; box-shadow: inset 3px 0 0 var(--mostaza), var(--sombra-suave); }
+.pq-onb-item-falta .pq-campo-dinero .pq-input { border-color: #E3B65C; background: #FFFBF1; }
+.pq-onb-item-nota { margin: var(--esp-2) var(--esp-2) 0 0; font-size: 12.5px; line-height: 1.4; color: #8a5a00; }
+.pq-onb-otra-foto { margin-top: var(--esp-5); }
+.pq-onb-alterno { margin: var(--esp-5) 0 0; font-size: 14px; }
+.pq-onb-alterno a { display: inline-block; padding: var(--esp-2) var(--esp-1); }
+.pq-llave-fila { grid-template-columns: minmax(128px, 1fr) minmax(0, 2fr); margin-top: 0; padding-right: 0; }
+
 /* Elegir color: muestras redondas con el nombre del color. */
 .pq-onb-vista { margin-top: 0; max-width: none; }
 .pq-onb-vista, .pq-onb-abierta {

@@ -128,9 +128,11 @@ class AuthController
         }
 
         $sede = Auth::exigirSesion();
-        if ((int) $sede['publicada'] !== 1) {
-            flash_set('ok', 'Termina de configurar tu negocio.');
-            redirigir('/panel/onboarding/' . Sede::siguientePasoOnboarding($sede));
+        // El alta la termina el dueño; un colaborador entra al panel, que le
+        // explica que la tienda todavía no está abierta.
+        if ((int) $sede['publicada'] !== 1 && $sede['rol'] === 'dueno') {
+            flash_set('ok', 'Termina de configurar tu negocio: vas por aquí.');
+            redirigir('/panel/onboarding');
         }
 
         redirigir('/panel');

@@ -4,3 +4,13 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.php [QSA,L]
 </IfModule>
+
+# Fotos de menú de celular (ver .user.ini, que es el que aplica con PHP-FPM).
+<IfModule mod_php.c>
+  php_value upload_max_filesize 12M
+  php_value post_max_size 14M
+</IfModule>
+
+<Files ".user.ini">
+  Require all denied
+</Files>

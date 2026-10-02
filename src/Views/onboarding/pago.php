@@ -11,12 +11,24 @@ if (!array_key_exists(strtoupper($colorActual), $paleta)) {
 }
 $nombreNegocio = (string) ($negocio['negocio_nombre'] ?? $negocio['nombre']);
 $inicial = mb_strtoupper(mb_substr((string) ($negocio['inicial'] ?? $nombreNegocio), 0, 1));
-$llaveTipo = $negocio['llave_breb_tipo'] ?? 'celular';
+$llaveTipo = $llavePrevia['tipo'] ?? ($negocio['llave_breb_tipo'] ?? 'celular');
+$llaveValor = $llavePrevia['valor'] ?? ($negocio['llave_breb_valor'] ?? $negocio['whatsapp']);
+// El teclado correcto desde el principio (interacciones.js lo cambia al
+// elegir otro tipo).
+$llaveInput = match ($llaveTipo) {
+    'correo' => ['type' => 'email', 'modo' => 'email'],
+    'cedula' => ['type' => 'text', 'modo' => 'numeric'],
+    default  => ['type' => 'tel', 'modo' => 'numeric'],
+};
 $cobroOpcional = $esReservas && !$tieneAnticipos;
 ?>
 <main class="pq-onb-cuerpo">
   <h1 class="pq-h1">Ponle tu color y abre</h1>
   <p class="pq-lead pq-onb-bajada">Así va a verse la entrada de tu tienda. El color lo cambias cuando quieras.</p>
+
+  <?php if (!empty($error)): ?>
+    <div class="pq-alerta pq-onb-aviso" role="alert"><?= e($error) ?></div>
+  <?php endif; ?>
 
   <form method="post" action="<?= e(base_url('/panel/onboarding/publicar')) ?>" class="pq-onb-form" data-enviando="Abriendo tu tienda…">
     <?= csrf_campo() ?>
@@ -83,7 +95,7 @@ $cobroOpcional = $esReservas && !$tieneAnticipos;
 
       <div class="pq-campo">
         <label class="pq-label" for="llave_valor">Tu llave</label>
-        <input class="pq-input pq-mono" type="text" id="llave_valor" name="llave_valor" data-llave-valor-input value="<?= e($negocio['llave_breb_valor'] ?? $negocio['whatsapp']) ?>" required>
+        <input class="pq-input pq-mono<?= !empty($error) ? ' pq-input-invalido' : '' ?>" type="<?= $llaveInput['type'] ?>" inputmode="<?= $llaveInput['modo'] ?>" id="llave_valor" name="llave_valor" data-llave-valor-input value="<?= e($llaveValor) ?>" maxlength="120" autocomplete="off" required<?= !empty($error) ? ' aria-invalid="true" autofocus' : '' ?>>
       </div>
 
       <p class="pq-nota-panel">

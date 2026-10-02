@@ -2,15 +2,25 @@
 $esReservas = $negocio['tipo_negocio'] === 'reservas';
 $pasoActual = 1;
 $queFoto = $esReservas ? 'tu lista de servicios' : 'tu menú';
+// Con catálogo ya armado, esta pantalla es "sumar otra página": lo que se
+// lea se agrega, y "Atrás" vuelve a la lista en vez de no existir.
+$sumando = $totalCatalogo > 0;
+$cosas = $esReservas ? 'servicios' : 'productos';
+$volverUrl = $sumando ? '/panel/onboarding/productos' : null;
 require __DIR__ . '/_pasos.php';
 ?>
 <main class="pq-onb-cuerpo">
-  <h1 class="pq-h1">Tómale una foto a <?= e($queFoto) ?></h1>
-  <p class="pq-lead pq-onb-bajada">
-    <?= $esReservas
-      ? 'Una lista de precios, una pizarra o un pantallazo de Instagram. Veci lee los servicios, precios y duración por ti.'
-      : 'La carta impresa, la pizarra o un pantallazo de Instagram. Veci lee los productos y precios por ti.' ?>
-  </p>
+  <?php if ($sumando): ?>
+    <h1 class="pq-h1">Suma otra foto</h1>
+    <p class="pq-lead pq-onb-bajada">Otra página del menú, la pizarra del día o los <?= $cosas ?> de temporada. Lo que Veci lea se agrega a los <?= (int) $totalCatalogo ?> que ya tienes; no se borra nada.</p>
+  <?php else: ?>
+    <h1 class="pq-h1">Tómale una foto a <?= e($queFoto) ?></h1>
+    <p class="pq-lead pq-onb-bajada">
+      <?= $esReservas
+        ? 'Una lista de precios, una pizarra o un pantallazo de Instagram. Veci lee los servicios, precios y duración por ti.'
+        : 'La carta impresa, la pizarra o un pantallazo de Instagram. Veci lee los productos y precios por ti.' ?>
+    </p>
+  <?php endif; ?>
 
   <?php if (!empty($error)): ?>
     <div class="pq-alerta pq-onb-aviso" role="alert"><?= e($error) ?></div>
@@ -26,7 +36,7 @@ require __DIR__ . '/_pasos.php';
         <span class="pq-subir-foto-boton pq-subir-foto-boton-principal">Tomar foto</span>
         <span class="pq-subir-foto-boton">Elegir archivo</span>
       </span>
-      <span>JPG, PNG o WEBP · hasta 8 MB</span>
+      <span>JPG, PNG o WEBP · la foto normal del celular sirve</span>
       <input id="foto" type="file" name="foto" accept="image/png,image/jpeg,image/webp" required data-input-foto>
     </label>
 
@@ -42,13 +52,17 @@ require __DIR__ . '/_pasos.php';
     <ul class="pq-onb-consejos" aria-label="Para que salga bien">
       <li>Con buena luz y de frente</li>
       <li>Que se lean los precios</li>
-      <li>Si tu menú tiene varias páginas, empieza por una: el resto lo agregas después</li>
+      <?php if (!$sumando): ?><li>Si tu menú tiene varias páginas, empieza por una: las otras las sumas en el siguiente paso</li><?php endif; ?>
     </ul>
 
-    <button type="submit" class="pq-btn pq-btn-sello" data-boton-foto>Leer esta foto →</button>
+    <button type="submit" class="pq-btn pq-btn-sello" data-boton-foto>Usar esta foto →</button>
   </form>
 
-  <?php if (!empty($negocio['menu_foto'])): ?>
+  <?php if ($sumando): ?>
+    <p class="pq-centro pq-onb-alterno">
+      <a class="pq-enlace-sello" href="<?= e(base_url('/panel/onboarding/productos')) ?>">Volver a mi <?= $esReservas ? 'lista' : 'carta' ?> (<?= (int) $totalCatalogo ?> <?= $cosas ?>)</a>
+    </p>
+  <?php elseif (!empty($negocio['menu_foto'])): ?>
     <a href="<?= e(base_url('/panel/onboarding/productos')) ?>" class="pq-enlace-fila pq-onb-foto-guardada">
       <img src="<?= e(base_url($negocio['menu_foto'])) ?>" alt="" class="pq-onb-foto-mini">
       <span>
@@ -57,5 +71,12 @@ require __DIR__ . '/_pasos.php';
       </span>
       <svg class="pq-enlace-fila-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </a>
+  <?php endif; ?>
+
+  <?php if (!$sumando): ?>
+    <?php // Sin menú impreso (o sin ganas de foto) también se puede abrir. ?>
+    <p class="pq-centro pq-onb-alterno">
+      <a class="pq-enlace-sello" href="<?= e(base_url('/panel/onboarding/productos?a_mano=1')) ?>">No tengo foto: <?= $esReservas ? 'escribo mis servicios' : 'escribo mi carta' ?> a mano</a>
+    </p>
   <?php endif; ?>
 </main>

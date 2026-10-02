@@ -65,16 +65,21 @@ PHP puro + MySQL, sin framework:
      así que nunca rompe la sesión sin importar con qué host entres.
    - `anthropic_api_key` (opcional): con una llave, el paso "La IA arma tu
      tienda" lee productos y precios reales de la foto del menú llamando a
-     la API de Claude. Sin llave, usa un catálogo de ejemplo para que el
-     flujo completo se pueda probar sin depender de una API externa.
+     la API de Claude (salida JSON estructurada y respaldo automático de
+     modelo si la petición es rechazada). Sin llave, ofrece un catálogo de
+     ejemplo —avisándole al dueño que es de ejemplo— para que el flujo
+     completo se pueda probar sin depender de una API externa.
 
 4. Levanta el servidor:
 
    - **Desarrollo local**, con el servidor embebido de PHP:
 
      ```bash
-     php -S localhost:8000 serve.php
+     php -d upload_max_filesize=12M -d post_max_size=14M -S localhost:8000 serve.php
      ```
+
+     (Los `-d` dejan subir fotos de menú tal como salen del celular; en
+     hosting eso lo ponen `public/.user.ini` y `public/.htaccess`.)
 
    - **Producción**: ver la guía completa para hosting compartido tipo
      cPanel (el mismo donde sueles instalar WordPress) más abajo.

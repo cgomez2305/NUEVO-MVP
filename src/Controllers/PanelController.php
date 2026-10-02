@@ -462,6 +462,7 @@ class PanelController
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::crear((int) $negocio['id'], $nombre, $precio, $duracion);
+            flash_set('ok', "«{$nombre}» se agregó a tu lista.");
         }
 
         redirigir($volver);
@@ -1070,6 +1071,7 @@ class PanelController
             'activo'  => 'sedes',
             'negocio' => $negocio,
             'sede'    => $sede,
+            'error'   => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -1094,6 +1096,17 @@ class PanelController
                 // El color es del negocio (todas sus sedes), no de esta sede.
                 if (isset($_POST['color_marca'])) {
                     \App\Models\Negocio::actualizarColor((int) $negocio['negocio_id'], (string) $_POST['color_marca']);
+                }
+                // La llave Bre-B solo se elegía al abrir la tienda: si el
+                // dueño cambiaba de cuenta, no tenía dónde corregirla.
+                if (isset($_POST['llave_tipo'])) {
+                    $tipo = in_array($_POST['llave_tipo'], ['celular', 'cedula', 'correo'], true) ? $_POST['llave_tipo'] : 'celular';
+                    $llave = llave_breb_normalizada($tipo, (string) ($_POST['llave_valor'] ?? ''));
+                    if ($llave === null) {
+                        flash_set('error', 'Guardamos lo demás, pero la llave Bre-B no parece válida: un celular tiene 10 dígitos y empieza por 3; una cédula, solo números.');
+                        redirigir('/panel/sedes/' . $sede['id'] . '/editar');
+                    }
+                    Sede::guardarLlaveBreB((int) $sede['id'], $tipo, $llave);
                 }
                 flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }

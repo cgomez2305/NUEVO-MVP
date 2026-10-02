@@ -503,3 +503,34 @@ function metodo_pago_legible(string $metodo): string
         default    => ucfirst($metodo),
     };
 }
+
+/**
+ * Valida y normaliza una llave Bre-B según su tipo; null si no sirve.
+ * Una llave mal escrita no se nota hasta que un cliente intenta pagar y
+ * la transferencia rebota, así que se revisa al guardarla:
+ *   - celular: 10 dígitos que empiezan por 3 (acepta "+57", espacios, guiones).
+ *   - cedula:  5 a 10 dígitos (acepta puntos).
+ *   - correo:  un correo válido, en minúsculas.
+ */
+function llave_breb_normalizada(string $tipo, string $valor): ?string
+{
+    $valor = trim($valor);
+
+    if ($tipo === 'correo') {
+        $correo = mb_strtolower($valor);
+        return mb_strlen($correo) <= 120 && filter_var($correo, FILTER_VALIDATE_EMAIL) !== false ? $correo : null;
+    }
+
+    $digitos = preg_replace('/\D+/', '', $valor) ?? '';
+    if ($tipo === 'celular') {
+        if (strlen($digitos) === 12 && str_starts_with($digitos, '57')) {
+            $digitos = substr($digitos, 2);
+        }
+        return preg_match('/^3\d{9}$/', $digitos) === 1 ? $digitos : null;
+    }
+    if ($tipo === 'cedula') {
+        return preg_match('/^\d{5,10}$/', $digitos) === 1 ? $digitos : null;
+    }
+
+    return null;
+}

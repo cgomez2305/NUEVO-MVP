@@ -26,6 +26,40 @@ otro adorno: cada paso es sobrio y el clímax es el final.
 pasos **con nombre** (`.pq-onb-pasos`). Incluye `$pasoActual` y opcional
 `$volverUrl`; muestra los flashes `ok` y `aviso`.
 
+## Lógica del flujo (revisada)
+
+- **Un solo guarda**: `Sede::siguientePasoOnboarding()` dice el paso
+  pendiente y cada pantalla lo usa (`exigirPaso()`); `publicar` también,
+  así un POST viejo no abre una tienda vacía. `/panel/onboarding` redirige
+  al paso pendiente (lo usan el login y el dashboard).
+- **Solo el dueño** hace el alta. El colaborador entra al panel.
+- **La foto es opcional**: "No tengo foto: escribo mi carta a mano" →
+  `productos?a_mano=1`. El paso del catálogo tiene tres modos (`$modo`):
+  `leer` (foto sin leer, `_leer_foto.php`), `a_mano` (vacío, formulario
+  abierto con autofocus; vuelve abierto tras cada ítem) y `revisar`.
+- **Varias fotos**: "¿Tu menú tiene otra página?" sube otra; queda "por
+  leer" en sesión (`onb_foto_por_leer`) y lo leído se **suma** sin repetir
+  nombres. La foto reemplazada se borra del disco.
+- **La foto se achica en el navegador** (canvas, 2000 px, JPEG 0,85,
+  respeta EXIF) y el servidor la normaliza otra vez con `Services\Imagen`
+  (endereza, reduce, quita EXIF/GPS). PHP traía 2 MB de límite de subida
+  y las fotos de celular fallaban todas: `.user.ini` / `.htaccess` lo
+  suben a 12 MB y cada código de error de subida tiene su mensaje.
+- **Lectura honesta** (`ExtractorMenu` devuelve `estado`): `ok`, `vacio`
+  (no encontró nada → vuelve a la foto con mensaje), `fallo` (reintentar
+  o escribir a mano; no cuenta para el límite) y `sin_llave` (catálogo de
+  ejemplo **avisando** que es de ejemplo). Al llegar al límite del plan
+  Gratis no se inventa nada: editor a mano.
+- **Precio que no se vio** = 0: la fila sale vacía con borde mostaza
+  (`.pq-onb-item-falta`) y no se puede abrir hasta completarla.
+  `guardarCatalogo` guarda lo válido y nombra lo incompleto.
+- **Llave Bre-B validada** (`llave_breb_normalizada()`): celular de 10
+  dígitos que empieza por 3 (acepta +57), cédula 5–10 dígitos, correo.
+  Si falla, vuelve con lo escrito y el color elegido. Se edita después en
+  Sedes → Editar datos.
+- **PRG al abrir**: `publicar` redirige a `/panel/onboarding/abierta`;
+  recargar no reenvía.
+
 ## Componentes
 
 - **Leer la foto** (`.pq-onb-escaner`): la foto con una línea que la
@@ -65,6 +99,10 @@ pasos **con nombre** (`.pq-onb-pasos`). Incluye `$pasoActual` y opcional
   CSP necesita `img-src 'self' data: blob:` o la miniatura sale vacía.
 - Tamaños de archivo: KB por debajo de 1 MB ("0.0 MB" no dice nada).
 - Formularios que tardan (IA, publicar): `data-enviando="Texto…"`.
+- Un botón que solo sube la foto dice "Usar esta foto", no "Leer": la
+  lectura es el paso siguiente.
+- La guardia de cambios también pregunta en los enlaces que salen de la
+  pantalla ("Atrás", "otra foto"), no solo en los formularios.
 - El logo de la app es `logo-veci-lockup-transparente.png`: el PNG
   original trae fondo blanco y pintaba un recuadro sobre el papel crema
   (`mix-blend-mode` no sirve contra el fondo raíz de la página).

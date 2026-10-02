@@ -37,6 +37,7 @@ $router->get('/reset-password/{token}', [$auth, 'formularioReset']);
 $router->post('/reset-password/{token}', [$auth, 'restablecer']);
 
 // --- Alta del comerciante (flujo A de la maqueta) ---------------------
+$router->get('/panel/onboarding', [$onboarding, 'continuar']);
 $router->get('/panel/onboarding/foto', [$onboarding, 'mostrarFoto']);
 $router->post('/panel/onboarding/foto', [$onboarding, 'subirFoto']);
 $router->post('/panel/onboarding/analizar', [$onboarding, 'analizar']);
@@ -46,6 +47,7 @@ $router->get('/panel/onboarding/horario', [$onboarding, 'mostrarHorario']);
 $router->post('/panel/onboarding/horario', [$onboarding, 'guardarHorario']);
 $router->get('/panel/onboarding/pago', [$onboarding, 'mostrarPago']);
 $router->post('/panel/onboarding/publicar', [$onboarding, 'publicar']);
+$router->get('/panel/onboarding/abierta', [$onboarding, 'mostrarAbierta']);
 
 // --- Panel del negocio -------------------------------------------------
 $router->get('/panel', [$panel, 'dashboard']);

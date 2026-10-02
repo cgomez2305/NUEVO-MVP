@@ -118,6 +118,21 @@ class Servicio
         };
     }
 
+    /**
+     * Cuántos servicios de la sede no tienen precio todavía: la lectura con IA
+     * los deja en 0 cuando el precio no se veía en la foto, y así no se
+     * puede abrir (se venderían gratis).
+     */
+    public static function contarSinPrecio(int $sedeId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COUNT(*) AS total FROM servicios WHERE sede_id = :sede_id AND precio = 0'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
     public static function contarPorSede(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(

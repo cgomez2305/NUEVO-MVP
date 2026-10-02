@@ -657,18 +657,63 @@
 
     if (boton) boton.disabled = true;
 
+    // "0.0 MB" para una foto de 300 KB no dice nada: KB por debajo de 1 MB.
+    function tamano(bytes) {
+      return bytes < 1024 * 1024
+        ? Math.max(1, Math.round(bytes / 1024)) + ' KB'
+        : (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
+    }
+
+    // La foto del celular (3–6 MB, 4000 px) se achica aquí antes de subir:
+    // con 4G lento sube en segundos y no choca con el límite de subida del
+    // servidor. createImageBitmap respeta la orientación EXIF, así que la
+    // foto llega derecha. Si el navegador no puede (o sale más pesada), se
+    // sube la original y el servidor la reduce igual.
+    function achicar(archivo) {
+      var LADO = 2000;
+      if (!window.createImageBitmap || !window.DataTransfer || archivo.size < 900 * 1024) {
+        return Promise.resolve(archivo);
+      }
+      return createImageBitmap(archivo, { imageOrientation: 'from-image' }).then(function (bitmap) {
+        var escala = Math.min(1, LADO / Math.max(bitmap.width, bitmap.height));
+        var lienzo = document.createElement('canvas');
+        lienzo.width = Math.round(bitmap.width * escala);
+        lienzo.height = Math.round(bitmap.height * escala);
+        var ctx = lienzo.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+        ctx.drawImage(bitmap, 0, 0, lienzo.width, lienzo.height);
+        return new Promise(function (resolver) {
+          lienzo.toBlob(function (blob) {
+            if (!blob || blob.size >= archivo.size) { resolver(archivo); return; }
+            resolver(new File([blob], archivo.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.85);
+        });
+      }).catch(function () { return archivo; });
+    }
+
     input.addEventListener('change', function () {
       var archivo = input.files && input.files[0];
       if (!archivo) return;
-      if (boton) boton.disabled = false;
       if (dropzone) dropzone.hidden = true;
       if (previa) previa.hidden = false;
       if (previaNombre) previaNombre.textContent = archivo.name;
-      // "0.0 MB" para una foto de 300 KB no dice nada: KB por debajo de 1 MB.
-      if (previaTamano) previaTamano.textContent = archivo.size < 1024 * 1024
-        ? Math.max(1, Math.round(archivo.size / 1024)) + ' KB'
-        : (archivo.size / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
+      if (previaTamano) previaTamano.textContent = tamano(archivo.size);
       if (previaImg) previaImg.src = URL.createObjectURL(archivo);
+      var textoBoton = boton ? boton.textContent : '';
+      if (boton) { boton.disabled = true; boton.textContent = 'Preparando la foto…'; }
+
+      achicar(archivo).then(function (final) {
+        if (final !== archivo) {
+          try {
+            var lista = new DataTransfer();
+            lista.items.add(final);
+            input.files = lista.files;
+            if (previaTamano) previaTamano.textContent = tamano(archivo.size) + ' → ' + tamano(final.size);
+          } catch (e) { /* se sube la original */ }
+        }
+        if (boton) { boton.disabled = false; boton.textContent = textoBoton; }
+      });
     });
 
     if (cambiar) {
@@ -700,13 +745,21 @@
     zona.addEventListener('input', function (evento) {
       if (evento.target.getAttribute && evento.target.getAttribute('form') === idPrincipal) sucio = true;
     });
+    var aviso = 'Cambiaste cosas en la lista y todavía no las guardas. Si sigues, se pierden. ¿Seguir de todas formas?';
     zona.addEventListener('submit', function (evento) {
       if (!sucio || evento.target.id === idPrincipal || evento.defaultPrevented) return;
-      if (!window.confirm('Cambiaste cosas en la lista y todavía no las guardas. Si sigues, se pierden. ¿Seguir de todas formas?')) {
+      if (!window.confirm(aviso)) {
         evento.preventDefault();
         evento.stopImmediatePropagation();
       }
     }, true);
+    // Lo mismo con los enlaces que salen de la pantalla ("Atrás", "otra
+    // foto"), que están fuera de la lista y antes se llevaban lo escrito.
+    document.addEventListener('click', function (evento) {
+      var enlace = evento.target.closest && evento.target.closest('a[href]');
+      if (!sucio || !enlace || enlace.target === '_blank' || enlace.getAttribute('href').charAt(0) === '#') return;
+      if (!window.confirm(aviso)) evento.preventDefault();
+    });
   });
 })();
 

@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-02 (panel y onboarding v2 completos)
+# Estado de la sesión — 2026-10-02 (panel y onboarding v2 completos, lógica del onboarding revisada)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -49,6 +49,13 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   no había dónde cambiarlo) y 5 bugs reales corregidos (foto sin vista
   previa por CSP, horario sin días = callejón sin salida, cambios del
   catálogo perdidos, productos agregados nacían agotados y ocultos, 0.0 MB).
+- Luego "revisa muy bien la lógica del onboarding": hecho. Foto opcional
+  (carta a mano), varias fotos sin duplicar, foto achicada en navegador +
+  normalizada en servidor (límite PHP de 2 MB rompía las fotos de celular),
+  lectura con IA honesta (estados ok/vacio/fallo/sin_llave, modelo
+  claude-opus-5-5, salida JSON estructurada, fallbacks "default"), ítems sin
+  precio bloquean abrir, llave Bre-B validada y editable en Sedes, PRG al
+  publicar, onboarding solo para el dueño. Detalle en `references/onboarding.md`.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
@@ -92,7 +99,8 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   scratchpad; `capturas.js --cookies jar`. En Puppeteer, los botones que
   quedan bajo la bottomnav fija se pulsan con `$eval(sel, e => e.click())`.
 - Onboarding de prueba: `registrar.sh jar nombre tipo 31199900NN` y
-  `flujo-onboarding2.js` en el scratchpad; limpiar con `limpiar-onb.sh`
+  `flujo-onboarding3.js S out ancho` (cuentas o3/o4/o5 = 3119990031-33,
+  usa `menu-celular.jpg` de 10 MB con EXIF) en el scratchpad; limpiar con `limpiar-onb.sh`
   (borra negocios 31199900xx y sus fotos). Registro: 3 por IP al día, así
   que `DELETE FROM limites_tasa` entre corridas.
 - Copiloto bloqueado en plan Gratis: para probarlo, `update negocios set

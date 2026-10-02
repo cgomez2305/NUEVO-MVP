@@ -111,7 +111,11 @@ $inicialNegocio = mb_strtoupper(mb_substr((string) ($negocio['inicial'] ?? $nomb
 <?php else: ?>
   <div class="pq-alerta pq-inicio-bloque">
     Tu <?= $queEs ?> todavía no está publicada.
-    <a href="<?= e(base_url('/panel/onboarding/foto')) ?>" class="pq-enlace-sello">Termina el alta →</a>
+    <?php if (($negocio['rol'] ?? '') === 'dueno'): ?>
+      <a href="<?= e(base_url('/panel/onboarding')) ?>" class="pq-enlace-sello">Termina el alta →</a>
+    <?php else: ?>
+      El dueño la abre cuando termine de configurarla.
+    <?php endif; ?>
   </div>
 <?php endif; ?>
 

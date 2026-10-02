@@ -195,23 +195,30 @@ class Sede
     /**
      * En qué paso del onboarding quedó una sede sin publicar, para poder
      * devolverla ahí mismo al iniciar sesión en vez de soltarla en un
-     * panel vacío. Reutiliza las mismas condiciones que ya usan los
-     * guardas de cada paso en OnboardingController.
+     * panel vacío. Es también el guarda de cada paso en
+     * OnboardingController: un paso solo se muestra si los anteriores
+     * están completos.
+     *
+     * La foto no es obligatoria: quien arma su carta a mano pasa directo
+     * al catálogo. Un catálogo con ítems sin precio (la IA no alcanzó a
+     * leerlo) todavía no está completo.
+     *
+     * @return 'foto'|'productos'|'horario'|'pago'
      */
     public static function siguientePasoOnboarding(array $sede): string
     {
-        if (empty($sede['menu_foto'])) {
-            return 'foto';
+        $sedeId = (int) $sede['id'];
+        $esReservas = $sede['tipo_negocio'] === 'reservas';
+        $total = $esReservas ? Servicio::contarPorSede($sedeId) : Producto::contarPorSede($sedeId);
+
+        if ($total === 0) {
+            return empty($sede['menu_foto']) ? 'foto' : 'productos';
         }
-        if ($sede['tipo_negocio'] === 'reservas') {
-            if (Servicio::contarPorSede((int) $sede['id']) === 0) {
-                return 'productos';
-            }
-            if (self::horario($sede) === []) {
-                return 'horario';
-            }
-        } elseif (Producto::contarPorSede((int) $sede['id']) === 0) {
+        if (($esReservas ? Servicio::contarSinPrecio($sedeId) : Producto::contarSinPrecio($sedeId)) > 0) {
             return 'productos';
+        }
+        if ($esReservas && self::horario($sede) === []) {
+            return 'horario';
         }
 
         return 'pago';
