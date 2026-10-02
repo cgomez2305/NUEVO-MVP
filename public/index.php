@@ -106,6 +106,8 @@ $router->post('/panel/fidelidad/{cliente}/premio', [$crecimiento, 'entregarPremi
 $router->get('/panel/resenas', [$crecimiento, 'resenas']);
 $router->post('/panel/resenas/{id}/comentario', [$crecimiento, 'alternarComentarioResena']);
 $router->post('/panel/pedidos/{id}/resena', [$crecimiento, 'pedirResenaPedido']);
+$router->post('/panel/pedidos/{id}/avisar', [$panel, 'avisarPedido']);
+$router->post('/panel/citas/{id}/avisar', [$panel, 'avisarCita']);
 $router->post('/panel/citas/{id}/resena', [$crecimiento, 'pedirResenaCita']);
 $router->get('/panel/paquetes', [$crecimiento, 'paquetes']);
 $router->post('/panel/paquetes', [$crecimiento, 'crearPaquete']);

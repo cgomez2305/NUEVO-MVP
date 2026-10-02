@@ -4532,3 +4532,13 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-bono-puntos .pq-ayuda { margin-left: 4px; }
 .pq-paquetes-panel .pq-admin-fila { flex-wrap: nowrap; }
 .pq-paquetes-panel .pq-menu-kebab { flex: none; }
+
+/* ---------- Avisos de estado al cliente (panel) ---------- */
+/* Un enlace verde discreto bajo la acción principal: no compite con "Siguiente paso". */
+.pq-aviso-estado-form { display: contents; }
+.pq-aviso-estado { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--esp-2); border: 0; border-radius: var(--radio-s); background: none; color: #0f7a46; font: 600 13px/1.2 var(--fuente-texto); cursor: pointer; }
+.pq-aviso-estado:hover { background: var(--tinte-caja); }
+.pq-aviso-estado:focus-visible { outline: 2px solid var(--caja); outline-offset: 2px; }
+.pq-aviso-detalle { display: flex; flex-direction: column; align-items: flex-end; gap: var(--esp-2); margin: var(--esp-4) 0; padding: var(--esp-3); border-radius: var(--radio-m); background: #ECE5DD; }
+.pq-aviso-burbuja { margin: 0; max-width: 92%; padding: var(--esp-2) var(--esp-3); font-size: 14px; line-height: 1.45; color: #111; }
+.pq-aviso-detalle .pq-btn { width: auto; }

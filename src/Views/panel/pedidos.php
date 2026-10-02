@@ -97,6 +97,13 @@ unset($columna);
                 <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguiente['texto']) ?> →</button>
               </form>
             <?php endif; ?>
+            <?php if (\App\Services\AvisoEstado::pendiente('pedido', $pedido, $negocio)): ?>
+              <?php // El cliente todavía no sabe del cambio: un toque y se abre WhatsApp con el aviso escrito. ?>
+              <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/avisar')) ?>" target="_blank" class="pq-aviso-estado-form">
+                <?= csrf_campo() ?>
+                <button type="submit" class="pq-aviso-estado"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>Avisarle: <?= e(etiqueta_estado_pedido((string) $pedido['estado'])) ?></button>
+              </form>
+            <?php endif; ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -207,4 +214,11 @@ $hastaIdx = min($pagina * $porPagina, $historialTotal);
       <a class="<?= $pagina >= $totalPaginas ? 'pq-pagina-deshabilitada' : '' ?>" href="<?= $enlacePagina(min($totalPaginas, $pagina + 1)) ?>" aria-label="Siguiente">›</a>
     </div>
   <?php endif; ?>
+<?php endif; ?>
+
+<?php if (!empty($ok)): ?>
+  <div class="pq-toast" role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+    <?= e($ok) ?>
+  </div>
 <?php endif; ?>

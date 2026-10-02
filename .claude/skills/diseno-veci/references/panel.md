@@ -272,3 +272,17 @@ ilustraciones.
   "Faltan $X". Se guarda una foto del resumen: si después cancelan un
   pedido, el cierre de ese día no cambia. Volver a cerrar reemplaza.
 - Historial de los últimos 14 cierres con su diferencia.
+
+## Avisos de estado al cliente (pedidos y citas)
+
+- `App\Services\AvisoEstado`: un texto por estado (pagado, en cocina,
+  listo —según recoger/mesa/domicilio—, en camino, entregado, cancelado;
+  cita confirmada o cancelada). `aviso_estado` guarda de qué estado ya se
+  avisó, para no ofrecerlo dos veces.
+- Con la API de WhatsApp Business configurada (`whatsapp_api` en config)
+  sale solo al cambiar el estado (toast "Le avisamos a X"). Sin ella:
+  - Detalle del pedido: el aviso se ve **como burbuja de WhatsApp** sobre
+    el fondo del chat (`.pq-aviso-detalle`) con "Avisarle por WhatsApp".
+  - Tablero y agenda: enlace verde discreto `.pq-aviso-estado`
+    ("Avisarle: Listo") bajo la acción principal; no compite con ella.
+- La migración da por avisados los pedidos y citas que ya existían.

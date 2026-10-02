@@ -201,6 +201,8 @@ CREATE TABLE IF NOT EXISTS pedidos (
   -- Lo cobrado de domicilio y la zona, copiados al pedir (ver zonas_domicilio).
   costo_domicilio INT UNSIGNED NOT NULL DEFAULT 0,
   zona_domicilio  VARCHAR(80)  DEFAULT NULL,
+  -- Último estado del que se le avisó al cliente por WhatsApp.
+  aviso_estado    VARCHAR(20)  DEFAULT NULL,
   metodo_pago   ENUM('breb','nequi','efectivo') NOT NULL DEFAULT 'breb',
   tipo_entrega  ENUM('domicilio','recoger','mesa') NOT NULL DEFAULT 'domicilio',
   direccion     VARCHAR(255) DEFAULT NULL,
@@ -305,6 +307,7 @@ CREATE TABLE IF NOT EXISTS citas (
   notas         VARCHAR(255) DEFAULT NULL,
   token_gestion CHAR(32)     DEFAULT NULL,
   recordatorio_enviado TINYINT(1) NOT NULL DEFAULT 0,
+  aviso_estado  VARCHAR(20)  DEFAULT NULL,
   anticipo_monto  INT UNSIGNED NOT NULL DEFAULT 0,
   anticipo_estado ENUM('no_requerido','pendiente','pagado') NOT NULL DEFAULT 'no_requerido',
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -622,4 +625,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_05_combos.sql'),
   ('2026-10-03_06_cierres_caja.sql'),
   ('2026-10-03_07_resenas.sql'),
-  ('2026-10-03_08_paquetes_bonos.sql');
+  ('2026-10-03_08_paquetes_bonos.sql'),
+  ('2026-10-03_09_avisos_estado.sql');

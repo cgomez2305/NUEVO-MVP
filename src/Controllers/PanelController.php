@@ -23,6 +23,7 @@ use App\Models\Sede;
 use App\Models\Servicio;
 use App\Models\UsoIA;
 use App\Models\Usuario;
+use App\Services\AvisoEstado;
 use App\Services\RecordatorioWhatsapp;
 
 /**
@@ -126,6 +127,7 @@ class PanelController
             'totalPaginas' => $totalPaginas,
             'porPagina'    => $porPagina,
             'historialLimitado' => $historialLimitado,
+            'ok'             => flash_obtener('ok'),
         ], 'panel');
     }
 
@@ -163,9 +165,42 @@ class PanelController
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
             Pedido::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+            // Con la API de WhatsApp configurada, el cliente se entera solo;
+            // si no, el panel le ofrece al dueño "Avisarle" con el texto listo.
+            $pedido = Pedido::buscar((int) $parametros['id'], (int) $negocio['id']);
+            if ($pedido !== null && AvisoEstado::automatico('pedido', $pedido, $negocio)) {
+                flash_set('ok', 'Le avisamos a ' . $pedido['cliente_nombre'] . ' por WhatsApp.');
+            }
         }
 
         redirigir($volver);
+    }
+
+    /** "Avisarle": marca el aviso como dado y abre WhatsApp con el texto del estado actual. */
+    public function avisarPedido(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $pedido = Pedido::buscar((int) $parametros['id'], (int) $negocio['id']);
+        $texto = $pedido !== null ? AvisoEstado::texto('pedido', $pedido, $negocio) : null;
+        if ($texto === null || !csrf_verificar()) {
+            redirigir('/panel/pedidos');
+        }
+        AvisoEstado::marcar('pedido', (int) $pedido['id'], (string) $pedido['estado']);
+        header('Location: ' . AvisoEstado::enlace($pedido, $texto));
+        exit;
+    }
+
+    public function avisarCita(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
+        $texto = $cita !== null ? AvisoEstado::texto('cita', $cita, $negocio) : null;
+        if ($texto === null || !csrf_verificar()) {
+            redirigir('/panel/citas');
+        }
+        AvisoEstado::marcar('cita', (int) $cita['id'], (string) $cita['estado']);
+        header('Location: ' . AvisoEstado::enlace($cita, $texto));
+        exit;
     }
 
     /** Detalle completo de un pedido: ítems, entrega, notas y acciones menos frecuentes. */
@@ -645,6 +680,10 @@ class PanelController
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
             Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+            $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
+            if ($cita !== null && AvisoEstado::automatico('cita', $cita, $negocio)) {
+                flash_set('ok', 'Le avisamos a ' . $cita['cliente_nombre'] . ' por WhatsApp.');
+            }
         }
 
         redirigir('/panel/citas');
