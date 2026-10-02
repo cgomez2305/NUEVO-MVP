@@ -1,113 +1,159 @@
-<p class="pq-lead"><a href="<?= e(base_url('/admin')) ?>" style="color: var(--gris-suave)">← Todos los negocios</a></p>
+<?php
+$color = color_seguro($negocio['color_marca'] ?? null);
+$inicial = mb_strtoupper(mb_substr((string) $negocio['nombre'], 0, 1));
+$suspendido = (int) $negocio['suspendido'] === 1;
+$diasCreado = dias_desde((string) $negocio['creado_en']);
+$pendientes = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] === null));
+$historial = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] !== null));
+$roles = ['dueno' => 'Dueño', 'colaborador' => 'Colaborador'];
+$whatsappLegible = fn (string $n) => strlen($n) === 10 ? substr($n, 0, 3) . ' ' . substr($n, 3, 3) . ' ' . substr($n, 6) : $n;
+?>
+<a href="<?= e(base_url('/admin')) ?>" class="pq-volver-panel">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  Negocios
+</a>
 
-<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 8px">
-  <div>
-    <span class="pq-eyebrow"><?= $negocio['tipo_negocio'] === 'reservas' ? 'Servicios con cita' : 'Productos con carrito' ?></span>
-    <h1 class="pq-h1" style="font-size: 26px">
-      <?= e($negocio['nombre']) ?>
-      <?php if ((int) $negocio['suspendido'] === 1): ?>
-        <span class="pq-chip pq-chip-cancelado" style="font-size: 11px; padding: 3px 8px; margin-left: 6px">Suspendido</span>
-      <?php endif; ?>
-    </h1>
+<header class="pq-admin-ficha">
+  <span class="pq-letrero-insignia pq-admin-ficha-insignia" style="--marca: <?= e($color) ?>; --marca-sobre: <?= e(color_texto_sobre($color)) ?>" aria-hidden="true"><?= e($inicial) ?></span>
+  <div class="pq-admin-ficha-texto">
+    <span class="pq-eyebrow"><?= $negocio['tipo_negocio'] === 'reservas' ? 'Reservas' : 'Pedidos' ?> · se unió <?= e(hace_dias($diasCreado)) ?></span>
+    <h1 class="pq-h1"><?= e($negocio['nombre']) ?></h1>
+    <?php if ($suspendido): ?>
+      <span class="pq-chip pq-chip-cancelado">Suspendido<?= !empty($negocio['suspendido_en']) ? ' desde el ' . e(fecha_larga((string) $negocio['suspendido_en'])) : '' ?></span>
+    <?php endif; ?>
   </div>
-
-  <?php if ((int) $negocio['suspendido'] === 1): ?>
-    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/reactivar')) ?>">
-      <?= csrf_campo() ?>
-      <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Reactivar cuenta</button>
-    </form>
-  <?php else: ?>
-    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/suspender')) ?>" data-confirmar="¿Suspender esta cuenta? Nadie de este negocio podrá entrar ni su tienda pública responderá.">
-      <?= csrf_campo() ?>
-      <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Suspender cuenta</button>
-    </form>
-  <?php endif; ?>
-</div>
+</header>
 
 <?php if (!empty($ok)): ?>
-  <div class="pq-alerta pq-alerta-ok" style="margin-top: 16px"><?= e($ok) ?></div>
+  <div class="pq-alerta pq-alerta-ok" role="status"><?= e($ok) ?></div>
 <?php endif; ?>
 <?php if (!empty($error)): ?>
-  <div class="pq-alerta" style="margin-top: 16px"><?= e($error) ?></div>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
 <?php endif; ?>
 
 <?php if (!empty($resetEnlace)): ?>
-  <div class="pq-card" style="margin-top: 16px; border: 1px solid var(--sello)">
-    <span style="font-size: 13px; font-weight: 600">Enlace de recuperación para <?= e($resetUsuario) ?></span>
-    <p class="pq-ayuda" style="margin-top: 6px">Válido por 1 hora, un solo uso. Cópialo y mándalo por WhatsApp — no se va a volver a mostrar.</p>
-    <input class="pq-input pq-mono" style="margin-top: 8px; font-size: 11px" type="text" readonly data-seleccionar-al-tocar value="<?= e($resetEnlace) ?>">
-  </div>
+  <?php
+  // El enlace se muestra una sola vez (flash): se copia o se manda directo
+  // por WhatsApp al número de esa persona, sin pasarlo a mano.
+  $resetWhatsapp = '';
+  foreach ($usuarios as $u) {
+      if (str_contains((string) $resetUsuario, (string) $u['whatsapp'])) {
+          $resetWhatsapp = (string) $u['whatsapp'];
+      }
+  }
+  $mensajeReset = "Hola, te escribimos de Veci. Con este enlace pones una contraseña nueva (sirve una sola vez, durante 1 hora):\n" . $resetEnlace;
+  ?>
+  <section class="pq-admin-enlace" aria-labelledby="pq-titulo-enlace">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-enlace">Enlace para <?= e($resetUsuario) ?></h2>
+    <p class="pq-ayuda">Sirve una vez, durante 1 hora. No se vuelve a mostrar: mándalo ya.</p>
+    <input class="pq-input pq-mono" type="text" readonly data-seleccionar-al-tocar value="<?= e($resetEnlace) ?>" aria-label="Enlace de recuperación">
+    <div class="pq-admin-enlace-botones">
+      <?php if ($resetWhatsapp !== ''): ?>
+        <a class="pq-btn pq-btn-whatsapp" href="https://wa.me/57<?= e($resetWhatsapp) ?>?text=<?= rawurlencode($mensajeReset) ?>" target="_blank" rel="noopener">Mandar por WhatsApp</a>
+      <?php endif; ?>
+      <button type="button" class="pq-btn pq-btn-ghost" data-copiar="<?= e($resetEnlace) ?>">Copiar enlace</button>
+    </div>
+  </section>
 <?php endif; ?>
 
-<div style="margin-top: 24px">
-  <span style="font-size: 13px; font-weight: 600">Plan: <?= e(ucfirst($plan['nombre'])) ?></span>
-  <span class="pq-ayuda">
-    <?php if ($negocio['plan_estado'] === 'degradado_a_gratis'): ?>
-      · degradado a Gratis por falta de pago
-    <?php elseif (!empty($negocio['plan_vence_en'])): ?>
-      · vence el <?= e(date('d/m/Y', strtotime((string) $negocio['plan_vence_en']))) ?>
-    <?php endif; ?>
-  </span>
+<?php if ($pendientes !== []): ?>
+  <section class="pq-admin-seccion" aria-labelledby="pq-titulo-pendientes">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-pendientes">Pago por confirmar</h2>
+    <div class="pq-consignaciones">
+      <?php foreach ($pendientes as $pago): ?>
+        <?php $mostrarNegocio = false; $volver = ''; require __DIR__ . '/_consignacion.php'; ?>
+      <?php endforeach; ?>
+    </div>
+  </section>
+<?php endif; ?>
 
-  <div class="pq-stack" style="gap: 8px; margin-top: 8px">
-    <?php foreach ($pagosPlan as $pago): ?>
-      <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 12px<?= $pago['confirmado_en'] === null ? '; border-color: var(--sello)' : '' ?>">
-        <div class="pq-stack" style="gap: 2px">
-          <span style="font-size: 13px; font-weight: 600">
-            Plan <?= e(ucfirst($pago['plan_nombre'])) ?> (<?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>) · <?= pesos((int) $pago['monto']) ?>
-          </span>
-          <span class="pq-ayuda">
-            Pedido el <?= e(date('d/m/Y', strtotime((string) $pago['creado_en']))) ?>
-            <?= $pago['confirmado_en'] !== null ? ' · confirmado el ' . e(date('d/m/Y', strtotime((string) $pago['confirmado_en']))) : ' · esperando confirmación' ?>
-          </span>
-        </div>
-        <?php if ($pago['confirmado_en'] === null): ?>
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
-            <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/confirmar')) ?>" style="display: flex; gap: 6px; align-items: center" data-confirmar="¿Ya viste esta transferencia en el Bre-B de Veci? Esto activa el plan del negocio de inmediato.">
-              <?= csrf_campo() ?>
-              <input class="pq-input" type="text" inputmode="numeric" name="monto_recibido" required placeholder="Monto recibido" aria-label="Monto que llegó a Bre-B" style="width: 140px; padding: 7px 10px; font-size: 13px">
-              <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Confirmar</button>
-            </form>
-            <form method="post" action="<?= e(base_url('/admin/pagos/' . $pago['id'] . '/rechazar')) ?>" data-confirmar="¿Descartar esta solicitud? El dueño podrá volver a pedir el cambio.">
-              <?= csrf_campo() ?>
-              <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Descartar</button>
-            </form>
-          </div>
+<section class="pq-admin-seccion" aria-labelledby="pq-titulo-plan">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-plan">Plan</h2>
+  <div class="pq-admin-tarjeta">
+    <div class="pq-admin-plan">
+      <strong class="pq-admin-plan-nombre"><?= e(ucfirst((string) $plan['nombre'])) ?></strong>
+      <span class="pq-ayuda">
+        <?php if ($negocio['plan_estado'] === 'degradado_a_gratis'): ?>
+          Volvió a Gratis porque no se renovó el pago.
+        <?php elseif (!empty($negocio['plan_vence_en'])): ?>
+          Pagado hasta el <?= e(fecha_larga((string) $negocio['plan_vence_en'])) ?>.
+        <?php else: ?>
+          Sin cobro.
         <?php endif; ?>
-      </div>
-    <?php endforeach; ?>
-    <?php if ($pagosPlan === []): ?>
-      <p class="pq-ayuda">Sin pagos de plan registrados todavía.</p>
+      </span>
+    </div>
+    <?php if ($historial !== []): ?>
+      <ul class="pq-admin-pagos">
+        <?php foreach ($historial as $pago): ?>
+          <li>
+            <span><?= e(ucfirst((string) $pago['plan_nombre'])) ?> · <?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?></span>
+            <span class="pq-mono"><?= pesos((int) $pago['monto']) ?></span>
+            <span class="pq-ayuda">confirmado el <?= e(fecha_larga((string) $pago['confirmado_en'])) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php elseif ($pendientes === []): ?>
+      <p class="pq-ayuda pq-admin-sin">Nunca ha pagado un plan.</p>
     <?php endif; ?>
   </div>
-</div>
+</section>
 
-<div style="margin-top: 24px">
-  <span style="font-size: 13px; font-weight: 600">Sedes (<?= count($sedes) ?>)</span>
-  <div class="pq-stack" style="gap: 8px; margin-top: 8px">
+<section class="pq-admin-seccion" aria-labelledby="pq-titulo-sedes">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-sedes">Sedes <span class="pq-admin-cuenta"><?= count($sedes) ?></span></h2>
+  <ul class="pq-admin-tarjeta pq-admin-filas">
     <?php foreach ($sedes as $sede): ?>
-      <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between">
-        <span style="font-size: 13px"><?= e($sede['nombre']) ?> <span class="pq-ayuda pq-mono">/t/<?= e($sede['slug']) ?></span></span>
-        <span class="pq-chip <?= (int) $sede['publicada'] === 1 ? 'pq-chip-caja' : 'pq-chip-pendiente' ?>"><?= (int) $sede['publicada'] === 1 ? 'Publicada' : 'Sin publicar' ?></span>
-      </div>
+      <?php $abierta = (int) $sede['publicada'] === 1; ?>
+      <li class="pq-admin-fila">
+        <span class="pq-admin-fila-texto">
+          <strong><?= e($sede['nombre']) ?></strong>
+          <?php if ($abierta): ?>
+            <a class="pq-ayuda pq-mono" href="<?= e(base_url('/t/' . $sede['slug'])) ?>" target="_blank" rel="noopener">/t/<?= e($sede['slug']) ?> ↗</a>
+          <?php else: ?>
+            <?php $pasoAlta = \App\Models\Sede::siguientePasoOnboarding(array_merge($sede, ['tipo_negocio' => $negocio['tipo_negocio']])); ?>
+            <span class="pq-ayuda">Se quedó en el paso «<?= e(['foto' => 'Foto', 'productos' => $negocio['tipo_negocio'] === 'reservas' ? 'Servicios' : 'Catálogo', 'horario' => 'Horario', 'pago' => 'Abrir'][$pasoAlta]) ?>» del alta</span>
+          <?php endif; ?>
+        </span>
+        <span class="pq-chip <?= $abierta ? 'pq-chip-caja' : 'pq-chip-pendiente' ?>"><?= $abierta ? 'Abierta' : 'Sin abrir' ?></span>
+      </li>
     <?php endforeach; ?>
-  </div>
-</div>
+  </ul>
+</section>
 
-<div style="margin-top: 24px">
-  <span style="font-size: 13px; font-weight: 600">Usuarios (<?= count($usuarios) ?>)</span>
-  <div class="pq-stack" style="gap: 8px; margin-top: 8px">
+<section class="pq-admin-seccion" aria-labelledby="pq-titulo-personas">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-personas">Quiénes entran <span class="pq-admin-cuenta"><?= count($usuarios) ?></span></h2>
+  <ul class="pq-admin-tarjeta pq-admin-filas">
     <?php foreach ($usuarios as $usuario): ?>
-      <div class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-        <div class="pq-stack" style="gap: 2px">
-          <span style="font-size: 13px; font-weight: 600"><?= e($usuario['nombre']) ?> <span class="pq-chip" style="font-size: 11px; padding: 2px 7px"><?= e($usuario['rol']) ?></span></span>
-          <span class="pq-ayuda pq-mono"><?= e($usuario['whatsapp']) ?><?= !empty($usuario['correo']) ? ' · ' . e($usuario['correo']) : '' ?></span>
-        </div>
+      <li class="pq-admin-fila">
+        <span class="pq-admin-fila-texto">
+          <strong><?= e($usuario['nombre']) ?> <span class="pq-ayuda">· <?= e($roles[$usuario['rol']] ?? $usuario['rol']) ?></span></strong>
+          <span class="pq-ayuda pq-mono"><?= e($whatsappLegible((string) $usuario['whatsapp'])) ?><?= !empty($usuario['correo']) ? ' · ' . e($usuario['correo']) : '' ?></span>
+        </span>
         <form method="post" action="<?= e(base_url('/admin/usuarios/' . $usuario['id'] . '/generar-reset')) ?>">
           <?= csrf_campo() ?>
-          <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Generar enlace de recuperación</button>
+          <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Enlace de contraseña</button>
         </form>
-      </div>
+      </li>
     <?php endforeach; ?>
-  </div>
-</div>
+  </ul>
+</section>
+
+<?php
+// Lo irreversible-a-medias va al final y aparte, no como primer botón de
+// la pantalla: suspender deja sin tienda y sin panel a todo el negocio.
+?>
+<section class="pq-admin-seccion pq-admin-delicado" aria-labelledby="pq-titulo-delicado">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-delicado">Zona delicada</h2>
+  <?php if ($suspendido): ?>
+    <p class="pq-ayuda">La cuenta está suspendida: nadie del negocio entra al panel y su tienda no responde.</p>
+    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/reactivar')) ?>">
+      <?= csrf_campo() ?>
+      <button type="submit" class="pq-btn pq-btn-sello">Reactivar cuenta</button>
+    </form>
+  <?php else: ?>
+    <p class="pq-ayuda">Suspender deja a todo el negocio sin panel y sin tienda pública hasta que se reactive. Úsalo por fraude o abuso, no por falta de pago (eso ya baja el plan a Gratis solo).</p>
+    <form method="post" action="<?= e(base_url('/admin/negocios/' . $negocio['id'] . '/suspender')) ?>" data-confirmar="¿Suspender a <?= e($negocio['nombre']) ?>? Nadie del negocio podrá entrar y su tienda dejará de responder.">
+      <?= csrf_campo() ?>
+      <button type="submit" class="pq-btn pq-btn-ghost pq-peligro-btn">Suspender cuenta</button>
+    </form>
+  <?php endif; ?>
+</section>

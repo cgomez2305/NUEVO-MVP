@@ -802,3 +802,39 @@
     }
   });
 })();
+
+/*
+  Consignación del panel interno (admin/_consignacion.php): mientras se
+  escribe lo que llegó a la cuenta Bre-B de Veci, se compara con lo que
+  debía llegar. Igual → sello "Coincide" y se habilita confirmar; distinto
+  → se dice cuánto falta o sobra. El servidor hace la misma verificación,
+  así que sin JS el botón queda activo y nada se activa con otro monto.
+*/
+(function () {
+  'use strict';
+  function pesos(n) { return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  function revisar(form) {
+    var esperado = parseInt(form.getAttribute('data-consignacion'), 10) || 0;
+    var campo = form.querySelector('[data-monto-recibido]');
+    var sello = form.querySelector('[data-sello-coincide]');
+    var diferencia = form.querySelector('[data-monto-diferencia]');
+    var boton = form.querySelector('[data-confirmar-pago]');
+    var escrito = parseInt((campo.value || '').replace(/\D+/g, ''), 10) || 0;
+    var coincide = escrito === esperado;
+    if (sello) sello.hidden = !coincide;
+    if (boton) boton.disabled = !coincide;
+    if (diferencia) {
+      diferencia.textContent = escrito === 0 || coincide ? ''
+        : (escrito < esperado ? 'Faltan ' + pesos(esperado - escrito) : 'Sobran ' + pesos(escrito - esperado)) + ': así no se puede activar el plan.';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('form[data-consignacion]').forEach(revisar);
+  });
+  document.addEventListener('input', function (evento) {
+    var form = evento.target.closest && evento.target.closest('form[data-consignacion]');
+    if (form) revisar(form);
+  });
+})();

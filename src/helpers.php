@@ -584,3 +584,14 @@ function aviso_pausas_invalidas(array $dias): ?string
 
     return 'La pausa del ' . $lista . ' no quedaba dentro del horario de ese día (tiene que empezar después de abrir y terminar antes de cerrar), así que ese día quedó corrido. Revísala.';
 }
+
+/**
+ * Días de calendario entre una fecha y hoy (ayer a las 11 p. m. es "ayer"
+ * aunque no hayan pasado 24 horas). Para usar con hace_dias().
+ */
+function dias_desde(string $fecha): int
+{
+    $dia = strtotime(date('Y-m-d', strtotime($fecha) ?: time()));
+
+    return max(0, (int) round((strtotime(date('Y-m-d')) - $dia) / 86400));
+}

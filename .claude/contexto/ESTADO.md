@@ -61,12 +61,12 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   tabulares, tokens `--fuente-titulo`/`--fuente-texto`), se quitaron
   Instrument Serif, Inter y JetBrains Mono; y (2) horarios con pausa de
   almuerzo por día: hecho (franjas, ver `references/panel.md` → Horario).
-  Sigue el panel de administración.
+  Luego el panel de administración: hecho (ver `references/admin.md`).
+  Con esto tienda, panel, onboarding y admin están todos en v2.
 - Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
-0. Diseño: tienda, panel y onboarding completos en v2. Sigue el admin
-   (`layouts/admin.php`, `src/Views/admin/`).
+0. Diseño: tienda, panel, onboarding y admin completos en v2.
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
@@ -109,6 +109,9 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   usa `menu-celular.jpg` de 10 MB con EXIF) en el scratchpad; limpiar con `limpiar-onb.sh`
   (borra negocios 31199900xx y sus fotos). Registro: 3 por IP al día, así
   que `DELETE FROM limites_tasa` entre corridas.
+- Admin de prueba: `php bin/crear_admin.php "Prueba QA" qa@tuveci.co prueba12345`
+  (borrarlo después: `delete from admins where correo='qa@tuveci.co'`);
+  `login-admin.sh` y `prueba-admin.js` en el scratchpad.
 - Copiloto bloqueado en plan Gratis: para probarlo, `update negocios set
   plan_id=3, plan_vence_en='2027-12-31' where id=1` y luego volver a
   `plan_id=1, plan_vence_en=NULL`.

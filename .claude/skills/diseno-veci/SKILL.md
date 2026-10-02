@@ -149,6 +149,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/onboarding.md` — registro y alta del negocio: pasos con
   nombre, lectura de la foto, catálogo en un solo formulario, elegir el
   color del toldo con vista previa y la tienda que se abre al final.
+- `references/admin.md` — panel interno del equipo de Veci: sello
+  "Interno", consignación de pagos por confirmar, lista con filtros y
+  ficha del negocio con la zona delicada al final.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 

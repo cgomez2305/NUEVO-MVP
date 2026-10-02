@@ -50,33 +50,90 @@ class Negocio
         return $stmt->fetch() ?: null;
     }
 
+    /** Filtros de la lista del panel interno (clave => etiqueta). */
+    public const FILTROS_ADMIN = [
+        'todos'        => 'Todos',
+        'por_cobrar'   => 'Pago por confirmar',
+        'pagan'        => 'Pagan plan',
+        'sin_publicar' => 'Sin abrir',
+        'suspendidos'  => 'Suspendidos',
+    ];
+
     /**
-     * Para el panel interno: todos los negocios con su cantidad de sedes y
-     * usuarios, más recientes primero. $busqueda filtra por nombre del
-     * negocio o WhatsApp de cualquiera de sus usuarios.
+     * Negocios para el panel interno, con lo que el equipo necesita ver de
+     * un vistazo: plan, cuántas sedes tienen tienda abierta y si hay un pago
+     * esperando confirmación. Busca por nombre o por el WhatsApp de
+     * cualquiera de sus usuarios.
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function listarTodos(string $busqueda = ''): array
+    public static function listarTodos(string $busqueda = '', string $filtro = 'todos'): array
     {
-        $sql = "SELECT n.*,
+        $sql = "SELECT n.*, p.nombre AS plan_nombre,
                   (SELECT COUNT(*) FROM sedes s WHERE s.negocio_id = n.id) AS total_sedes,
-                  (SELECT COUNT(*) FROM usuarios u WHERE u.negocio_id = n.id) AS total_usuarios
-                FROM negocios n";
+                  (SELECT COUNT(*) FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1) AS sedes_publicadas,
+                  (SELECT COUNT(*) FROM usuarios u WHERE u.negocio_id = n.id) AS total_usuarios,
+                  (SELECT COUNT(*) FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL) AS pagos_pendientes
+                FROM negocios n
+                JOIN planes p ON p.id = n.plan_id";
+        $condiciones = [];
         $parametros = [];
 
         if ($busqueda !== '') {
-            $sql .= ' WHERE n.nombre LIKE :busqueda
-                       OR EXISTS (SELECT 1 FROM usuarios u WHERE u.negocio_id = n.id AND u.whatsapp LIKE :busqueda2)';
+            $condiciones[] = '(n.nombre LIKE :busqueda
+                OR EXISTS (SELECT 1 FROM usuarios u WHERE u.negocio_id = n.id AND u.whatsapp LIKE :busqueda2))';
             $parametros['busqueda'] = '%' . $busqueda . '%';
             $parametros['busqueda2'] = '%' . $busqueda . '%';
         }
+        $condiciones[] = match ($filtro) {
+            'por_cobrar'   => 'EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL)',
+            'pagan'        => "n.plan_id > 1 AND n.plan_estado = 'activo'",
+            'sin_publicar' => 'NOT EXISTS (SELECT 1 FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1)',
+            'suspendidos'  => 'n.suspendido = 1',
+            default        => '1 = 1',
+        };
 
-        $sql .= ' ORDER BY n.creado_en DESC';
+        $sql .= ' WHERE ' . implode(' AND ', $condiciones) . ' ORDER BY n.creado_en DESC';
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute($parametros);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Cifras de la cabecera del panel interno y conteo de cada filtro.
+     *
+     * @return array{total:int, abiertos:int, pagan:int, nuevos_semana:int, conteos:array<string,int>}
+     */
+    public static function resumenAdmin(): array
+    {
+        $fila = Database::conexion()->query(
+            "SELECT
+               COUNT(*) AS total,
+               SUM(EXISTS (SELECT 1 FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1)) AS abiertos,
+               SUM(n.plan_id > 1 AND n.plan_estado = 'activo') AS pagan,
+               SUM(n.creado_en >= NOW() - INTERVAL 7 DAY) AS nuevos_semana,
+               SUM(n.suspendido = 1) AS suspendidos,
+               SUM(EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL)) AS por_cobrar
+             FROM negocios n"
+        )->fetch();
+
+        $total = (int) ($fila['total'] ?? 0);
+        $abiertos = (int) ($fila['abiertos'] ?? 0);
+
+        return [
+            'total'         => $total,
+            'abiertos'      => $abiertos,
+            'pagan'         => (int) ($fila['pagan'] ?? 0),
+            'nuevos_semana' => (int) ($fila['nuevos_semana'] ?? 0),
+            'conteos'       => [
+                'todos'        => $total,
+                'por_cobrar'   => (int) ($fila['por_cobrar'] ?? 0),
+                'pagan'        => (int) ($fila['pagan'] ?? 0),
+                'sin_publicar' => $total - $abiertos,
+                'suspendidos'  => (int) ($fila['suspendidos'] ?? 0),
+            ],
+        ];
     }
 
     public static function suspender(int $id): void

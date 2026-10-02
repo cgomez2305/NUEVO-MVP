@@ -3936,3 +3936,127 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 /* Un día con pausa del mediodía muestra cada tramo en su línea
    ("8 a. m. – 12 m." / "2 – 6 p. m."): en una sola línea no cabía a 360 px. */
 .pq-horario-franja { display: block; }
+
+/* =====================================================================
+   PANEL INTERNO (admin) · equipo de Veci
+   Mismo papel, letra y componentes que el panel del dueño (caja del día,
+   segmentos, insignias con el color de cada negocio). Lo propio: el sello
+   "Interno" de la cabecera y la consignación de los pagos por confirmar.
+   ===================================================================== */
+.pq-admin-bg { min-height: 100vh; }
+.pq-admin-cabeza { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); background: var(--tiquete); border-bottom: 1px dashed var(--borde); }
+.pq-admin-marca { display: inline-flex; align-items: center; gap: var(--esp-3); min-height: 44px; text-decoration: none; }
+.pq-admin-logo { height: 22px; width: auto; }
+/* Sello de caucho: borde doble, ligeramente torcido, tinta azul sello. */
+.pq-admin-sello { display: inline-block; padding: 2px 7px; border: 2px solid var(--sello); border-radius: 5px; box-shadow: inset 0 0 0 1px var(--tiquete), inset 0 0 0 2px color-mix(in srgb, var(--sello) 55%, transparent); color: var(--sello); font: 800 10.5px/1.3 var(--fuente-titulo); letter-spacing: .14em; text-transform: uppercase; transform: rotate(-4deg); }
+.pq-admin-sesion { display: flex; align-items: center; gap: var(--esp-2); min-width: 0; }
+.pq-admin-quien { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; color: var(--gris-texto); }
+.pq-admin-cuerpo { max-width: 760px; margin: 0 auto; padding: var(--esp-5) var(--esp-4) var(--esp-10); }
+.pq-admin-cuerpo > .pq-alerta { margin-top: var(--esp-4); }
+.pq-admin-cuerpo .pq-caja-dia { margin-top: var(--esp-4); }
+.pq-admin-seccion { margin-top: var(--esp-8); }
+.pq-admin-seccion > .pq-ayuda { margin: var(--esp-1) 0 0; }
+.pq-admin-cuenta { margin-left: 4px; font: 600 14px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--gris-suave); }
+.pq-admin-buscar { display: flex; gap: var(--esp-2); margin-bottom: var(--esp-3); }
+.pq-admin-buscar .pq-input { flex: 1; min-width: 0; }
+.pq-admin-buscar .pq-btn { width: auto; }
+@media (max-width: 420px) { .pq-admin-quien { display: none; } }
+
+/* Lista de negocios: insignia con el color de cada uno (el mismo que ve
+   su cliente en el toldo), nombre, plan y sedes, y a la derecha solo el
+   estado que pide atención. */
+.pq-admin-lista { display: flex; flex-direction: column; gap: var(--esp-2); margin: var(--esp-4) 0 0; padding: 0; list-style: none; }
+.pq-admin-negocio { display: flex; align-items: center; gap: var(--esp-3); min-height: 64px; padding: var(--esp-3) var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; color: var(--carbon); text-decoration: none; box-shadow: var(--sombra-suave); transition: border-color var(--rapido) ease, transform var(--rapido) var(--curva); }
+.pq-admin-negocio:hover { border-color: var(--borde); transform: translateY(-1px); }
+.pq-admin-negocio:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-admin-negocio-suspendido { background: var(--tiquete); }
+.pq-admin-negocio-suspendido .pq-admin-insignia { filter: grayscale(1); opacity: .6; }
+.pq-admin-insignia { animation: none; box-shadow: none; flex-shrink: 0; }
+.pq-admin-negocio-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.pq-admin-negocio-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 16px/1.25 var(--fuente-titulo); }
+.pq-admin-negocio-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; text-align: right; }
+.pq-admin-negocio-lado .pq-ayuda { font-size: 12px; white-space: nowrap; }
+@media (max-width: 479px) {
+  .pq-admin-negocio { flex-wrap: wrap; }
+  .pq-admin-negocio-lado { flex: 1 1 100%; flex-direction: row; align-items: center; justify-content: space-between; padding-left: 48px; }
+}
+
+/* Ficha del negocio */
+.pq-admin-ficha { display: flex; align-items: center; gap: var(--esp-4); margin-top: var(--esp-3); }
+.pq-admin-ficha-insignia { flex-shrink: 0; animation: none; box-shadow: 0 0 0 4px var(--tiquete), var(--sombra-suave); }
+.pq-admin-ficha-texto { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.pq-admin-ficha-texto .pq-h1 { margin: 0; overflow-wrap: anywhere; }
+.pq-admin-tarjeta { margin: var(--esp-3) 0 0; padding: 0 var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); list-style: none; }
+.pq-admin-plan { display: flex; flex-direction: column; gap: 2px; padding: var(--esp-4) 0; }
+.pq-admin-plan-nombre { font: 700 18px/1.2 var(--fuente-titulo); }
+.pq-admin-pagos { margin: 0; padding: 0; list-style: none; border-top: 1px dashed var(--borde); }
+.pq-admin-pagos li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--esp-3); padding: var(--esp-3) 0; font-size: 14px; }
+.pq-admin-pagos li + li { border-top: 1px dashed var(--recibo); }
+.pq-admin-pagos .pq-ayuda { flex: 1 1 100%; }
+.pq-admin-sin { margin: 0; padding: 0 0 var(--esp-4); }
+.pq-admin-filas { padding: 0 var(--esp-4); }
+.pq-admin-fila { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 60px; padding: var(--esp-3) 0; }
+.pq-admin-fila + .pq-admin-fila { border-top: 1px dashed var(--borde); }
+.pq-admin-fila-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14.5px; }
+.pq-admin-fila-texto a { color: var(--sello); text-decoration: none; }
+.pq-admin-fila .pq-btn { width: auto; flex-shrink: 0; }
+@media (max-width: 479px) {
+  .pq-admin-fila { flex-wrap: wrap; }
+  .pq-admin-fila form { flex: 1 1 100%; }
+  .pq-admin-fila form .pq-btn { width: 100%; }
+}
+.pq-admin-enlace { margin-top: var(--esp-5); padding: var(--esp-4); border: 1.5px solid var(--sello); border-radius: var(--radio-m); background: var(--tinte-sello); }
+.pq-admin-enlace .pq-input { margin-top: var(--esp-3); font-size: 12.5px; }
+.pq-admin-enlace-botones { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-3); }
+.pq-admin-enlace-botones .pq-btn { width: auto; flex: 1 1 180px; }
+.pq-admin-delicado { padding: var(--esp-4); border: 1.5px dashed #E3B1A6; border-radius: var(--radio-m); background: var(--tinte-aji); }
+.pq-admin-delicado .pq-ayuda { margin: var(--esp-2) 0 var(--esp-3); color: #6d2c1f; }
+.pq-admin-delicado .pq-btn { width: auto; }
+.pq-peligro-btn { border-color: #E3B1A6; color: #9c2c17; }
+.pq-peligro-btn:hover { background: #FBE3E0; }
+
+/* Consignación: el desprendible del pago por confirmar. Arriba lo
+   impreso (lo que debe llegar), un corte perforado con muescas a los
+   lados, abajo lo que se escribe al mirar la cuenta. */
+.pq-consignaciones { display: grid; gap: var(--esp-4); margin-top: var(--esp-3); }
+@media (min-width: 700px) { .pq-consignaciones { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pq-consignacion { position: relative; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid var(--recibo); border-top: 4px solid var(--sello); border-radius: var(--radio-m); box-shadow: var(--sombra-media); }
+.pq-consignacion-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: var(--esp-2); padding: var(--esp-3) var(--esp-4) 0; }
+.pq-consignacion-tipo { font: 700 11px/1.3 var(--fuente-texto); letter-spacing: .1em; text-transform: uppercase; color: var(--sello); }
+.pq-consignacion-numero { font: 600 12px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--gris-suave); }
+.pq-consignacion-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-3); margin: 0; padding: var(--esp-3) var(--esp-4) var(--esp-4); }
+.pq-consignacion-dato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pq-consignacion-dato-ancho { grid-column: 1 / -1; }
+.pq-consignacion-dato dt { font-size: 12px; color: var(--gris-texto); }
+.pq-consignacion-dato dd { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-consignacion-dato dd a { color: var(--carbon); font: 700 17px/1.2 var(--fuente-titulo); text-decoration: none; }
+.pq-consignacion-dato dd a:hover { text-decoration: underline; }
+.pq-consignacion-esperado dd { font: 700 21px/1.1 var(--fuente-titulo); font-variant-numeric: tabular-nums; }
+.pq-consignacion-corte { position: relative; height: 0; margin: 0 var(--esp-3); border-top: 2px dashed var(--borde); }
+.pq-consignacion-corte::before, .pq-consignacion-corte::after { content: ""; position: absolute; top: -9px; width: 16px; height: 16px; border-radius: 50%; background: var(--tiquete); box-shadow: inset 0 0 0 1px var(--recibo); }
+.pq-consignacion-corte::before { left: calc(var(--esp-3) * -1 - 9px); clip-path: inset(0 0 0 50%); }
+.pq-consignacion-corte::after { right: calc(var(--esp-3) * -1 - 9px); clip-path: inset(0 50% 0 0); }
+.pq-consignacion-form { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-4); }
+.pq-consignacion-fila { display: flex; align-items: center; gap: var(--esp-3); }
+.pq-consignacion-fila .pq-campo-dinero { flex: 1; min-width: 0; }
+/* El sello aparece cuando lo escrito es igual a lo esperado: verde caja,
+   torcido como el de "Pagado" en una factura. */
+.pq-consignacion-sello { flex-shrink: 0; padding: 3px 9px; border: 2px solid var(--caja); border-radius: 6px; color: #0f7a4f; font: 800 12px/1.2 var(--fuente-titulo); letter-spacing: .12em; text-transform: uppercase; transform: rotate(-6deg); animation: pqSello .22s var(--curva) both; }
+.pq-consignacion-sello[hidden] { display: none; }
+@keyframes pqSello { from { opacity: 0; transform: rotate(-6deg) scale(1.6); } to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .pq-consignacion-sello { animation: none; } }
+.pq-consignacion-diferencia { min-height: 1.4em; margin: 0; color: #8a5a00; }
+.pq-consignacion-botones { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-1); }
+.pq-consignacion-botones .pq-btn { width: auto; flex: 1 1 auto; }
+.pq-consignacion-botones .pq-btn-sello { flex-grow: 2; }
+/* Los segmentos sangran hasta el borde con el margen del panel (20 px);
+   aquí el canal es de 16 px. */
+.pq-admin-cuerpo .pq-segmentos { margin: var(--esp-3) calc(var(--esp-4) * -1) 0; padding: 0 var(--esp-4) var(--esp-1); }
+@media (min-width: 960px) { .pq-admin-cuerpo .pq-segmentos { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; } }
+/* La hoja del panel interno: el mismo papel que el panel del dueño, que en
+   escritorio flota sobre el fondo con sombra. */
+.pq-admin-hoja { min-height: 100vh; background: var(--tiquete); }
+@media (min-width: 960px) {
+  .pq-admin-hoja { max-width: 1120px; min-height: calc(100vh - 64px); margin: 0 auto; border-radius: 22px; overflow: clip; box-shadow: 0 30px 70px -30px rgba(32, 33, 36, .28); }
+  .pq-admin-cabeza { padding: var(--esp-4) var(--esp-6); }
+}

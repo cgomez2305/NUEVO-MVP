@@ -70,14 +70,22 @@ class AdminController
     public function dashboard(array $parametros): void
     {
         $admin = AdminAuth::exigirSesion();
-        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 80);
+        $filtro = (string) ($_GET['filtro'] ?? 'todos');
+        if (!array_key_exists($filtro, Negocio::FILTROS_ADMIN)) {
+            $filtro = 'todos';
+        }
 
         ver('admin/dashboard', [
-            'titulo'         => 'Negocios · Panel interno · Veci',
-            'admin'          => $admin,
-            'negocios'       => Negocio::listarTodos($busqueda),
-            'busqueda'       => $busqueda,
+            'titulo'          => 'Negocios · Panel interno · Veci',
+            'admin'           => $admin,
+            'negocios'        => Negocio::listarTodos($busqueda, $filtro),
+            'busqueda'        => $busqueda,
+            'filtro'          => $filtro,
+            'resumen'         => Negocio::resumenAdmin(),
             'pagosPendientes' => PagoPlan::listarPendientes(),
+            'ok'              => flash_obtener('ok'),
+            'error'           => flash_obtener('error'),
         ], 'admin');
     }
 
@@ -131,11 +139,11 @@ class AdminController
             } elseif (!PagoPlan::confirmar((int) $pago['id'], (int) $admin['id'])) {
                 flash_set('error', 'Ese pago ya estaba confirmado.');
             } else {
-                flash_set('ok', 'Pago confirmado: el plan del negocio ya quedó activo.');
+                flash_set('ok', 'Pago confirmado: el plan de ' . $this->nombreNegocio((int) $pago['negocio_id']) . ' ya quedó activo.');
             }
         }
 
-        redirigir('/admin/negocios/' . (int) $pago['negocio_id']);
+        redirigir($this->volver((int) $pago['negocio_id']));
     }
 
     /** Descarta una solicitud de cambio de plan que nunca se pagó, para que el dueño pueda volver a pedir. */
@@ -156,7 +164,7 @@ class AdminController
             }
         }
 
-        redirigir('/admin/negocios/' . (int) $pago['negocio_id']);
+        redirigir($this->volver((int) $pago['negocio_id']));
     }
 
     public function suspender(array $parametros): void
@@ -200,6 +208,21 @@ class AdminController
         }
 
         redirigir('/admin/negocios/' . (int) $usuario['negocio_id']);
+    }
+
+    /**
+     * Los pagos se confirman desde la lista (/admin) o desde la ficha del
+     * negocio: se vuelve a donde se hizo, para no perder el hilo cuando hay
+     * varios por confirmar.
+     */
+    private function volver(int $negocioId): string
+    {
+        return ($_POST['volver'] ?? '') === '/admin' ? '/admin' : '/admin/negocios/' . $negocioId;
+    }
+
+    private function nombreNegocio(int $negocioId): string
+    {
+        return (string) (Negocio::buscarPorId($negocioId)['nombre'] ?? 'el negocio');
     }
 
     /** @return array<int, array<string, mixed>> */
