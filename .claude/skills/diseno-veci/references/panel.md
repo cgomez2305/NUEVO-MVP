@@ -166,6 +166,22 @@ precio, "Editar"). Es un `<details>`: abre UN formulario con nombre,
 precio, duración y anticipo, y un solo "Guardar cambios". El controlador
 guarda el anticipo junto al servicio solo si es el dueño.
 
+## Marco de app en escritorio (≥960 px)
+
+- La hoja (`.pq-shell`) mide exactamente el alto de la ventana menos el
+  margen del body, y **solo se desplaza `.pq-shell-main`** (la columna del
+  contenido). El body no hace scroll (`overflow: hidden`).
+- Sidebar y cabecera no usan `sticky` contra la ventana: el sidebar es una
+  columna fija y la cabecera va `sticky; top: 0` dentro de la columna que
+  se desplaza. Antes ambos se pegaban a 32 px y por ese hueco se veía pasar
+  el contenido por encima de la cabecera.
+- `.pq-shell-main` lleva `position: relative`: los `.pq-sr-solo` (absolutos)
+  se medían contra la página y la estiraban.
+- En impresión se desactiva el marco (alto automático, sin overflow) para
+  no recortar la comanda.
+- Un elemento nuevo que dependa del scroll de la ventana en el panel de
+  escritorio debe escuchar el de `.pq-shell-main`, no el de `window`.
+
 ## Horario y días bloqueados
 
 - `.pq-semana`: un día por fila con interruptor; apagado, las horas se

@@ -2380,14 +2380,24 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
      en su sitio en vez de seguir el scroll. Por eso el redondeado de la
      esquina izquierda ahora vive en el propio sidebar (border-radius),
      no en el contenedor con overflow:hidden. */
+  /* Marco de app: la hoja tiene el alto exacto de la ventana (menos el
+     margen del body) y lo único que se desplaza es la columna del
+     contenido. Antes la página entera hacía scroll y el sidebar y la
+     cabecera iban pegados (sticky) a 32 px del borde: por ese hueco de
+     arriba se veía pasar el contenido por encima de la cabecera, y abajo
+     el sidebar terminaba antes que la hoja. Con el scroll dentro de la
+     hoja, sidebar y cabecera ya no necesitan "pegarse": nunca se mueven. */
   .pq-shell:has(.pq-topbar-links) {
     max-width: 1400px;
-    min-height: calc(100vh - 64px);
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+    min-height: 480px;
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch;
     border-radius: 20px;
   }
+  body.pq-panel-bg:has(.pq-shell .pq-topbar-links) { overflow: hidden; }
 
   /* Sin overflow-y:auto a propósito, aunque max-height podría pedirlo si el
      menú creciera mucho: sería la MISMA trampa que ya documentamos arriba
@@ -2408,11 +2418,8 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
     border-right: 1px solid var(--recibo);
     background: #F4F1E9;
     border-radius: 20px 0 0 20px;
-    position: sticky;
-    top: 32px;
-    align-self: flex-start;
-    min-height: calc(100vh - 64px);
-    max-height: calc(100vh - 64px);
+    position: relative;
+    z-index: 10;
   }
   /* El bloque del logo mide lo mismo que el header (ver .pq-header más
      abajo) y arranca en el mismo y=32 del sticky: sus bordes inferiores
@@ -2468,14 +2475,23 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .75; }
   .pq-shell:has(.pq-topbar-links) .pq-topbar-links a.activo svg { opacity: 1; }
 
-  .pq-shell:has(.pq-topbar-links) .pq-shell-main { flex: 1 1 auto; min-width: 0; }
-  /* El header queda alineado en altura con el sidebar (mismo top:32px de
-     sticky) para que ambos se sientan como una sola pieza, no dos cajas
-     independientes — y cierra la esquina redondeada del shell por su lado. */
+  /* La columna del contenido es la que se desplaza; recorta su esquina
+     derecha y no le pasa el scroll a la ventana al llegar al final. */
+  .pq-shell:has(.pq-topbar-links) .pq-shell-main {
+    position: relative; /* contiene a los .pq-sr-solo (absolutos): si no, estiraban la página */
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0 20px 20px 0;
+    scroll-padding-top: 80px; /* los saltos a un ancla no quedan bajo la cabecera */
+  }
+  /* La cabecera va pegada arriba de la columna que se desplaza (top: 0):
+     el contenido pasa por debajo de ella, nunca por encima. */
   .pq-shell:has(.pq-topbar-links) .pq-header {
     padding: 14px 32px;
     position: sticky;
-    top: 32px;
+    top: 0;
     z-index: 6;
     background: var(--tiquete);
     border-bottom: 1px solid var(--recibo);
@@ -3257,6 +3273,8 @@ body.pq-auth-bg {
 
 @media print {
   @page { size: 80mm auto; margin: 4mm; }
+  body.pq-panel-bg:has(.pq-shell .pq-topbar-links) { overflow: visible; }
+  .pq-shell:has(.pq-topbar-links), .pq-shell:has(.pq-topbar-links) .pq-shell-main { height: auto; overflow: visible; }
   body * { visibility: hidden; }
   .pq-comanda-imprimible, .pq-comanda-imprimible * { visibility: visible; }
   .pq-comanda-imprimible { position: absolute; top: 0; left: 0; width: 72mm; max-width: none; margin: 0; filter: none; font-size: 12px; color: #000; }
@@ -3365,7 +3383,7 @@ body.pq-auth-bg {
   pointer-events: none;
 }
 @media (min-width: 960px) {
-  .pq-header { position: relative; }
+  .pq-header { position: relative; } /* fuera del panel con sidebar; ahí manda la regla sticky del marco de app */
 }
 
 /* Inicio: las cifras del día como la tira de una registradora. */
