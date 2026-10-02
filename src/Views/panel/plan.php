@@ -32,6 +32,25 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
 <?php if ($pendiente !== null): ?>
   <div class="pq-card pq-plan-pendiente">
     <p class="pq-plan-pendiente-titulo">Solicitud pendiente: plan <?= e($nombresBonitos[$pendiente['plan_nombre']] ?? $pendiente['plan_nombre']) ?> (<?= $pendiente['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>)</p>
+    <?php if (!empty($wompi)): ?>
+      <?php
+      // Web Checkout de Wompi: monto y referencia firmados (no se pueden
+      // cambiar en el navegador). Una referencia nueva por intento.
+      $referenciaWompi = \App\Services\Wompi::referencia((int) $pendiente['id']);
+      $centavos = (int) $pendiente['monto'] * 100;
+      ?>
+      <form method="get" action="<?= e(\App\Services\Wompi::urlCheckout()) ?>" class="pq-plan-wompi">
+        <input type="hidden" name="public-key" value="<?= e(\App\Services\Wompi::llavePublica()) ?>">
+        <input type="hidden" name="currency" value="COP">
+        <input type="hidden" name="amount-in-cents" value="<?= $centavos ?>">
+        <input type="hidden" name="reference" value="<?= e($referenciaWompi) ?>">
+        <input type="hidden" name="signature:integrity" value="<?= e(\App\Services\Wompi::firmaIntegridad($referenciaWompi, $centavos)) ?>">
+        <input type="hidden" name="redirect-url" value="<?= e(url_publica('/panel/plan/pago')) ?>">
+        <button type="submit" class="pq-btn pq-btn-sello">Pagar <?= pesos((int) $pendiente['monto']) ?> ahora</button>
+        <span class="pq-ayuda">Tarjeta, PSE, Nequi o Bancolombia, con Wompi. El plan se activa solo al aprobarse.</span>
+      </form>
+      <p class="pq-plan-pendiente-o"><span>o</span></p>
+    <?php endif; ?>
     <p class="pq-plan-pendiente-texto">
       Transfiere <strong><?= pesos((int) $pendiente['monto']) ?></strong> por Bre-B
       <?php if (!empty($llaveBreb)): ?>

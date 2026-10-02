@@ -4542,3 +4542,10 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-aviso-detalle { display: flex; flex-direction: column; align-items: flex-end; gap: var(--esp-2); margin: var(--esp-4) 0; padding: var(--esp-3); border-radius: var(--radio-m); background: #ECE5DD; }
 .pq-aviso-burbuja { margin: 0; max-width: 92%; padding: var(--esp-2) var(--esp-3); font-size: 14px; line-height: 1.45; color: #111; }
 .pq-aviso-detalle .pq-btn { width: auto; }
+
+/* ---------- Plan: pagar con Wompi ---------- */
+.pq-plan-wompi { display: flex; flex-direction: column; align-items: flex-start; gap: var(--esp-2); margin: var(--esp-3) 0; }
+.pq-plan-wompi .pq-btn { width: auto; }
+/* "o" entre las dos formas de pago, sobre una línea punteada. */
+.pq-plan-pendiente-o { display: flex; align-items: center; gap: var(--esp-3); margin: var(--esp-3) 0; color: var(--gris-suave); font-size: 13px; }
+.pq-plan-pendiente-o::before, .pq-plan-pendiente-o::after { content: ""; flex: 1; border-top: 1px dashed var(--borde); }

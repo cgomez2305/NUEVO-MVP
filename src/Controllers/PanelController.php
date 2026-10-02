@@ -1477,6 +1477,7 @@ class PanelController
             'iaUsadaEsteMes'    => $iaUsadaEsteMes,
             'sustantivo'        => $esReservas ? 'citas' : 'pedidos',
             'llaveBreb'         => config('cobro_planes.llave_breb'),
+            'wompi'             => \App\Services\Wompi::disponible(),
             'ok'                => flash_obtener('ok'),
             'error'             => flash_obtener('error'),
         ], 'panel');
@@ -1534,11 +1535,33 @@ class PanelController
             $fin->format('Y-m-d')
         );
 
-        flash_set('ok', 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($monto) . ' por Bre-B y confirmamos tu plan apenas lo veamos.');
+        flash_set('ok', \App\Services\Wompi::disponible()
+            ? 'Listo: paga ' . pesos($monto) . ' con Wompi y tu plan se activa solo, o transfiere por Bre-B.'
+            : 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($monto) . ' por Bre-B y confirmamos tu plan apenas lo veamos.');
         redirigir('/panel/plan');
     }
 
     /** El dueño retira su solicitud pendiente (p. ej. eligió el plan o el ciclo equivocado) para poder pedir otra. */
+    /**
+     * Regreso del checkout de Wompi (?id=transacción). No se confía en lo
+     * que diga la URL: se consulta la transacción a la API de Wompi. Si no
+     * se puede consultar todavía, el webhook la confirma en un momento.
+     */
+    public function regresoPagoPlan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $transaccion = \App\Services\Wompi::disponible() ? \App\Services\Wompi::consultarTransaccion((string) ($_GET['id'] ?? '')) : null;
+        $resultado = $transaccion !== null ? \App\Services\Wompi::procesarTransaccion($transaccion) : 'pendiente';
+        match ($resultado) {
+            'confirmado', 'ya_confirmado' => flash_set('ok', '¡Pago recibido! Tu plan ya está activo.'),
+            'rechazado' => flash_set('error', 'El pago no se aprobó. Puedes intentarlo otra vez o transferir por Bre-B.'),
+            'invalido'  => flash_set('error', 'No pudimos asociar ese pago a tu solicitud. Escríbenos a soporte@tuveci.co con el comprobante.'),
+            default     => flash_set('ok', 'Estamos confirmando tu pago con Wompi: tu plan se activa solo en unos minutos.'),
+        };
+        redirigir('/panel/plan');
+    }
+
     public function cancelarSolicitudPlan(array $parametros): void
     {
         $negocio = Auth::exigirSesion();

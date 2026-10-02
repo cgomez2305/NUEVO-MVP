@@ -40,6 +40,17 @@ return [
     // Ver src/Controllers/WebhookController.php.
     'breb_webhook_secret' => null,
 
+    // Opcional. Wompi (Web Checkout) para que los negocios paguen su plan con
+    // tarjeta, PSE o Nequi y se active solo. Las llaves están en el panel de
+    // Wompi → Desarrolladores. Con llave pub_test_ usa el sandbox. Configura
+    // la URL de eventos de Wompi a https://TU-DOMINIO/webhooks/wompi.
+    // Sin estas llaves, el plan se paga por Bre-B y lo confirma un admin.
+    'wompi' => [
+        'llave_publica'      => null, // pub_test_... o pub_prod_...
+        'secreto_integridad' => null, // test_integrity_... / prod_integrity_...
+        'secreto_eventos'    => null, // test_events_... / prod_events_...
+    ],
+
     // Opcional. Llaves VAPID para las notificaciones push de la PWA (avisa
     // al dueño de un pedido/cita nueva aunque tenga el panel cerrado). Se
     // generan UNA vez con: php bin/generar_claves_vapid.php

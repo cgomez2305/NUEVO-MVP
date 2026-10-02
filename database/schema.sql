@@ -400,11 +400,14 @@ CREATE TABLE IF NOT EXISTS pagos_plan (
   periodo_fin    DATE         NOT NULL,
   -- NULL en confirmado_en = todavía esperando que un admin lo revise.
   confirmado_por INT UNSIGNED DEFAULT NULL,
+  -- Transacción de la pasarela (Wompi) que pagó este plan, si fue así.
+  transaccion_pasarela VARCHAR(64) DEFAULT NULL,
   confirmado_en  DATETIME     DEFAULT NULL,
   creado_en      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   FOREIGN KEY (plan_id) REFERENCES planes(id),
   FOREIGN KEY (confirmado_por) REFERENCES admins(id) ON DELETE SET NULL,
+  UNIQUE KEY uniq_pago_transaccion (transaccion_pasarela),
   INDEX idx_pagos_plan_pendientes (confirmado_en)
 ) ENGINE=InnoDB;
 
@@ -626,4 +629,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_06_cierres_caja.sql'),
   ('2026-10-03_07_resenas.sql'),
   ('2026-10-03_08_paquetes_bonos.sql'),
-  ('2026-10-03_09_avisos_estado.sql');
+  ('2026-10-03_09_avisos_estado.sql'),
+  ('2026-10-03_10_pasarela_wompi.sql');

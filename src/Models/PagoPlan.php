@@ -101,6 +101,21 @@ class PagoPlan
      */
     public static function confirmar(int $id, int $adminId): bool
     {
+        return self::aplicar($id, $adminId, null);
+    }
+
+    /**
+     * Lo mismo que confirmar(), pero por la pasarela (Wompi): sin admin, con
+     * la transacción que pagó (única: la misma transacción no confirma dos
+     * pagos) y método de pago 'wompi'.
+     */
+    public static function confirmarPorPasarela(int $id, string $transaccionId): bool
+    {
+        return self::aplicar($id, null, $transaccionId !== '' ? $transaccionId : null);
+    }
+
+    private static function aplicar(int $id, ?int $adminId, ?string $transaccionId): bool
+    {
         $pdo = Database::conexion();
         $pdo->beginTransaction();
         try {
@@ -131,10 +146,14 @@ class PagoPlan
             $pdo->prepare(
                 'UPDATE pagos_plan
                     SET confirmado_por = :admin_id, confirmado_en = NOW(),
-                        periodo_inicio = :inicio, periodo_fin = :fin
+                        periodo_inicio = :inicio, periodo_fin = :fin,
+                        transaccion_pasarela = :transaccion,
+                        metodo_pago = IF(:es_pasarela = 1, \'wompi\', metodo_pago)
                   WHERE id = :id AND confirmado_en IS NULL'
             )->execute([
                 'admin_id' => $adminId,
+                'transaccion' => $transaccionId,
+                'es_pasarela' => $transaccionId !== null ? 1 : 0,
                 'inicio'   => $inicio->format('Y-m-d'),
                 'fin'      => $fin->format('Y-m-d'),
                 'id'       => $id,

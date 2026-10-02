@@ -114,6 +114,7 @@ $router->post('/panel/paquetes', [$crecimiento, 'crearPaquete']);
 $router->post('/panel/paquetes/vender', [$crecimiento, 'venderBono']);
 $router->post('/panel/paquetes/{id}/alternar', [$crecimiento, 'alternarPaquete']);
 $router->post('/panel/paquetes/{id}/eliminar', [$crecimiento, 'eliminarPaquete']);
+$router->get('/panel/plan/pago', [$panel, 'regresoPagoPlan']);
 $router->get('/panel/caja', [$caja, 'ver']);
 $router->post('/panel/caja', [$caja, 'cerrar']);
 $router->get('/panel/domicilios', [$crecimiento, 'domicilios']);
@@ -169,6 +170,7 @@ $router->post('/cita/{token}/reprogramar', [$tienda, 'guardarReprogramacion']);
 
 // --- Webhooks de proveedores externos -----------------------------------
 $router->post('/webhooks/breb', [$webhook, 'breb']);
+$router->post('/webhooks/wompi', [$webhook, 'wompi']);
 
 // --- Panel interno del equipo de Veci (no de un negocio) ---------------
 $router->get('/admin/login', [$admin, 'formularioLogin']);

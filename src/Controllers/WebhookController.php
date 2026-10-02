@@ -28,6 +28,29 @@ use App\Models\Pedido;
  */
 class WebhookController
 {
+    /**
+     * Eventos de Wompi (pago de planes). Solo cuenta un evento con checksum
+     * válido (secreto de eventos); la transacción se aplica con las mismas
+     * reglas que el regreso del checkout (ver Wompi::procesarTransaccion).
+     * Responde 200 a todo evento válido para que Wompi no lo reintente.
+     */
+    public function wompi(): void
+    {
+        header('Content-Type: application/json');
+        $evento = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($evento) || !\App\Services\Wompi::eventoValido($evento)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'firma inválida']);
+            exit;
+        }
+        $resultado = 'ignorado';
+        if (($evento['event'] ?? '') === 'transaction.updated' && is_array($evento['data']['transaction'] ?? null)) {
+            $resultado = \App\Services\Wompi::procesarTransaccion($evento['data']['transaction']);
+        }
+        echo json_encode(['resultado' => $resultado]);
+        exit;
+    }
+
     public function breb(): void
     {
         $secreto = config('breb_webhook_secret');

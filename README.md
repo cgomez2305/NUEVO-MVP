@@ -153,6 +153,22 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    partir con datos ya cargados, entra con la cuenta de demostración
    (`3001234567` / `veci123`) si importaste `seed.sql`.
 
+### Cobro de planes con Wompi (opcional)
+
+Sin configurar nada, el negocio pide su plan y transfiere por Bre-B; un
+admin lo confirma en `/admin`. Para que paguen con tarjeta, PSE o Nequi y el
+plan se active solo:
+
+1. En el panel de Wompi → Desarrolladores copia la llave pública, el
+   secreto de integridad y el secreto de eventos a `config/config.php` →
+   `wompi` (con llaves `pub_test_…` se usa el sandbox).
+2. En Wompi configura la URL de eventos: `https://TU-DOMINIO/webhooks/wompi`.
+
+El plan se activa solo con un evento firmado (checksum) o consultando la
+transacción a la API de Wompi al volver del pago; se exige estado
+`APPROVED` y el monto exacto. Nunca se confía en lo que diga la URL de
+regreso.
+
 ### Actualizar una instalación que ya está en producción
 
 `database/schema.sql` es el esquema completo para una base **nueva**; no
