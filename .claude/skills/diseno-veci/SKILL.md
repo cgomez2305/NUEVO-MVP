@@ -143,6 +143,8 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/tienda.md` — componentes de la tienda pública (cabecera con
   toldo, navegación de categorías, carta con puntos guía, fila de servicio,
   barra del carrito, tarjetas de información) con su anatomía y estados.
+- `references/sitio.md` — sitio público estático (`docs/`): tipografía
+  alojada, logo, detalles que no hay que romper y cómo verificarlo.
 - `references/panel.md` — el panel del dueño completo: el puente con la
   tienda (insignia, cenefa, escaparate, comanda unificada), shell, kanban,
   agenda, servicios, horario, copiloto, formularios e interruptores.

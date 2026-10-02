@@ -72,7 +72,8 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   `php bin/migrar.php` las aplica. Detalle en `references/crecimiento.md`.
 
 ## Pendiente (en orden)
-0. Diseño: tienda, panel, onboarding y admin completos en v2.
+0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
+   pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).
 1. Sede extra ($30.000/mes en Pro): hecho (`2026-10-03_12_sedes_extra.sql`,
    prorrateo hasta el vencimiento, renovación con extras, `/panel/sedes`).
 2. Wompi ya está en código: falta poner llaves reales en
