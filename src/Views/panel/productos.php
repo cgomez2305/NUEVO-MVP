@@ -63,7 +63,9 @@
                 <?php if ($oculto): ?>
                   <span class="pq-chip pq-chip-cancelado">Oculto de la tienda</span>
                 <?php elseif ($agotado): ?>
-                  <span class="pq-chip pq-chip-pendiente">Agotado</span>
+                  <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => 'Sin unidades', default => 'Agotado' } ?></span>
+                <?php elseif ($producto['stock'] !== null): ?>
+                  <span class="pq-chip <?= (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES ? 'pq-chip-pendiente' : 'pq-chip-caja' ?>"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
                 <?php else: ?>
                   <span class="pq-chip pq-chip-caja">Disponible</span>
                 <?php endif; ?>
@@ -82,11 +84,23 @@
                     <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">
                     <button type="submit"><?= $oculto ? 'Mostrar en la tienda' : 'Ocultar de la tienda' ?></button>
                   </form>
-                  <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/agotado')) ?>">
-                    <?= csrf_campo() ?>
-                    <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">
-                    <button type="submit"><?= $agotado ? 'Marcar disponible' : 'Marcar agotado' ?></button>
-                  </form>
+                  <?php if (($producto['motivo_agotado'] ?? '') === 'stock'): ?>
+                    <?php // Sin unidades no se "desagota" con un clic: hay que decir cuántas llegaron. ?>
+                    <a href="<?= e(base_url('/panel/productos/' . $producto['id'] . '/editar')) ?>#stock">Cargar unidades</a>
+                  <?php else: ?>
+                    <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/agotado')) ?>">
+                      <?= csrf_campo() ?>
+                      <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">
+                      <button type="submit"><?= $agotado ? 'Marcar disponible' : 'Agotado hasta nuevo aviso' ?></button>
+                    </form>
+                  <?php endif; ?>
+                  <?php if (!$agotado): ?>
+                    <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/agotado-hoy')) ?>">
+                      <?= csrf_campo() ?>
+                      <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">
+                      <button type="submit">Se acabó por hoy</button>
+                    </form>
+                  <?php endif; ?>
                   <hr>
                   <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar «<?= e($producto['nombre']) ?>» de tu catálogo? No se puede deshacer.">
                     <?= csrf_campo() ?>

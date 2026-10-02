@@ -344,6 +344,7 @@ class PanelController
             if (!isset($_POST['visible'])) {
                 Producto::establecerActivo($id, (int) $negocio['id'], false);
             }
+            Producto::establecerStock($id, (int) $negocio['id'], $this->stockDelFormulario());
             flash_set('ok', "«{$nombre}» se agregó a tu catálogo.");
         }
 
@@ -370,6 +371,7 @@ class PanelController
             Producto::actualizar($id, $sedeId, $nombre, $precio, $categoria, $descripcion);
             Producto::establecerAgotado($id, $sedeId, !isset($_POST['disponible']));
             Producto::establecerActivo($id, $sedeId, isset($_POST['visible']));
+            Producto::establecerStock($id, $sedeId, $this->stockDelFormulario());
             if (!empty($_POST['quitar_imagen'])) {
                 Producto::eliminarImagen($id, $sedeId);
             }
@@ -437,6 +439,28 @@ class PanelController
         }
 
         redirigir($volver);
+    }
+
+    /** "Se acabó por hoy": mañana vuelve a estar disponible solo. */
+    public function agotarHoyProducto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        $volver = $this->destinoSeguro($_POST['volver'] ?? null);
+
+        if (csrf_verificar()) {
+            Producto::agotarPorHoy((int) $parametros['id'], (int) $negocio['id']);
+            flash_set('ok', 'Agotado por hoy: mañana vuelve a estar disponible solo.');
+        }
+
+        redirigir($volver);
+    }
+
+    /** Unidades del formulario: vacío = no llevar inventario de este producto. */
+    private function stockDelFormulario(): ?int
+    {
+        $texto = trim((string) ($_POST['stock'] ?? ''));
+
+        return $texto === '' ? null : max(0, (int) preg_replace('/\D+/', '', $texto));
     }
 
     /** "Visible en la tienda": distinto de agotado — esto lo saca por completo del catálogo público. */

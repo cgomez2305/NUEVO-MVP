@@ -278,6 +278,12 @@
     if (cantidadEl) cantidadEl.textContent = lineaActual.cantidad;
     var subtotalEl = document.getElementById('pq-subtotal-' + productoId);
     if (subtotalEl) subtotalEl.textContent = formatearPesos(lineaActual.subtotal);
+    // Inventario: el "+" se apaga al llegar a las unidades que hay.
+    var mas = fila ? fila.querySelector('[data-carrito-form="agregar"] button') : null;
+    if (mas && lineaActual.tope !== null && lineaActual.tope !== undefined) {
+      mas.disabled = lineaActual.cantidad >= lineaActual.tope;
+      if (mas.disabled) mas.title = 'No hay más unidades'; else mas.removeAttribute('title');
+    }
   }
 
   document.addEventListener('submit', function (evento) {

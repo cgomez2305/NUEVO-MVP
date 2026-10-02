@@ -4342,3 +4342,12 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
 .pq-domicilios-minimo { display: flex; gap: var(--esp-2); margin-top: var(--esp-3); max-width: 420px; }
 .pq-domicilios-minimo .pq-input { flex: 1; min-width: 0; }
 .pq-domicilios-minimo .pq-btn { width: auto; flex: none; }
+
+/* ---------- Inventario · tienda ---------- */
+/* "Quedan 3": dato real del inventario, en tono de aviso amable (no alarma roja). */
+.pq-plato-quedan { display: inline-block; margin-top: 8px; padding: 3px 9px; border-radius: 999px; background: var(--marca-suave); color: var(--marca-texto); font-size: 12px; font-weight: 700; }
+.pq-stepper-boton:disabled { opacity: .35; cursor: not-allowed; }
+.pq-stepper-boton:disabled:hover { background: none; }
+/* ---------- Inventario · panel ---------- */
+.pq-campo-unidades { max-width: 180px; }
+.pq-switch-texto .pq-switch-nota { margin-top: 2px; color: #8a5a00; font-weight: 600; }

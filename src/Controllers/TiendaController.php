@@ -434,8 +434,17 @@ class TiendaController
 
             if ($producto !== null && (int) $producto['activo'] === 1 && (int) $producto['agotado'] === 0) {
                 $carrito = $this->carritoDeSesion((int) $negocio['id']);
-                $carrito[$productoId] = ($carrito[$productoId] ?? 0) + 1;
-                $this->guardarCarrito((int) $negocio['id'], $carrito);
+                $nueva = ($carrito[$productoId] ?? 0) + 1;
+                // Con inventario no se deja pedir más de lo que hay: el "+"
+                // se queda quieto y se dice por qué (sin JS, con un aviso).
+                if ($producto['stock'] !== null && $nueva > (int) $producto['stock']) {
+                    if (!$this->esPeticionAjax()) {
+                        flash_set('error', 'Solo quedan ' . (int) $producto['stock'] . ' de ' . $producto['nombre'] . '.');
+                    }
+                } else {
+                    $carrito[$productoId] = $nueva;
+                    $this->guardarCarrito((int) $negocio['id'], $carrito);
+                }
             }
         }
 
@@ -524,6 +533,7 @@ class TiendaController
             'producto_id' => (int) $linea['producto']['id'],
             'cantidad'    => $linea['cantidad'],
             'subtotal'    => (int) $linea['producto']['precio'] * $linea['cantidad'],
+            'tope'        => $linea['producto']['stock'] !== null ? (int) $linea['producto']['stock'] : null,
         ], $carrito['lineas']);
         // Las líneas de ajuste de la comanda (subtotal, cupón, domicilio) las
         // arma el mismo parcial que la página: así el JS no repite reglas.
@@ -564,6 +574,14 @@ class TiendaController
         if ($carrito['lineas'] === []) {
             flash_set('error', 'Tu carrito está vacío.');
             redirigir('/t/' . $negocio['slug']);
+        }
+
+        // El inventario bajó mientras llenaba el formulario: se ajusta el
+        // carrito y se le muestra, en vez de mandar menos de lo que pidió.
+        if ($carrito['recortados'] !== []) {
+            $this->guardarCarrito((int) $negocio['id'], array_column(array_map(fn ($l) => [(int) $l['producto']['id'], $l['cantidad']], $carrito['lineas']), 1, 0));
+            flash_set('error', ucfirst(implode('; ', $carrito['recortados'])) . '. Ajustamos tu pedido: revísalo y vuelve a enviar.');
+            redirigir('/t/' . $negocio['slug'] . '/carrito');
         }
 
         $this->exigirTasaPublica('pedido', $negocio, '/t/' . $negocio['slug'] . '/carrito');
@@ -663,7 +681,14 @@ class TiendaController
         ], $carrito['lineas']);
 
         $this->registrarTasaPublica('pedido', $negocio);
-        $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas, $ajustes);
+        try {
+            $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas, $ajustes);
+        } catch (\DomainException $e) {
+            // Inventario: alguien se llevó las últimas unidades mientras
+            // este cliente llenaba el formulario.
+            flash_set('error', $e->getMessage());
+            redirigir($volverAlCarrito);
+        }
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
         if ($cuponUsado !== null && $ajustes['descuento'] > 0) {
             Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $ajustes['descuento'], $pedidoId);
@@ -926,6 +951,7 @@ class TiendaController
         $lineas = [];
         $cantidadTotal = 0;
         $total = 0;
+        $recortados = [];
 
         foreach ($this->carritoDeSesion((int) $negocio['id']) as $productoId => $cantidad) {
             if (!isset($porId[$productoId]) || $cantidad < 1) {
@@ -934,6 +960,11 @@ class TiendaController
             $producto = $porId[$productoId];
             if ((int) $producto['agotado'] === 1) {
                 continue;
+            }
+            // Si el inventario bajó mientras el producto estaba en el carrito.
+            if ($producto['stock'] !== null && $cantidad > (int) $producto['stock']) {
+                $cantidad = (int) $producto['stock'];
+                $recortados[] = $cantidad === 1 ? "solo queda 1 de {$producto['nombre']}" : "solo quedan {$cantidad} de {$producto['nombre']}";
             }
             $lineas[] = ['producto' => $producto, 'cantidad' => $cantidad];
             $cantidadTotal += $cantidad;
@@ -968,6 +999,7 @@ class TiendaController
             // formulario (el JS lo suma en vivo; el servidor, al pedir).
             'total'     => $total - $descuento,
             'minimo'    => (int) ($negocio['pedido_minimo'] ?? 0),
+            'recortados' => $recortados,
         ];
     }
 

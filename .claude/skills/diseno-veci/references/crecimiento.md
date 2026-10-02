@@ -98,3 +98,20 @@ N/M" o "le toca {premio}".
   el domicilio. `_pedido_ajustes.php` pinta subtotal/cupón/domicilio en la
   confirmación y en el panel. La info de la tienda lista zonas y mínimos
   (`#domicilios`).
+
+## Agotado por hoy e inventario (catálogo del panel y tienda)
+
+- `Producto::COLUMNAS` hace que `agotado` sea el **efectivo**: marcado a
+  mano (`agotado_fijo`), solo por hoy (`agotado_hasta`, vuelve solo
+  mañana) o sin unidades (`stock` en 0). `motivo_agotado` dice cuál.
+- Tienda: "Agotado por hoy" solo cuando de verdad vuelve mañana; si no,
+  "Agotado" a secas (no prometer fecha). Con ≤ 5 unidades,
+  `.pq-plato-quedan` ("Quedan 3", tono de marca, no rojo).
+- Carrito: el "+" no pasa de las unidades (se apaga, `disabled`); si el
+  inventario bajó mientras se llenaba el formulario, se vuelve al carrito
+  con el aviso y la cantidad ajustada (nunca se manda menos en silencio).
+  `Pedido::crear` descuenta con `FOR UPDATE`; cancelar devuelve unidades.
+- Panel: campo "Unidades disponibles" (vacío = no contar), kebab con "Se
+  acabó por hoy" / "Agotado hasta nuevo aviso"; sin unidades, el kebab
+  lleva a "Cargar unidades" en vez de un "Marcar disponible" que no
+  serviría. Chips: Quedan N / Agotado hoy / Sin unidades / Agotado.

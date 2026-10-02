@@ -161,6 +161,10 @@ CREATE TABLE IF NOT EXISTS productos (
   color       CHAR(7)      NOT NULL DEFAULT '#5B7F3A',
   activo      TINYINT(1)   NOT NULL DEFAULT 1,
   agotado     TINYINT(1)   NOT NULL DEFAULT 0,
+  -- "Agotado por hoy": vuelve solo al día siguiente (ver Producto::SELECT).
+  agotado_hasta DATE       DEFAULT NULL,
+  -- Inventario opcional: NULL = no se controla; cada pedido descuenta.
+  stock       INT          DEFAULT NULL,
   orden       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
@@ -515,4 +519,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-01_sedes_direccion.sql'),
   ('2026-10-03_01_cupones.sql'),
   ('2026-10-03_02_fidelidad.sql'),
-  ('2026-10-03_03_zonas_domicilio.sql');
+  ('2026-10-03_03_zonas_domicilio.sql'),
+  ('2026-10-03_04_inventario.sql');

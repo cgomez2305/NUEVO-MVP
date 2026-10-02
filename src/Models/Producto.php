@@ -10,6 +10,23 @@ class Producto
 {
     private const PALETA = ['#E8452C', '#F2B632', '#5B7F3A', '#1B1A17', '#3B4CCA'];
 
+    /**
+     * `agotado` que lee todo el resto del código es el EFECTIVO: marcado a
+     * mano, agotado solo por hoy (agotado_hasta, se quita solo mañana) o
+     * sin unidades (stock en 0). El valor guardado queda en agotado_fijo y
+     * el porqué en motivo_agotado ('fijo' | 'hoy' | 'stock' | null).
+     */
+    private const COLUMNAS = "p.*, p.agotado AS agotado_fijo,
+        CASE WHEN p.agotado = 1 THEN 'fijo'
+             WHEN p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE() THEN 'hoy'
+             WHEN p.stock IS NOT NULL AND p.stock <= 0 THEN 'stock'
+             ELSE NULL END AS motivo_agotado,
+        (p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE())
+                       OR (p.stock IS NOT NULL AND p.stock <= 0)) AS agotado";
+
+    /** La misma regla, para filtrar en un WHERE. */
+    private const AGOTADO_SQL = "(p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE()) OR (p.stock IS NOT NULL AND p.stock <= 0))";
+
     public static function crear(
         int $sedeId,
         string $nombre,
@@ -41,7 +58,7 @@ class Producto
     /** @return array<int, array<string, mixed>> */
     public static function listarPorSede(int $sedeId, bool $soloActivos = false): array
     {
-        $sql = 'SELECT * FROM productos WHERE sede_id = :sede_id';
+        $sql = 'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE sede_id = :sede_id';
         if ($soloActivos) {
             $sql .= ' AND activo = 1';
         }
@@ -56,7 +73,7 @@ class Producto
     public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT * FROM productos WHERE id = :id AND sede_id = :sede_id'
+            'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE id = :id AND sede_id = :sede_id'
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
 
@@ -111,14 +128,45 @@ class Producto
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
-    /** Marca/desmarca un producto como agotado sin borrarlo: sigue visible en la tienda pero no se puede agregar al carrito. */
+    /**
+     * Marca/desmarca un producto como agotado sin borrarlo: sigue visible en
+     * la tienda pero no se puede agregar al carrito. "Marcar disponible"
+     * quita también el agotado de hoy (el inventario en 0 se corrige
+     * editando las unidades, no aquí).
+     */
     public static function alternarAgotado(int $id, int $sedeId): void
     {
+        $producto = self::buscar($id, $sedeId);
+        if ($producto === null) {
+            return;
+        }
+        $agotar = (int) $producto['agotado'] === 0;
         $stmt = Database::conexion()->prepare(
-            'UPDATE productos SET agotado = NOT agotado WHERE id = :id AND sede_id = :sede_id'
+            'UPDATE productos SET agotado = :agotado, agotado_hasta = NULL WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['agotado' => $agotar ? 1 : 0, 'id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    /** "Se acabó por hoy": mañana vuelve a estar disponible sin que nadie se acuerde de desmarcarlo. */
+    public static function agotarPorHoy(int $id, int $sedeId): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET agotado = 0, agotado_hasta = CURDATE() WHERE id = :id AND sede_id = :sede_id'
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
+
+    /** Unidades disponibles; null = no llevar inventario de este producto. */
+    public static function establecerStock(int $id, int $sedeId, ?int $stock): void
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE productos SET stock = :stock WHERE id = :id AND sede_id = :sede_id'
+        );
+        $stmt->execute(['stock' => $stock === null ? null : max(0, $stock), 'id' => $id, 'sede_id' => $sedeId]);
+    }
+
+    /** Con pocas unidades, la tienda lo dice ("Quedan 3"): es verdad y ayuda a decidir. */
+    public const POCAS_UNIDADES = 5;
 
     /**
      * Distinto de "agotado": esto lo saca por completo de la tienda pública
@@ -188,9 +236,9 @@ class Producto
             $params['categoria'] = $categoria;
         }
         if ($disponibilidad === 'disponibles') {
-            $condiciones[] = 'agotado = 0';
+            $condiciones[] = 'NOT ' . self::AGOTADO_SQL;
         } elseif ($disponibilidad === 'agotados') {
-            $condiciones[] = 'agotado = 1';
+            $condiciones[] = self::AGOTADO_SQL;
         }
 
         $ordenSql = match ($orden) {
@@ -200,7 +248,7 @@ class Producto
         };
 
         $stmt = Database::conexion()->prepare(
-            'SELECT * FROM productos WHERE ' . implode(' AND ', $condiciones) . ' ORDER BY ' . $ordenSql
+            'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE ' . implode(' AND ', $condiciones) . ' ORDER BY ' . $ordenSql
         );
         $stmt->execute($params);
         return $stmt->fetchAll();

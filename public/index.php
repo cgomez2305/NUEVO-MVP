@@ -64,6 +64,7 @@ $router->get('/panel/productos/{id}/editar', [$panel, 'editarProducto']);
 $router->post('/panel/productos/{id}/actualizar', [$panel, 'actualizarProducto']);
 $router->post('/panel/productos/{id}/eliminar', [$panel, 'eliminarProducto']);
 $router->post('/panel/productos/{id}/agotado', [$panel, 'alternarAgotadoProducto']);
+$router->post('/panel/productos/{id}/agotado-hoy', [$panel, 'agotarHoyProducto']);
 $router->post('/panel/productos/{id}/visible', [$panel, 'alternarActivoProducto']);
 $router->get('/panel/servicios', [$panel, 'servicios']);
 $router->post('/panel/servicios', [$panel, 'crearServicio']);

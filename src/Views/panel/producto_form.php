@@ -72,13 +72,22 @@ $volver = base_url('/panel/productos');
     <?php endif; ?>
   </div>
 
+  <div class="pq-campo">
+    <label class="pq-label" for="stock">Unidades disponibles <span class="pq-ayuda">(opcional)</span></label>
+    <input class="pq-input pq-mono pq-campo-unidades" type="number" inputmode="numeric" min="0" step="1" id="stock" name="stock" value="<?= isset($producto['stock']) && $producto['stock'] !== null ? (int) $producto['stock'] : '' ?>" placeholder="Sin contar">
+    <span class="pq-ayuda">Para lo que se hace en cantidad fija (20 empanadas, 8 tortas). Cada pedido descuenta; en 0 sale agotado solo. Vacío = no contar.</span>
+  </div>
+
   <div class="pq-switch-fila">
     <div class="pq-switch-texto">
       <strong>Disponible para vender</strong>
       <span>Si lo apagas, se ve en tu tienda pero no se puede agregar al carrito.</span>
+      <?php if (($producto['motivo_agotado'] ?? '') === 'hoy'): ?>
+        <span class="pq-switch-nota">Ahora está agotado solo por hoy: mañana vuelve solo.</span>
+      <?php endif; ?>
     </div>
     <label class="pq-switch">
-      <input type="checkbox" name="disponible" <?= ($producto === null || (int) $producto['agotado'] === 0) ? 'checked' : '' ?>>
+      <input type="checkbox" name="disponible" <?= ($producto === null || (int) ($producto['agotado_fijo'] ?? $producto['agotado']) === 0) ? 'checked' : '' ?>>
       <span class="pq-switch-riel"></span>
     </label>
   </div>

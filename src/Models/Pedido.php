@@ -85,6 +85,25 @@ class Pedido
             ]);
             $pedidoId = (int) $pdo->lastInsertId();
 
+            // Inventario: se bloquea la fila de cada producto con stock y se
+            // descuenta dentro de la misma transacción, así dos clientes a
+            // la vez no se llevan la última unidad los dos.
+            $stmtStock = $pdo->prepare('SELECT nombre, stock FROM productos WHERE id = :id AND sede_id = :sede FOR UPDATE');
+            $stmtDescontar = $pdo->prepare('UPDATE productos SET stock = stock - :cantidad WHERE id = :id');
+            foreach ($items as $item) {
+                $stmtStock->execute(['id' => $item['producto_id'], 'sede' => $sedeId]);
+                $fila = $stmtStock->fetch();
+                if ($fila === false || $fila['stock'] === null) {
+                    continue;
+                }
+                if ((int) $fila['stock'] < (int) $item['cantidad']) {
+                    throw new \DomainException((int) $fila['stock'] <= 0
+                        ? "Se acabó {$fila['nombre']} mientras pedías. Lo quitamos: revisa tu pedido."
+                        : "Solo quedan {$fila['stock']} de {$fila['nombre']}. Ajusta la cantidad y vuelve a enviar.");
+                }
+                $stmtDescontar->execute(['cantidad' => $item['cantidad'], 'id' => $item['producto_id']]);
+            }
+
             $stmtItem = $pdo->prepare(
                 'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad)
                  VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad)'
@@ -257,10 +276,37 @@ class Pedido
         if (!in_array($estado, self::ESTADOS, true)) {
             return;
         }
-        $stmt = Database::conexion()->prepare(
-            'UPDATE pedidos SET estado = :estado WHERE id = :id AND sede_id = :sede_id'
-        );
-        $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
+        $pdo = Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT estado FROM pedidos WHERE id = :id AND sede_id = :sede_id FOR UPDATE');
+            $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+            $antes = $stmt->fetchColumn();
+            if ($antes === false) {
+                $pdo->rollBack();
+                return;
+            }
+            $pdo->prepare('UPDATE pedidos SET estado = :estado WHERE id = :id AND sede_id = :sede_id')
+                ->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
+            // Cancelar devuelve las unidades al inventario (y "descancelar"
+            // las vuelve a tomar): el stock siempre cuadra con lo vendido.
+            $signo = match (true) {
+                $antes !== 'cancelado' && $estado === 'cancelado' => '+',
+                $antes === 'cancelado' && $estado !== 'cancelado' => '-',
+                default => null,
+            };
+            if ($signo !== null) {
+                $pdo->prepare(
+                    "UPDATE productos p JOIN pedido_items i ON i.producto_id = p.id
+                     SET p.stock = p.stock {$signo} i.cantidad
+                     WHERE i.pedido_id = :id AND p.stock IS NOT NULL"
+                )->execute(['id' => $id]);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     /** Pedidos creados después de cierto ID, para el polling de notificaciones del panel. */

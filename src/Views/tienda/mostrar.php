@@ -58,7 +58,10 @@ $contador = 0;
                   <p class="pq-plato-desc"><?= e($producto['descripcion']) ?></p>
                 <?php endif; ?>
                 <?php if ($agotado): ?>
-                  <span class="pq-plato-agotado-etiqueta">Agotado por hoy</span>
+                  <?php // Solo "por hoy" si de verdad vuelve mañana; un agotado indefinido no promete fecha. ?>
+                  <span class="pq-plato-agotado-etiqueta"><?= ($producto['motivo_agotado'] ?? '') === 'hoy' ? 'Agotado por hoy' : 'Agotado' ?></span>
+                <?php elseif ($producto['stock'] !== null && (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES): ?>
+                  <span class="pq-plato-quedan"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
                 <?php endif; ?>
               </div>
 
