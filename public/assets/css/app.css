@@ -3099,3 +3099,236 @@ body.pq-auth-bg {
 .pq-publicada-check-pendiente:hover { color: var(--sello); }
 .pq-publicada-check-pendiente:hover svg { color: var(--sello); }
 
+
+/* =====================================================================
+   PANEL v2 (Ruta 2 "Tiquete y papel") — fase 1: estructura, pedidos,
+   detalle de pedido, productos y agenda. Ver
+   .claude/skills/diseno-veci/references/panel.md
+   ===================================================================== */
+
+/* Celular: el logo y el selector de sede eran dos franjas apiladas (~120px
+   antes de cualquier contenido). Ahora el selector se monta sobre la misma
+   franja del logo, a la derecha: ambos pegados arriba con la misma altura. */
+@media (max-width: 959px) {
+  .pq-shell { --alto-barra-movil: 57px; }
+  .pq-topbar { height: var(--alto-barra-movil); }
+  .pq-header {
+    position: sticky;
+    top: 0;
+    z-index: 11;
+    height: var(--alto-barra-movil);
+    margin-top: calc(var(--alto-barra-movil) * -1);
+    padding: 0 16px;
+    background: transparent;
+    border-bottom: 0;
+    pointer-events: none; /* deja pasar los toques al logo de debajo */
+  }
+  .pq-header .pq-switcher, .pq-header .pq-switcher-boton { pointer-events: auto; }
+  .pq-switcher-sub { display: none; }
+  .pq-switcher-nombre { max-width: 130px; }
+}
+
+/* Menú lateral de escritorio, igual: navegación en Inter. */
+.pq-topbar-links a { font-family: 'Inter', sans-serif; font-size: 13.5px; }
+
+/* Menú inferior: etiquetas en Inter, no en monoespaciada (son navegación,
+   no datos). La mono queda para números de pedido, horas y precios. */
+.pq-bottomnav a, .pq-bottomnav summary { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; }
+.pq-bottomnav a.activo, .pq-bottomnav summary.activo { font-weight: 700; }
+
+/* Cabecera de página reutilizable (título a la izquierda, acción a la derecha). */
+.pq-pagina-cabeza { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; }
+.pq-pagina-aviso { margin-top: var(--esp-4); }
+.pq-btn-bloqueado { opacity: .6; }
+.pq-seccion-cuenta { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--recibo); color: var(--gris-texto); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: 2px; }
+.pq-enlace-sello { color: var(--sello); font-weight: 700; }
+.pq-chip-boton { border: 0; cursor: pointer; font: inherit; }
+
+/* Demora: un acento a la izquierda en vez de pintar toda la tarjeta de rojo.
+   Con varias citas/pedidos atrasados, el rojo total volvía la pantalla una
+   alarma permanente y dejaba de servir para priorizar. */
+.pq-card-demorado { border-color: var(--recibo); background: var(--tiquete); box-shadow: inset 4px 0 0 var(--aji), var(--sombra-suave); }
+
+/* ---------- Pedidos ---------- */
+.pq-kanban-titulo, .pq-historial-titulo { margin: var(--esp-6) 0 0; }
+.pq-kanban-nada { padding: 4px 2px; }
+.pq-kanban-card-fila { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.pq-kanban-entrega, .pq-card-demorado .pq-kanban-entrega { color: var(--gris-texto); font-weight: 500; }
+.pq-kanban-total { font-size: 12.5px; flex-shrink: 0; }
+.pq-kanban-nota { font-size: 11.5px; }
+.pq-kanban-accion { margin-top: 4px; }
+.pq-kanban-accion .pq-btn { width: 100%; font-size: 13px; padding: 9px 10px; }
+.pq-historial-aviso { margin-top: 10px; }
+.pq-filtro-boton { width: auto; }
+
+@media (max-width: 959px) {
+  /* El tablero en curso también en celular (antes estaba oculto: el dueño
+     solo veía el historial plano). Apilado por etapa y sin etapas vacías. */
+  .pq-kanban { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--esp-3); margin-top: var(--esp-3); }
+  .pq-kanban-col { max-height: none; }
+  .pq-kanban-col-vacia { display: none; }
+  .pq-kanban-card-link { font-size: 14px; white-space: normal; }
+}
+
+@media (max-width: 639px) {
+  /* Filtros en dos filas: búsqueda + botón, y los dos selectores. */
+  .pq-filtro-historial { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+  .pq-filtro-historial .pq-input[name="q"] { grid-column: 1 / 3; }
+  .pq-filtro-historial .pq-filtro-boton { grid-column: 3; }
+  .pq-filtro-historial .pq-select[name="estado"] { grid-column: 1 / 2; }
+  .pq-filtro-historial .pq-select[name="rango"] { grid-column: 2 / 4; }
+  .pq-filtro-historial .pq-select, .pq-filtro-historial .pq-input { width: 100%; }
+  .pq-filtro-fecha-personalizada { grid-column: 1 / -1; }
+
+  /* Historial: de tabla de 7 columnas (fecha cortada) a filas-tarjeta. */
+  .pq-tabla-wrap { max-height: none; overflow: visible; }
+  .pq-tabla thead { display: none; }
+  .pq-tabla, .pq-tabla tbody { display: block; }
+  .pq-tabla tbody tr {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "id cliente total" "entrega entrega estado" "fecha fecha estado";
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--recibo);
+  }
+  .pq-tabla tbody tr:last-child { border-bottom: 0; }
+  .pq-tabla tbody td { padding: 0; border: 0; }
+  .pq-t-id { grid-area: id; }
+  .pq-t-cliente { grid-area: cliente; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pq-t-total { grid-area: total; text-align: right; }
+  .pq-t-entrega { grid-area: entrega; font-size: 12.5px; }
+  .pq-t-fecha { grid-area: fecha; font-size: 12.5px; }
+  .pq-t-estado { grid-area: estado; align-self: end; justify-self: end; }
+  .pq-t-ver { display: none; }
+}
+.pq-t-id { font-weight: 700; }
+.pq-t-cliente { font-weight: 600; }
+.pq-t-total { font-weight: 700; }
+.pq-t-entrega, .pq-t-fecha { color: var(--gris-texto); white-space: nowrap; }
+.pq-t-entrega-contenido { display: inline-flex; align-items: center; gap: 5px; }
+.pq-t-icono { display: inline-flex; width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ---------- Detalle de pedido + comanda imprimible ---------- */
+.pq-volver-panel { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; color: var(--gris-texto); font-size: 14px; font-weight: 600; text-decoration: none; }
+.pq-volver-panel svg { width: 16px; height: 16px; }
+.pq-volver-panel:hover { color: var(--sello); }
+.pq-detalle-cabeza { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); margin-top: var(--esp-3); flex-wrap: wrap; }
+.pq-detalle-quien { display: flex; align-items: center; gap: var(--esp-3); min-width: 0; }
+.pq-detalle-avatar { width: 44px; height: 44px; background: var(--sello); }
+.pq-detalle-titulo { margin: 0; font: 400 24px/1.1 'Instrument Serif', serif; color: var(--carbon); }
+.pq-detalle-espera { margin-top: var(--esp-3); }
+
+/* La comanda: papel térmico (blanco puro, monoespaciada, línea punteada y
+   borde rasgado abajo). En la pantalla es la tarjeta del pedido; al imprimir
+   es lo único que sale, en el ancho de un rollo de 80 mm. */
+.pq-comanda-panel {
+  --diente: 8px;
+  max-width: 420px;
+  margin-top: var(--esp-4);
+  padding: var(--esp-4) var(--esp-4) calc(var(--esp-4) + var(--diente));
+  background: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #1a1a1a;
+  border-radius: var(--radio-s) var(--radio-s) 0 0;
+  filter: drop-shadow(0 1px 1px rgba(32, 33, 36, .08)) drop-shadow(0 8px 14px rgba(32, 33, 36, .1));
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
+}
+.pq-comanda-panel-cabeza { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-bottom: var(--esp-3); border-bottom: 1px dashed #b9b9b9; text-align: center; }
+.pq-comanda-panel-cabeza strong { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.pq-comanda-panel-cabeza span { font-size: 12px; color: #555; }
+.pq-comanda-panel-cliente { margin: var(--esp-3) 0 0; font-weight: 600; }
+.pq-comanda-panel-items { list-style: none; margin: var(--esp-2) 0 0; padding: 0; }
+.pq-comanda-panel-items li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; padding: 5px 0; align-items: baseline; }
+.pq-comanda-panel-cant { font-weight: 700; }
+.pq-comanda-panel-nombre { overflow-wrap: anywhere; }
+.pq-comanda-panel-precio { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-comanda-panel-total { display: flex; justify-content: space-between; margin: var(--esp-2) 0 0; padding-top: var(--esp-2); border-top: 1px dashed #b9b9b9; font-size: 15px; font-weight: 700; }
+.pq-comanda-panel-datos { display: grid; gap: 4px; margin: var(--esp-3) 0 0; padding-top: var(--esp-3); border-top: 1px dashed #b9b9b9; }
+.pq-comanda-panel-datos > div { display: grid; grid-template-columns: 68px 1fr; gap: 8px; }
+.pq-comanda-panel-datos dt { color: #666; }
+.pq-comanda-panel-datos dd { margin: 0; overflow-wrap: anywhere; }
+.pq-comanda-panel-nota dd { font-weight: 700; }
+
+.pq-detalle-accion { margin-top: var(--esp-5); max-width: 420px; }
+.pq-detalle-secundarias { display: flex; gap: 8px; margin-top: 10px; max-width: 420px; }
+.pq-detalle-secundarias .pq-btn { flex: 1 1 0; width: auto; }
+.pq-detalle-mas { margin-top: var(--esp-5); max-width: 420px; border-top: 1px dashed var(--borde); padding-top: var(--esp-2); }
+.pq-detalle-mas > summary { display: flex; align-items: center; min-height: 44px; color: var(--gris-texto); font-size: 14px; font-weight: 600; cursor: pointer; }
+.pq-detalle-mas-cuerpo { display: flex; flex-direction: column; gap: var(--esp-4); padding: var(--esp-2) 0 var(--esp-2); }
+.pq-detalle-estado-fila { display: flex; gap: 8px; }
+.pq-detalle-estado-fila .pq-select { flex: 1 1 auto; min-width: 0; }
+.pq-detalle-estado-fila .pq-btn { width: auto; }
+
+@media print {
+  @page { size: 80mm auto; margin: 4mm; }
+  body * { visibility: hidden; }
+  .pq-comanda-panel, .pq-comanda-panel * { visibility: visible; }
+  .pq-comanda-panel { position: absolute; top: 0; left: 0; width: 72mm; max-width: none; margin: 0; padding: 0; filter: none; -webkit-mask: none; mask: none; box-shadow: none; font-size: 11.5px; }
+}
+
+/* ---------- Productos ---------- */
+.pq-catalogo-grid { grid-template-columns: minmax(0, 1fr); } /* 1fr a secas no dejaba encoger la tarjeta: desbordaba 33px a 390px */
+.pq-producto-card-info { color: inherit; text-decoration: none; border-radius: 8px; }
+.pq-producto-card-info:hover .pq-producto-card-nombre { color: var(--sello); }
+.pq-producto-card-info:focus-visible { outline: 2px solid var(--sello); outline-offset: 3px; }
+.pq-producto-card-meta .pq-producto-card-precio { margin: 0 0 0 2px; font-size: 13.5px; color: var(--carbon); }
+.pq-producto-miniatura-inicial { display: grid; place-items: center; background: color-mix(in srgb, var(--color-producto) 16%, var(--tiquete)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-producto) 30%, transparent); }
+.pq-producto-miniatura-inicial span { font: 400 26px/1 'Instrument Serif', serif; color: color-mix(in srgb, var(--color-producto) 70%, var(--carbon)); }
+@media (max-width: 639px) {
+  .pq-producto-editar { display: none; } /* el nombre ya lleva a editar */
+  .pq-producto-miniatura { width: 48px; height: 48px; }
+}
+
+/* ---------- Agenda (citas) ---------- */
+.pq-agenda-espera { margin-top: var(--esp-6); }
+.pq-agenda-espera-lista { display: flex; flex-direction: column; gap: 8px; margin-top: var(--esp-2); }
+.pq-agenda-espera-fila { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3); background: var(--tiquete); border: 1px solid var(--recibo); border-radius: var(--radio-m); }
+.pq-agenda-espera-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pq-avatar-espera { background: var(--mostaza); color: var(--carbon); }
+.pq-agenda-dia { margin-top: var(--esp-6); }
+.pq-agenda-dia-titulo { display: flex; align-items: baseline; gap: var(--esp-2); margin: 0 0 var(--esp-2); font: 400 22px/1.1 'Instrument Serif', serif; color: var(--carbon); }
+.pq-agenda-dia-titulo span { font: 500 13px/1 'Inter', sans-serif; color: var(--gris-suave); }
+.pq-agenda-lista { display: flex; flex-direction: column; gap: 8px; }
+.pq-agenda-cita { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--esp-3); padding: var(--esp-3) var(--esp-4) var(--esp-3) var(--esp-3); background: var(--tiquete); border: 1px solid var(--recibo); border-radius: var(--radio-m); box-shadow: var(--sombra-suave); }
+.pq-agenda-cita-cancelada { opacity: .55; }
+.pq-agenda-cita.pq-card-demorado { box-shadow: inset 4px 0 0 var(--aji), var(--sombra-suave); }
+.pq-agenda-hora { display: flex; flex-direction: column; gap: 2px; padding-right: var(--esp-3); border-right: 1px dashed var(--borde); }
+.pq-agenda-hora strong { font: 700 17px/1.1 'JetBrains Mono', monospace; color: var(--carbon); font-variant-numeric: tabular-nums; }
+.pq-agenda-hora span { font: 500 11.5px/1.2 'JetBrains Mono', monospace; color: var(--gris-suave); }
+.pq-agenda-cuerpo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pq-agenda-fila { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pq-agenda-nombre { font-size: 14.5px; font-weight: 600; color: var(--carbon); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pq-agenda-anticipo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.pq-agenda-acciones { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.pq-agenda-mas > summary { display: flex; align-items: center; min-height: 36px; color: var(--gris-texto); font-size: 13px; font-weight: 600; cursor: pointer; }
+.pq-agenda-mas[open] { flex-basis: 100%; }
+.pq-agenda-duracion { margin-top: 6px; }
+/* En la agenda angosta, "Sin confirmar · 16 horas esperando" sí puede partirse. */
+.pq-agenda-cuerpo .pq-tiempo-espera { white-space: normal; align-items: flex-start; }
+.pq-agenda-cuerpo .pq-tiempo-espera svg { margin-top: 3px; }
+/* Los <summary> con display:flex pierden el triángulo nativo: se dibuja un
+   chevron propio que gira al abrir, para que se note que se despliega. */
+.pq-detalle-mas > summary, .pq-agenda-mas > summary { list-style: none; gap: 6px; }
+.pq-detalle-mas > summary::-webkit-details-marker, .pq-agenda-mas > summary::-webkit-details-marker { display: none; }
+.pq-detalle-mas > summary::after, .pq-agenda-mas > summary::after {
+  content: ""; width: 7px; height: 7px; margin-top: -3px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform var(--rapido) var(--curva);
+}
+.pq-detalle-mas[open] > summary::after, .pq-agenda-mas[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+@media (prefers-reduced-motion: reduce) { .pq-detalle-mas > summary::after, .pq-agenda-mas > summary::after { transition: none; } }
+
+.pq-vacio-panel { margin-top: var(--esp-6); padding: var(--esp-10) var(--esp-6); border: 1.5px dashed var(--borde); border-radius: 14px; text-align: center; color: var(--gris-texto); }
+.pq-vacio-panel svg { width: 34px; height: 34px; margin: 0 auto var(--esp-3); color: var(--gris-suave); }
+.pq-vacio-panel p { margin: 0; font-size: 14px; line-height: 1.5; }
+.pq-vacio-panel strong { color: var(--carbon); }
+
+/* ---------- Mi cuenta: notificaciones ---------- */
+.pq-cuenta-push { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.pq-cuenta-push[hidden] { display: none; }
+.pq-cuenta-push-titulo { font-size: 13px; font-weight: 600; }
+.pq-cuenta-push .pq-btn { width: auto; align-self: flex-start; }

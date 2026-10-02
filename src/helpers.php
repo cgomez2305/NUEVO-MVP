@@ -459,3 +459,14 @@ function hoja_almanaque(string $fecha, string $fechaActiva, string $href): strin
         . '<span class="pq-dia-mes">' . $meses[(int) date('n', $ts) - 1] . '</span>'
         . '</a>';
 }
+
+/** 'breb' → "Bre-B", 'nequi' → "Nequi"... Nunca mostrar el código crudo ("BREB") al cliente ni al dueño. */
+function metodo_pago_legible(string $metodo): string
+{
+    return match ($metodo) {
+        'breb'     => 'Bre-B',
+        'nequi'    => 'Nequi',
+        'efectivo' => 'Efectivo',
+        default    => ucfirst($metodo),
+    };
+}

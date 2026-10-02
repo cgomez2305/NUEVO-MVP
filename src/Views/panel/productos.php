@@ -1,8 +1,8 @@
 <div class="pq-catalogo-cabecera">
   <div>
     <span class="pq-eyebrow">Tu menú</span>
-    <h1 class="pq-h1" style="font-size: 28px">Productos</h1>
-    <p class="pq-lead" style="margin-top: 2px">Gestiona lo que vendes en tu tienda</p>
+    <h1 class="pq-h1">Productos</h1>
+    <p class="pq-lead">Gestiona lo que vendes en tu tienda</p>
   </div>
   <a href="<?= e(base_url('/panel/productos/nuevo')) ?>" class="pq-btn pq-btn-sello pq-btn-chico">+ Nuevo producto</a>
 </div>
@@ -25,14 +25,14 @@
     <option value="precio" <?= $orden === 'precio' ? 'selected' : '' ?>>Ordenar: Precio</option>
     <option value="recientes" <?= $orden === 'recientes' ? 'selected' : '' ?>>Ordenar: Más recientes</option>
   </select>
-  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Buscar</button>
+  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico pq-filtro-boton">Buscar</button>
 </form>
 
 <?php if ($porCategoria === []): ?>
   <?php if ($totalProductos === 0): ?>
     <div class="pq-catalogo-vacio">
       Todavía no tienes productos en tu catálogo.
-      <a href="<?= e(base_url('/panel/productos/nuevo')) ?>" style="font-weight: 700; color: var(--sello)">Agrega el primero →</a>
+      <a href="<?= e(base_url('/panel/productos/nuevo')) ?>" class="pq-enlace-sello">Agrega el primero →</a>
     </div>
   <?php else: ?>
     <div class="pq-catalogo-vacio">No hay productos que coincidan con la búsqueda.</div>
@@ -48,12 +48,16 @@
           $agotado = (int) $producto['agotado'] === 1;
           ?>
           <div class="pq-producto-card<?= $oculto ? ' pq-producto-oculto' : '' ?>">
-            <div class="pq-producto-miniatura" style="background: <?= e($producto['color']) ?>">
+            <?php // Sin foto, la inicial sobre su color: identifica el producto sin fingir una imagen. ?>
+            <div class="pq-producto-miniatura<?= empty($producto['imagen']) ? ' pq-producto-miniatura-inicial' : '' ?>" style="--color-producto: <?= e(color_seguro($producto['color'], '#8a8d97')) ?>">
               <?php if (!empty($producto['imagen'])): ?>
                 <img src="<?= e(base_url($producto['imagen'])) ?>" alt="">
+              <?php else: ?>
+                <span aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $producto['nombre'], 0, 1))) ?></span>
               <?php endif; ?>
             </div>
-            <div class="pq-producto-card-info">
+            <?php // Todo el bloque del nombre lleva a editar: en celular reemplaza al botón "Editar". ?>
+            <a class="pq-producto-card-info" href="<?= e(base_url('/panel/productos/' . $producto['id'] . '/editar')) ?>">
               <span class="pq-producto-card-nombre"><?= e($producto['nombre']) ?></span>
               <span class="pq-producto-card-meta">
                 <?php if ($oculto): ?>
@@ -63,11 +67,11 @@
                 <?php else: ?>
                   <span class="pq-chip pq-chip-caja">Disponible</span>
                 <?php endif; ?>
+                <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?></span>
               </span>
-            </div>
-            <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?></span>
+            </a>
             <div class="pq-producto-card-acciones">
-              <a href="<?= e(base_url('/panel/productos/' . $producto['id'] . '/editar')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Editar</a>
+              <a href="<?= e(base_url('/panel/productos/' . $producto['id'] . '/editar')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico pq-producto-editar">Editar</a>
               <details class="pq-menu-kebab">
                 <summary aria-label="Más acciones">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>

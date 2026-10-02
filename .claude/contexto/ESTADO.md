@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-02 (actualizado tras el rediseño de la tienda)
+# Estado de la sesión — 2026-10-02 (actualizado tras la fase 1 del panel v2)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -39,17 +39,18 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - Auditoría sin hallazgos en: SQLi, IDOR, CSRF, XSS, subidas, redirecciones.
 
 ## En curso
-- Nada a medias. Tienda v2 aplicada a `mostrar.php` y `servicios.php`
-  (toldo con la marca del negocio, carta con puntos guía, contadores en el
-  "+", barra del pedido, navegación de secciones, horario con "hoy").
-- Fuentes ahora alojadas en `public/assets/fonts/` (CSP sin Google).
+- Nada a medias. Último pedido: "sigue con el panel del dueño". Fase 1
+  hecha (shell fusionado en celular, kanban, historial en tarjetas, comanda
+  imprimible, productos con inicial, agenda por día, push en Mi cuenta);
+  documentada en `.claude/skills/diseno-veci/references/panel.md`.
+- Fuentes alojadas en `public/assets/fonts/` (CSP sin Google).
 
 ## Pendiente (en orden)
-0. Diseño: TODA la tienda pública está en tienda v2 (portada con toldo,
-   carta, carrito-comanda, reserva con almanaque, confirmaciones y gestión
-   de cita con sello de caucho). Sigue: el panel del dueño (crear
-   `references/panel.md` en la skill), luego onboarding y admin. Bug que ya existía: `/panel/productos` desborda 33–63px
-   en celular (detectado por capturas.js).
+0. Diseño: tienda pública completa en v2. Panel fase 1 completa. Sigue
+   panel fase 2: servicios (varios "Guardar" por tarjeta, formularios
+   densos), horario, fechas bloqueadas, copiloto, recordatorios, sedes,
+   colaboradores, empleados, cuenta, plan, producto_form y
+   productos/_gestor.php. Después onboarding y admin.
 1. Cobro automático de sede extra ($30.000) — proyecto aparte.
 2. Pasarela de pago para planes (fase 2 del cobro híbrido).
 3. Tareas viejas de la tienda pública de servicios (horario 7 días,
@@ -84,6 +85,11 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Capturas:
   `node .claude/skills/diseno-veci/scripts/capturas.js --rutas ... --anchos 360,390,1280 --out <dir> [--cookies jar]`.
 - Tras pruebas: `DELETE FROM limites_tasa;` y borrar pedidos/clientes de prueba.
+- Sesiones de prueba del panel: cookie jars de curl (login con CSRF) en el
+  scratchpad; `capturas.js --cookies jar`. En Puppeteer, los botones que
+  quedan bajo la bottomnav fija se pulsan con `$eval(sel, e => e.click())`.
+- Las citas de prueba de Luis Pérez (3011112222) quedan en el pasado y la
+  agenda solo muestra de hoy en adelante: mover `fecha_hora` para probar.
 
 ## Errores ya resueltos (no repetir)
 - curl exit 7 → servidor PHP caído tras reinicio del contenedor → relanzar.

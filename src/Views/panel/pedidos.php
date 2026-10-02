@@ -1,7 +1,7 @@
-<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<div class="pq-pagina-cabeza">
   <div>
     <span class="pq-eyebrow">Pedidos</span>
-    <h1 class="pq-h1" style="font-size: 28px">Tus pedidos</h1>
+    <h1 class="pq-h1">Tus pedidos</h1>
   </div>
   <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
     <a href="<?= e(base_url('/panel/pedidos/exportar.csv') . '?' . http_build_query(array_filter([
@@ -9,7 +9,7 @@
         'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado,
     ]))) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar <?= $historialTotal ?> pedido<?= $historialTotal === 1 ? '' : 's' ?></a>
   <?php else: ?>
-    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico" style="opacity: .6">Exportar CSV · Pro</a>
+    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico pq-btn-bloqueado">Exportar CSV · Pro</a>
   <?php endif; ?>
 </div>
 
@@ -53,9 +53,11 @@ unset($columna);
 ?>
 
 <?php if ($activos !== []): ?>
+<h2 class="pq-seccion-titulo pq-kanban-titulo">En curso <span class="pq-seccion-cuenta"><?= count($activos) ?></span></h2>
 <div class="pq-kanban">
   <?php foreach ($columnasKanban as $columna): ?>
-    <div class="pq-kanban-col">
+    <?php // En celular las etapas vacías se ocultan: apiladas, solo serían ruido. ?>
+    <div class="pq-kanban-col<?= $columna['pedidos'] === [] ? ' pq-kanban-col-vacia' : '' ?>">
       <div class="pq-kanban-col-header">
         <span class="pq-kanban-dot" style="background: <?= e($columna['color']) ?>"></span>
         <?= e($columna['titulo']) ?>
@@ -63,7 +65,7 @@ unset($columna);
       </div>
       <div class="pq-kanban-cards">
         <?php if ($columna['pedidos'] === []): ?>
-          <p class="pq-ayuda" style="padding: 4px 2px">Nada por aquí.</p>
+          <p class="pq-ayuda pq-kanban-nada">Nada por aquí.</p>
         <?php endif; ?>
         <?php foreach ($columna['pedidos'] as $pedido): ?>
           <?php
@@ -73,26 +75,26 @@ unset($columna);
           ?>
           <div class="pq-kanban-card<?= $nivel === 'prioridad' ? ' pq-card-demorado' : '' ?>">
             <a class="pq-kanban-card-link" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">#<?= (int) $pedido['id'] ?> · <?= e($pedido['cliente_nombre']) ?></a>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
-              <span class="pq-tiempo-espera" style="color: var(--gris-texto)">
+            <div class="pq-kanban-card-fila">
+              <span class="pq-tiempo-espera pq-kanban-entrega">
                 <?= $iconoEntrega($pedido['tipo_entrega']) ?>
                 <?= e($etiquetaEntregaCorta($pedido)) ?>
               </span>
-              <span class="pq-mono pq-precio-suave" style="font-size: 12px; flex-shrink: 0"><?= pesos((int) $pedido['total']) ?></span>
+              <span class="pq-mono pq-precio-suave pq-kanban-total"><?= pesos((int) $pedido['total']) ?></span>
             </div>
             <?php if (!empty($pedido['notas'])): ?>
-              <span class="pq-ayuda pq-nota-corta" style="font-size: 11px">"<?= e($pedido['notas']) ?>"</span>
+              <span class="pq-ayuda pq-nota-corta pq-kanban-nota">"<?= e($pedido['notas']) ?>"</span>
             <?php endif; ?>
             <span class="pq-tiempo-espera pq-tiempo-<?= e($nivel) ?>">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
               <?= e(texto_espera($minutos)) ?>
             </span>
             <?php if ($siguiente !== null): ?>
-              <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>" style="margin-top: 4px">
+              <form method="post" action="<?= e(base_url('/panel/pedidos/' . $pedido['id'] . '/estado')) ?>" class="pq-kanban-accion">
                 <?= csrf_campo() ?>
                 <input type="hidden" name="estado" value="<?= e($siguiente['estado']) ?>">
                 <input type="hidden" name="volver" value="/panel/pedidos">
-                <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico" style="width: 100%; font-size: 12px; padding: 8px 10px"><?= e($siguiente['texto']) ?> →</button>
+                <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguiente['texto']) ?> →</button>
               </form>
             <?php endif; ?>
           </div>
@@ -108,9 +110,7 @@ unset($columna);
   </div>
 <?php endif; ?>
 
-<div style="margin-top: 28px; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px">
-  <span class="pq-seccion-titulo">Historial completo</span>
-</div>
+<h2 class="pq-seccion-titulo pq-historial-titulo">Historial</h2>
 
 <form method="get" action="<?= e(base_url('/panel/pedidos')) ?>" class="pq-filtro-historial">
   <input class="pq-input" type="text" name="q" value="<?= e($busqueda) ?>" placeholder="Buscar pedido o cliente...">
@@ -132,11 +132,11 @@ unset($columna);
     <input class="pq-input" type="date" name="desde" value="<?= e($desdePersonalizado) ?>" aria-label="Desde">
     <input class="pq-input" type="date" name="hasta" value="<?= e($hastaPersonalizado) ?>" aria-label="Hasta">
   </span>
-  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico" style="width: auto">Buscar</button>
+  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico pq-filtro-boton">Buscar</button>
 </form>
 
 <?php if ($historialLimitado): ?>
-  <div class="pq-alerta pq-alerta-aviso" style="margin-top: 10px">
+  <div class="pq-alerta pq-alerta-aviso pq-historial-aviso">
     Tu plan muestra hasta 30 días de historial. <a href="<?= e(base_url('/panel/plan')) ?>">Sube a Pro</a> para ver el histórico completo y exportarlo a CSV.
   </div>
 <?php endif; ?>
@@ -168,18 +168,18 @@ $hastaIdx = min($pagina * $porPagina, $historialTotal);
       <tbody>
         <?php foreach ($historial as $pedido): ?>
           <tr data-href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>">
-            <td class="pq-mono" style="font-weight: 700">#<?= (int) $pedido['id'] ?></td>
-            <td style="font-weight: 600"><?= e($pedido['cliente_nombre']) ?></td>
-            <td style="color: var(--gris-texto)">
-              <span style="display: inline-flex; align-items: center; gap: 5px">
-                <span style="width: 14px; height: 14px; flex-shrink: 0; display: inline-flex"><?= $iconoEntrega($pedido['tipo_entrega']) ?></span>
+            <td class="pq-t-id pq-mono">#<?= (int) $pedido['id'] ?></td>
+            <td class="pq-t-cliente"><?= e($pedido['cliente_nombre']) ?></td>
+            <td class="pq-t-entrega">
+              <span class="pq-t-entrega-contenido">
+                <span class="pq-t-icono"><?= $iconoEntrega($pedido['tipo_entrega']) ?></span>
                 <?= e($etiquetaEntregaCorta($pedido)) ?>
               </span>
             </td>
-            <td style="color: var(--gris-texto); white-space: nowrap"><?= e(fecha_corta((string) $pedido['creado_en'])) ?></td>
-            <td><span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']]) ?></span></td>
-            <td class="pq-mono" style="font-weight: 700"><?= pesos((int) $pedido['total']) ?></td>
-            <td><a class="pq-fila-ver" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" aria-label="Ver pedido #<?= (int) $pedido['id'] ?>">›</a></td>
+            <td class="pq-t-fecha"><?= e(fecha_corta((string) $pedido['creado_en'])) ?></td>
+            <td class="pq-t-estado"><span class="pq-chip <?= e(chip_estado($pedido['estado'])) ?>"><?= e($etiquetasEstado[$pedido['estado']]) ?></span></td>
+            <td class="pq-t-total pq-mono"><?= pesos((int) $pedido['total']) ?></td>
+            <td class="pq-t-ver"><a class="pq-fila-ver" href="<?= e(base_url('/panel/pedidos/' . $pedido['id'])) ?>" aria-label="Ver pedido #<?= (int) $pedido['id'] ?>">›</a></td>
           </tr>
         <?php endforeach; ?>
       </tbody>

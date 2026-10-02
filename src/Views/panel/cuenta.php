@@ -24,6 +24,18 @@
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cambiar contraseña</button>
 </form>
 
+<?php
+// Antes este botón aparecía al pie de TODAS las pantallas del panel, sin
+// contexto. Vive aquí, explicado, y solo se muestra si el navegador
+// soporta notificaciones (panel-push.js quita el "hidden").
+?>
+<section class="pq-card pq-cuenta-push" id="push-seccion" hidden>
+  <span class="pq-cuenta-push-titulo">Avisos de pedidos en este celular</span>
+  <p class="pq-ayuda">Te llega una notificación cada vez que entra un pedido o una reserva, aunque tengas el panel cerrado. Se activa por dispositivo.</p>
+  <button type="button" id="push-boton" class="pq-btn pq-btn-ghost pq-btn-chico" data-csrf="<?= e(csrf_token()) ?>">Activar notificaciones</button>
+  <p id="push-estado" class="pq-ayuda" aria-live="polite"></p>
+</section>
+
 <form method="post" action="<?= e(base_url('/logout')) ?>" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--borde)">
   <?= csrf_campo() ?>
   <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión</button>

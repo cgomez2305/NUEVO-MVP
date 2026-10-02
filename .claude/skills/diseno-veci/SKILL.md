@@ -139,6 +139,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/tienda.md` — componentes de la tienda pública (cabecera con
   toldo, navegación de categorías, carta con puntos guía, fila de servicio,
   barra del carrito, tarjetas de información) con su anatomía y estados.
+- `references/panel.md` — componentes del panel del dueño (shell fusionado
+  en celular, kanban, historial en tarjetas, comanda imprimible, catálogo
+  con inicial, agenda por día) y qué pantallas faltan por pasar a v2.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 

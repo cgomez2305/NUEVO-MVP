@@ -218,10 +218,6 @@ $pqLinkSidebar = static function (string $clave, string $etiqueta, string $href)
         <?= $contenido ?>
       </div>
 
-      <div style="padding: 0 20px 24px">
-        <button type="button" id="push-boton" class="pq-btn pq-btn-ghost pq-btn-chico" data-csrf="<?= e(csrf_token()) ?>">Activar notificaciones</button>
-        <p id="push-estado" class="pq-ayuda" style="margin-top: 6px"></p>
-      </div>
     </div>
   </div>
   <script src="<?= e(base_url('assets/js/confirmar.js')) ?>" defer></script>

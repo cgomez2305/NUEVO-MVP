@@ -3,8 +3,7 @@ $volverUrl = '/t/' . $negocio['slug'];
 $volverTexto = 'Volver a la tienda';
 require __DIR__ . '/_cabecera_corta.php';
 
-$metodosLegibles = ['breb' => 'Bre-B', 'nequi' => 'Nequi', 'efectivo' => 'Efectivo'];
-$metodo = $metodosLegibles[$pedido['metodo_pago']] ?? ucfirst((string) $pedido['metodo_pago']);
+$metodo = metodo_pago_legible((string) $pedido['metodo_pago']);
 $nombreNegocio = nombre_publico_sede($negocio);
 ?>
 <div class="pq-content-tienda pq-flujo pq-flujo-angosto">
