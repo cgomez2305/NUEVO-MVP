@@ -60,6 +60,20 @@
       document.body.appendChild(scrim);
     }
 
+    // Cabecera propia del pop-up ("Menú" + botón de cerrar): se inyecta una
+    // sola vez por panel para no tocar el HTML de las 20 páginas del sitio.
+    document.querySelectorAll('.nav-links').forEach(function (links) {
+      if (links.querySelector('.nav-panel-header')) return;
+      var header = document.createElement('div');
+      header.className = 'nav-panel-header';
+      header.innerHTML =
+        '<span>Menú</span>' +
+        '<button type="button" class="nav-panel-cerrar" aria-label="Cerrar menú">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>' +
+        '</button>';
+      links.insertBefore(header, links.firstChild);
+    });
+
     function cerrarMenuMovil() {
       document.querySelectorAll('.nav-links.abierto').forEach(function (links) {
         links.classList.remove('abierto');
@@ -95,6 +109,9 @@
     scrim.addEventListener('click', cerrarMenuMovil);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') cerrarMenuMovil();
+    });
+    document.querySelectorAll('.nav-panel-cerrar').forEach(function (boton) {
+      boton.addEventListener('click', cerrarMenuMovil);
     });
     document.querySelectorAll('.nav-links').forEach(function (links) {
       links.querySelectorAll('a:not(.nav-trigger)').forEach(function (enlace) {
