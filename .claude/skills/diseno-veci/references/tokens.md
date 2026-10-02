@@ -54,11 +54,14 @@ la CSP (`font-src 'self'`) lo bloquea a propósito.
 
 | Familia | Ruta | Uso |
 |---|---|---|
-| Bricolage Grotesque 600–700 | Tienda | Nombre del negocio, títulos de sección, insignia |
-| Inter Tight 400–700 | Tienda | Todo el texto, precios (con `tabular-nums`) |
-| Instrument Serif 400 | Panel | Títulos grandes (`.pq-h1`) |
-| Inter 400–700 | Panel | Texto |
-| JetBrains Mono 400–600 | Panel | Datos operativos (#pedido, horas, eyebrows). **No en la tienda.** |
+| Bricolage Grotesque 600–800 (`--fuente-titulo`) | Todo | Títulos (`.pq-h1` 700, `-.015em`), nombre del negocio, insignias |
+| Inter Tight 400–700 (`--fuente-texto`) | Todo | Texto, interfaz y datos (#pedido, horas, precios con `tabular-nums`) |
+
+Una sola familia para tienda, panel, onboarding y admin (antes el panel
+usaba Instrument Serif + Inter + JetBrains Mono y se leía como otro
+producto). Las rutas se distinguen por papel y color, no por letra. No
+agregar familias ni volver a una monoespaciada: `.pq-mono` ahora es solo
+"cifras tabulares".
 
 Escala de la tienda (celular → escritorio ≥ 860 px):
 | Rol | Tamaño | Peso | Notas |

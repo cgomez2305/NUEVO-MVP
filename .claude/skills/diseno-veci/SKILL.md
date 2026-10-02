@@ -21,7 +21,7 @@ nivel en vez de reinventar (o degradar) lo que existe.
 | Fondo | `--papel` #F6F1E7 | `--tiquete` #FFFDF8 |
 | Texto | `--tinta` #1B1A17 | `--carbon` #202124 |
 | Acento | `--marca` (color del negocio) | `--sello` #3B4CCA (azul Veci) |
-| Tipografía | Bricolage Grotesque (títulos) + Inter Tight (texto) | Instrument Serif (títulos) + Inter (texto) + JetBrains Mono (datos) |
+| Tipografía | **La misma en las dos:** Bricolage Grotesque (títulos) + Inter Tight (texto y cifras con `tabular-nums`), vía `--fuente-titulo` / `--fuente-texto` | (igual) |
 
 En la tienda manda la marca del negocio: Veci solo aparece en el sello
 "Hecho con Veci" del plan Gratis. En el panel, la marca del negocio
@@ -129,8 +129,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - Tarjetas idénticas en rejilla con sombra para todo.
 - Un botón de color saturado repetido en cada fila.
 - Degradados de relleno que fingen imágenes.
-- Texto en mayúsculas espaciadas + monoespaciada para todo dato "técnico"
-  en la tienda (la mono es del panel; en la tienda se ve frío).
+- Fuentes nuevas o monoespaciadas: el producto usa solo dos familias en
+  todas partes (el usuario pidió que cliente y dueño se lean igual). Para
+  cifras alineadas, `font-variant-numeric: tabular-nums`, no una mono.
 - Iconos de distintas familias o grosores en la misma pantalla.
 - Espaciados a ojo (13 px, 22 px) en vez de la escala.
 - Animaciones de entrada en todo, en bucle o de más de 400 ms.

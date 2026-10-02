@@ -6,6 +6,12 @@
 */
 
 :root {
+  /* Una sola familia tipográfica para tienda, panel y onboarding: el
+     cliente y el dueño leen el mismo producto. Las dos rutas se
+     distinguen por papel y color, no por letra. Las cifras van
+     tabulares (alinean como en un tiquete) en vez de monoespaciadas. */
+  --fuente-titulo: 'Bricolage Grotesque', system-ui, sans-serif;
+  --fuente-texto: 'Inter Tight', system-ui, sans-serif;
   --carbon: #202124;
   --tiquete: #FFFDF8;
   --sello: #3B4CCA;
@@ -62,7 +68,7 @@
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--fuente-texto);
   color: var(--carbon);
   background: var(--tiquete);
 }
@@ -75,11 +81,11 @@ button { font-family: inherit; }
   * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-.pq-mono { font-family: 'JetBrains Mono', monospace; }
-.pq-serif { font-family: 'Instrument Serif', serif; }
+.pq-mono { font-family: var(--fuente-texto); font-variant-numeric: tabular-nums; }
+
 
 .pq-panel-bg { background: var(--tiquete); color: var(--carbon); }
-.pq-tienda-bg { background: var(--papel); color: var(--tinta); font-family: 'Inter Tight', sans-serif; scroll-behavior: smooth; }
+.pq-tienda-bg { background: var(--papel); color: var(--tinta); font-family: var(--fuente-texto); scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .pq-tienda-bg { scroll-behavior: auto; }
 }
@@ -147,9 +153,10 @@ button { font-family: inherit; }
    abajo (el bug real detrás de "el menú se ve centrado verticalmente"). */
 .pq-topbar-brand-fila { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; min-width: 0; }
 .pq-topbar-brand {
-  font-family: 'Instrument Serif', serif;
-  font-size: 21px;
-  font-weight: 400;
+  font-family: var(--fuente-titulo);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.01em;
   text-decoration: none;
   color: var(--carbon);
   display: inline-flex;
@@ -196,7 +203,7 @@ button { font-family: inherit; }
 .pq-topbar-links::-webkit-scrollbar { display: none; }
 .pq-topbar-links a {
   position: relative;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 11.5px;
   text-decoration: none;
   color: var(--gris-suave);
@@ -266,7 +273,7 @@ button { font-family: inherit; }
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 10.5px;
   color: var(--gris-suave);
   text-decoration: none;
@@ -322,9 +329,10 @@ button { font-family: inherit; }
 /* ---------- tipografía ---------- */
 
 .pq-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 12px;
-  letter-spacing: .12em;
+  font-weight: 600;
+  letter-spacing: .09em;
   text-transform: uppercase;
   color: var(--sello);
 }
@@ -333,10 +341,11 @@ button { font-family: inherit; }
 .pq-eyebrow-sutil { font-size: 11px; color: var(--gris-suave); }
 
 h1.pq-h1 {
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  font-size: clamp(28px, 8vw, 36px);
-  line-height: 1.06;
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: clamp(25px, 7vw, 31px);
+  letter-spacing: -.015em;
+  line-height: 1.1;
   margin: 6px 0 0;
   color: var(--carbon);
   letter-spacing: -.01em;
@@ -417,7 +426,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   top: 50%;
   transform: translateY(-50%);
   color: var(--gris-suave);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 13px;
   pointer-events: none;
 }
@@ -434,7 +443,7 @@ p.pq-lead { font-size: 14px; color: var(--gris-texto); line-height: 1.5; margin:
   top: 50%;
   transform: translateY(-50%);
   color: var(--gris-suave);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 12px;
   pointer-events: none;
 }
@@ -576,7 +585,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
   justify-content: center;
   background: var(--sello);
   color: #fff;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--fuente-titulo);
   font-size: 13px;
   font-weight: 700;
 }
@@ -614,7 +623,7 @@ textarea.pq-input { resize: vertical; min-height: 60px; font-family: inherit; }
 }
 .pq-switcher-panel-titulo {
   display: block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: .06em;
@@ -865,7 +874,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 }
 .pq-paso:last-child { border-bottom: none; }
 .pq-paso-num {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 13px;
   color: var(--sello);
   width: 28px;
@@ -876,7 +885,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 11px;
   letter-spacing: .04em;
   padding: 5px 10px;
@@ -948,7 +957,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-slots-grid + .pq-slots-grid,
 .pq-slot-grupo + .pq-slot-grupo { margin-top: 20px; }
 .pq-slot-grupo-titulo {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .06em;
@@ -1097,8 +1106,8 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 
 /* ---------- estadísticas del panel ---------- */
 
-/* En celular, 4 cifras en una fila no caben con la fuente real (JetBrains
-   Mono a 25px + etiquetas como "Clientes recurrentes"): desbordaban la
+/* En celular, 4 cifras en una fila no caben (cifras a 25px + etiquetas
+   como "Clientes recurrentes"): desbordaban la
    pantalla 28px. Por debajo de 600px pasan a una cuadrícula de 2×2. */
 .pq-stats { display: flex; gap: 10px; margin-top: 16px; }
 @media (max-width: 599px) {
@@ -1130,7 +1139,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-stat:has(.pq-stat-valor[style*="sello"]) .pq-stat-icono { background: rgba(59,76,202,.16); color: var(--sello); }
 .pq-stat:has(.pq-stat-valor[style*="aji"]) .pq-stat-icono { background: rgba(232,69,44,.16); color: var(--aji); }
 .pq-stat-valor {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 25px;
   font-weight: 700;
   line-height: 1.1;
@@ -1153,7 +1162,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
 .pq-compartir-url {
   flex-grow: 1;
   min-width: 0;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: var(--sello);
   overflow: hidden;
@@ -1200,7 +1209,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
   font-size: 11px;
   letter-spacing: .07em;
   text-transform: uppercase;
@@ -1244,7 +1253,7 @@ button.pq-switcher-item:focus-visible { outline: 2px solid var(--sello); outline
   margin-top: 8px;
 }
 .pq-resumen-semana-dato { display: flex; align-items: baseline; gap: 5px; }
-.pq-resumen-semana-dato strong { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--carbon); }
+.pq-resumen-semana-dato strong { font-family: var(--fuente-texto); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; color: var(--carbon); }
 .pq-resumen-semana-dato span { font-size: 12.5px; color: var(--gris-texto); }
 
 /* ---------- historial de pedidos: filtros, tabla, paginación ---------- */
@@ -1390,12 +1399,13 @@ a.pq-stat:hover { border-color: var(--sello); }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Instrument Serif', serif;
-  font-size: 16px;
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
   color: var(--tiquete);
   box-shadow: 0 3px 8px rgba(32, 33, 36, .18);
 }
-.pq-avatar-chico { width: 34px; height: 34px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; }
+.pq-avatar-chico { width: 34px; height: 34px; font-size: 13px; font-weight: 700; font-family: var(--fuente-texto); }
 
 /* ---------- tienda pública (Ruta 1) ---------- */
 
@@ -1455,13 +1465,13 @@ a.pq-stat:hover { border-color: var(--sello); }
   place-items: center;
   background: var(--marca);
   color: var(--marca-sobre);
-  font: 700 28px/1 'Bricolage Grotesque', sans-serif;
+  font: 700 28px/1 var(--fuente-titulo);
   box-shadow: 0 0 0 4px var(--papel), 0 10px 20px -8px rgba(27, 26, 23, .45);
   animation: pqAparece .45s .15s var(--curva) both;
 }
 .pq-letrero-nombre {
   margin: var(--esp-3) 0 0;
-  font: 700 clamp(26px, 7.6vw, 34px)/1.05 'Bricolage Grotesque', sans-serif;
+  font: 700 clamp(26px, 7.6vw, 34px)/1.05 var(--fuente-titulo);
   letter-spacing: -.02em;
   color: var(--tinta);
   text-wrap: balance;
@@ -1572,7 +1582,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   align-items: center;
   gap: 10px;
   margin: 0 0 var(--esp-3);
-  font: 700 19px/1.2 'Bricolage Grotesque', sans-serif;
+  font: 700 19px/1.2 var(--fuente-titulo);
   letter-spacing: -.01em;
   color: var(--tinta);
 }
@@ -1603,9 +1613,9 @@ a.pq-stat:hover { border-color: var(--sello); }
    completa y los puntos guía + precio bajan a la siguiente (sigue leyéndose
    como carta) en vez de partir el nombre en una palabra por renglón. */
 .pq-plato-linea { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
-.pq-plato-nombre { margin: 0; flex: 0 1 auto; max-width: 100%; font: 600 15.5px/1.3 'Inter Tight', sans-serif; color: var(--tinta); overflow-wrap: break-word; text-wrap: pretty; }
+.pq-plato-nombre { margin: 0; flex: 0 1 auto; max-width: 100%; font: 600 15.5px/1.3 var(--fuente-texto); color: var(--tinta); overflow-wrap: break-word; text-wrap: pretty; }
 .pq-plato-guia { flex: 1; min-width: 14px; border-bottom: 2px dotted color-mix(in srgb, var(--tinta) 22%, transparent); transform: translateY(-4px); }
-.pq-plato-precio { flex-shrink: 0; font: 650 15px/1.3 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-plato-precio { flex-shrink: 0; font: 650 15px/1.3 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--tinta); }
 .pq-plato-desc {
   margin: 4px 0 0;
   font-size: 13.5px;
@@ -1658,7 +1668,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   border-radius: 999px;
   background: var(--tinta);
   color: var(--papel);
-  font: 700 11.5px/20px 'Inter Tight', sans-serif;
+  font: 700 11.5px/20px var(--fuente-texto);
   font-variant-numeric: tabular-nums;
   text-align: center;
   box-shadow: 0 0 0 2px #FFFDF8;
@@ -1683,7 +1693,7 @@ a.pq-stat:hover { border-color: var(--sello); }
 }
 .pq-servicio:first-child { border-top: 0; }
 .pq-servicio-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pq-servicio-nombre { font: 600 15.5px/1.3 'Inter Tight', sans-serif; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-servicio-nombre { font: 600 15.5px/1.3 var(--fuente-texto); color: var(--tinta); overflow-wrap: anywhere; }
 .pq-servicio-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13.5px; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
 .pq-servicio-precio { color: var(--tinta); font-weight: 600; }
 .pq-servicio-flecha { width: 18px; height: 18px; flex-shrink: 0; color: var(--texto-tenue); transition: transform var(--rapido) ease, color var(--rapido) ease; }
@@ -1714,7 +1724,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
    dirección. Mismo lenguaje de línea punteada que la carta. */
 .pq-info-grupo { display: grid; gap: var(--esp-3); margin-top: var(--esp-8); }
 .pq-info { padding: var(--esp-4) var(--esp-5); border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); scroll-margin-top: 72px; }
-.pq-info-titulo { margin: 0 0 var(--esp-2); font: 700 15px/1.3 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-info-titulo { margin: 0 0 var(--esp-2); font: 700 15px/1.3 var(--fuente-titulo); color: var(--tinta); }
 .pq-horario { margin: 0; }
 .pq-horario-fila { display: flex; justify-content: space-between; gap: var(--esp-3); padding: 8px 0; border-top: 1px dashed var(--linea-tienda); font-size: 14px; }
 .pq-horario-fila:first-child { border-top: 0; }
@@ -1776,7 +1786,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   border-radius: 999px;
   background: var(--papel);
   color: var(--tinta);
-  font: 700 11.5px/20px 'Inter Tight', sans-serif;
+  font: 700 11.5px/20px var(--fuente-texto);
   font-variant-numeric: tabular-nums;
   text-align: center;
   box-shadow: 0 0 0 2px var(--tinta);
@@ -1784,7 +1794,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-barra-carrito-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pq-barra-carrito-etiqueta { font-size: 15px; font-weight: 650; }
 .pq-barra-carrito-sub { font-size: 12.5px; color: rgba(246, 241, 231, .65); }
-.pq-barra-carrito-total { display: flex; align-items: center; gap: 6px; font: 700 16px/1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-barra-carrito-total { display: flex; align-items: center; gap: 6px; font: 700 16px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; }
 .pq-barra-carrito-total::after { content: "→"; font-weight: 400; opacity: .6; transition: transform var(--rapido) ease; }
 .pq-barra-carrito:hover .pq-barra-carrito-total::after { transform: translateX(3px); }
 /* "Pulso" cuando se agrega un producto sin recargar la página: la bolsa
@@ -1833,12 +1843,12 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-cabecera-corta-enlace:hover .pq-cabecera-corta-flecha { transform: translateX(-2px); border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
 .pq-letrero-insignia.pq-letrero-insignia-chica { width: 36px; height: 36px; flex-shrink: 0; font-size: 16px; animation: none; box-shadow: 0 0 0 2px var(--papel), 0 4px 10px -4px rgba(27, 26, 23, .4); }
 .pq-cabecera-corta-texto { display: flex; flex-direction: column; min-width: 0; }
-.pq-cabecera-corta-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 15px/1.25 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-cabecera-corta-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 15px/1.25 var(--fuente-titulo); color: var(--tinta); }
 .pq-cabecera-corta-volver { font-size: 12.5px; color: var(--texto-tenue); }
 
 .pq-pagina-titulo {
   margin: var(--esp-6) 0 0;
-  font: 700 clamp(26px, 7vw, 32px)/1.08 'Bricolage Grotesque', sans-serif;
+  font: 700 clamp(26px, 7vw, 32px)/1.08 var(--fuente-titulo);
   letter-spacing: -.02em;
   color: var(--tinta);
   text-wrap: balance;
@@ -1851,8 +1861,8 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 
 /* Pasos numerados: el número lleva la marca del negocio, así el recorrido
    (1 datos → 2 entrega → 3 pago) se lee de un vistazo. */
-.pq-etapa { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--esp-3); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
-.pq-etapa-numero { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--marca); color: var(--marca-sobre); font: 700 13px/1 'Inter Tight', sans-serif; }
+.pq-etapa { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--esp-3); font: 700 17px/1.2 var(--fuente-titulo); color: var(--tinta); }
+.pq-etapa-numero { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--marca); color: var(--marca-sobre); font: 700 13px/1 var(--fuente-texto); }
 .pq-etapa-fila { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); margin-bottom: var(--esp-3); }
 .pq-etapa-fila .pq-etapa { margin-bottom: 0; }
 .pq-checkout-form .pq-etapa { margin-top: var(--esp-8); }
@@ -1896,7 +1906,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-comanda .pq-stepper-boton svg { width: 16px; height: 16px; }
 .pq-comanda .pq-stepper-boton:hover { background: var(--papel-hondo); }
 .pq-comanda .pq-stepper-boton:focus-visible { outline: 3px solid var(--marca); outline-offset: 1px; }
-.pq-comanda .pq-stepper-cantidad { min-width: 24px; font: 650 15px/1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-comanda .pq-stepper-cantidad { min-width: 24px; font: 650 15px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; }
 .pq-comanda-quitar button {
   width: 40px;
   height: 40px;
@@ -1919,10 +1929,10 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   margin-top: var(--esp-1);
   padding-top: var(--esp-3);
   border-top: 4px double color-mix(in srgb, var(--tinta) 22%, transparent);
-  font: 700 17px/1.2 'Bricolage Grotesque', sans-serif;
+  font: 700 17px/1.2 var(--fuente-titulo);
   color: var(--tinta);
 }
-.pq-comanda-total span:last-child { font: 700 21px/1.1 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-comanda-total span:last-child { font: 700 21px/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; }
 .pq-comanda-nota { margin: var(--esp-2) 0 0; font-size: 12.5px; line-height: 1.45; color: var(--texto-tenue); }
 .pq-comanda-seguir { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: var(--esp-1); color: var(--marca-texto); font-size: 14px; font-weight: 600; text-decoration: none; }
 .pq-comanda-seguir svg { width: 16px; height: 16px; }
@@ -1959,7 +1969,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 }
 .pq-checkout-sticky-resumen { display: flex; flex-direction: column; }
 .pq-checkout-sticky-etiqueta { font-size: 12px; font-weight: 600; color: var(--texto-tenue); }
-.pq-checkout-sticky-total { font: 700 19px/1.15 'Inter Tight', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-checkout-sticky-total { font: 700 19px/1.15 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--tinta); }
 .pq-checkout-sticky-boton { width: auto; flex-grow: 1; max-width: 280px; }
 
 /* Reserva */
@@ -1982,7 +1992,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   font-weight: 600;
   text-decoration: none;
 }
-.pq-persona-inicial { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--papel-hondo); font: 700 13px/1 'Bricolage Grotesque', sans-serif; }
+.pq-persona-inicial { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--papel-hondo); font: 700 13px/1 var(--fuente-titulo); }
 .pq-persona:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
 .pq-persona-activa, .pq-persona-activa:hover { border-color: var(--marca-texto); background: var(--marca-suave); }
 .pq-persona-activa .pq-persona-inicial { background: var(--marca); color: var(--marca-sobre); }
@@ -2008,7 +2018,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   transition: transform var(--rapido) ease, border-color var(--rapido) ease, background var(--rapido) ease;
 }
 .pq-dia-semana { font-size: 11.5px; font-weight: 700; color: var(--texto-tenue); }
-.pq-dia-numero { font: 700 22px/1.1 'Bricolage Grotesque', sans-serif; font-variant-numeric: tabular-nums; }
+.pq-dia-numero { font: 700 22px/1.1 var(--fuente-titulo); font-variant-numeric: tabular-nums; }
 .pq-dia-mes { font-size: 11px; color: var(--texto-tenue); }
 .pq-dia:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
 .pq-dia:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
@@ -2029,10 +2039,10 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-shell-tienda .pq-slot:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
 .pq-shell-tienda .pq-slot:focus-visible { outline: 3px solid var(--marca); }
 .pq-shell-tienda .pq-slot-seleccionado, .pq-shell-tienda .pq-slot-seleccionado:hover { background: var(--marca); border-color: var(--marca); color: var(--marca-sobre); }
-.pq-shell-tienda .pq-slot-grupo-titulo { font: 600 13px/1.2 'Inter Tight', sans-serif; letter-spacing: 0; color: var(--texto-calido); margin-bottom: var(--esp-2); }
+.pq-shell-tienda .pq-slot-grupo-titulo { font: 600 13px/1.2 var(--fuente-texto); letter-spacing: 0; color: var(--texto-calido); margin-bottom: var(--esp-2); }
 
 .pq-sin-cupos { padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
-.pq-sin-cupos-titulo { display: block; font: 700 16px/1.25 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-sin-cupos-titulo { display: block; font: 700 16px/1.25 var(--fuente-titulo); color: var(--tinta); }
 .pq-sin-cupos-proximo { display: flex; flex-direction: column; gap: 2px; margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px dashed var(--linea-tienda); }
 .pq-sin-cupos-fecha { font-size: 15.5px; font-weight: 650; color: var(--tinta); }
 .pq-sin-cupos > .pq-ayuda { margin-top: 6px; }
@@ -2061,7 +2071,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   background: var(--marca-suave);
   border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
 }
-.pq-turno-hora { font: 700 28px/1.1 'Bricolage Grotesque', sans-serif; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.pq-turno-hora { font: 700 28px/1.1 var(--fuente-titulo); font-variant-numeric: tabular-nums; color: var(--tinta); }
 .pq-turno-fecha { font-size: 15px; font-weight: 600; color: var(--tinta); }
 .pq-turno-servicio { font-size: 13.5px; color: var(--texto-calido); }
 .pq-turno-anticipo { margin: var(--esp-3) 0 0; font-size: 13.5px; line-height: 1.45; color: #8a5a00; }
@@ -2094,7 +2104,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   border: 2.5px solid currentColor;
   border-radius: var(--radio-s);
   color: var(--marca-texto);
-  font: 800 12px/1 'Bricolage Grotesque', sans-serif;
+  font: 800 12px/1 var(--fuente-titulo);
   letter-spacing: .12em;
   text-transform: uppercase;
   transform: rotate(-9deg);
@@ -2113,7 +2123,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 
 /* Pasos de pago: misma numeración con la marca que las etapas. */
 .pq-pago { margin-top: var(--esp-6); padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
-.pq-pago-titulo { margin: 0 0 var(--esp-4); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-pago-titulo { margin: 0 0 var(--esp-4); font: 700 17px/1.2 var(--fuente-titulo); color: var(--tinta); }
 .pq-pago-pasos { display: grid; gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
 .pq-pago-paso { display: flex; gap: var(--esp-3); align-items: flex-start; }
 .pq-pago-paso-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -2134,7 +2144,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-gestion-acciones { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-6); }
 /* Cancelar es destructivo pero secundario: texto rojo con área táctil
    completa, sin competir con "Cambiar día u hora". */
-.pq-boton-peligro { width: 100%; min-height: 48px; border: 0; border-radius: var(--radio-m); background: none; color: #9c2c17; font: 600 15px/1 'Inter Tight', sans-serif; cursor: pointer; transition: background var(--rapido) ease; }
+.pq-boton-peligro { width: 100%; min-height: 48px; border: 0; border-radius: var(--radio-m); background: none; color: #9c2c17; font: 600 15px/1 var(--fuente-texto); cursor: pointer; transition: background var(--rapido) ease; }
 .pq-boton-peligro:hover { background: var(--tinte-aji); }
 .pq-boton-peligro:focus-visible { outline: 3px solid #9c2c17; outline-offset: 2px; }
 
@@ -2437,7 +2447,7 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
   }
   .pq-shell:has(.pq-topbar-links) .pq-nav-grupo {
     display: block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--fuente-texto); font-variant-numeric: tabular-nums;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: .06em;
@@ -2507,7 +2517,7 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
     transform: translateY(-50%);
     background: var(--carbon);
     color: var(--tiquete);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--fuente-texto);
     font-size: 12.5px;
     font-weight: 600;
     white-space: nowrap;
@@ -2543,7 +2553,7 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
     transform: translateY(-50%);
     background: var(--carbon);
     color: var(--tiquete);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--fuente-texto);
     font-size: 12.5px;
     font-weight: 600;
     white-space: nowrap;
@@ -2607,7 +2617,7 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
 .pq-producto-card-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
 .pq-producto-card-nombre { font-size: 14.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .pq-producto-card-meta { font-size: 12.5px; color: var(--gris-texto); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-.pq-producto-card-precio { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; flex-shrink: 0; margin-right: 4px }
+.pq-producto-card-precio { font-family: var(--fuente-texto); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; flex-shrink: 0; margin-right: 4px }
 .pq-producto-card-acciones { display: flex; align-items: center; gap: 4px; flex-shrink: 0 }
 
 .pq-menu-kebab { position: relative }
@@ -2714,7 +2724,7 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
 .pq-switch input:checked + .pq-switch-riel::before { transform: translateX(18px) }
 .pq-switch input:focus-visible + .pq-switch-riel { outline: 2px solid var(--sello); outline-offset: 2px }
 
-.pq-contador-caracteres { display: block; text-align: right; font-size: 11px; color: var(--gris-suave); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.pq-contador-caracteres { display: block; text-align: right; font-size: 11px; color: var(--gris-suave); margin-top: 4px; font-family: var(--fuente-texto); font-variant-numeric: tabular-nums; }
 
 /* ---------- Sedes ---------- */
 
@@ -2971,7 +2981,7 @@ body.pq-auth-bg {
 .pq-copiar-horario[open] > summary { border-color: var(--sello); color: var(--sello); margin-bottom: 10px; }
 .pq-copiar-horario-panel { padding: 12px; border: 1px solid var(--recibo); border-radius: 12px; background: var(--tiquete); }
 .pq-copiar-horario-dias { display: flex; flex-wrap: wrap; gap: 8px; }
-.pq-copiar-horario-dias label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--borde); cursor: pointer; }
+.pq-copiar-horario-dias label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; font-family: var(--fuente-texto); font-variant-numeric: tabular-nums; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--borde); cursor: pointer; }
 .pq-copiar-horario-dias input { accent-color: var(--sello); }
 .pq-dia-nombre-corto { display: none; font-size: 11px; letter-spacing: .03em; }
 @media (max-width: 370px) {
@@ -3129,11 +3139,11 @@ body.pq-auth-bg {
 }
 
 /* Menú lateral de escritorio, igual: navegación en Inter. */
-.pq-topbar-links a { font-family: 'Inter', sans-serif; font-size: 13.5px; }
+.pq-topbar-links a { font-family: var(--fuente-texto); font-size: 13.5px; }
 
 /* Menú inferior: etiquetas en Inter, no en monoespaciada (son navegación,
    no datos). La mono queda para números de pedido, horas y precios. */
-.pq-bottomnav a, .pq-bottomnav summary { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; }
+.pq-bottomnav a, .pq-bottomnav summary { font-family: var(--fuente-texto); font-size: 11px; font-weight: 500; }
 .pq-bottomnav a.activo, .pq-bottomnav summary.activo { font-weight: 700; }
 
 /* Cabecera de página reutilizable (título a la izquierda, acción a la derecha). */
@@ -3217,15 +3227,15 @@ body.pq-auth-bg {
 .pq-detalle-cabeza { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); margin-top: var(--esp-3); flex-wrap: wrap; }
 .pq-detalle-quien { display: flex; align-items: center; gap: var(--esp-3); min-width: 0; }
 .pq-detalle-avatar { width: 44px; height: 44px; background: var(--sello); }
-.pq-detalle-titulo { margin: 0; font: 400 24px/1.1 'Instrument Serif', serif; color: var(--carbon); }
+.pq-detalle-titulo { margin: 0; font: 700 21px/1.15 var(--fuente-titulo); letter-spacing: -.01em; color: var(--carbon); }
 .pq-detalle-espera { margin-top: var(--esp-3); }
 
 /* La comanda del panel es la misma de la tienda (.pq-comanda-final, ver
    "tienda v2: confirmaciones"): mismo papel, puntos guía, doble raya en el
    total y sello de caucho con el estado. Aquí solo se le da la letra de la
    tienda (el panel usa Inter) y el nombre del negocio arriba. */
-.pq-comanda-imprimible { max-width: 420px; margin-top: var(--esp-4); font-family: 'Inter Tight', sans-serif; color: var(--tinta); }
-.pq-comanda-negocio { margin: 0 0 var(--esp-2); font: 700 17px/1.2 'Bricolage Grotesque', sans-serif; color: var(--tinta); }
+.pq-comanda-imprimible { max-width: 420px; margin-top: var(--esp-4); font-family: var(--fuente-texto); color: var(--tinta); }
+.pq-comanda-negocio { margin: 0 0 var(--esp-2); font: 700 17px/1.2 var(--fuente-titulo); color: var(--tinta); }
 .pq-comanda-dato-nota dd { font-weight: 600; }
 /* En el panel el sello va arriba a la derecha, junto al nombre: abajo le
    quitaba 112px a los datos (cliente, dirección), que aquí son más largos. */
@@ -3262,7 +3272,7 @@ body.pq-auth-bg {
 .pq-producto-card-info:focus-visible { outline: 2px solid var(--sello); outline-offset: 3px; }
 .pq-producto-card-meta .pq-producto-card-precio { margin: 0 0 0 2px; font-size: 13.5px; color: var(--carbon); }
 .pq-producto-miniatura-inicial { display: grid; place-items: center; background: color-mix(in srgb, var(--color-producto) 16%, var(--tiquete)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-producto) 30%, transparent); }
-.pq-producto-miniatura-inicial span { font: 400 26px/1 'Instrument Serif', serif; color: color-mix(in srgb, var(--color-producto) 70%, var(--carbon)); }
+.pq-producto-miniatura-inicial span { font: 700 21px/1 var(--fuente-titulo); color: color-mix(in srgb, var(--color-producto) 70%, var(--carbon)); }
 @media (max-width: 639px) {
   .pq-producto-editar { display: none; } /* el nombre ya lleva a editar */
   .pq-producto-miniatura { width: 48px; height: 48px; }
@@ -3275,15 +3285,15 @@ body.pq-auth-bg {
 .pq-agenda-espera-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pq-avatar-espera { background: var(--mostaza); color: var(--carbon); }
 .pq-agenda-dia { margin-top: var(--esp-6); }
-.pq-agenda-dia-titulo { display: flex; align-items: baseline; gap: var(--esp-2); margin: 0 0 var(--esp-2); font: 400 22px/1.1 'Instrument Serif', serif; color: var(--carbon); }
-.pq-agenda-dia-titulo span { font: 500 13px/1 'Inter', sans-serif; color: var(--gris-suave); }
+.pq-agenda-dia-titulo { display: flex; align-items: baseline; gap: var(--esp-2); margin: 0 0 var(--esp-2); font: 700 18px/1.15 var(--fuente-titulo); color: var(--carbon); }
+.pq-agenda-dia-titulo span { font: 500 13px/1 var(--fuente-texto); color: var(--gris-suave); }
 .pq-agenda-lista { display: flex; flex-direction: column; gap: 8px; }
 .pq-agenda-cita { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--esp-3); padding: var(--esp-3) var(--esp-4) var(--esp-3) var(--esp-3); background: var(--tiquete); border: 1px solid var(--recibo); border-radius: var(--radio-m); box-shadow: var(--sombra-suave); }
 .pq-agenda-cita-cancelada { opacity: .55; }
 .pq-agenda-cita.pq-card-demorado { box-shadow: inset 4px 0 0 var(--aji), var(--sombra-suave); }
 .pq-agenda-hora { display: flex; flex-direction: column; gap: 2px; padding-right: var(--esp-3); border-right: 1px dashed var(--borde); }
-.pq-agenda-hora strong { font: 700 17px/1.1 'JetBrains Mono', monospace; color: var(--carbon); font-variant-numeric: tabular-nums; }
-.pq-agenda-hora span { font: 500 11.5px/1.2 'JetBrains Mono', monospace; color: var(--gris-suave); }
+.pq-agenda-hora strong { font: 700 17px/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--carbon); font-variant-numeric: tabular-nums; }
+.pq-agenda-hora span { font: 500 11.5px/1.2 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--gris-suave); }
 .pq-agenda-cuerpo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .pq-agenda-fila { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pq-agenda-nombre { font-size: 14.5px; font-weight: 600; color: var(--carbon); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -3336,7 +3346,7 @@ body.pq-auth-bg {
   border-radius: 50%;
   background: var(--marca);
   color: var(--marca-sobre);
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: var(--fuente-titulo);
   box-shadow: inset 0 0 0 1px rgba(27, 26, 23, .08);
 }
 
@@ -3380,7 +3390,7 @@ body.pq-auth-bg {
   text-decoration: none;
 }
 .pq-caja-casilla:first-child { border-left: 0; }
-.pq-caja-valor { font: 700 22px/1.1 'JetBrains Mono', monospace; color: var(--carbon); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pq-caja-valor { font: 700 22px/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--carbon); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .pq-caja-etiqueta { font-size: 12px; font-weight: 500; line-height: 1.3; color: var(--gris-texto); }
 .pq-caja-casilla-alerta .pq-caja-valor { color: var(--aji); }
 .pq-caja-casilla-alerta .pq-caja-etiqueta { color: var(--carbon); font-weight: 600; }
@@ -3412,15 +3422,15 @@ body.pq-auth-bg {
 .pq-escaparate-letrero { display: flex; align-items: flex-end; gap: var(--esp-3); }
 .pq-escaparate .pq-letrero-insignia { width: 48px; height: 48px; margin-top: -16px; flex-shrink: 0; position: relative; font-size: 21px; }
 .pq-escaparate-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 2px; }
-.pq-escaparate-eyebrow { font: 500 12px/1.3 'Inter Tight', sans-serif; color: var(--texto-tenue); }
-.pq-escaparate-nombre { font: 700 19px/1.15 'Bricolage Grotesque', sans-serif; letter-spacing: -.01em; color: var(--tinta); overflow-wrap: anywhere; }
+.pq-escaparate-eyebrow { font: 500 12px/1.3 var(--fuente-texto); color: var(--texto-tenue); }
+.pq-escaparate-nombre { font: 700 19px/1.15 var(--fuente-titulo); letter-spacing: -.01em; color: var(--tinta); overflow-wrap: anywhere; }
 .pq-escaparate-url {
   display: block;
   margin-top: var(--esp-3);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font: 600 13.5px/1.4 'Inter Tight', sans-serif;
+  font: 600 13.5px/1.4 var(--fuente-texto);
   color: var(--marca-texto);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
@@ -3435,7 +3445,7 @@ body.pq-auth-bg {
 .pq-inicio-lista { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-3); }
 .pq-inicio-vacio { margin-top: var(--esp-2); }
 .pq-inicio-ver-todo { margin-top: var(--esp-4); }
-.pq-fila-hora { width: 44px; flex-shrink: 0; font: 700 13px/1.2 'JetBrains Mono', monospace; color: var(--gris-texto); font-variant-numeric: tabular-nums; }
+.pq-fila-hora { width: 44px; flex-shrink: 0; font: 700 13px/1.2 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--gris-texto); font-variant-numeric: tabular-nums; }
 .pq-fila-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .pq-fila-nombre { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; font-weight: 600; }
 .pq-fila-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
@@ -3459,7 +3469,7 @@ body.pq-auth-bg {
   border: 0;
   background: none;
   color: var(--gris-texto);
-  font: 600 13.5px/1 'Inter', sans-serif;
+  font: 600 13.5px/1 var(--fuente-texto);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
   text-underline-offset: 3px;
@@ -3554,7 +3564,7 @@ body.pq-auth-bg {
 .pq-horario-intervalo { margin-top: var(--esp-5); max-width: 320px; }
 .pq-horario-guardar { margin-top: var(--esp-5); }
 @media (min-width: 640px) { .pq-horario-guardar { width: auto; } }
-.pq-escaparate-cuerpo-simple { padding-top: var(--esp-4); font-family: 'Inter Tight', sans-serif; }
+.pq-escaparate-cuerpo-simple { padding-top: var(--esp-4); font-family: var(--fuente-texto); }
 .pq-escaparate-cuerpo-simple .pq-escaparate-eyebrow { display: block; margin-bottom: var(--esp-2); }
 .pq-escaparate .pq-horario-hoy { margin: 0 -10px; }
 
@@ -3583,7 +3593,7 @@ body.pq-auth-bg {
 .pq-fechas-form { display: flex; flex-direction: column; gap: var(--esp-3); margin-top: var(--esp-5); }
 .pq-fechas-lista, .pq-equipo-lista { list-style: none; margin: var(--esp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
 .pq-fecha-bloqueada { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-3); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
-.pq-dia-bloqueado { position: relative; font-family: 'Inter Tight', sans-serif; box-shadow: inset 0 4px 0 var(--borde); }
+.pq-dia-bloqueado { position: relative; font-family: var(--fuente-texto); box-shadow: inset 0 4px 0 var(--borde); }
 .pq-dia-bloqueado:hover { transform: none; border-color: var(--linea-tienda); }
 .pq-dia-bloqueado .pq-dia-numero { color: var(--gris-suave); }
 .pq-dia-bloqueado::after {
@@ -3597,7 +3607,7 @@ body.pq-auth-bg {
 /* Empleados */
 .pq-equipo-lista { margin-top: var(--esp-5); }
 .pq-equipo-fila { display: flex; align-items: center; gap: var(--esp-3); min-height: 60px; padding: 0 var(--esp-2) 0 var(--esp-3); background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); }
-.pq-equipo-avatar { background: var(--marca); color: var(--marca-sobre); font-family: 'Bricolage Grotesque', sans-serif; }
+.pq-equipo-avatar { background: var(--marca); color: var(--marca-sobre); font-family: var(--fuente-titulo); }
 .pq-equipo-nombre { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 
 /* Recordatorios */
@@ -3654,7 +3664,7 @@ body.pq-auth-bg {
 .pq-segmento:hover { border-color: var(--borde); color: var(--carbon); }
 .pq-segmento:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
 .pq-segmento-activo, .pq-segmento-activo:hover { background: var(--carbon); border-color: var(--carbon); color: #FFFFFF; }
-.pq-segmento-cuenta { font: 600 12px/1 'JetBrains Mono', monospace; opacity: .75; }
+.pq-segmento-cuenta { font: 600 12px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; opacity: .75; }
 .pq-segmento-ayuda { margin: var(--esp-2) 0 0; }
 @media (min-width: 960px) { .pq-segmentos { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; flex-wrap: wrap; } }
 
@@ -3688,11 +3698,11 @@ body.pq-auth-bg {
   margin: 0 !important;
   border: 0;
   resize: vertical;
-  font: 15px/1.45 'Inter', sans-serif;
+  font: 15px/1.45 var(--fuente-texto);
   color: #111b21;
 }
 .pq-wa-editable:focus { outline: 2px solid #128C7E; outline-offset: 2px; }
-.pq-wa-fondo .pq-contador-caracteres { display: block; margin-top: 6px; text-align: right; font: 500 11px/1 'JetBrains Mono', monospace; color: #54656f; }
+.pq-wa-fondo .pq-contador-caracteres { display: block; margin-top: 6px; text-align: right; font: 500 11px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: #54656f; }
 .pq-wa-nota { margin: 0; }
 .pq-wa-secundarias { display: flex; gap: var(--esp-2); margin-left: calc(var(--esp-2) * -1); }
 .pq-enlace-boton { display: inline-flex; align-items: center; }
@@ -3765,7 +3775,7 @@ body.pq-auth-bg {
 .pq-onb-cabeza-fila { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
 .pq-onb-logo { height: 24px; width: auto; }
 .pq-onb-volver { margin-left: calc(var(--esp-1) * -1); }
-.pq-onb-cuenta { font: 600 12px/1 'JetBrains Mono', monospace; color: var(--gris-texto); }
+.pq-onb-cuenta { font: 600 12px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--gris-texto); }
 /* Pasos con nombre: la barra sola no decía qué falta. */
 .pq-onb-pasos { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: var(--esp-3) 0 0; padding: 0; list-style: none; }
 .pq-onb-paso { display: flex; flex-direction: column; gap: 6px; }
@@ -3853,9 +3863,9 @@ body.pq-auth-bg {
 .pq-onb-seccion .pq-campo { margin-bottom: 0; }
 
 /* ¡Ya abriste!: la cabecera real de la tienda, a sangre. */
-.pq-onb-abierta { margin: 0 calc(var(--esp-5) * -1); background: var(--papel); min-height: 100vh; font-family: 'Inter Tight', sans-serif; }
+.pq-onb-abierta { margin: 0 calc(var(--esp-5) * -1); background: var(--papel); min-height: 100vh; font-family: var(--fuente-texto); }
 .pq-onb-abierta-letrero { padding-bottom: var(--esp-2); }
-.pq-onb-abierta-eyebrow { margin: var(--esp-3) 0 0; font: 700 13px/1 'Inter Tight', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--marca-texto); animation: pqAparece .45s .35s var(--curva) both; }
+.pq-onb-abierta-eyebrow { margin: var(--esp-3) 0 0; font: 700 13px/1 var(--fuente-texto); letter-spacing: .08em; text-transform: uppercase; color: var(--marca-texto); animation: pqAparece .45s .35s var(--curva) both; }
 .pq-onb-abierta .pq-letrero-nombre { margin-top: var(--esp-2); }
 .pq-onb-abierta-texto { margin: var(--esp-2) 0 0; font-size: 15px; line-height: 1.5; color: var(--texto-calido); text-wrap: pretty; }
 .pq-onb-abierta-cuerpo { display: flex; flex-direction: column; gap: var(--esp-5); padding: var(--esp-4) var(--esp-5) var(--esp-10); }

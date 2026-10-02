@@ -1,8 +1,8 @@
 # Componentes del panel del dueño
 
 Ruta 2 "Tiquete y papel": fondo `--tiquete`, texto `--carbon`, acción
-`--sello` (#3B4CCA), títulos en Instrument Serif, interfaz en Inter, datos
-(precios, horas, números de pedido) en JetBrains Mono. CSS: bloque
+`--sello` (#3B4CCA). Tipografía igual a la tienda: títulos en Bricolage
+Grotesque, interfaz y datos en Inter Tight (cifras tabulares). CSS: bloque
 "PANEL v2" al final de `app.css`. Layout: `src/Views/layouts/panel.php`.
 
 Estado del rediseño: **todo el panel está en v2** (inicio, pedidos,
@@ -34,8 +34,8 @@ la Ruta 1, para que ambos lados se sientan de la misma familia:
   caucho mostrando el estado. En el panel el sello va arriba a la derecha.
 - Hojita de almanaque de la reserva, tachada, para los días bloqueados.
 
-Lo demás del panel (navegación, formularios, datos) sigue en Inter +
-JetBrains Mono con el azul sello.
+Lo demás del panel (navegación, formularios, datos) va en Inter Tight con
+el azul sello.
 
 ---
 
@@ -56,7 +56,7 @@ JetBrains Mono con el azul sello.
   y el selector de sede vuelve a recibir clics. Así no hay dos franjas
   apiladas comiéndose 120px de pantalla.
 - `.pq-switcher-sub` ("Sede activa") se oculta en celular.
-- Navegación lateral y bottomnav en Inter (no en mono): son rótulos, no datos.
+- Navegación lateral y bottomnav en Inter Tight: son rótulos, no datos.
 - Nada global va al pie de todas las páginas: el botón de avisos push vive
   en Mi cuenta (`#push-seccion`, `hidden` hasta que `panel-push.js` confirme
   que el navegador soporta push).
@@ -78,7 +78,7 @@ Títulos de sección con contador: `<h2 class="pq-seccion-titulo">En curso
 - Escritorio: 4 columnas. Celular: una sola columna con las columnas vacías
   ocultas (`.pq-kanban-col-vacia`); no hay scroll horizontal.
 - Tarjeta: `#id · cliente` / icono de entrega + total (`.pq-kanban-total`,
-  mono) / nota entre comillas / tiempo de espera / **un solo** botón con el
+  cifras tabulares) / nota entre comillas / tiempo de espera / **un solo** botón con el
   siguiente paso (`.pq-kanban-accion`).
 - **Demora** (`.pq-card-demorado`): acento de 4px a la izquierda
   (`box-shadow: inset 4px 0 0 var(--aji)`), sin fondo rojo; el rojo queda
@@ -193,13 +193,13 @@ guarda el anticipo junto al servicio solo si es el dueño.
 - Toda la info es un enlace a editar (`.pq-producto-card-info`); el botón
   "Editar" se oculta en celular y queda el menú ⋮.
 - **Sin foto, inicial honesta** (`.pq-producto-miniatura-inicial`): letra en
-  Instrument Serif sobre el color del producto
+  Bricolage sobre el color del producto
   (`--color-producto: color_seguro(...)`). Nunca una foto genérica.
 
 ## Agenda de citas (`panel/citas.php`)
 
 ```
-Hoy  viernes 2 de octubre           ← Instrument Serif + fecha_larga()
+Hoy  viernes 2 de octubre           ← Bricolage + fecha_larga()
 ┌──────────┬─────────────────────────┐
 │ 10:00    │ Luis Pérez   [Pendiente]│
 │ a. m.    │ Corte · $20.000 · con X │
@@ -211,7 +211,7 @@ Hoy  viernes 2 de octubre           ← Instrument Serif + fecha_larga()
 
 - Agrupada por día: Hoy / Mañana / Ayer + fecha larga; otros días, la fecha
   larga sola. Se lee como la agenda de papel del salón.
-- Columna de hora de 72px con borde punteado: la hora grande (`g:i`, mono
+- Columna de hora de 72px con borde punteado: la hora grande (`g:i`, cifras tabulares
   17px), y debajo, en líneas separadas, meridiano y duración (nunca
   "a. m. · 30 min" en una línea: se parte feo a 360px).
 - El texto de espera **sí** puede partirse dentro de la agenda
