@@ -129,6 +129,7 @@ $router->get('/panel/recordatorios/{cita}/mensaje', [$panel, 'mensajeRecordatori
 $router->post('/panel/recordatorios/{cita}/enviar', [$panel, 'registrarEnvioRecordatorio']);
 $router->get('/panel/sedes', [$panel, 'sedes']);
 $router->post('/panel/sedes', [$panel, 'crearSede']);
+$router->post('/panel/sedes/extra', [$panel, 'solicitarSedeExtra']);
 $router->get('/panel/sedes/{sede}/editar', [$panel, 'editarSede']);
 $router->post('/panel/sedes/{sede}/actualizar', [$panel, 'actualizarSede']);
 $router->post('/panel/sede/cambiar', [$panel, 'cambiarSede']);

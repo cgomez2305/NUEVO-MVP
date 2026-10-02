@@ -73,11 +73,12 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2.
-1. Cobro automático de sede extra ($30.000) — proyecto aparte.
+1. Sede extra ($30.000/mes en Pro): hecho (`2026-10-03_12_sedes_extra.sql`,
+   prorrateo hasta el vencimiento, renovación con extras, `/panel/sedes`).
 2. Wompi ya está en código: falta poner llaves reales en
    `config/config.php` y registrar `/webhooks/wompi` en el panel de Wompi.
-3. Tareas viejas de la tienda pública de servicios (horario 7 días,
-   disponibilidad de hoy por servicio, `sedes.direccion`) quedaron sin cerrar.
+3. Tienda de servicios (horario 7 días, próxima apertura, cupo de hoy,
+   `sedes.direccion`): verificado, ya estaba hecho en f94702c.
 
 ## Archivos clave tocados
 - `src/Models/Sede.php` — `SELECT_CON_MARCA_Y_PLAN`, `aplicarVencimiento()`.

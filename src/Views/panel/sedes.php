@@ -10,6 +10,55 @@ $nombreNegocio = (string) ($negocio['negocio_nombre'] ?? $negocio['nombre']);
 </div>
 <p class="pq-lead pq-pagina-bajada-panel">Cada sede tiene su propia tienda, catálogo, horario y agenda.</p>
 
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta pq-pagina-aviso" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
+
+<?php
+$hayCupo = $totalSedes < $cupo;
+$extraPendiente = $pendiente !== null && $pendiente['concepto'] === 'sede_extra';
+?>
+<?php if ($esDueno): ?>
+  <?php // El cupo como una cuadra de locales: llenos los que ya tienen sede, punteados los libres. ?>
+  <div class="pq-sedes-cupo">
+    <span class="pq-sedes-cupo-cuadra" aria-hidden="true">
+      <?php for ($i = 1; $i <= max($cupo, $totalSedes); $i++): ?><span class="<?= $i <= $totalSedes ? 'pq-sedes-cupo-ocupado' : '' ?>"></span><?php endfor; ?>
+    </span>
+    <span class="pq-sedes-cupo-texto">
+      <?php if ($totalSedes > $cupo): // p. ej. venció Pro: las sedes siguen, pero no se crean más ?>
+        <strong><?= (int) $totalSedes ?> sedes</strong>
+      <?php else: ?>
+        <strong><?= (int) $totalSedes ?> de <?= (int) $cupo ?> sede<?= $cupo === 1 ? '' : 's' ?></strong>
+      <?php endif; ?>
+      <span class="pq-ayuda"><?= (int) ($negocio['sedes_incluidas'] ?? 1) ?> incluida<?= (int) ($negocio['sedes_incluidas'] ?? 1) === 1 ? '' : 's' ?> en tu plan<?= $precioExtra > 0 && (int) ($negocio['sedes_extra'] ?? 0) > 0 ? ' + ' . (int) $negocio['sedes_extra'] . ' extra' : '' ?></span>
+    </span>
+  </div>
+
+  <?php if (!$hayCupo): ?>
+    <?php if ($extraPendiente): ?>
+      <div class="pq-sede-extra">
+        <strong>Tu sede extra está esperando el pago</strong>
+        <span class="pq-ayuda">Apenas se confirme los <?= pesos((int) $pendiente['monto']) ?>, aquí mismo aparece "+ Nueva sede".</span>
+        <a class="pq-btn pq-btn-sello pq-btn-chico" href="<?= e(base_url('/panel/plan')) ?>">Ver cómo pagar</a>
+      </div>
+    <?php elseif ($prorrateo !== null): ?>
+      <form method="post" action="<?= e(base_url('/panel/sedes/extra')) ?>" class="pq-sede-extra">
+        <?= csrf_campo() ?>
+        <strong>¿Otra sede? <span class="pq-sede-extra-precio"><?= pesos($precioExtra) ?><small>/mes</small></span></strong>
+        <span class="pq-ayuda">Hoy pagas solo <strong><?= pesos($prorrateo['monto']) ?></strong>, por los <?= (int) $prorrateo['dias'] ?> días que le quedan a tu plan. Desde la renovación va incluida en el cobro del plan.</span>
+        <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"<?= $pendiente !== null ? ' disabled' : '' ?>>Pedir sede extra</button>
+        <?php if ($pendiente !== null): ?><span class="pq-ayuda">Primero paga o cancela tu solicitud de plan pendiente.</span><?php endif; ?>
+      </form>
+    <?php else: ?>
+      <div class="pq-sede-extra">
+        <strong>Tu plan incluye <?= (int) $cupo ?> sede<?= $cupo === 1 ? '' : 's' ?></strong>
+        <span class="pq-ayuda">Con Pro tienes 3 sedes, y más si las necesitas.</span>
+        <a class="pq-btn pq-btn-ghost pq-btn-chico" href="<?= e(base_url('/panel/plan')) ?>">Ver planes</a>
+      </div>
+    <?php endif; ?>
+  <?php endif; ?>
+<?php endif; ?>
+
 <?php
 // Cada sede se muestra como una fachada pequeña (toldo, insignia y nombre
 // con la letra de la tienda): se reconoce como "una tienda", no como una
@@ -58,7 +107,7 @@ $nombreNegocio = (string) ($negocio['negocio_nombre'] ?? $negocio['nombre']);
   <?php endforeach; ?>
 </div>
 
-<?php if ($esDueno): ?>
+<?php if ($esDueno && $hayCupo): ?>
   <details class="pq-agregar-panel">
     <summary class="pq-btn pq-btn-ghost">+ Nueva sede</summary>
     <form method="post" action="<?= e(base_url('/panel/sedes')) ?>" class="pq-agregar-panel-form">

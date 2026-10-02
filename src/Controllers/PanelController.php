@@ -1175,12 +1175,23 @@ class PanelController
             ? $todas
             : array_values(array_filter($todas, fn ($s) => in_array((int) $s['id'], Usuario::sedeIdsAsignadas((int) $negocio['usuario_id']), true)));
 
+        $precioExtra = (int) ($negocio['precio_sede_extra'] ?? 0);
+        $vigente = !empty($negocio['plan_vence_en']) && $negocio['plan_vence_en'] >= date('Y-m-d');
+
         ver('panel/sedes', [
-            'titulo'  => 'Sedes · Veci',
-            'activo'  => 'sedes',
-            'negocio' => $negocio,
-            'sedes'   => $sedesVisibles,
-            'ok'      => flash_obtener('ok'),
+            'titulo'      => 'Sedes · Veci',
+            'activo'      => 'sedes',
+            'negocio'     => $negocio,
+            'sedes'       => $sedesVisibles,
+            'totalSedes'  => count($todas),
+            'cupo'        => Sede::cupo($negocio),
+            'precioExtra' => $precioExtra,
+            // Solo se vende sede extra con un plan que la ofrece y vigente:
+            // se prorratea hasta su vencimiento.
+            'prorrateo'   => $precioExtra > 0 && $vigente ? Plan::prorrateoSedeExtra($precioExtra, (string) $negocio['plan_vence_en']) : null,
+            'pendiente'   => $negocio['rol'] === 'dueno' ? PagoPlan::pendientePorNegocio((int) $negocio['negocio_id']) : null,
+            'ok'          => flash_obtener('ok'),
+            'error'       => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -1227,16 +1238,62 @@ class PanelController
      */
     private function exigirCupoDeSedes(array $negocio): void
     {
-        $incluidas = (int) ($negocio['sedes_incluidas'] ?? 1);
-        if (Sede::contarPorNegocio((int) $negocio['negocio_id']) < $incluidas) {
+        $cupo = Sede::cupo($negocio);
+        if (Sede::contarPorNegocio((int) $negocio['negocio_id']) < $cupo) {
             return;
         }
 
+        if (!empty($negocio['precio_sede_extra'])) {
+            flash_set('error', 'Ya usas las ' . $cupo . ' sedes de tu plan. Agrega una sede extra para crear otra.');
+            redirigir('/panel/sedes');
+        }
         flash_set(
             'error',
-            'Tu plan incluye ' . $incluidas . ' sede' . ($incluidas === 1 ? '' : 's') . '. '
-            . 'Sube de plan para agregar más, o escríbenos a soporte@tuveci.co si ya necesitas una sede extra.'
+            'Tu plan incluye ' . $cupo . ' sede' . ($cupo === 1 ? '' : 's') . '. Sube a Pro para tener varias sedes.'
         );
+        redirigir('/panel/plan');
+    }
+
+    /**
+     * Pide una sede extra (solo planes que la venden, como Pro): deja un
+     * pago pendiente prorrateado hasta que vence el plan (Plan::
+     * prorrateoSedeExtra). El cupo sube cuando se confirma el pago, por
+     * Bre-B (admin) o Wompi, igual que un plan.
+     */
+    public function solicitarSedeExtra(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+
+        if (!csrf_verificar()) {
+            flash_set('error', 'El formulario expiró, intenta de nuevo.');
+            redirigir('/panel/sedes');
+        }
+        $precio = (int) ($negocio['precio_sede_extra'] ?? 0);
+        $venceEn = (string) ($negocio['plan_vence_en'] ?? '');
+        if ($precio <= 0 || $venceEn === '' || $venceEn < date('Y-m-d')) {
+            flash_set('error', 'Las sedes extra son del plan Pro vigente.');
+            redirigir('/panel/plan');
+        }
+        if (PagoPlan::pendientePorNegocio($negocioId) !== null) {
+            flash_set('error', 'Ya tienes un pago pendiente: págalo o cancélalo antes de pedir otra cosa.');
+            redirigir('/panel/plan');
+        }
+
+        $prorrateo = Plan::prorrateoSedeExtra($precio, $venceEn);
+        PagoPlan::crearPendiente(
+            $negocioId,
+            (int) $negocio['plan_id'],
+            $prorrateo['monto'],
+            (string) ($negocio['plan_ciclo'] ?? 'mensual'),
+            date('Y-m-d'),
+            $venceEn,
+            'sede_extra',
+            1
+        );
+
+        flash_set('ok', 'Listo: paga ' . pesos($prorrateo['monto']) . ' por la sede extra (los ' . $prorrateo['dias'] . ' días que le quedan a tu plan) y podrás crearla.');
         redirigir('/panel/plan');
     }
 
@@ -1470,6 +1527,7 @@ class PanelController
             'activo'            => 'plan',
             'negocio'           => $negocio,
             'planes'            => Plan::listarTodos(),
+            'totalSedes'        => Sede::contarPorNegocio($negocioId),
             'pendiente'         => PagoPlan::pendientePorNegocio($negocioId),
             'limitePedidosMes'  => $limitePedidosMes,
             'usadosEsteMes'     => $usadosEsteMes,
@@ -1522,7 +1580,10 @@ class PanelController
             redirigir('/panel/plan');
         }
 
-        $monto = $ciclo === 'anual' ? (int) $plan['precio_anual'] : (int) $plan['precio_mensual'];
+        // Con más sedes que las incluidas, la renovación cobra también las
+        // extra (las que el negocio tiene hoy: si borró una, ya no se cobra).
+        $sedesExtra = Plan::sedesExtraNecesarias($plan, Sede::contarPorNegocio((int) $negocio['negocio_id']));
+        $monto = Plan::precio($plan, $ciclo, $sedesExtra);
         $inicio = new \DateTimeImmutable('today');
         $fin = $inicio->modify($ciclo === 'anual' ? '+1 year' : '+30 days');
 
@@ -1532,7 +1593,9 @@ class PanelController
             $monto,
             $ciclo,
             $inicio->format('Y-m-d'),
-            $fin->format('Y-m-d')
+            $fin->format('Y-m-d'),
+            'plan',
+            $sedesExtra
         );
 
         flash_set('ok', \App\Services\Wompi::disponible()

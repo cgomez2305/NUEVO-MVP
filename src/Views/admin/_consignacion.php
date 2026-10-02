@@ -14,6 +14,7 @@
 $pqPagoId = (int) $pago['id'];
 $pqMonto = (int) $pago['monto'];
 $pqDiasPedido = dias_desde((string) $pago['creado_en']);
+$pqEsSede = ($pago['concepto'] ?? 'plan') === 'sede_extra';
 ?>
 <article class="pq-consignacion" aria-labelledby="pq-consignacion-<?= $pqPagoId ?>">
   <header class="pq-consignacion-cabeza">
@@ -31,8 +32,8 @@ $pqDiasPedido = dias_desde((string) $pago['creado_en']);
       <span class="pq-sr-solo" id="pq-consignacion-<?= $pqPagoId ?>">Pago del plan <?= e(ucfirst((string) $pago['plan_nombre'])) ?></span>
     <?php endif; ?>
     <div class="pq-consignacion-dato">
-      <dt>Plan</dt>
-      <dd><?= e(ucfirst((string) $pago['plan_nombre'])) ?> · <?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?></dd>
+      <dt><?= $pqEsSede ? 'Concepto' : 'Plan' ?></dt>
+      <dd><?= $pqEsSede ? 'Sede extra · hasta el ' . e(fecha_larga((string) $pago['periodo_fin'])) : e(ucfirst((string) $pago['plan_nombre'])) . ' · ' . ($pago['ciclo'] === 'anual' ? 'anual' : 'mensual') . ((int) ($pago['sedes_extra'] ?? 0) > 0 ? ' + ' . (int) $pago['sedes_extra'] . ' sede extra' : '') ?></dd>
     </div>
     <div class="pq-consignacion-dato">
       <dt>Pedido</dt>
@@ -46,7 +47,7 @@ $pqDiasPedido = dias_desde((string) $pago['creado_en']);
 
   <div class="pq-consignacion-corte" aria-hidden="true"></div>
 
-  <form method="post" action="<?= e(base_url('/admin/pagos/' . $pqPagoId . '/confirmar')) ?>" class="pq-consignacion-form" data-consignacion="<?= $pqMonto ?>" data-confirmar="¿Ya viste esta transferencia en la cuenta Bre-B de Veci? Esto activa el plan del negocio de inmediato.">
+  <form method="post" action="<?= e(base_url('/admin/pagos/' . $pqPagoId . '/confirmar')) ?>" class="pq-consignacion-form" data-consignacion="<?= $pqMonto ?>" data-confirmar="¿Ya viste esta transferencia en la cuenta Bre-B de Veci? <?= $pqEsSede ? 'Esto le suma la sede extra al negocio de inmediato.' : 'Esto activa el plan del negocio de inmediato.' ?>">
     <?= csrf_campo() ?>
     <?php if (!empty($volver)): ?><input type="hidden" name="volver" value="<?= e($volver) ?>"><?php endif; ?>
     <label class="pq-label" for="monto-<?= $pqPagoId ?>">¿Cuánto llegó a la cuenta de Veci?</label>
@@ -58,7 +59,7 @@ $pqDiasPedido = dias_desde((string) $pago['creado_en']);
     </div>
     <p class="pq-ayuda pq-consignacion-diferencia" data-monto-diferencia aria-live="polite"></p>
     <div class="pq-consignacion-botones">
-      <button type="submit" class="pq-btn pq-btn-sello" data-confirmar-pago>Confirmar y activar plan</button>
+      <button type="submit" class="pq-btn pq-btn-sello" data-confirmar-pago><?= $pqEsSede ? 'Confirmar y activar sede' : 'Confirmar y activar plan' ?></button>
       <button type="submit" form="pq-descartar-<?= $pqPagoId ?>" class="pq-btn pq-btn-ghost">Descartar</button>
     </div>
   </form>

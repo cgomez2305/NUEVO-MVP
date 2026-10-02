@@ -21,16 +21,20 @@ class PagoPlan
         int $monto,
         string $ciclo,
         string $periodoInicio,
-        string $periodoFin
+        string $periodoFin,
+        string $concepto = 'plan',
+        int $sedesExtra = 0
     ): int {
         $pdo = Database::conexion();
         $stmt = $pdo->prepare(
-            'INSERT INTO pagos_plan (negocio_id, plan_id, monto, metodo_pago, ciclo, periodo_inicio, periodo_fin)
-             VALUES (:negocio_id, :plan_id, :monto, :metodo_pago, :ciclo, :periodo_inicio, :periodo_fin)'
+            'INSERT INTO pagos_plan (negocio_id, plan_id, concepto, sedes_extra, monto, metodo_pago, ciclo, periodo_inicio, periodo_fin)
+             VALUES (:negocio_id, :plan_id, :concepto, :sedes_extra, :monto, :metodo_pago, :ciclo, :periodo_inicio, :periodo_fin)'
         );
         $stmt->execute([
             'negocio_id'     => $negocioId,
             'plan_id'        => $planId,
+            'concepto'       => $concepto === 'sede_extra' ? 'sede_extra' : 'plan',
+            'sedes_extra'    => max(0, $sedesExtra),
             'monto'          => $monto,
             'metodo_pago'    => 'breb_manual',
             'ciclo'          => $ciclo,
@@ -98,6 +102,10 @@ class PagoPlan
      * negocio está renovando el MISMO plan y todavía le quedan días, el
      * período nuevo arranca donde termina el actual (no pierde lo pagado);
      * en cualquier otro caso arranca hoy.
+     *
+     * Una sede extra (concepto 'sede_extra') no mueve el período: suma sus
+     * sedes al cupo hasta que vence el plan vigente. Un pago de plan deja
+     * el cupo extra en lo que ese pago cubrió.
      */
     public static function confirmar(int $id, int $adminId): bool
     {
@@ -125,6 +133,26 @@ class PagoPlan
             if ($pago === false) {
                 $pdo->rollBack();
                 return false;
+            }
+
+            if ($pago['concepto'] === 'sede_extra') {
+                $pdo->prepare(
+                    'UPDATE pagos_plan
+                        SET confirmado_por = :admin_id, confirmado_en = NOW(), periodo_inicio = CURDATE(),
+                            transaccion_pasarela = :transaccion,
+                            metodo_pago = IF(:es_pasarela = 1, \'wompi\', metodo_pago)
+                      WHERE id = :id AND confirmado_en IS NULL'
+                )->execute([
+                    'admin_id'    => $adminId,
+                    'transaccion' => $transaccionId,
+                    'es_pasarela' => $transaccionId !== null ? 1 : 0,
+                    'id'          => $id,
+                ]);
+                $pdo->prepare('UPDATE negocios SET sedes_extra = LEAST(255, sedes_extra + :n) WHERE id = :negocio_id')
+                    ->execute(['n' => (int) $pago['sedes_extra'], 'negocio_id' => $pago['negocio_id']]);
+                $pdo->commit();
+
+                return true;
             }
 
             $stmtNegocio = $pdo->prepare('SELECT plan_id, plan_vence_en FROM negocios WHERE id = :id FOR UPDATE');
@@ -160,9 +188,10 @@ class PagoPlan
             ]);
 
             $pdo->prepare(
-                "UPDATE negocios SET plan_id = :plan_id, plan_estado = 'activo', plan_vence_en = :vence_en, plan_ciclo = :ciclo WHERE id = :negocio_id"
+                "UPDATE negocios SET plan_id = :plan_id, plan_estado = 'activo', plan_vence_en = :vence_en, plan_ciclo = :ciclo, sedes_extra = :sedes_extra WHERE id = :negocio_id"
             )->execute([
                 'plan_id'    => $pago['plan_id'],
+                'sedes_extra' => (int) $pago['sedes_extra'],
                 'vence_en'   => $fin->format('Y-m-d'),
                 'ciclo'      => $pago['ciclo'],
                 'negocio_id' => $pago['negocio_id'],

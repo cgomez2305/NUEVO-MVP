@@ -59,6 +59,19 @@ class Sede
     }
 
     /** Cuántas sedes tiene un negocio en total (publicadas o no): lo que hace cumplir el límite de sedes del plan (ver planes.sedes_incluidas). */
+    /**
+     * Cuántas sedes puede tener el negocio con su plan vigente: las
+     * incluidas más las extra pagadas (solo en planes que venden sede
+     * extra). $sede es una fila de SELECT_CON_MARCA_Y_PLAN (o el contexto
+     * del panel), ya con el vencimiento aplicado.
+     */
+    public static function cupo(array $sede): int
+    {
+        $extra = !empty($sede['precio_sede_extra']) ? (int) ($sede['sedes_extra'] ?? 0) : 0;
+
+        return (int) ($sede['sedes_incluidas'] ?? 1) + $extra;
+    }
+
     public static function contarPorNegocio(int $negocioId): int
     {
         $stmt = Database::conexion()->prepare(
@@ -87,7 +100,7 @@ class Sede
      */
     private const SELECT_CON_MARCA_Y_PLAN = "
         SELECT s.*, n.tipo_negocio, n.color_marca, n.nombre AS negocio_nombre,
-               n.plan_id, n.plan_estado, n.plan_vence_en, n.plan_ciclo,
+               n.plan_id, n.plan_estado, n.plan_vence_en, n.plan_ciclo, n.sedes_extra,
                p.nombre AS plan_nombre, p.precio_mensual AS plan_precio_mensual, p.precio_anual AS plan_precio_anual,
                p.limite_pedidos_mes, p.limite_ia_mes, p.incluye_copiloto, p.incluye_estadisticas_completas,
                p.incluye_multisede, p.sedes_incluidas, p.precio_sede_extra,
@@ -125,6 +138,7 @@ class Sede
             $fila['incluye_multisede'] = $fila['pg_incluye_multisede'];
             $fila['sedes_incluidas'] = $fila['pg_sedes_incluidas'];
             $fila['precio_sede_extra'] = $fila['pg_precio_sede_extra'];
+            $fila['sedes_extra'] = 0;
             $fila['plan_estado'] = 'degradado_a_gratis';
         }
 

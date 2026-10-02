@@ -14,10 +14,9 @@ SET NAMES utf8mb4;
 -- más abajo, después de creada la tabla negocios): se editan a mano desde
 -- SQL si cambia un precio o un límite, no hay pantalla de administración
 -- para esto todavía. NULL en un límite significa "ilimitado".
--- sedes_incluidas/precio_sede_extra son metadata para cuando exista el
--- proyecto de multisede con cobro por sede extra (hoy cualquier negocio
--- puede crear sedes sin límite, ver `sedes` más abajo — incluye_multisede
--- todavía no se hace cumplir en el código, ver src/Models/Sede.php).
+-- sedes_incluidas es el cupo de sedes del plan; precio_sede_extra (solo
+-- Pro) es lo que cuesta al mes cada sede por encima de ese cupo (ver
+-- negocios.sedes_extra y pagos_plan.concepto).
 CREATE TABLE IF NOT EXISTS planes (
   id                             TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre                         VARCHAR(20)  NOT NULL UNIQUE,
@@ -54,6 +53,9 @@ CREATE TABLE IF NOT EXISTS negocios (
   plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
   plan_vence_en DATE         DEFAULT NULL,
   plan_ciclo    ENUM('mensual','anual') NOT NULL DEFAULT 'mensual',
+  -- Sedes pagadas por encima de las incluidas en el plan (Pro: $30.000/mes
+  -- cada una). El cupo de sedes es planes.sedes_incluidas + sedes_extra.
+  sedes_extra   TINYINT UNSIGNED NOT NULL DEFAULT 0,
   -- El equipo de Veci suspende una cuenta desde el panel interno (mora,
   -- abuso, solicitud del dueño). Suspendida: nadie de ese negocio puede
   -- iniciar sesión y sus tiendas públicas dejan de responder.
@@ -396,6 +398,10 @@ CREATE TABLE IF NOT EXISTS pagos_plan (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   negocio_id     INT UNSIGNED NOT NULL,
   plan_id        TINYINT UNSIGNED NOT NULL,
+  -- 'plan' = pago o renovación del plan (con sus sedes extra);
+  -- 'sede_extra' = agregar sedes a mitad de período (prorrateado).
+  concepto       ENUM('plan','sede_extra') NOT NULL DEFAULT 'plan',
+  sedes_extra    TINYINT UNSIGNED NOT NULL DEFAULT 0,
   monto          INT UNSIGNED NOT NULL,
   metodo_pago    VARCHAR(30)  NOT NULL DEFAULT 'breb_manual',
   ciclo          ENUM('mensual','anual') NOT NULL DEFAULT 'mensual',
@@ -647,4 +653,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_08_paquetes_bonos.sql'),
   ('2026-10-03_09_avisos_estado.sql'),
   ('2026-10-03_10_pasarela_wompi.sql'),
-  ('2026-10-03_11_referidos.sql');
+  ('2026-10-03_11_referidos.sql'),
+  ('2026-10-03_12_sedes_extra.sql');

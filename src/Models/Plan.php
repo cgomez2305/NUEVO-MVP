@@ -39,4 +39,46 @@ class Plan
         $plan = self::buscarPorNombre('gratis');
         return $plan !== null ? (int) $plan['id'] : 1;
     }
+
+    /**
+     * Cuántas sedes por encima del cupo del plan tendría que pagar un
+     * negocio con $sedes sedes. Solo los planes con precio_sede_extra (Pro)
+     * venden sedes extra; en los demás, 0.
+     */
+    public static function sedesExtraNecesarias(array $plan, int $sedes): int
+    {
+        if (empty($plan['precio_sede_extra'])) {
+            return 0;
+        }
+
+        return max(0, $sedes - (int) ($plan['sedes_incluidas'] ?? 1));
+    }
+
+    /** Lo que cuesta el plan en ese ciclo con esas sedes extra (la sede extra se paga 12 veces en el anual). */
+    public static function precio(array $plan, string $ciclo, int $sedesExtra = 0): int
+    {
+        $anual = $ciclo === 'anual';
+        $base = $anual ? (int) $plan['precio_anual'] : (int) $plan['precio_mensual'];
+
+        return $base + $sedesExtra * (int) ($plan['precio_sede_extra'] ?? 0) * ($anual ? 12 : 1);
+    }
+
+    /**
+     * Una sede extra pedida a mitad de período se cobra solo por los días
+     * que le quedan al plan (precio mensual × días / 30, redondeado a la
+     * centena hacia arriba): así todas las sedes vencen juntas y la
+     * renovación siguiente las cobra completas. Sin fecha de vencimiento
+     * (plan sin ciclo), un mes completo.
+     *
+     * @return array{dias: int, monto: int}
+     */
+    public static function prorrateoSedeExtra(int $precioMensual, ?string $venceEn): array
+    {
+        $dias = 30;
+        if ($venceEn !== null && $venceEn !== '') {
+            $dias = max(1, (int) (new \DateTimeImmutable('today'))->diff(new \DateTimeImmutable($venceEn))->format('%r%a'));
+        }
+
+        return ['dias' => $dias, 'monto' => (int) (ceil($precioMensual * $dias / 30 / 100) * 100)];
+    }
 }

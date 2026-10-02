@@ -12,7 +12,7 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
   <?php if ($planActualNombre === 'gratis'): ?>
     Sin costo. Sube de plan cuando tu negocio lo necesite.
   <?php elseif (!empty($negocio['plan_vence_en'])): ?>
-    Activo hasta el <?= e(fecha_larga((string) $negocio['plan_vence_en'])) ?>.
+    Activo hasta el <?= e(fecha_larga((string) $negocio['plan_vence_en'])) ?><?= !empty($negocio['precio_sede_extra']) && (int) ($negocio['sedes_extra'] ?? 0) > 0 ? ', con ' . (int) $negocio['sedes_extra'] . ' sede' . ((int) $negocio['sedes_extra'] === 1 ? '' : 's') . ' extra' : '' ?>.
   <?php else: ?>
     Activo.
   <?php endif; ?>
@@ -31,7 +31,11 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
 
 <?php if ($pendiente !== null): ?>
   <div class="pq-card pq-plan-pendiente">
-    <p class="pq-plan-pendiente-titulo">Solicitud pendiente: plan <?= e($nombresBonitos[$pendiente['plan_nombre']] ?? $pendiente['plan_nombre']) ?> (<?= $pendiente['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>)</p>
+    <?php if ($pendiente['concepto'] === 'sede_extra'): ?>
+      <p class="pq-plan-pendiente-titulo">Solicitud pendiente: <?= (int) $pendiente['sedes_extra'] ?> sede extra hasta el <?= e(fecha_larga((string) $pendiente['periodo_fin'])) ?></p>
+    <?php else: ?>
+      <p class="pq-plan-pendiente-titulo">Solicitud pendiente: plan <?= e($nombresBonitos[$pendiente['plan_nombre']] ?? $pendiente['plan_nombre']) ?> (<?= $pendiente['ciclo'] === 'anual' ? 'anual' : 'mensual' ?>)<?= (int) $pendiente['sedes_extra'] > 0 ? ' con ' . (int) $pendiente['sedes_extra'] . ' sede' . ((int) $pendiente['sedes_extra'] === 1 ? '' : 's') . ' extra' : '' ?></p>
+    <?php endif; ?>
     <?php if (!empty($wompi)): ?>
       <?php
       // Web Checkout de Wompi: monto y referencia firmados (no se pueden
@@ -87,6 +91,8 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
   <?php foreach ($planes as $plan): ?>
     <?php
       $esActual = $plan['nombre'] === $planActualNombre;
+      // Lo que de verdad se cobraría hoy: con más sedes que las incluidas, las extra van en el precio.
+      $extrasPlan = \App\Models\Plan::sedesExtraNecesarias($plan, (int) $totalSedes);
       $bullets = [];
       $bullets[] = $plan['limite_pedidos_mes'] === null ? 'Pedidos o citas ilimitados' : 'Hasta ' . (int) $plan['limite_pedidos_mes'] . ' pedidos o citas/mes';
       $bullets[] = $plan['limite_ia_mes'] === null ? 'Análisis con IA ilimitados' : (int) $plan['limite_ia_mes'] . ' análisis con IA/mes';
@@ -115,11 +121,14 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
           <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
           <?php if ($plan['nombre'] !== 'gratis'): ?>
             <label class="pq-plan-card-ciclo">
-              <input type="radio" name="ciclo" value="mensual" checked> Mensual · <?= pesos((int) $plan['precio_mensual']) ?>
+              <input type="radio" name="ciclo" value="mensual" checked> Mensual · <?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan)) ?>
             </label>
             <label class="pq-plan-card-ciclo">
-              <input type="radio" name="ciclo" value="anual"> Anual · <?= pesos((int) $plan['precio_anual']) ?>
+              <input type="radio" name="ciclo" value="anual"> Anual · <?= pesos(\App\Models\Plan::precio($plan, 'anual', $extrasPlan)) ?>
             </label>
+            <?php if ($extrasPlan > 0): ?>
+              <span class="pq-ayuda">Incluye <?= $extrasPlan ?> sede<?= $extrasPlan === 1 ? '' : 's' ?> extra (<?= pesos((int) $plan['precio_sede_extra']) ?>/mes c/u).</span>
+            <?php endif; ?>
           <?php endif; ?>
           <button type="submit" class="pq-btn <?= $plan['nombre'] === 'gratis' ? 'pq-btn-ghost' : 'pq-btn-sello' ?> pq-btn-chico pq-plan-card-boton">
             <?= $plan['nombre'] === 'gratis' ? 'Bajar a Gratis' : ($esActual ? 'Renovar' : 'Elegir ' . e($nombresBonitos[$plan['nombre']])) ?>
@@ -130,4 +139,4 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
   <?php endforeach; ?>
 </div>
 
-<p class="pq-ayuda pq-plan-pie">Veci no procesa el dinero: transfieres directo por Bre-B y un admin confirma el pago a mano — sin comisión de pasarela.</p>
+<p class="pq-ayuda pq-plan-pie"><?= !empty($wompi) ? 'Pagas con Wompi (el plan se activa solo) o transfieres por Bre-B y un admin confirma el pago.' : 'Transfieres directo por Bre-B y un admin confirma el pago a mano — sin comisión de pasarela.' ?></p>

@@ -157,7 +157,7 @@ class Negocio
     {
         $stmt = Database::conexion()->prepare(
             "UPDATE negocios SET plan_id = (SELECT id FROM planes WHERE nombre = 'gratis'),
-                                  plan_estado = 'activo', plan_vence_en = NULL
+                                  plan_estado = 'activo', plan_vence_en = NULL, sedes_extra = 0
              WHERE id = :id"
         );
         $stmt->execute(['id' => $id]);
@@ -174,7 +174,7 @@ class Negocio
     {
         $stmt = Database::conexion()->prepare(
             "UPDATE negocios SET plan_id = (SELECT id FROM planes WHERE nombre = 'gratis'),
-                                  plan_estado = 'degradado_a_gratis', plan_vence_en = NULL
+                                  plan_estado = 'degradado_a_gratis', plan_vence_en = NULL, sedes_extra = 0
              WHERE plan_estado = 'activo'
                AND plan_vence_en IS NOT NULL
                AND plan_vence_en < CURDATE()

@@ -231,9 +231,13 @@ límites y funciones que sí se hacen cumplir en el código (`database/schema.sq
 - **Barrio**: todo ilimitado salvo estadísticas completas (sigue en 30 días
   de historial), incluye el copiloto de recompra.
 - **Pro**: historial completo + exportar a CSV, y es el único con
-  multisede (3 sedes incluidas en el precio). La sede extra ($30.000/mes)
-  todavía no tiene cobro en el código, así que por ahora crear una cuarta
-  sede se bloquea en el servidor.
+  multisede (3 sedes incluidas en el precio). Cada sede extra cuesta
+  $30.000/mes (`planes.precio_sede_extra`): desde `/panel/sedes` el dueño
+  la pide y paga solo los días que le quedan al plan (prorrateo); al
+  confirmarse el pago sube `negocios.sedes_extra` y puede crearla. Las
+  renovaciones de Pro ya cobran las sedes extra que el negocio tenga en ese
+  momento (si borró una, deja de cobrarse). Si el plan vence o baja a
+  Gratis, las sedes siguen funcionando pero no se pueden crear más.
 
 **Cómo se cobra**: Bre-B y Nequi no tienen cobro automático recurrente, así
 que el cobro es manual verificado. El dueño pide el cambio de plan desde

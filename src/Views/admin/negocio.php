@@ -86,7 +86,7 @@ $whatsappLegible = fn (string $n) => strlen($n) === 10 ? substr($n, 0, 3) . ' ' 
       <ul class="pq-admin-pagos">
         <?php foreach ($historial as $pago): ?>
           <li>
-            <span><?= e(ucfirst((string) $pago['plan_nombre'])) ?> · <?= $pago['ciclo'] === 'anual' ? 'anual' : 'mensual' ?></span>
+            <span><?= ($pago['concepto'] ?? 'plan') === 'sede_extra' ? 'Sede extra' : e(ucfirst((string) $pago['plan_nombre'])) . ' · ' . ($pago['ciclo'] === 'anual' ? 'anual' : 'mensual') . ((int) ($pago['sedes_extra'] ?? 0) > 0 ? ' + ' . (int) $pago['sedes_extra'] . ' sede extra' : '') ?></span>
             <span class="pq-mono"><?= pesos((int) $pago['monto']) ?></span>
             <span class="pq-ayuda">confirmado el <?= e(fecha_larga((string) $pago['confirmado_en'])) ?></span>
           </li>

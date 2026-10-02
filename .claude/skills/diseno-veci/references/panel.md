@@ -286,3 +286,20 @@ ilustraciones.
   - Tablero y agenda: enlace verde discreto `.pq-aviso-estado`
     ("Avisarle: Listo") bajo la acción principal; no compite con ella.
 - La migración da por avisados los pedidos y citas que ya existían.
+
+## Cupo de sedes y sede extra (`/panel/sedes`, `/panel/plan`)
+
+- Arriba de las fachadas, el cupo como una cuadra (`.pq-sedes-cupo`): un
+  local por sede posible; los ocupados llevan el toldo del negocio
+  (`--marca` rayado) y los libres solo el contorno punteado. Al lado,
+  "3 de 4 sedes · 3 incluidas en tu plan + 1 extra". Si el plan venció y
+  quedaron más sedes que el cupo, dice "4 sedes" sin el "de".
+- "+ Nueva sede" solo aparece si hay cupo. Sin cupo, en su lugar va una
+  caja punteada de tiquete (`.pq-sede-extra`) con tres estados: Pro vigente
+  ("¿Otra sede? $30.000/mes · hoy pagas solo $X por los N días que le
+  quedan a tu plan" + "Pedir sede extra"), pago pendiente ("esperando el
+  pago" + "Ver cómo pagar") o plan sin multisede ("Ver planes").
+- En `/panel/plan` los precios de Pro son los que se cobrarían de verdad:
+  con sedes extra, "Mensual · $159.000" y la nota "Incluye 1 sede extra".
+  El pendiente de sede extra se titula "1 sede extra hasta el …"; el admin
+  la ve en la consignación como "Concepto: Sede extra".

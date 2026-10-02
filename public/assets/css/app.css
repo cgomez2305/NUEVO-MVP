@@ -4565,3 +4565,16 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-referido-pasos li { counter-increment: paso; position: relative; display: flex; flex-direction: column; gap: 2px; padding: var(--esp-3) var(--esp-4) var(--esp-3) 52px; border: 1px dashed var(--borde); border-radius: var(--radio-m); font-size: 14px; color: var(--carbon); }
 .pq-referido-pasos li::before { content: counter(paso); position: absolute; left: var(--esp-4); top: var(--esp-3); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--sello); color: #fff; font-weight: 800; font-size: 13px; }
 .pq-registro-invita { margin: var(--esp-3) 0 0; padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: var(--tinte-sello); color: var(--carbon); font-size: 14px; }
+
+/* ---------- Cupo de sedes y sede extra (panel) ---------- */
+/* El cupo se lee como una cuadra: un local con toldo por sede. Los
+   ocupados llevan el toldo del negocio; los libres, solo el contorno. */
+.pq-sedes-cupo { display: flex; align-items: center; gap: var(--esp-3); margin-top: var(--esp-4); }
+.pq-sedes-cupo-cuadra { display: inline-flex; align-items: flex-end; gap: 6px; flex: none; }
+.pq-sedes-cupo-cuadra > span { position: relative; width: 22px; height: 24px; border: 1.5px dashed var(--borde); border-radius: 3px 3px 2px 2px; }
+.pq-sedes-cupo-cuadra > .pq-sedes-cupo-ocupado { border: 1.5px solid var(--marca-texto); background: var(--marca-suave); }
+.pq-sedes-cupo-cuadra > .pq-sedes-cupo-ocupado::before { content: ""; position: absolute; inset: -1.5px -1.5px auto; height: 8px; border-radius: 3px 3px 0 0; background: repeating-linear-gradient(90deg, var(--marca) 0 4px, var(--marca-claro) 4px 8px); }
+.pq-sedes-cupo-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pq-sede-extra { display: flex; flex-direction: column; align-items: flex-start; gap: var(--esp-2); max-width: 560px; margin-top: var(--esp-4); padding: var(--esp-4); border: 1.5px dashed var(--borde); border-radius: var(--radio-m); background: var(--tiquete); }
+.pq-sede-extra-precio { margin-left: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-sede-extra-precio small { font-weight: 500; color: var(--gris-texto); }
