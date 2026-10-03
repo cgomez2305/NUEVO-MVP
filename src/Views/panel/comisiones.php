@@ -9,7 +9,7 @@ $urlPeriodo = fn (string $clave, ?int $empleadoId = null) => base_url('/panel/co
     <h1 class="pq-h1">Comisiones</h1>
   </div>
 </div>
-<p class="pq-lead pq-pagina-bajada-panel">Lo que vendió cada persona y lo que le toca, sobre lo cobrado de verdad en citas atendidas (sin canceladas ni «no vino»). Veci calcula; el pago lo haces tú.</p>
+<p class="pq-lead pq-pagina-bajada-panel">Lo que vendió cada persona y lo que le toca, sobre lo cobrado de verdad en citas atendidas (sin canceladas ni «no vino»). Las sesiones de un bono cuentan por el valor del servicio. Veci calcula; el pago lo haces tú.</p>
 
 <nav class="pq-segmentos" aria-label="Período">
   <?php foreach ($periodos as $claveP => $p): ?>

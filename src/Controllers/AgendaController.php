@@ -109,10 +109,14 @@ class AgendaController
         if ($cita === null || !csrf_verificar()) {
             redirigir('/panel/citas');
         }
-        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true) || !empty($cita['imprevisto_motivo'])) {
-            flash_set('error', !empty($cita['imprevisto_motivo'])
-                ? 'Esa cita la pediste mover tú: no se puede marcar «No vino».'
-                : 'Solo se marca «No vino» en una cita pendiente o confirmada.');
+        // La misma regla que muestra el botón, también en el servidor: no se
+        // puede marcar «No vino» una cita que todavía no pasa la tolerancia.
+        if (!Imprevisto::puedeMarcarNoVino($cita, $negocio)) {
+            flash_set('error', match (true) {
+                !empty($cita['imprevisto_motivo']) => 'Esa cita la pediste mover tú: no se puede marcar «No vino».',
+                !in_array($cita['estado'], ['pendiente', 'confirmada'], true) => 'Solo se marca «No vino» en una cita pendiente o confirmada.',
+                default => 'Todavía no: espera a que pase la tolerancia (y lo que avisó que llegaba tarde).',
+            });
             redirigir('/panel/citas');
         }
         $cupon = Imprevisto::noAsistio($cita, $negocio);

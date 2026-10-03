@@ -61,6 +61,14 @@ class Empleado
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
+    public static function tieneCitas(int $id): bool
+    {
+        $stmt = Database::conexion()->prepare('SELECT 1 FROM citas WHERE empleado_id = :e LIMIT 1');
+        $stmt->execute(['e' => $id]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
     public static function contarPorSede(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
@@ -105,9 +113,9 @@ class Empleado
 
     /**
      * El horario con el que se reparten los turnos de este profesional: el
-     * suyo si lo tiene, si no el de la sede. Un día que la sede no atiende
-     * no aparece aunque el profesional lo tenga marcado (sus horas dentro
-     * de un día abierto sí son las suyas: puede entrar más tarde).
+     * suyo si lo tiene, si no el de la sede. Su horario vive DENTRO del de
+     * la sede: puede entrar más tarde o salir antes, pero nunca se ofrecen
+     * turnos con el local cerrado (ni en la pausa de almuerzo de la sede).
      */
     public static function horario(?array $empleado, array $sede): array
     {
@@ -116,8 +124,25 @@ class Empleado
             return $horarioSede;
         }
         $propio = Sede::horario(['horario_atencion' => $empleado['horario_atencion']]);
+        $resultado = [];
+        foreach ($propio as $dia => $franjasPropias) {
+            $cruce = [];
+            foreach ($franjasPropias as [$inicioP, $finP]) {
+                foreach ($horarioSede[$dia] ?? [] as [$inicioS, $finS]) {
+                    $inicio = max($inicioP, $inicioS);
+                    $fin = min($finP, $finS);
+                    if ($inicio < $fin) {
+                        $cruce[] = [$inicio, $fin];
+                    }
+                }
+            }
+            if ($cruce !== []) {
+                usort($cruce, fn ($a, $b) => strcmp($a[0], $b[0]));
+                $resultado[$dia] = $cruce;
+            }
+        }
 
-        return array_intersect_key($propio, $horarioSede);
+        return $resultado;
     }
 
     /** null = vuelve a usar el horario de la sede. */
@@ -150,12 +175,16 @@ class Empleado
      * todos sin cambios, se borra todo: "hace todo al precio normal" es el
      * caso por defecto y así un servicio nuevo le queda incluido solo.
      *
+     * Devuelve false (sin guardar) si no marcó ninguno: "ninguna fila" quiere
+     * decir "hace todos", así que desmarcar todo haría lo contrario de lo
+     * que se pidió. Para que no atienda, se pausa.
+     *
      * @param array<int, array{hace: bool, precio: ?int, duracion_min: ?int}> $porServicio servicio_id => datos
      */
-    public static function guardarServicios(int $empleadoId, int $sedeId, array $porServicio): void
+    public static function guardarServicios(int $empleadoId, int $sedeId, array $porServicio): bool
     {
         if (self::buscar($empleadoId, $sedeId) === null) {
-            return;
+            return false;
         }
         $validos = array_column(Servicio::listarPorSede($sedeId), 'id');
         $validos = array_map('intval', $validos);
@@ -174,6 +203,9 @@ class Empleado
             }
             $filas[] = [$servicioId, $precio, $duracion];
         }
+        if ($filas === [] && $validos !== []) {
+            return false;
+        }
         $pdo = Database::conexion();
         $pdo->beginTransaction();
         $pdo->prepare('DELETE FROM empleado_servicios WHERE empleado_id = :e')->execute(['e' => $empleadoId]);
@@ -184,6 +216,8 @@ class Empleado
             }
         }
         $pdo->commit();
+
+        return true;
     }
 
     /**

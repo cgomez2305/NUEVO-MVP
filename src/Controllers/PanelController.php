@@ -756,7 +756,7 @@ class PanelController
             $antes = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
             if ($antes !== null && $antes['estado'] === 'no_asistio' && in_array($estado, Cita::ESTADOS, true)) {
                 if (!Imprevisto::deshacerNoAsistio($antes)) {
-                    flash_set('ok', 'No se puede cambiar: el cliente ya usó el cupón de su anticipo.');
+                    flash_set('error', 'No se puede cambiar: el cliente ya usó el cupón de su anticipo o la sesión de su bono.');
                     redirigir('/panel/citas');
                 }
             }

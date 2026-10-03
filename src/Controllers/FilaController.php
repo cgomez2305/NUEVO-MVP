@@ -66,14 +66,26 @@ class FilaController
         $empleadoId = (int) ($_POST['empleado_id'] ?? 0);
         $empleado = $empleadoId > 0 ? Empleado::buscar($empleadoId, (int) $sede['id']) : null;
         $clienteId = Cliente::buscarOCrear((int) $sede['negocio_id'], $nombre, $telefono, true);
-        $token = TurnoFila::anotar(
+        $turno = TurnoFila::anotar(
             (int) $sede['id'],
             $clienteId,
             $servicio !== null ? (int) $servicio['id'] : null,
             $empleado !== null && (int) $empleado['activo'] === 1 ? (int) $empleado['id'] : null
         );
+        $misTurnos = (array) ($_SESSION['turnos_fila'] ?? []);
+        if (!$turno['nuevo']) {
+            // Ya hay un turno con ese WhatsApp: solo se muestra en el mismo
+            // celular que lo sacó. Si no, quien escribiera un número ajeno
+            // vería el turno de otro y podría sacarlo de la fila.
+            if (!in_array($turno['token'], $misTurnos, true)) {
+                flash_set('error', 'Ese WhatsApp ya está en la fila de hoy. Abre el enlace de tu turno o pregunta en el local.');
+                redirigir($volver);
+            }
+            redirigir('/fila/' . $turno['token']);
+        }
+        $_SESSION['turnos_fila'] = array_slice(array_merge($misTurnos, [$turno['token']]), -5);
         WebPush::notificarSede((int) $sede['id'], 'Alguien entró a la fila', $nombre . ($servicio !== null ? ' · ' . $servicio['nombre'] : ''), '/panel/fila');
-        redirigir('/fila/' . $token);
+        redirigir('/fila/' . $turno['token']);
     }
 
     public function estado(array $parametros): void

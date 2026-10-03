@@ -72,7 +72,10 @@ class CierreCaja
                AND estado = 'no_asistio' AND anticipo_estado = 'pagado' AND cupon_abono_id IS NULL"
         );
         $stmt->execute($rango);
-        $citas['total'] = (int) $citas['total'] + (int) $stmt->fetchColumn();
+        // Va a "total" y también a "anticipos": entró por transferencia, no es efectivo del cajón.
+        $retenido = (int) $stmt->fetchColumn();
+        $citas['total'] = (int) $citas['total'] + $retenido;
+        $citas['anticipos'] = (int) $citas['anticipos'] + $retenido;
 
         // Tiendas (fase 4): ventas de mostrador (no anuladas) y abonos de
         // fiado. Lo fiado no es plata que entró: no suma a "Vendido" ni al

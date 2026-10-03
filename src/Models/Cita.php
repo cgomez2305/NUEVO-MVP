@@ -104,7 +104,8 @@ class Cita
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono,
                     s.slug AS sede_slug, s.nombre AS sede_nombre, n.nombre AS negocio_nombre,
-                    e.nombre AS empleado_nombre
+                    e.nombre AS empleado_nombre,
+                    (SELECT GROUP_CONCAT(ca.nombre ORDER BY ca.id SEPARATOR \' + \') FROM cita_adicionales ca WHERE ca.cita_id = c.id) AS adicionales_texto
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
@@ -136,7 +137,8 @@ class Cita
     public static function listarPorSede(int $sedeId, int $limite = 50): array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
+            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre,
+                    (SELECT GROUP_CONCAT(ca.nombre ORDER BY ca.id SEPARATOR \' + \') FROM cita_adicionales ca WHERE ca.cita_id = c.id) AS adicionales_texto
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
@@ -154,7 +156,8 @@ class Cita
     public static function listarProximas(int $sedeId, int $limite = 100): array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
+            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre,
+                    (SELECT GROUP_CONCAT(ca.nombre ORDER BY ca.id SEPARATOR \' + \') FROM cita_adicionales ca WHERE ca.cita_id = c.id) AS adicionales_texto
              FROM citas c
              JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
@@ -173,7 +176,8 @@ class Cita
     public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre
+            'SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre,
+                    (SELECT GROUP_CONCAT(ca.nombre ORDER BY ca.id SEPARATOR \' + \') FROM cita_adicionales ca WHERE ca.cita_id = c.id) AS adicionales_texto
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id
              WHERE c.id = :id AND c.sede_id = :sede_id'
@@ -304,6 +308,7 @@ class Cita
     {
         $stmt = Database::conexion()->prepare(
             "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre,
+                    (SELECT GROUP_CONCAT(ca.nombre ORDER BY ca.id SEPARATOR ' + ') FROM cita_adicionales ca WHERE ca.cita_id = c.id) AS adicionales_texto,
                     (SELECT b.token FROM bonos b WHERE b.garantia_de = c.id LIMIT 1) AS garantia_token
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
              LEFT JOIN empleados e ON e.id = c.empleado_id

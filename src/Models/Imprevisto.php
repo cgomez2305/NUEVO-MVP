@@ -284,12 +284,25 @@ class Imprevisto
     public static function deshacerNoAsistio(array $cita): bool
     {
         $pdo = Database::conexion();
+        // Primero se revisa todo y solo después se deshace: o se deshace
+        // completo o no se toca nada.
         if (!empty($cita['cupon_abono_id'])) {
             $usos = $pdo->prepare('SELECT COUNT(*) FROM cupon_usos WHERE cupon_id = :c');
             $usos->execute(['c' => (int) $cita['cupon_abono_id']]);
             if ((int) $usos->fetchColumn() > 0) {
                 return false;
             }
+        }
+        if (!empty($cita['bono_devuelto_id'])) {
+            // La sesión devuelta pudo usarse en otra cita: volver a cobrarla
+            // dejaría el bono con más sesiones usadas que compradas.
+            $cupo = $pdo->prepare('SELECT b.sesiones_total - (SELECT COUNT(*) FROM bono_usos u WHERE u.bono_id = b.id) FROM bonos b WHERE b.id = :b');
+            $cupo->execute(['b' => (int) $cita['bono_devuelto_id']]);
+            if ((int) $cupo->fetchColumn() < 1) {
+                return false;
+            }
+        }
+        if (!empty($cita['cupon_abono_id'])) {
             $pdo->prepare('DELETE FROM cupones WHERE id = :c')->execute(['c' => (int) $cita['cupon_abono_id']]);
         }
         if (!empty($cita['bono_devuelto_id'])) {
@@ -350,12 +363,15 @@ class Imprevisto
     public static function duracionesReales(int $sedeId): array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT servicio_id, COUNT(*) AS citas, ROUND(AVG(TIMESTAMPDIFF(MINUTE, iniciada_en, terminada_en))) AS promedio
-             FROM citas
-             WHERE sede_id = :s AND servicio_id IS NOT NULL AND iniciada_en IS NOT NULL AND terminada_en IS NOT NULL
-               AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 120 DAY)
-               AND TIMESTAMPDIFF(MINUTE, iniciada_en, terminada_en) BETWEEN 5 AND 480
-             GROUP BY servicio_id HAVING COUNT(*) >= :n'
+            // Solo citas reservadas con la duración estándar del servicio: las que
+            // traían adicionales o la duración propia de un profesional inflarían
+            // (o achicarían) el promedio.
+            'SELECT c.servicio_id, COUNT(*) AS citas, ROUND(AVG(TIMESTAMPDIFF(MINUTE, c.iniciada_en, c.terminada_en))) AS promedio
+             FROM citas c JOIN servicios s ON s.id = c.servicio_id AND c.duracion_min = s.duracion_min
+             WHERE c.sede_id = :s AND c.iniciada_en IS NOT NULL AND c.terminada_en IS NOT NULL
+               AND c.fecha_hora >= DATE_SUB(NOW(), INTERVAL 120 DAY)
+               AND TIMESTAMPDIFF(MINUTE, c.iniciada_en, c.terminada_en) BETWEEN 5 AND 480
+             GROUP BY c.servicio_id HAVING COUNT(*) >= :n'
         );
         $stmt->execute(['s' => $sedeId, 'n' => self::MUESTRA_MINIMA]);
         $duraciones = [];

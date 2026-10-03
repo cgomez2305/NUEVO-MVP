@@ -32,10 +32,13 @@ class TurnoFila
     }
 
     /**
-     * Anota al cliente. Si ya tiene un turno vivo hoy en esta sede, devuelve
-     * ese mismo (no se anota dos veces por recargar o tocar dos veces).
+     * Anota al cliente. Si ya tiene un turno vivo hoy en esta sede, no crea
+     * otro y devuelve ese (nuevo = false): el controlador decide si puede
+     * mostrarlo, porque cualquiera puede escribir un WhatsApp ajeno.
+     *
+     * @return array{token: string, nuevo: bool}
      */
-    public static function anotar(int $sedeId, int $clienteId, ?int $servicioId, ?int $empleadoId): string
+    public static function anotar(int $sedeId, int $clienteId, ?int $servicioId, ?int $empleadoId): array
     {
         $stmt = Database::conexion()->prepare(
             "SELECT token FROM turnos_fila WHERE sede_id = :s AND cliente_id = :c AND estado IN ('esperando', 'llamado') AND DATE(creado_en) = CURDATE()"
@@ -43,14 +46,14 @@ class TurnoFila
         $stmt->execute(['s' => $sedeId, 'c' => $clienteId]);
         $existente = $stmt->fetchColumn();
         if (is_string($existente)) {
-            return $existente;
+            return ['token' => $existente, 'nuevo' => false];
         }
         $token = bin2hex(random_bytes(16));
         Database::conexion()->prepare(
             'INSERT INTO turnos_fila (sede_id, cliente_id, servicio_id, empleado_id, token) VALUES (:s, :c, :sv, :e, :t)'
         )->execute(['s' => $sedeId, 'c' => $clienteId, 'sv' => $servicioId, 'e' => $empleadoId, 't' => $token]);
 
-        return $token;
+        return ['token' => $token, 'nuevo' => true];
     }
 
     public static function buscarPorToken(string $token): ?array

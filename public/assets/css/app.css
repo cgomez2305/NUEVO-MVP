@@ -5095,3 +5095,5 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 @media (prefers-reduced-motion: reduce) {
   .pq-mostrador-linea-nueva, .pq-mostrador-bascula, .pq-mostrador-hecha { animation: none; }
 }
+/* Adicionales de la cita en la agenda: en negrita para que no se olviden al atender. */
+.pq-agenda-adicionales { font-weight: 600; color: var(--carbon); }

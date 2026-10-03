@@ -291,7 +291,7 @@ class TiendaController
 
         $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
 
-        if (!csrf_verificar() || $servicio === null || (int) $servicio['agotado'] === 1) {
+        if (!csrf_verificar() || $servicio === null || (int) $servicio['agotado'] === 1 || (int) $servicio['activo'] !== 1) {
             redirigir('/t/' . $negocio['slug']);
         }
 
@@ -302,7 +302,8 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)) {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)
+            || strtotime("{$fecha} {$hora}") < time()) {
             flash_set('error', 'Elige una fecha y una hora válidas.');
             redirigir($volverAReservar);
         }
@@ -378,7 +379,9 @@ class TiendaController
         $cuponUsado = null;
         $descuentoCita = 0;
         if ($bono !== null) {
-            $descuentoCita = $condiciones['precio'];
+            // El bono se compró al precio del servicio: si el profesional cobra
+            // más, la diferencia (y los adicionales) se pagan aparte.
+            $descuentoCita = min($condiciones['precio'], (int) $servicio['precio']);
             $anticipo = 0;
         }
         if ($codigoCupon !== '') {
@@ -424,7 +427,8 @@ class TiendaController
         WebPush::notificarSede(
             (int) $negocio['id'],
             'Cita nueva',
-            "{$nombre} · {$servicio['nombre']} el " . date('d M', strtotime($fecha)) . " a las {$hora}",
+            "{$nombre} · {$servicio['nombre']}" . ($adicionales !== [] ? ' + ' . implode(' + ', array_column($adicionales, 'nombre')) : '')
+                . ' el ' . date('d M', strtotime($fecha)) . " a las {$hora}",
             '/panel/citas'
         );
 
@@ -1038,7 +1042,7 @@ class TiendaController
         }
 
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
-        $horario = Empleado::horario($empleadoId !== null ? Empleado::buscar($empleadoId, (int) $negocio['id']) : null, $negocio);
+        [$horario, $profesionalEnPausa] = $this->horarioDeLaCita($cita, $negocio);
         $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         $ocupados = $bloqueada ? [] : Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
         $slots = $bloqueada ? [] : Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
@@ -1056,8 +1060,29 @@ class TiendaController
             'fechasDisponibles' => $fechasDisponibles,
             'slots'             => $slots,
             'bloqueada'         => $bloqueada,
+            'profesionalEnPausa' => $profesionalEnPausa,
             'error'             => flash_obtener('error'),
         ], 'tienda');
+    }
+
+    /**
+     * Horario para mover una cita: el de su profesional. Si esa persona está
+     * en pausa (vacaciones, incapacidad) no se ofrece nada: mover la cita a
+     * sus días de descanso sería peor que no moverla.
+     *
+     * @return array{0: array<string, mixed>, 1: bool}
+     */
+    private function horarioDeLaCita(array $cita, array $negocio): array
+    {
+        if ($cita['empleado_id'] === null) {
+            return [Empleado::horario(null, $negocio), false];
+        }
+        $empleado = Empleado::buscar((int) $cita['empleado_id'], (int) $negocio['id']);
+        if ($empleado === null || (int) $empleado['activo'] !== 1) {
+            return [[], true];
+        }
+
+        return [Empleado::horario($empleado, $negocio), false];
     }
 
     public function guardarReprogramacion(array $parametros): void
@@ -1087,7 +1112,7 @@ class TiendaController
         }
 
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
-        $horario = Empleado::horario($empleadoId !== null ? Empleado::buscar($empleadoId, (int) $negocio['id']) : null, $negocio);
+        [$horario] = $this->horarioDeLaCita($cita, $negocio);
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
         $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
 

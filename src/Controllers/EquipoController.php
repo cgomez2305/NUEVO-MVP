@@ -86,6 +86,10 @@ class EquipoController
             redirigir('/panel/empleados/' . $empleado['id']);
         }
         $comision = trim((string) ($_POST['comision_pct'] ?? ''));
+        if ($comision !== '' && (!ctype_digit($comision) || (int) $comision > 100)) {
+            flash_set('error', 'La comisión es un número de 0 a 100 (o vacía si no trabaja por porcentaje).');
+            redirigir('/panel/empleados/' . $empleado['id']);
+        }
         Empleado::actualizarPerfil(
             (int) $empleado['id'],
             (int) $negocio['id'],
@@ -126,8 +130,11 @@ class EquipoController
                 'duracion_min' => $duracion !== '' ? (int) $duracion : null,
             ];
         }
-        Empleado::guardarServicios((int) $empleado['id'], (int) $negocio['id'], $porServicio);
-        flash_set('ok', 'Servicios de ' . $empleado['nombre'] . ' guardados.');
+        if (Empleado::guardarServicios((int) $empleado['id'], (int) $negocio['id'], $porServicio)) {
+            flash_set('ok', 'Servicios de ' . $empleado['nombre'] . ' guardados.');
+        } else {
+            flash_set('error', 'Marca al menos un servicio. Si ' . $empleado['nombre'] . ' no va a atender por un tiempo, mejor ponlo en pausa abajo.');
+        }
         redirigir('/panel/empleados/' . $empleado['id'] . '#servicios');
     }
 
@@ -207,6 +214,12 @@ class EquipoController
     public function eliminar(array $parametros): void
     {
         [$negocio, $empleado] = $this->empleadoDelPost($parametros);
+        if (Empleado::tieneCitas((int) $empleado['id'])) {
+            // Borrarlo dejaría sus citas sin persona (no bloquean la agenda de
+            // nadie) y sacaría lo que atendió de las comisiones del período.
+            flash_set('error', $empleado['nombre'] . ' ya tiene citas en la agenda: en vez de quitarlo, ponlo en pausa. Así no aparece para reservar y su historial y comisiones quedan completos.');
+            redirigir('/panel/empleados/' . $empleado['id']);
+        }
         foreach (Empleado::fotos((int) $empleado['id']) as $foto) {
             Subida::borrar($foto['ruta']);
         }

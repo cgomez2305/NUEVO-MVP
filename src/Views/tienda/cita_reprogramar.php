@@ -31,6 +31,9 @@ $grupos = array_filter([
   <?php if (!empty($error)): ?>
     <div class="pq-alerta"><?= e($error) ?></div>
   <?php endif; ?>
+  <?php if (!empty($profesionalEnPausa)): ?>
+    <div class="pq-alerta pq-alerta-aviso"><?= e($cita['empleado_nombre'] ?? 'Quien te atiende') ?> no está atendiendo por estos días. Escríbele al negocio por WhatsApp para mover tu cita con otra persona.</div>
+  <?php endif; ?>
 
   <section class="pq-reserva-bloque" id="elige-dia">
     <div class="pq-etapa-fila">

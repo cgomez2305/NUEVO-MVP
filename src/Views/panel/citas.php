@@ -199,8 +199,8 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
                 <span class="pq-chip <?= e(chip_estado($cita['estado'])) ?>"><?= e(\App\Models\Cita::ETIQUETAS[$cita['estado']] ?? ucfirst((string) $cita['estado'])) ?></span>
               </div>
               <span class="pq-ayuda">
-                <?= e($cita['nombre_servicio']) ?> · <span class="pq-mono"><?= e(precio_texto($cita)) ?></span>
-                <?php if ($cita['precio_final'] !== null): ?> · cobrado <span class="pq-mono"><?= pesos((int) $cita['precio_final']) ?></span><?php endif; ?>
+                <?= e($cita['nombre_servicio']) ?><?php if (!empty($cita['adicionales_texto'])): ?> <strong class="pq-agenda-adicionales">+ <?= e($cita['adicionales_texto']) ?></strong><?php endif; ?> · <span class="pq-mono"><?= e(precio_texto($cita)) ?></span>
+                <?php if ($cita['precio_final'] !== null): ?> · cobrado <span class="pq-mono"><?= pesos(\App\Models\Cita::valor($cita)) ?></span><?php endif; ?>
                 <?php if (!empty($cita['empleado_nombre'])): ?> · con <?= e($cita['empleado_nombre']) ?><?php endif; ?>
               </span>
               <?php

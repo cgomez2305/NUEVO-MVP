@@ -22,7 +22,7 @@ $valorCita = \App\Models\Cita::valor($cita);
     </div>
     <div class="pq-comanda-linea">
       <div class="pq-comanda-fila">
-        <span class="pq-comanda-nombre"><?= e($cita['nombre_servicio']) ?></span>
+        <span class="pq-comanda-nombre"><?= e($cita['nombre_servicio']) ?><?= !empty($cita['adicionales_texto']) ? ' + ' . e($cita['adicionales_texto']) : '' ?></span>
         <span class="pq-plato-guia" aria-hidden="true"></span>
         <span class="pq-comanda-subtotal"><?= e(precio_texto($cita)) ?></span>
       </div>

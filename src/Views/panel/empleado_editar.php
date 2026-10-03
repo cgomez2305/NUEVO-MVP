@@ -123,7 +123,7 @@ $urlPublica = url_publica('/t/' . $negocio['slug'] . '/equipo/' . $id);
       <label class="pq-reglas-opcion"><input type="radio" name="usa_horario" value="propio" <?= $usaPropio ? 'checked' : '' ?>><span>Su propio horario <span class="pq-ayuda">(p. ej. entra más tarde o descansa un día)</span></span></label>
       <div data-mostrar-si="usa_horario=propio">
         <?php $sugerirSiVacio = false; require __DIR__ . '/_semana.php'; ?>
-        <p class="pq-ayuda">Los días que el negocio no abre no se ofrecen aunque los marques.</p>
+        <p class="pq-ayuda">Solo se ofrecen las horas en que el negocio también está abierto (fuera de su pausa de almuerzo).</p>
       </div>
       <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Guardar horario</button>
     </form>
@@ -134,7 +134,7 @@ $urlPublica = url_publica('/t/' . $negocio['slug'] . '/equipo/' . $id);
       <?= csrf_campo() ?>
       <button type="submit" class="pq-enlace-boton"><?= (int) $empleado['activo'] === 1 ? 'Pausar (vacaciones, incapacidad…)' : 'Volver a activar' ?></button>
     </form>
-    <form method="post" action="<?= e(base_url($base . '/eliminar')) ?>" data-confirmar="¿Quitar a <?= e($empleado['nombre']) ?> del equipo? Sus citas quedan sin persona asignada y se borran sus fotos.">
+    <form method="post" action="<?= e(base_url($base . '/eliminar')) ?>" data-confirmar="¿Quitar a <?= e($empleado['nombre']) ?> del equipo? Se borran su ficha y sus fotos.">
       <?= csrf_campo() ?>
       <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Quitar del equipo</button>
     </form>

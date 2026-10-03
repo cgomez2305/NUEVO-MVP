@@ -34,16 +34,13 @@ class Subida
         }
         $base = __DIR__ . '/../../public/uploads/' . $carpeta . '/';
         $nombre = $prefijo . '-' . bin2hex(random_bytes(8));
-        // Normalizada como JPEG; si GD no está, se guarda el original validado.
+        // Siempre re-codificada como JPEG. Si no se puede (sin GD), no se
+        // guarda: el original llevaría sus metadatos (EXIF, GPS) a la web.
         if (Imagen::normalizar((string) $archivo['tmp_name'], $base . $nombre . '.jpg', $ladoMax, 82)) {
             return 'uploads/' . $carpeta . '/' . $nombre . '.jpg';
         }
-        $destino = $nombre . '.' . self::TIPOS[$mime];
-        if (!move_uploaded_file((string) $archivo['tmp_name'], $base . $destino)) {
-            return null;
-        }
 
-        return 'uploads/' . $carpeta . '/' . $destino;
+        return null;
     }
 
     /**

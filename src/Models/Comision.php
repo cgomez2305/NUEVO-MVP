@@ -36,10 +36,22 @@ class Comision
      *
      * @return array<int, array{id: int, nombre: string, pct: ?int, citas: int, vendido: int, comision: ?int}>
      */
+    /**
+     * Base de la comisión de una cita: lo que se cobró (Cita::sqlValor). Si
+     * la sesión iba por un bono, el descuento no es plata perdida: el bono se
+     * pagó antes. Ahí la base es el valor del servicio, como en un salón de
+     * verdad, donde el profesional cobra su parte de cada sesión del paquete.
+     */
+    public static function sqlBase(string $alias): string
+    {
+        return "IF(EXISTS (SELECT 1 FROM bono_usos bu WHERE bu.cita_id = {$alias}.id), "
+            . "CAST(COALESCE({$alias}.precio_final, {$alias}.precio) AS SIGNED), " . Cita::sqlValor($alias) . ')';
+    }
+
     public static function liquidacion(int $sedeId, string $desde, string $hasta): array
     {
         $stmt = Database::conexion()->prepare(
-            "SELECT e.id, e.nombre, e.comision_pct, COUNT(c.id) AS citas, COALESCE(SUM(" . Cita::sqlValor('c') . "), 0) AS vendido
+            "SELECT e.id, e.nombre, e.comision_pct, COUNT(c.id) AS citas, COALESCE(SUM(" . self::sqlBase('c') . "), 0) AS vendido
              FROM empleados e
              LEFT JOIN citas c ON c.empleado_id = e.id AND c.estado = 'completada'
                   AND c.fecha_hora >= :desde AND c.fecha_hora < DATE_ADD(:hasta, INTERVAL 1 DAY)
@@ -69,7 +81,7 @@ class Comision
     public static function detalle(int $sedeId, int $empleadoId, string $desde, string $hasta): array
     {
         $stmt = Database::conexion()->prepare(
-            "SELECT c.id, c.fecha_hora, c.nombre_servicio, cl.nombre AS cliente_nombre, " . Cita::sqlValor('c') . " AS valor
+            "SELECT c.id, c.fecha_hora, c.nombre_servicio, cl.nombre AS cliente_nombre, " . self::sqlBase('c') . " AS valor
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
              WHERE c.sede_id = :s AND c.empleado_id = :e AND c.estado = 'completada'
                AND c.fecha_hora >= :desde AND c.fecha_hora < DATE_ADD(:hasta, INTERVAL 1 DAY)
