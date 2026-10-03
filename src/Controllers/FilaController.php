@@ -30,7 +30,7 @@ class FilaController
             'negocio'    => $sede,
             'abierta'    => $this->filaDisponible($sede),
             'servicios'  => Servicio::listarPorSede((int) $sede['id'], true),
-            'empleados'  => Empleado::listarPorSede((int) $sede['id'], true),
+            'empleados'  => Empleado::paraLaFila($sede),
             'enFila'     => count(TurnoFila::deHoy((int) $sede['id'])),
             'error'      => flash_obtener('error'),
         ], 'tienda');
@@ -64,7 +64,13 @@ class FilaController
         $servicioId = (int) ($_POST['servicio_id'] ?? 0);
         $servicio = $servicioId > 0 ? Servicio::buscar($servicioId, (int) $sede['id']) : null;
         $empleadoId = (int) ($_POST['empleado_id'] ?? 0);
-        $empleado = $empleadoId > 0 ? Empleado::buscar($empleadoId, (int) $sede['id']) : null;
+        // Solo alguien que el formulario ofrece (ver Empleado::paraLaFila).
+        $empleado = null;
+        foreach ($empleadoId > 0 ? Empleado::paraLaFila($sede) : [] as $persona) {
+            if ((int) $persona['id'] === $empleadoId) {
+                $empleado = $persona;
+            }
+        }
         $clienteId = Cliente::buscarOCrear((int) $sede['negocio_id'], $nombre, $telefono, true);
         $turno = TurnoFila::anotar(
             (int) $sede['id'],

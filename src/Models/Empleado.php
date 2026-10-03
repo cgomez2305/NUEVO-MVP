@@ -145,6 +145,60 @@ class Empleado
         return $resultado;
     }
 
+    /**
+     * Profesionales de la fila virtual: los que están trabajando ahora; si
+     * nadie (p. ej. alguien se anota antes de abrir), los que trabajan hoy;
+     * si el horario no dice nada útil, todo el equipo activo. Así la fila no
+     * ofrece a quien no vino y no reparte la espera entre gente ausente.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function paraLaFila(array $sede): array
+    {
+        $ahora = self::trabajandoAhora($sede);
+        if ($ahora !== []) {
+            return $ahora;
+        }
+        $hoy = self::trabajandoAhora($sede, true);
+
+        return $hoy !== [] ? $hoy : self::listarPorSede((int) $sede['id'], true);
+    }
+
+    /**
+     * Profesionales activos sin día libre hoy y dentro de su horario en este
+     * momento ($todoElDia: con alguna franja hoy, a cualquier hora).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function trabajandoAhora(array $sede, bool $todoElDia = false): array
+    {
+        $activos = self::listarPorSede((int) $sede['id'], true);
+        if ($activos === []) {
+            return [];
+        }
+        $stmt = Database::conexion()->prepare(
+            'SELECT d.empleado_id FROM empleado_dias_libres d JOIN empleados e ON e.id = d.empleado_id
+             WHERE e.sede_id = :s AND d.fecha = CURDATE()'
+        );
+        $stmt->execute(['s' => (int) $sede['id']]);
+        $libres = array_map('intval', $stmt->fetchAll(\PDO::FETCH_COLUMN));
+        $dia = (int) date('N');
+        $ahora = date('H:i');
+
+        return array_values(array_filter($activos, static function (array $e) use ($sede, $libres, $dia, $ahora, $todoElDia): bool {
+            if (in_array((int) $e['id'], $libres, true)) {
+                return false;
+            }
+            foreach (self::horario($e, $sede)[$dia] ?? [] as [$inicio, $fin]) {
+                if ($todoElDia || ($ahora >= $inicio && $ahora < $fin)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }));
+    }
+
     /** null = vuelve a usar el horario de la sede. */
     public static function guardarHorario(int $id, int $sedeId, ?array $horario): void
     {

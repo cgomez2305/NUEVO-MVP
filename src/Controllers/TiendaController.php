@@ -67,7 +67,7 @@ class TiendaController
             }
 
             ver('tienda/servicios', [
-                'titulo'           => $negocio['nombre'] . ' · Veci',
+                'titulo'           => nombre_publico_sede($negocio) . ' · Veci',
                 'negocio'          => $negocio,
                 'servicios'        => $servicios,
                 'horario'          => horario_resumen($horarioSede),
@@ -93,7 +93,7 @@ class TiendaController
         $abiertoAhora = negocio_abierto_ahora($horarioSede);
 
         ver('tienda/mostrar', [
-            'titulo'          => $negocio['nombre'] . ' · Veci',
+            'titulo'          => nombre_publico_sede($negocio) . ' · Veci',
             'negocio'         => $negocio,
             'productos'       => $productos,
             'carrito'         => $carrito,
@@ -106,6 +106,8 @@ class TiendaController
             'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
             'canonicalUrl'    => url_publica('/t/' . $negocio['slug']),
+            // Avisos que mandan aquí: "solo quedan N" sin JS, carrito vacío al pedir.
+            'error'           => flash_obtener('error'),
         ], 'tienda');
     }
 
@@ -246,7 +248,7 @@ class TiendaController
             'franjas'           => $franjas,
             'franjaElegida'     => $franjaElegida,
             'zonas'             => $aDomicilio ? ZonaDomicilio::listarPorSede((int) $negocio['id'], true) : [],
-            'titulo'            => 'Reservar ' . $servicio['nombre'] . ' · ' . $negocio['nombre'],
+            'titulo'            => 'Reservar ' . $servicio['nombre'] . ' · ' . nombre_publico_sede($negocio),
             'negocio'           => $negocio,
             'servicio'          => $servicio,
             'anticipo'          => Servicio::calcularAnticipo(['precio' => $condiciones['precio'] + $precioAdicionales] + $servicio),
@@ -268,6 +270,7 @@ class TiendaController
             'disponibilidadError' => $disponibilidadError,
             'horaElegida'       => $slotValido ? $horaElegida : null,
             'error'             => flash_obtener('error'),
+            'ok'                => flash_obtener('ok'),
             // Solo viene con valor justo después de unirse a la lista de
             // espera en esta misma vuelta (ver unirseListaEspera): habilita
             // la tarjeta de confirmación y el botón "Salir de la lista". Una
@@ -538,6 +541,10 @@ class TiendaController
             }
             $descuentoCita = $evaluacion['descuento'];
         }
+        // Con un cupón grande el anticipo podía quedar por encima de lo que
+        // el cliente de verdad paga por el servicio (p. ej. 50% de anticipo
+        // sobre $80.000 con un cupón de $60.000): nunca se pide más que eso.
+        $anticipo = max(0, min($anticipo, $precioTotal - $recargo - $descuentoCita));
 
         $this->registrarTasaPublica('cita', $negocio);
         $citaId = Cita::crear(
@@ -586,7 +593,7 @@ class TiendaController
             (int) $negocio['id'],
             'Cita nueva',
             "{$nombre} · {$servicio['nombre']}" . ($adicionales !== [] ? ' + ' . implode(' + ', array_column($adicionales, 'nombre')) : '')
-                . ' el ' . date('d M', strtotime($fecha)) . " a las {$hora}",
+                . ' el ' . fecha_larga($fecha) . ' a las ' . hora_legible($hora),
             '/panel/citas'
         );
 
@@ -611,7 +618,7 @@ class TiendaController
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
 
         ver('tienda/cita_confirmada', [
-            'titulo'         => 'Cita reservada · ' . $negocio['nombre'],
+            'titulo'         => 'Cita reservada · ' . nombre_publico_sede($negocio),
             'negocio'        => $negocio,
             'cita'           => $cita,
             'enlaceWhatsapp' => $enlaceWhatsapp,
@@ -631,7 +638,7 @@ class TiendaController
         $servicio = Servicio::buscar($servicioId, (int) $negocio['id']);
         $fecha = (string) ($_POST['fecha'] ?? '');
 
-        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
+        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha) . $this->sufijoReserva();
 
         if (!csrf_verificar() || $servicio === null) {
             redirigir('/t/' . $negocio['slug']);
@@ -639,7 +646,7 @@ class TiendaController
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
             flash_set('error', 'Elige una fecha válida.');
-            redirigir('/t/' . $negocio['slug'] . '/reservar/' . $servicioId);
+            redirigir('/t/' . $negocio['slug'] . '/reservar/' . $servicioId . ($this->sufijoReserva() !== '' ? '?' . ltrim($this->sufijoReserva(), '&') : ''));
         }
 
         $nombre = trim((string) ($_POST['nombre'] ?? ''));
@@ -660,7 +667,7 @@ class TiendaController
         WebPush::notificarSede(
             (int) $negocio['id'],
             'Alguien quiere un cupo',
-            "{$nombre} quiere «{$servicio['nombre']}» el " . date('d M', strtotime($fecha)),
+            "{$nombre} quiere «{$servicio['nombre']}» el " . fecha_larga($fecha),
             '/panel/citas'
         );
 
@@ -668,7 +675,19 @@ class TiendaController
         // permite mostrar "Salir de la lista" justo después de anotarse, sin
         // necesitar login ni un token de gestión como el de citas.
         flash_set('lista_espera_id', (string) $listaEsperaId);
+        // Solo quien se anotó (en este navegador) puede sacarse: sin esto,
+        // cualquiera borraba entradas ajenas probando ids.
+        $_SESSION['listas_espera'] = array_slice(array_merge($_SESSION['listas_espera'] ?? [], [$listaEsperaId]), -20);
         redirigir($volverAReservar);
+    }
+
+    /** "&empleado=…&ad=…" del formulario, para volver a la misma reserva. */
+    private function sufijoReserva(): string
+    {
+        $empleado = (int) ($_POST['empleado'] ?? 0);
+        $ad = implode(',', array_filter(array_map('intval', explode(',', (string) ($_POST['ad'] ?? ''))), fn (int $id) => $id > 0));
+
+        return ($empleado > 0 ? '&empleado=' . $empleado : '') . ($ad !== '' ? '&ad=' . $ad : '');
     }
 
     public function salirListaEspera(array $parametros): void
@@ -678,10 +697,13 @@ class TiendaController
         $id = (int) ($_POST['id'] ?? 0);
         $servicioId = (int) ($_POST['servicio_id'] ?? 0);
         $fecha = (string) ($_POST['fecha'] ?? '');
-        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
+        $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha) . $this->sufijoReserva();
 
-        if (csrf_verificar()) {
+        $mias = array_map('intval', $_SESSION['listas_espera'] ?? []);
+        if (csrf_verificar() && in_array($id, $mias, true)) {
             ListaEspera::eliminar($id, (int) $negocio['id']);
+            $_SESSION['listas_espera'] = array_values(array_diff($mias, [$id]));
+            flash_set('ok', 'Listo, saliste de la lista de espera.');
         }
 
         redirigir($volverAReservar);
@@ -817,13 +839,20 @@ class TiendaController
         $negocio = $this->negocioOAbortar($parametros['slug']);
         $productos = Producto::listarPorSede((int) $negocio['id'], true);
         $carrito = $this->resumenCarrito($negocio, $productos);
+        $error = flash_obtener('error');
+        // Si algo se agotó o bajó de inventario desde que lo agregó, el
+        // carrito se ajusta y se le dice qué cambió (no desaparece sin más).
+        if ($carrito['recortados'] !== []) {
+            $this->guardarCarrito((int) $negocio['id'], array_column(array_map(fn ($l) => [(int) $l['producto']['id'], $l['cantidad']], $carrito['lineas']), 1, 0));
+            $error ??= ucfirst(implode('; ', $carrito['recortados'])) . '. Ajustamos tu pedido.';
+        }
 
         ver('tienda/carrito', [
             'titulo'  => 'Tu carrito · ' . nombre_publico_sede($negocio),
             'negocio' => $negocio,
             'carrito' => $carrito,
             'zonas'   => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
-            'error'   => flash_obtener('error'),
+            'error'   => $error,
             'errorCupon'   => flash_obtener('error_cupon'),
             'cuponEscrito' => flash_obtener('cupon_escrito'),
         ], 'tienda');
@@ -992,7 +1021,8 @@ class TiendaController
             '/panel/pedidos'
         );
 
-        $resumenTexto = "Pedido nuevo de {$nombre}:\n";
+        // El número del pedido amarra el chat con el panel.
+        $resumenTexto = "Pedido #{$pedidoId} de {$nombre}:\n";
         foreach ($items as $item) {
             $resumenTexto .= ($item['gramos'] !== null ? "- {$item['texto']} de {$item['nombre']}" : "- {$item['cantidad']} x {$item['nombre']}")
                 . ($item['combo'] !== '' ? " ({$item['combo']})" : '') . "\n";
@@ -1004,6 +1034,12 @@ class TiendaController
             $resumenTexto .= "Domicilio ({$zona['nombre']}): " . ZonaDomicilio::etiquetaCosto((int) $zona['costo']) . "\n";
         }
         $resumenTexto .= 'Total: ' . pesos((int) $pedido['total']) . "\n";
+        // Cómo paga: para saber si llevar vueltas o esperar la transferencia (con su referencia).
+        $resumenTexto .= 'Pago: ' . match ($metodoPago) {
+            'breb'  => 'Bre-B (referencia VECI-P' . $pedidoId . ')',
+            'nequi' => 'Nequi',
+            default => 'efectivo',
+        } . "\n";
         $resumenTexto .= match ($tipoEntrega) {
             'recoger' => 'Recojo en el local',
             'mesa'    => "Para comer en el local, mesa {$mesa}",
@@ -1023,7 +1059,7 @@ class TiendaController
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
 
         ver('tienda/pedido_confirmado', [
-            'titulo'         => 'Pedido listo · ' . $negocio['nombre'],
+            'titulo'         => 'Pedido listo · ' . nombre_publico_sede($negocio),
             'negocio'        => $negocio,
             'pedido'         => $pedido,
             'items'          => $items,
@@ -1127,9 +1163,12 @@ class TiendaController
             abortar404();
         }
 
-        if (csrf_verificar() && Imprevisto::clientePuedeGestionar($cita, Sede::buscarPorId((int) $cita['sede_id']))) {
-            Cita::actualizarEstado((int) $cita['id'], (int) $cita['sede_id'], 'cancelada');
-            flash_set('ok', 'Tu cita quedó cancelada.');
+        $sede = Sede::buscarPorId((int) $cita['sede_id']);
+        if (csrf_verificar() && $sede !== null && Imprevisto::clientePuedeGestionar($cita, $sede)) {
+            $saldo = Imprevisto::cancelacionDelCliente($cita, $sede);
+            flash_set('ok', $saldo !== null
+                ? 'Tu cita quedó cancelada. Tu anticipo de ' . pesos((int) $saldo['valor']) . ' no se pierde: úsalo en tu próxima reserva con el código ' . $saldo['codigo'] . ' (vale hasta el ' . fecha_larga((string) $saldo['vence_en']) . ').'
+                : 'Tu cita quedó cancelada.');
         }
 
         redirigir('/cita/' . $cita['token_gestion']);
@@ -1288,7 +1327,7 @@ class TiendaController
             redirigir('/cita/' . $cita['token_gestion']);
         }
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)) {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora) || $fecha < date('Y-m-d')) {
             flash_set('error', 'Elige una fecha y una hora válidas.');
             redirigir($volver);
         }
@@ -1297,6 +1336,14 @@ class TiendaController
             flash_set('error', 'Ese día no está disponible. Elige otra fecha.');
             redirigir($volver);
         }
+
+        // El mismo candado que una reserva nueva para ese día: dos personas
+        // moviendo su cita al mismo cupo no quedan las dos con la misma
+        // profesional. MySQL lo suelta al cerrar la conexión si algo redirige.
+        $candado = 'veci_cita_' . (int) $negocio['id'] . '_' . $fecha;
+        $st = \App\Database::conexion()->prepare('SELECT GET_LOCK(:k, 10)');
+        $st->execute(['k' => $candado]);
+        $st->fetchColumn();
 
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
         [$horario] = $this->horarioDeLaCita($cita, $negocio);
@@ -1312,6 +1359,9 @@ class TiendaController
         if (Visita::esVisita($cita)) {
             Visita::moverFranja((int) $cita['id'], $negocio, $fecha, $hora);
         }
+        $st = \App\Database::conexion()->prepare('SELECT RELEASE_LOCK(:k)');
+        $st->execute(['k' => $candado]);
+        $st->fetchColumn();
         flash_set('ok', 'Tu cita quedó reprogramada.');
         redirigir('/cita/' . $cita['token_gestion']);
     }
@@ -1367,7 +1417,8 @@ class TiendaController
     private function negocioOAbortar(string $slug): array
     {
         $negocio = Sede::buscarPorSlugPublicada($slug);
-        if ($negocio === null) {
+        // Una sede por encima del cupo del plan (el plan bajó) queda en pausa.
+        if ($negocio === null || !Sede::dentroDelCupo($negocio)) {
             abortar404();
         }
         // Calculado una sola vez aquí (todo método público pasa por este
@@ -1415,6 +1466,8 @@ class TiendaController
             }
             $producto = $porId[$productoId];
             if ((int) $producto['agotado'] === 1) {
+                // Se agotó mientras estaba en el carrito: se dice, no se borra en silencio.
+                $recortados[] = $producto['nombre'] . ' se agotó';
                 continue;
             }
             // Si el inventario bajó mientras el producto estaba en el carrito.

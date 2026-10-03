@@ -104,6 +104,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   correo             VARCHAR(160) DEFAULT NULL,
   reset_token        CHAR(64)     DEFAULT NULL,
   reset_token_expira DATETIME     DEFAULT NULL,
+  -- Sube al cambiar o restablecer la contraseña: las sesiones con otra versión se cierran.
+  sesion_version     INT UNSIGNED NOT NULL DEFAULT 0,
   creado_en          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_usuarios_correo (correo),
@@ -235,6 +237,8 @@ CREATE TABLE IF NOT EXISTS pedidos (
   notas         VARCHAR(255) DEFAULT NULL,
   estado        ENUM('pendiente','pagado','en_cocina','listo','en_camino','entregado','cancelado')
                 NOT NULL DEFAULT 'pendiente',
+  -- Lo que descontó del inventario ({producto_id: unidades|gramos}); se devuelve eso al cancelar/anular.
+  inventario_movido TEXT DEFAULT NULL,
   creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
@@ -328,6 +332,19 @@ CREATE TABLE IF NOT EXISTS fechas_bloqueadas (
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_fecha_bloqueada (sede_id, fecha)
+) ENGINE=InnoDB;
+
+-- "Se me complicó el día" de UNA persona del equipo: ese día no recibe
+-- reservas ni reprogramaciones (antes solo se cerraba el día de todo el
+-- negocio, y a la persona enferma la seguían agendando).
+CREATE TABLE IF NOT EXISTS empleado_dias_libres (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  empleado_id  INT UNSIGNED NOT NULL,
+  fecha        DATE         NOT NULL,
+  motivo       VARCHAR(120) DEFAULT NULL,
+  creado_en    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_dia_libre (empleado_id, fecha)
 ) ENGINE=InnoDB;
 
 -- Una cita = una reserva de un cliente para un servicio de una sede, en
@@ -818,6 +835,8 @@ CREATE TABLE IF NOT EXISTS ventas (
   anulada     TINYINT(1)   NOT NULL DEFAULT 0,
   anulada_en  DATETIME     DEFAULT NULL,
   anulada_por INT UNSIGNED DEFAULT NULL,
+  -- Lo que descontó del inventario ({producto_id: unidades|gramos}); se devuelve eso al cancelar/anular.
+  inventario_movido TEXT DEFAULT NULL,
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL,
@@ -1075,4 +1094,7 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_18_salud.sql'),
   ('2026-10-03_26_precios_asequibles.sql'),
   ('2026-10-03_27_tienda_libras_fiado.sql'),
-  ('2026-10-03_28_planes_presencial.sql');
+  ('2026-10-03_28_planes_presencial.sql'),
+  ('2026-10-03_29_sesion_version.sql'),
+  ('2026-10-03_30_inventario_movido.sql'),
+  ('2026-10-03_31_dias_libres_empleado.sql');

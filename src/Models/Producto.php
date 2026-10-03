@@ -16,19 +16,19 @@ class Producto
      * sin unidades (stock en 0). El valor guardado queda en agotado_fijo y
      * el porqué en motivo_agotado ('fijo' | 'hoy' | 'stock' | null).
      * Por peso el stock va en gramos y en la tienda en línea se pide por
-     * kilos: con menos de 1 kg ya no alcanza para un pedido (en el
-     * mostrador sí se pueden vender esos gramos).
+     * medias libras (GRAMOS_PASO_EN_LINEA = 250): con menos de 250 g ya no
+     * alcanza para un pedido (en el mostrador sí se pueden vender esos gramos).
      */
     private const COLUMNAS = "p.*, p.agotado AS agotado_fijo,
         CASE WHEN p.agotado = 1 THEN 'fijo'
              WHEN p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE() THEN 'hoy'
-             WHEN p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1) THEN 'stock'
+             WHEN p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 250, 1) THEN 'stock'
              ELSE NULL END AS motivo_agotado,
         (p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE())
-                       OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1))) AS agotado";
+                       OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 250, 1))) AS agotado";
 
     /** La misma regla, para filtrar en un WHERE. */
-    private const AGOTADO_SQL = "(p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE()) OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1)))";
+    private const AGOTADO_SQL = "(p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE()) OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 250, 1)))";
 
     public static function crear(
         int $sedeId,
@@ -254,6 +254,7 @@ class Producto
 
     public static function actualizarImagen(int $id, int $sedeId, string $rutaImagen): void
     {
+        self::borrarArchivoImagen($id, $sedeId); // la anterior, si había
         $stmt = Database::conexion()->prepare(
             'UPDATE productos SET imagen = :imagen WHERE id = :id AND sede_id = :sede_id'
         );
@@ -272,6 +273,7 @@ class Producto
 
     public static function eliminar(int $id, int $sedeId): void
     {
+        self::borrarArchivoImagen($id, $sedeId);
         $stmt = Database::conexion()->prepare(
             'DELETE FROM productos WHERE id = :id AND sede_id = :sede_id'
         );
@@ -350,8 +352,23 @@ class Producto
         $stmt->execute(['activo' => $activo ? 1 : 0, 'id' => $id, 'sede_id' => $sedeId]);
     }
 
+    /** La foto del producto en disco (si es una de las nuestras): al borrarla o cambiarla no queda huérfana. */
+    private static function borrarArchivoImagen(int $id, int $sedeId): void
+    {
+        $stmt = Database::conexion()->prepare('SELECT imagen FROM productos WHERE id = :id AND sede_id = :s');
+        $stmt->execute(['id' => $id, 's' => $sedeId]);
+        $imagen = (string) $stmt->fetchColumn();
+        if (preg_match('#^uploads/productos/producto-[a-f0-9]+\.(jpg|png|webp)$#', $imagen) === 1) {
+            $ruta = __DIR__ . '/../../public/' . $imagen;
+            if (is_file($ruta)) {
+                @unlink($ruta);
+            }
+        }
+    }
+
     public static function eliminarImagen(int $id, int $sedeId): void
     {
+        self::borrarArchivoImagen($id, $sedeId);
         $stmt = Database::conexion()->prepare(
             'UPDATE productos SET imagen = NULL WHERE id = :id AND sede_id = :sede_id'
         );

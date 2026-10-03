@@ -193,7 +193,7 @@ $evidencia = $evidencia ?? [];
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
         Cambiar día u hora
       </a>
-      <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" data-confirmar="¿Seguro que quieres cancelar tu <?= $esVisita ? 'visita' : 'cita' ?>?">
+      <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" data-confirmar="¿Seguro que quieres cancelar tu <?= $esVisita ? 'visita' : 'cita' ?>?<?= ($cita['anticipo_estado'] ?? '') === 'pagado' && (int) ($cita['anticipo_monto'] ?? 0) > 0 ? ' Tu anticipo queda como saldo a favor para la próxima.' : '' ?>">
         <?= csrf_campo() ?>
         <button type="submit" class="pq-boton-peligro">Cancelar <?= $esVisita ? 'visita' : 'cita' ?></button>
       </form>

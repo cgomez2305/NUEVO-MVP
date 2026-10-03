@@ -49,6 +49,9 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
     </div>
   <?php endif; ?>
 
+  <?php if (!empty($ok)): ?>
+    <div class="pq-alerta pq-alerta-ok" role="status"><?= e($ok) ?></div>
+  <?php endif; ?>
   <?php if (!empty($error)): ?>
     <div class="pq-alerta"><?= e($error) ?></div>
   <?php endif; ?>
@@ -231,7 +234,9 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
         <?php endif; ?>
       </div>
 
-      <?php if ($listaEsperaId !== null): ?>
+      <?php if ($cerradoEseDia): ?>
+        <?php /* Ese día no se atiende: no hay cupo que se pueda liberar. */ ?>
+      <?php elseif ($listaEsperaId !== null): ?>
         <div class="pq-card pq-card-exito pq-reserva-espera">
           <div class="pq-reserva-espera-titulo">
             <span class="pq-card-exito-check">
@@ -248,6 +253,8 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             <input type="hidden" name="id" value="<?= (int) $listaEsperaId ?>">
             <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
             <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
+            <input type="hidden" name="empleado" value="<?= $empleadoElegido !== null ? (int) $empleadoElegido['id'] : '' ?>">
+            <input type="hidden" name="ad" value="<?= e($idsAdicionales) ?>">
           </form>
           <details class="pq-salir-confirm">
             <summary>
@@ -271,6 +278,8 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             <?= csrf_campo() ?>
             <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
             <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
+            <input type="hidden" name="empleado" value="<?= $empleadoElegido !== null ? (int) $empleadoElegido['id'] : '' ?>">
+            <input type="hidden" name="ad" value="<?= e($idsAdicionales) ?>">
 
             <div class="pq-campo">
               <label class="pq-label" for="le-nombre">Tu nombre</label>

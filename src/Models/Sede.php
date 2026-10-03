@@ -72,6 +72,20 @@ class Sede
         return (int) ($sede['sedes_incluidas'] ?? 1) + $extra;
     }
 
+    /**
+     * ¿Esta sede cabe en el cupo del plan? Las sedes se cuentan por orden de
+     * creación: si el plan bajó (venció, pasó a Gratis o Barrio) y el
+     * negocio tiene más sedes que las incluidas, las más nuevas quedan en
+     * pausa (su tienda no atiende) hasta que vuelva a pagarlas.
+     */
+    public static function dentroDelCupo(array $sede): bool
+    {
+        $stmt = Database::conexion()->prepare('SELECT COUNT(*) FROM sedes WHERE negocio_id = :n AND id < :id');
+        $stmt->execute(['n' => (int) $sede['negocio_id'], 'id' => (int) $sede['id']]);
+
+        return (int) $stmt->fetchColumn() < self::cupo($sede);
+    }
+
     public static function contarPorNegocio(int $negocioId): int
     {
         $stmt = Database::conexion()->prepare(

@@ -29,6 +29,7 @@ class Auth
         Usuario::registrarLoginExitoso((int) $usuario['id']);
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
+        $_SESSION['sesion_version'] = (int) $usuario['sesion_version'];
         unset($_SESSION['sede_id']); // se elige de nuevo, por si el usuario ya no tiene acceso a la que tenía antes
 
         return true;
@@ -50,7 +51,7 @@ class Auth
 
     public static function cerrarSesion(): void
     {
-        unset($_SESSION['usuario_id'], $_SESSION['sede_id']);
+        unset($_SESSION['usuario_id'], $_SESSION['sede_id'], $_SESSION['sesion_version']);
         session_regenerate_id(true);
     }
 
@@ -59,10 +60,33 @@ class Auth
         return isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null;
     }
 
+    /**
+     * El usuario de la sesión, si la sesión sigue valiendo: se cierra si el
+     * equipo de Veci suspendió el negocio después de que entró, o si la
+     * contraseña cambió desde otra sesión (sesion_version distinta).
+     */
     public static function usuarioActual(): ?array
     {
         $id = self::usuarioId();
-        return $id === null ? null : Usuario::buscarPorId($id);
+        $usuario = $id === null ? null : Usuario::buscarPorId($id);
+        if ($id !== null && ($usuario === null
+            || (int) $usuario['negocio_suspendido'] === 1
+            || (int) ($_SESSION['sesion_version'] ?? 0) !== (int) $usuario['sesion_version'])) {
+            self::cerrarSesion();
+
+            return null;
+        }
+
+        return $usuario;
+    }
+
+    /** Tras cambiar la contraseña en esta sesión: esta sigue abierta, las demás no. */
+    public static function renovarVersionDeSesion(): void
+    {
+        $usuario = self::usuarioId() !== null ? Usuario::buscarPorId((int) self::usuarioId()) : null;
+        if ($usuario !== null) {
+            $_SESSION['sesion_version'] = (int) $usuario['sesion_version'];
+        }
     }
 
     /**

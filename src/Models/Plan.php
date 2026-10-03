@@ -68,17 +68,22 @@ class Plan
      * que le quedan al plan (precio mensual × días / 30, redondeado a la
      * centena hacia arriba): así todas las sedes vencen juntas y la
      * renovación siguiente las cobra completas. Sin fecha de vencimiento
-     * (plan sin ciclo), un mes completo.
+     * (plan sin ciclo), un mes completo. En un plan anual se prorratea el
+     * precio anual de la sede (10 meses: 2 gratis, como el plan) entre 365
+     * días, así nunca cuesta más que pagarla en la renovación.
      *
      * @return array{dias: int, monto: int}
      */
-    public static function prorrateoSedeExtra(int $precioMensual, ?string $venceEn): array
+    public static function prorrateoSedeExtra(int $precioMensual, ?string $venceEn, bool $anual = false): array
     {
         $dias = 30;
         if ($venceEn !== null && $venceEn !== '') {
             $dias = max(1, (int) (new \DateTimeImmutable('today'))->diff(new \DateTimeImmutable($venceEn))->format('%r%a'));
         }
+        $monto = $anual
+            ? min($precioMensual * 10, $precioMensual * 10 * $dias / 365)
+            : $precioMensual * $dias / 30;
 
-        return ['dias' => $dias, 'monto' => (int) (ceil($precioMensual * $dias / 30 / 100) * 100)];
+        return ['dias' => $dias, 'monto' => (int) (ceil($monto / 100) * 100)];
     }
 }

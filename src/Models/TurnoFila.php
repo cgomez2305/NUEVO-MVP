@@ -90,7 +90,8 @@ class TurnoFila
     /**
      * Cuántos tiene adelante (esperando o ya llamados, de hoy) y, si TODOS
      * los de adelante dijeron qué servicio quieren, cuánto podría esperar:
-     * la suma de sus duraciones repartida entre los profesionales activos.
+     * la suma de sus duraciones repartida entre los profesionales que
+     * están trabajando (ver Empleado::paraLaFila).
      * Si alguno no dijo, no se inventa un tiempo.
      *
      * @return array{adelante: int, minutos: ?int}
@@ -109,7 +110,10 @@ class TurnoFila
         $adelante = $stmt->fetchAll();
         $minutos = null;
         if ($adelante !== [] && !in_array(null, array_column($adelante, 'duracion_min'), true)) {
-            $profesionales = max(1, count(Empleado::listarPorSede((int) $turno['sede_id'], true)));
+            // Entre quienes están trabajando (no todo el equipo: el que entra
+            // a las 3 p. m. no atiende la fila de las 10 a. m.).
+            $sede = Sede::buscarPorId((int) $turno['sede_id']);
+            $profesionales = max(1, $sede !== null ? count(Empleado::paraLaFila($sede)) : 0);
             $minutos = (int) ceil(array_sum(array_map('intval', array_column($adelante, 'duracion_min'))) / $profesionales);
         }
 

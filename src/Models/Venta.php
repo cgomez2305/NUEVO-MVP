@@ -205,6 +205,7 @@ class Venta
             }
             $stmtStock = $pdo->prepare('SELECT nombre, stock, vende_por FROM productos WHERE id = :id AND sede_id = :sede FOR UPDATE');
             $stmtDescontar = $pdo->prepare('UPDATE productos SET stock = stock - :cantidad WHERE id = :id AND sede_id = :sede');
+            $movido = [];
             foreach (Producto::demandaDeStock($pdo, $cantidades) as $productoId => $necesario) {
                 $stmtStock->execute(['id' => $productoId, 'sede' => $sedeId]);
                 $fila = $stmtStock->fetch();
@@ -219,6 +220,7 @@ class Venta
                         : "Solo quedan {$quedan} de {$fila['nombre']}. No se vendió nada: ajusta la cantidad y vuelve a cobrar.");
                 }
                 $stmtDescontar->execute(['cantidad' => $necesario, 'id' => $productoId, 'sede' => $sedeId]);
+                $movido[$productoId] = $necesario;
             }
 
             try {
@@ -239,6 +241,9 @@ class Venta
                 throw $e;
             }
             $ventaId = (int) $pdo->lastInsertId();
+            // Lo descontado, tal cual: anular devuelve esto (ver anular()).
+            $pdo->prepare('UPDATE ventas SET inventario_movido = :m WHERE id = :id')
+                ->execute(['m' => json_encode($movido, JSON_FORCE_OBJECT), 'id' => $ventaId]);
 
             $stmtItem = $pdo->prepare(
                 'INSERT INTO venta_items (venta_id, producto_id, nombre, por_peso, cantidad, precio_unitario, costo_unitario, subtotal)
@@ -396,9 +401,13 @@ class Venta
                 }
             }
             $devolver = $pdo->prepare('UPDATE productos SET stock = stock + :n WHERE id = :p AND sede_id = :s AND stock IS NOT NULL');
-            // En la unidad en que se vendió (por_peso copiado), no en la de hoy.
-            foreach (Producto::demandaDeStock($pdo, $cantidades, $porPeso) as $productoId => $cantidad) {
-                $devolver->execute(['n' => $cantidad, 'p' => $productoId, 's' => $sedeId]);
+            // Exactamente lo que descontó la venta; si es anterior a guardarlo,
+            // en la unidad en que se vendió (por_peso copiado), no en la de hoy.
+            $movido = $venta['inventario_movido'] !== null ? json_decode((string) $venta['inventario_movido'], true) : null;
+            $devolucion = is_array($movido) ? $movido : Producto::demandaDeStock($pdo, $cantidades, $porPeso);
+            ksort($devolucion);
+            foreach ($devolucion as $productoId => $cantidad) {
+                $devolver->execute(['n' => (int) $cantidad, 'p' => (int) $productoId, 's' => $sedeId]);
             }
 
             if ($venta['metodo'] === 'fiado') {
@@ -467,7 +476,7 @@ class Venta
 
         $stmt = $pdo->prepare(
             'SELECT i.producto_id, p.nombre, COUNT(*) AS lineas, SUM(i.subtotal) AS vendido,
-                    ROUND(SUM(CAST(i.subtotal AS SIGNED) - CAST(i.costo_unitario AS SIGNED) * i.cantidad)) AS ganancia
+                    ROUND(SUM(CAST(i.subtotal AS SIGNED) - CAST(i.costo_unitario AS SIGNED) * CAST(i.cantidad AS DECIMAL(12,3)))) AS ganancia
              FROM venta_items i JOIN ventas v ON v.id = i.venta_id JOIN productos p ON p.id = i.producto_id
              WHERE v.sede_id = :s AND v.anulada = 0 AND v.creado_en >= :desde AND i.costo_unitario IS NOT NULL
              GROUP BY i.producto_id, p.nombre'
@@ -476,8 +485,12 @@ class Venta
         array_map($sumar, $stmt->fetchAll());
 
         $stmt = $pdo->prepare(
+            // Todo con signo (vender bajo costo da negativo, no un error de
+            // rango) y por peso el costo es del kilo: pedido en libras se
+            // cuesta por sus gramos; uno viejo en kilos, por su cantidad.
             "SELECT i.producto_id, p.nombre, COUNT(*) AS lineas, SUM(i.precio_unitario * i.cantidad) AS vendido,
-                    SUM((CAST(i.precio_unitario AS SIGNED) - CAST(p.costo AS SIGNED)) * i.cantidad) AS ganancia
+                    ROUND(SUM(CAST(i.precio_unitario AS SIGNED) * CAST(i.cantidad AS SIGNED)
+                        - CAST(p.costo AS SIGNED) * IF(i.gramos IS NOT NULL, i.gramos / 1000, CAST(i.cantidad AS SIGNED)))) AS ganancia
              FROM pedido_items i JOIN pedidos pe ON pe.id = i.pedido_id JOIN productos p ON p.id = i.producto_id
              WHERE pe.sede_id = :s AND pe.estado = 'entregado' AND pe.creado_en >= :desde AND p.costo IS NOT NULL
              GROUP BY i.producto_id, p.nombre"

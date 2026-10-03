@@ -73,7 +73,7 @@ class Fidelidad
                SELECT t.cliente_id, COUNT(*) AS ganados FROM (
                  SELECT pe.cliente_id FROM pedidos pe JOIN sedes s ON s.id = pe.sede_id
                  WHERE s.negocio_id = :n1 AND pe.estado <> 'cancelado'
-                   AND pe.total >= :min1 AND pe.creado_en >= :desde1
+                   AND pe.total - pe.costo_domicilio >= :min1 AND pe.creado_en >= :desde1
                  UNION ALL
                  SELECT ci.cliente_id FROM citas ci JOIN sedes s ON s.id = ci.sede_id
                  WHERE s.negocio_id = :n2 AND " . Cita::sqlCuenta('ci') . "

@@ -42,14 +42,14 @@ class AuthController
             redirigir('/registro');
         }
 
-        $nombre = trim((string) ($_POST['nombre'] ?? ''));
-        $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+        $nombre = mb_substr(trim((string) ($_POST['nombre'] ?? '')), 0, 120);
+        $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? '';
         $password = (string) ($_POST['password'] ?? '');
         $tipoNegocio = (string) ($_POST['tipo_negocio'] ?? 'pedidos');
-        $correo = trim((string) ($_POST['correo'] ?? ''));
+        $correo = mb_substr(trim((string) ($_POST['correo'] ?? '')), 0, 160);
 
         if ($nombre === '' || $whatsapp === '' || strlen($password) < 8) {
-            flash_set('error', 'Completa el nombre del negocio, tu WhatsApp y una contraseña de al menos 8 caracteres.');
+            flash_set('error', 'Completa el nombre del negocio, tu WhatsApp (10 dígitos que empiecen por 3) y una contraseña de al menos 8 caracteres.');
             redirigir('/registro');
         }
 
@@ -78,11 +78,21 @@ class AuthController
         // punto de venta, con el mismo nombre y WhatsApp) + un usuario dueño.
         // Así nadie tiene que enterarse de que existen "sedes" hasta que de
         // verdad abra una segunda.
-        $negocioId = Negocio::crear($nombre, $tipoNegocio);
-        $sedeId = Sede::crear($negocioId, $nombre, $whatsapp);
-        $usuarioId = Usuario::crear($negocioId, $nombre, $whatsapp, $password, 'dueno');
-        if ($correo !== '') {
-            Usuario::guardarCorreo($usuarioId, $correo);
+        // Todo o nada: sin la transacción, una falla a mitad dejaba un
+        // negocio sin dueño (o sin sede) que nadie podía usar.
+        $pdo = \App\Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $negocioId = Negocio::crear($nombre, $tipoNegocio);
+            $sedeId = Sede::crear($negocioId, $nombre, $whatsapp);
+            $usuarioId = Usuario::crear($negocioId, $nombre, $whatsapp, $password, 'dueno');
+            if ($correo !== '') {
+                Usuario::guardarCorreo($usuarioId, $correo);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
         }
 
         LimiteTasa::registrar('registro', $ip);
@@ -117,7 +127,7 @@ class AuthController
             redirigir('/login');
         }
 
-        $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+        $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? (preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '');
         $password = (string) ($_POST['password'] ?? '');
         $ip = ip_cliente();
 
@@ -181,7 +191,7 @@ class AuthController
             redirigir('/olvide-password');
         }
 
-        $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+        $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? (preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '');
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
         $ip = ip_cliente();
 

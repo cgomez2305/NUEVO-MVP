@@ -166,7 +166,12 @@ class PanelController
 
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
-            Pedido::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+            try {
+                Pedido::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
+            } catch (\DomainException $e) {
+                flash_set('error', $e->getMessage());
+                redirigir($volver);
+            }
             // Con la API de WhatsApp configurada, el cliente se entera solo;
             // si no, el panel le ofrece al dueño "Avisarle" con el texto listo.
             $pedido = Pedido::buscar((int) $parametros['id'], (int) $negocio['id']);
@@ -332,6 +337,7 @@ class PanelController
             'partesPosibles' => $this->partesPosiblesDeCombo((int) $negocio['id'], null),
             // Tiendas (fase 4): "Crear un producto con este código" desde el mostrador.
             'codigoInicial'  => Producto::normalizarCodigo((string) ($_GET['codigo'] ?? '')),
+            'error'          => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -397,6 +403,10 @@ class PanelController
         $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
         $categoria = $this->categoriaDelFormulario();
         $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
+        if ($nombre === '' || $precio <= 0) {
+            flash_set('error', 'Escribe el nombre y un precio mayor que $0: no se guardó nada.');
+            redirigir('/panel/productos/nuevo');
+        }
 
         if ($nombre !== '' && $precio > 0) {
             $id = Producto::crear((int) $negocio['id'], $nombre, $precio, $categoria, $descripcion);
@@ -435,6 +445,10 @@ class PanelController
         $precio = dinero_desde_texto((string) ($_POST['precio'] ?? ''));
         $categoria = $this->categoriaDelFormulario();
         $descripcion = mb_substr(trim((string) ($_POST['descripcion'] ?? '')), 0, 160);
+        if ($nombre === '' || $precio <= 0) {
+            flash_set('error', 'Escribe el nombre y un precio mayor que $0: no se guardaron los cambios.');
+            redirigir('/panel/productos/' . (int) $parametros['id'] . '/editar');
+        }
 
         if ($nombre !== '' && $precio > 0) {
             $id = (int) $parametros['id'];
@@ -492,20 +506,9 @@ class PanelController
             return null;
         }
 
-        $tiposPermitidos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        $mime = mime_content_type($archivo['tmp_name']) ?: '';
-        if (!isset($tiposPermitidos[$mime]) || $archivo['size'] > 5 * 1024 * 1024) {
-            return null;
-        }
-
-        $nombreArchivo = 'producto-' . bin2hex(random_bytes(8)) . '.' . $tiposPermitidos[$mime];
-        $destino = __DIR__ . '/../../public/uploads/productos/' . $nombreArchivo;
-
-        if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
-            return null;
-        }
-
-        return 'uploads/productos/' . $nombreArchivo;
+        // Re-codificada como JPEG (sin EXIF/GPS ni bytes extra), como las
+        // fotos del equipo: nunca se publica el archivo tal como llegó.
+        return \App\Services\Subida::imagen($archivo, 'productos', 'producto');
     }
 
     public function eliminarProducto(array $parametros): void
@@ -695,6 +698,8 @@ class PanelController
     public function eliminarServicio(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        // Borrar un servicio se lleva sus paquetes y adicionales: decide el dueño.
+        Auth::exigirDueno($negocio);
         $volver = $this->destinoSeguro($_POST['volver'] ?? null);
 
         if (csrf_verificar()) {
@@ -956,7 +961,7 @@ class PanelController
             ], $pedidos),
             'citas' => array_map(fn ($c) => [
                 'id'    => (int) $c['id'],
-                'texto' => $c['cliente_nombre'] . ' · ' . $c['nombre_servicio'] . ' · ' . date('d M g:i a', strtotime((string) $c['fecha_hora'])),
+                'texto' => $c['cliente_nombre'] . ' · ' . $c['nombre_servicio'] . ' · ' . fecha_corta((string) $c['fecha_hora'], ', '),
             ], $citas),
         ]);
         exit;
@@ -978,9 +983,9 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         if (csrf_verificar()) {
-            $endpoint = (string) ($_POST['endpoint'] ?? '');
-            $p256dh = (string) ($_POST['p256dh'] ?? '');
-            $auth = (string) ($_POST['auth'] ?? '');
+            $endpoint = is_string($_POST['endpoint'] ?? null) ? $_POST['endpoint'] : '';
+            $p256dh = is_string($_POST['p256dh'] ?? null) ? $_POST['p256dh'] : '';
+            $auth = is_string($_POST['auth'] ?? null) ? $_POST['auth'] : '';
 
             if ($endpoint !== '' && $p256dh !== '' && $auth !== '') {
                 PushSubscripcion::guardar((int) $negocio['usuario_id'], $endpoint, $p256dh, $auth);
@@ -1246,10 +1251,12 @@ class PanelController
             'sedes'       => $sedesVisibles,
             'totalSedes'  => count($todas),
             'cupo'        => Sede::cupo($negocio),
+            // Las más nuevas por encima del cupo (el plan bajó): su tienda está en pausa.
+            'enPausa'     => array_map('intval', array_column(array_slice($this->ordenarPorId($todas), Sede::cupo($negocio)), 'id')),
             'precioExtra' => $precioExtra,
             // Solo se vende sede extra con un plan que la ofrece y vigente:
             // se prorratea hasta su vencimiento.
-            'prorrateo'   => $precioExtra > 0 && $vigente ? Plan::prorrateoSedeExtra($precioExtra, (string) $negocio['plan_vence_en']) : null,
+            'prorrateo'   => $precioExtra > 0 && $vigente ? Plan::prorrateoSedeExtra($precioExtra, (string) $negocio['plan_vence_en'], ($negocio['plan_ciclo'] ?? 'mensual') === 'anual') : null,
             'pendiente'   => $negocio['rol'] === 'dueno' ? PagoPlan::pendientePorNegocio((int) $negocio['negocio_id']) : null,
             'ok'          => flash_obtener('ok'),
             'error'       => flash_obtener('error'),
@@ -1276,10 +1283,12 @@ class PanelController
         if (csrf_verificar()) {
             $this->exigirCupoDeSedes($negocio);
 
-            $nombre = trim((string) ($_POST['nombre'] ?? ''));
-            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+            $nombre = mb_substr(trim((string) ($_POST['nombre'] ?? '')), 0, 120);
+            $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? '';
 
-            if ($nombre !== '' && $whatsapp !== '') {
+            if ($nombre === '' || $whatsapp === '') {
+                flash_set('error', 'Escribe el nombre de la sede y su WhatsApp (10 dígitos que empiecen por 3).');
+            } else {
                 $nuevaSedeId = Sede::crear((int) $negocio['negocio_id'], $nombre, $whatsapp);
                 Auth::cambiarSede($nuevaSedeId);
                 flash_set('ok', 'Sede creada correctamente. Termina de configurarla: catálogo, horario y Bre-B.');
@@ -1297,6 +1306,14 @@ class PanelController
      * Cuenta TODAS las sedes (publicadas o no): una sin publicar ya ocupa
      * el cupo igual.
      */
+    /** @param array<int, array<string, mixed>> $filas */
+    private function ordenarPorId(array $filas): array
+    {
+        usort($filas, fn ($a, $b) => (int) $a['id'] <=> (int) $b['id']);
+
+        return $filas;
+    }
+
     private function exigirCupoDeSedes(array $negocio): void
     {
         $cupo = Sede::cupo($negocio);
@@ -1341,8 +1358,13 @@ class PanelController
             flash_set('error', 'Ya tienes un pago pendiente: págalo o cancélalo antes de pedir otra cosa.');
             redirigir('/panel/plan');
         }
+        // Mientras quede cupo incluido, la sede nueva no cuesta nada.
+        if (Sede::contarPorNegocio($negocioId) < Sede::cupo($negocio)) {
+            flash_set('error', 'Todavía tienes sedes incluidas en tu plan: créala sin costo.');
+            redirigir('/panel/sedes');
+        }
 
-        $prorrateo = Plan::prorrateoSedeExtra($precio, $venceEn);
+        $prorrateo = Plan::prorrateoSedeExtra($precio, $venceEn, ($negocio['plan_ciclo'] ?? 'mensual') === 'anual');
         PagoPlan::crearPendiente(
             $negocioId,
             (int) $negocio['plan_id'],
@@ -1388,12 +1410,14 @@ class PanelController
         }
 
         if (csrf_verificar()) {
-            $nombre = trim((string) ($_POST['nombre'] ?? ''));
-            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+            $nombre = mb_substr(trim((string) ($_POST['nombre'] ?? '')), 0, 120);
+            $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? '';
             $aceptaMesa = isset($_POST['acepta_mesa']);
-            $direccion = trim((string) ($_POST['direccion'] ?? ''));
+            $direccion = mb_substr(trim((string) ($_POST['direccion'] ?? '')), 0, 200);
 
-            if ($nombre !== '' && $whatsapp !== '') {
+            if ($nombre === '' || $whatsapp === '') {
+                flash_set('error', 'No se guardó: escribe el nombre de la sede y su WhatsApp (10 dígitos que empiecen por 3).');
+            } else {
                 Sede::actualizar((int) $sede['id'], $nombre, $whatsapp, $aceptaMesa, $direccion !== '' ? $direccion : null);
                 // El color es del negocio (todas sus sedes), no de esta sede.
                 if (isset($_POST['color_marca'])) {
@@ -1446,13 +1470,15 @@ class PanelController
         Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
-            $nombre = trim((string) ($_POST['nombre'] ?? ''));
-            $whatsapp = preg_replace('/\D+/', '', (string) ($_POST['whatsapp'] ?? '')) ?? '';
+            $nombre = mb_substr(trim((string) ($_POST['nombre'] ?? '')), 0, 120);
+            $whatsapp = whatsapp_normalizado((string) ($_POST['whatsapp'] ?? '')) ?? '';
             $password = (string) ($_POST['password'] ?? '');
-            $sedeIds = array_map('intval', (array) ($_POST['sedes'] ?? []));
+            // Solo sedes que en verdad son de este negocio (antes de validar que haya al menos una).
+            $sedesDelNegocio = array_map('intval', array_column(Sede::listarPorNegocio((int) $negocio['negocio_id']), 'id'));
+            $sedeIds = array_values(array_intersect(array_map('intval', (array) ($_POST['sedes'] ?? [])), $sedesDelNegocio));
 
             if ($nombre === '' || $whatsapp === '' || strlen($password) < 8 || $sedeIds === []) {
-                flash_set('error', 'Completa nombre, WhatsApp, una contraseña de al menos 8 caracteres y elige al menos una sede.');
+                flash_set('error', 'Completa nombre, WhatsApp (10 dígitos que empiecen por 3), una contraseña de al menos 8 caracteres y elige al menos una sede.');
                 redirigir('/panel/colaboradores');
             }
 
@@ -1460,10 +1486,6 @@ class PanelController
                 flash_set('error', 'Ya existe una cuenta con ese número de WhatsApp.');
                 redirigir('/panel/colaboradores');
             }
-
-            // Solo deja asignar sedes que en verdad son de este negocio.
-            $sedesDelNegocio = array_column(Sede::listarPorNegocio((int) $negocio['negocio_id']), 'id');
-            $sedeIds = array_values(array_intersect($sedeIds, array_map('intval', $sedesDelNegocio)));
 
             $colaboradorId = Usuario::crear((int) $negocio['negocio_id'], $nombre, $whatsapp, $password, 'colaborador');
             Usuario::asignarSedes($colaboradorId, $sedeIds);
@@ -1557,6 +1579,7 @@ class PanelController
                 flash_set('error', 'La contraseña nueva debe tener al menos 8 caracteres.');
             } else {
                 Usuario::cambiarPassword((int) $negocio['usuario_id'], $nueva);
+                Auth::renovarVersionDeSesion();
                 flash_set('ok', 'Contraseña actualizada.');
             }
         }
@@ -1675,7 +1698,12 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $transaccion = \App\Services\Wompi::disponible() ? \App\Services\Wompi::consultarTransaccion((string) ($_GET['id'] ?? '')) : null;
+        // Sin Wompi configurado (o sin transacción en la URL) no hay nada que
+        // confirmar: no se promete "se activa en unos minutos".
+        if (!\App\Services\Wompi::disponible() || (string) ($_GET['id'] ?? '') === '') {
+            redirigir('/panel/plan');
+        }
+        $transaccion = \App\Services\Wompi::consultarTransaccion((string) ($_GET['id'] ?? ''));
         $resultado = $transaccion !== null ? \App\Services\Wompi::procesarTransaccion($transaccion) : 'pendiente';
         match ($resultado) {
             'confirmado', 'ya_confirmado' => flash_set('ok', '¡Pago recibido! Tu plan ya está activo.'),
@@ -1744,7 +1772,9 @@ class PanelController
     /** Solo deja volver a rutas propias del panel, nunca a una URL externa. */
     private function destinoSeguro(mixed $ruta): string
     {
-        if (!is_string($ruta) || ($ruta !== '/panel' && !str_starts_with($ruta, '/panel/'))) {
+        // Solo rutas del panel, sin saltos de línea ni caracteres de control
+        // (irían a parar a la cabecera Location).
+        if (!is_string($ruta) || ($ruta !== '/panel' && !str_starts_with($ruta, '/panel/')) || preg_match('/[\x00-\x1F\x7F\\\\]/', $ruta) === 1) {
             return '/panel/productos';
         }
         return $ruta;

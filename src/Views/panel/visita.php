@@ -101,7 +101,7 @@ $renderFotos = static function (array $lista, bool $sePuedeBorrar) use ($base): 
             <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Avisarle</button>
           </div>
           <?php if (!empty($cita['en_camino_en'])): ?>
-            <span class="pq-ayuda">Saliste a las <?= e(hora_completa(date('H:i', strtotime((string) $cita['en_camino_en'])))) ?>; le dijiste que llegabas hacia las <?= e(hora_completa(date('H:i', strtotime((string) $cita['llegada_estimada'])))) ?>.</span>
+            <span class="pq-ayuda">Saliste a las <?= e(hora_completa(date('H:i', strtotime((string) $cita['en_camino_en'])))) ?>; le dijiste que llegabas hacia las <?= e(hora_completa(date('H:i', strtotime((string) $cita['llegada_estimada'])))) ?></span>
           <?php endif; ?>
         </form>
       <?php endif; ?>

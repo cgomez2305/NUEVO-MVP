@@ -15,6 +15,14 @@ use App\Database;
  */
 class Cupon
 {
+    /**
+     * Un uso cuenta mientras su pedido o su cita sigan en pie: si el pedido
+     * se cancela o la cita se cancela, el cupón vuelve a quedar disponible
+     * (para el tope de usos y para el "uno por persona").
+     */
+    private const USO_VIGENTE = "NOT EXISTS (SELECT 1 FROM pedidos pu WHERE pu.id = u.pedido_id AND pu.estado = 'cancelado')
+        AND NOT EXISTS (SELECT 1 FROM citas cu WHERE cu.id = u.cita_id AND cu.estado = 'cancelada')";
+
     /** Días que dura un cupón personal del copiloto. */
     public const DIAS_COPILOTO = 15;
 
@@ -75,7 +83,7 @@ class Cupon
             return null;
         }
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id) AS usos
+            'SELECT c.*, (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id AND ' . self::USO_VIGENTE . ') AS usos
              FROM cupones c WHERE c.negocio_id = :n AND c.codigo = :c'
         );
         $stmt->execute(['n' => $negocioId, 'c' => $codigo]);
@@ -86,7 +94,7 @@ class Cupon
     public static function buscar(int $id, int $negocioId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.*, (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id) AS usos
+            'SELECT c.*, (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id AND ' . self::USO_VIGENTE . ') AS usos
              FROM cupones c WHERE c.id = :id AND c.negocio_id = :n'
         );
         $stmt->execute(['id' => $id, 'n' => $negocioId]);
@@ -105,8 +113,8 @@ class Cupon
     {
         $stmt = Database::conexion()->prepare(
             'SELECT c.*, cl.nombre AS cliente_nombre,
-                    (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id) AS usos,
-                    (SELECT COALESCE(SUM(u.descuento), 0) FROM cupon_usos u WHERE u.cupon_id = c.id) AS descontado
+                    (SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = c.id AND ' . self::USO_VIGENTE . ') AS usos,
+                    (SELECT COALESCE(SUM(u.descuento), 0) FROM cupon_usos u WHERE u.cupon_id = c.id AND ' . self::USO_VIGENTE . ') AS descontado
              FROM cupones c
              LEFT JOIN clientes cl ON cl.id = c.cliente_id
              WHERE c.negocio_id = :n AND c.origen = :origen
@@ -190,7 +198,7 @@ class Cupon
 
     public static function usosDelCliente(int $cuponId, int $clienteId): int
     {
-        $stmt = Database::conexion()->prepare('SELECT COUNT(*) FROM cupon_usos WHERE cupon_id = :c AND cliente_id = :cl');
+        $stmt = Database::conexion()->prepare('SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = :c AND u.cliente_id = :cl AND ' . self::USO_VIGENTE);
         $stmt->execute(['c' => $cuponId, 'cl' => $clienteId]);
 
         return (int) $stmt->fetchColumn();
@@ -236,7 +244,7 @@ class Cupon
              WHERE c.negocio_id = :n AND c.cliente_id = :cl AND c.origen = 'copiloto'
                AND c.tipo = 'porcentaje' AND c.valor = :pct AND c.activo = 1
                AND (c.vence_en IS NULL OR c.vence_en >= CURDATE())
-               AND NOT EXISTS (SELECT 1 FROM cupon_usos u WHERE u.cupon_id = c.id)
+               AND NOT EXISTS (SELECT 1 FROM cupon_usos u WHERE u.cupon_id = c.id AND " . self::USO_VIGENTE . ")
              ORDER BY c.id DESC LIMIT 1"
         );
         $stmt->execute(['n' => $negocioId, 'cl' => $clienteId, 'pct' => $porcentaje]);

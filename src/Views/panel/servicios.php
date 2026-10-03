@@ -136,11 +136,13 @@ $resumenAnticipo = static function (array $servicio): string {
               <input type="hidden" name="volver" value="/panel/servicios">
               <button type="submit" class="pq-enlace-boton"><?= $agotado ? 'Volver a ofrecerlo' : 'Pausar (no disponible)' ?></button>
             </form>
-            <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar «<?= e($servicio['nombre']) ?>» de tu catálogo? No se puede deshacer.">
-              <?= csrf_campo() ?>
-              <input type="hidden" name="volver" value="/panel/servicios">
-              <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Eliminar</button>
-            </form>
+            <?php if ($esDueno): ?>
+              <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar «<?= e($servicio['nombre']) ?>» de tu catálogo? No se puede deshacer.">
+                <?= csrf_campo() ?>
+                <input type="hidden" name="volver" value="/panel/servicios">
+                <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Eliminar</button>
+              </form>
+            <?php endif; ?>
           </div>
         </div>
       </details>

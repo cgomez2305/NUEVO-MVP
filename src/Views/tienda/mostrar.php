@@ -35,6 +35,9 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
 <?php endif; ?>
 
 <main class="pq-content-tienda pq-vitrina">
+  <?php if (!empty($error)): ?>
+    <div class="pq-alerta pq-confirmacion-aviso" role="alert"><?= e($error) ?></div>
+  <?php endif; ?>
   <?php if ($productos === []): ?>
     <div class="pq-vacio-tienda">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16l-1.5 12.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
@@ -58,7 +61,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
               <a href="#producto-<?= (int) $idDestacado ?>" class="pq-mas-pedido-item">
                 <span class="pq-mas-pedido-puesto"><?= $posicion + 1 ?></span>
                 <span class="pq-mas-pedido-nombre"><?= e($porId[$idDestacado]['nombre']) ?></span>
-                <span class="pq-mas-pedido-precio"><?= pesos((int) $porId[$idDestacado]['precio']) ?></span>
+                <span class="pq-mas-pedido-precio"><?= pesos((int) $porId[$idDestacado]['precio']) ?><?= ($porId[$idDestacado]['vende_por'] ?? '') === 'peso' ? ' el kilo' : '' ?></span>
               </a>
             </li>
           <?php endforeach; ?>

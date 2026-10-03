@@ -94,16 +94,14 @@ class OnboardingController
         }
 
         // Se guarda enderezada, reducida a 2000 px y sin metadatos EXIF (ver
-        // Imagen). Sin GD, o si la imagen no se deja abrir, va el original.
+        // Imagen). Si no se deja abrir, no se guarda: el original llevaría
+        // sus metadatos (y lo que traiga pegado) a una carpeta pública.
         $carpeta = __DIR__ . '/../../public/uploads/menus/';
         $base = 'menu-' . $negocio['id'] . '-' . bin2hex(random_bytes(6));
         $nombreArchivo = $base . '.jpg';
         if (!Imagen::normalizar($archivo['tmp_name'], $carpeta . $nombreArchivo)) {
-            $nombreArchivo = $base . '.' . $tiposPermitidos[$mime];
-            if (!move_uploaded_file($archivo['tmp_name'], $carpeta . $nombreArchivo)) {
-                flash_set('error', 'No pudimos guardar la foto. Intenta otra vez en un momento.');
-                redirigir('/panel/onboarding/foto');
-            }
+            flash_set('error', 'No pudimos leer esa foto. Tómala otra vez o prueba con otra imagen.');
+            redirigir('/panel/onboarding/foto');
         }
 
         $this->borrarFotoAnterior($negocio['menu_foto'] ?? null);
@@ -358,6 +356,11 @@ class OnboardingController
         // Los mismos requisitos que para ver esta pantalla: un POST directo
         // (o desde una pestaña vieja) no puede abrir una tienda vacía.
         $this->exigirPaso($negocio, 'pago');
+        // Ni una sede que el plan ya no cubre (el plan bajó después de crearla).
+        if (!Sede::dentroDelCupo($negocio)) {
+            flash_set('error', 'Tu plan actual no incluye esta sede: sube de plan o agrega una sede extra para abrir su tienda.');
+            redirigir('/panel/plan');
+        }
 
         $tipo = (string) ($_POST['llave_tipo'] ?? 'celular');
         if (!in_array($tipo, ['celular', 'cedula', 'correo'], true)) {
@@ -368,7 +371,7 @@ class OnboardingController
         if ($llave === null) {
             flash_set('error', match ($tipo) {
                 'celular' => 'Revisa la llave: un celular tiene 10 dígitos y empieza por 3.',
-                'cedula'  => 'Revisa la llave: escribe tu cédula solo con números.',
+                'cedula'  => 'Revisa la llave: una cédula tiene entre 5 y 10 dígitos, solo números.',
                 default   => 'Revisa la llave: ese correo no parece completo.',
             });
             flash_set('llave_previa', (string) json_encode(['tipo' => $tipo, 'valor' => mb_substr($escrita, 0, 120)], JSON_UNESCAPED_UNICODE));

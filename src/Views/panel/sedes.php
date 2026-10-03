@@ -81,7 +81,9 @@ $extraPendiente = $pendiente !== null && $pendiente['concepto'] === 'sede_extra'
             <strong class="pq-escaparate-nombre"><?= e($sede['nombre']) ?></strong>
           </div>
         </div>
-        <?php if ($urlSede !== null): ?>
+        <?php if (in_array((int) $sede['id'], $enPausa ?? [], true)): ?>
+          <p class="pq-ayuda pq-escaparate-nota">En pausa: tu plan incluye <?= (int) $cupo ?> sede<?= (int) $cupo === 1 ? '' : 's' ?>, así que su tienda no atiende. Sube de plan o agrega una sede extra para reabrirla.</p>
+        <?php elseif ($urlSede !== null): ?>
           <a href="<?= e($urlSede) ?>" target="_blank" rel="noopener" class="pq-escaparate-url"><?= e(preg_replace('#^https?://#', '', $urlSede)) ?></a>
         <?php else: ?>
           <p class="pq-ayuda pq-escaparate-nota">Sin publicar: termina su configuración para que tenga tienda.</p>

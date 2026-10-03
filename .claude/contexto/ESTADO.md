@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-02 (panel y onboarding v2 completos, lógica del onboarding revisada)
+# Estado de la sesión — 2026-10-03 (QA funcional de 3 frentes corregido, migraciones 29-31)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -105,6 +105,36 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   semana por paciente; sin títulos de tratamiento en WhatsApp ni push).
   Aprobación presencial y rehacer planes: hechos (migración 28).
 
+- "sigue haciéndole pruebas de funcionalidad": 3 subagentes de QA
+  (cuenta/seguridad, pedidos/tiendas, reservas) en worktrees con su propia
+  base; ~40 hallazgos corregidos. Lo más importante:
+  - Sesión: cambiar la contraseña o suspender el negocio cierra las demás
+    sesiones (`usuarios.sesion_version`, migración 29).
+  - Inventario: el pedido y la venta guardan qué stock movieron
+    (`inventario_movido`, migración 30) y cancelar/anular devuelve eso
+    exacto; reabrir un pedido sin stock suficiente se niega con mensaje.
+  - Cupones/fidelidad: un uso de pedido o cita cancelada ya no cuenta.
+  - Sedes sobre el cupo del plan quedan "en pausa" (no salen en la tienda
+    pública ni reciben pedidos) en vez de seguir abiertas tras bajar de plan.
+  - Reservas: candado y fecha pasada al reprogramar; "cerrar el día" de un
+    profesional bloquea solo su agenda (`empleado_dias_libres`, migración
+    31); citas sin profesional asignado sí ocupan cupo; el cliente que
+    cancela recupera su anticipo como cupón; el anticipo nunca supera lo
+    que se paga tras el cupón; lista de espera: solo quien se anotó puede
+    salir, conserva profesional/adicionales y no se ofrece en días cerrados.
+  - Caja: las citas cuentan cuando ya pasó su hora o se atendieron (las que
+    faltan van como "por venir"); los bonos vendidos el día suman.
+  - "Citas de mañana" lista el día entero (el cron sigue con 24-30 h).
+  - Fila virtual: solo ofrece y reparte la espera entre quienes trabajan
+    ahora (si nadie, los de hoy; si no, todo el equipo).
+  - Terminar un plan de tratamiento deja sus citas agendadas dentro del
+    plan ($0); cancelarlo las suelta para cobrarlas aparte.
+  - Decididos a propósito: el colaborador puede editar el catálogo
+    (productos y servicios, precios incluidos), solo el dueño borra;
+    historial/exportar detalle en Gratis se mantiene como estaba.
+  Suites de regresión (scratchpad `yo/correr.sh <suite>`) y rastreador
+  (`barrido.js`) en verde tras los arreglos.
+
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).
@@ -114,6 +144,8 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
    `config/config.php` y registrar `/webhooks/wompi` en el panel de Wompi.
 3. Tienda de servicios (horario 7 días, próxima apertura, cupo de hoy,
    `sedes.direccion`): verificado, ya estaba hecho en f94702c.
+4. "Precio fundador": pendiente de que el usuario decida si se limita a
+   los primeros 100 negocios o a una fecha de corte. No aplicado.
 
 ## Archivos clave tocados
 - `src/Models/Sede.php` — `SELECT_CON_MARCA_Y_PLAN`, `aplicarVencimiento()`.

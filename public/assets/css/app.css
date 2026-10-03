@@ -4092,6 +4092,8 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
    cupón se escribe en un recorte punteado con tijeras bajo el papel.
    ===================================================================== */
 .pq-comanda-ajuste { display: flex; align-items: baseline; gap: var(--esp-2); padding: 3px 0; font-size: 14px; color: var(--texto-calido); }
+/* JS esconde la línea de domicilio con [hidden]; el display:flex de arriba le ganaba. */
+.pq-comanda-ajuste[hidden] { display: none; }
 .pq-comanda-ajuste > span:last-child { flex-shrink: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pq-comanda-ajuste-cupon { color: var(--marca-texto); font-weight: 600; }
 .pq-comanda-ajuste-aviso { color: #8a5a00; }

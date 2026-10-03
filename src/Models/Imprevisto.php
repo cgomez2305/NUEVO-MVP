@@ -177,6 +177,13 @@ class Imprevisto
         // sola persona del equipo, solo se mueven sus citas.
         if ($bloquear && $empleadoId === null) {
             FechaBloqueada::crear($sedeId, $fecha, ucfirst(self::MOTIVOS_DIA[$motivo]));
+        } elseif ($empleadoId !== null) {
+            // Si es una sola persona, ese día no se le agenda nada más (ni las
+            // citas que se mueven pueden volver a caer con ella ese día).
+            Database::conexion()->prepare(
+                'INSERT IGNORE INTO empleado_dias_libres (empleado_id, fecha, motivo)
+                 SELECT id, :f, :m FROM empleados WHERE id = :e AND sede_id = :s'
+            )->execute(['f' => $fecha, 'm' => ucfirst(self::MOTIVOS_DIA[$motivo]), 'e' => $empleadoId, 's' => $sedeId]);
         }
         $stmt = Database::conexion()->prepare(
             "UPDATE citas SET imprevisto_motivo = :m, " . self::sqlAviso('reprogramar') . ", retraso_negocio_min = 0
@@ -275,9 +282,28 @@ class Imprevisto
             Bono::devolverPorCita((int) $cita['id']);
             $pdo->prepare('UPDATE citas SET bono_devuelto_id = :b WHERE id = :id')->execute(['b' => (int) $bonoId, 'id' => (int) $cita['id']]);
         }
-        if ($cita['anticipo_estado'] !== 'pagado' || (int) $cita['anticipo_monto'] <= 0) {
+        return self::anticipoComoSaldo($cita, $sede);
+    }
+
+    /**
+     * El cliente cancela a tiempo desde su enlace. Si había pagado
+     * anticipo, no se pierde: queda como saldo a favor (cupón a su nombre)
+     * para su próxima reserva. Antes, cancelar bien era peor que no llegar.
+     */
+    public static function cancelacionDelCliente(array $cita, array $sede): ?array
+    {
+        Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'cancelada');
+
+        return self::anticipoComoSaldo($cita, $sede);
+    }
+
+    /** El anticipo pagado de la cita como cupón a nombre del cliente (60 días, un uso). null si no había. */
+    private static function anticipoComoSaldo(array $cita, array $sede): ?array
+    {
+        if ($cita['anticipo_estado'] !== 'pagado' || (int) $cita['anticipo_monto'] <= 0 || !empty($cita['cupon_abono_id'])) {
             return null;
         }
+        $pdo = Database::conexion();
         $negocioId = (int) $sede['negocio_id'];
         do {
             $codigo = Cupon::codigoAleatorio('ABONO');

@@ -94,7 +94,7 @@ $tarjeta = static function (array $fase): string {
           <span class="pq-plan-fase-numero" aria-hidden="true"><?= (int) $fase['orden'] ?></span>
           <span class="pq-plan-fase-texto">
             <strong><?= e($fase['nombre']) ?></strong>
-            <span class="pq-ayuda"><?= (int) $fase['hechas'] ?> de <?= (int) $fase['sesiones'] ?> sesión<?= (int) $fase['sesiones'] === 1 ? '' : 'es' ?><?= (int) $fase['agendadas'] > 0 ? ' · ' . (int) $fase['agendadas'] . ' agendada' . ((int) $fase['agendadas'] === 1 ? '' : 's') : '' ?></span>
+            <span class="pq-ayuda"><?= (int) $fase['hechas'] ?> de <?= (int) $fase['sesiones'] === 1 ? '1 sesión' : (int) $fase['sesiones'] . ' sesiones' ?><?= (int) $fase['agendadas'] > 0 ? ' · ' . (int) $fase['agendadas'] . ' agendada' . ((int) $fase['agendadas'] === 1 ? '' : 's') : '' ?></span>
             <?= $tarjeta($fase) ?>
           </span>
           <span class="pq-mono pq-plan-fase-valor"><?= pesos((int) $fase['valor']) ?></span>
@@ -195,7 +195,7 @@ $tarjeta = static function (array $fase): string {
   <?php if ($esDueno && $abierto): ?>
     <section class="pq-ficha-bloque pq-ficha-acciones">
       <?php if ($plan['estado'] === 'aprobado'): ?>
-        <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Marcar el plan como terminado? Si queda saldo, lo sigues pudiendo abonar y recordar.">
+        <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Marcar el plan como terminado? Si queda saldo, lo sigues pudiendo abonar y recordar. Las citas que sigan agendadas quedan dentro del plan, sin cobro aparte.">
           <?= csrf_campo() ?>
           <input type="hidden" name="estado" value="terminado">
           <button type="submit" class="pq-enlace-boton">Terminar el plan</button>

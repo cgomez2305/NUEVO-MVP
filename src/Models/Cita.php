@@ -187,9 +187,8 @@ class Cita
     }
 
     /**
-     * Citas que caen dentro de las próximas 24-30 horas y todavía no tienen
-     * recordatorio enviado. Ventana de 6 horas (no un corte exacto a las 24h)
-     * para que un cron que corre cada tanto no se salte ninguna.
+     * Citas de mañana (todo el día) sin recordatorio enviado: la pantalla
+     * "Citas de mañana" del panel, para enviarlos a mano de una sola vez.
      */
     public static function pendientesDeRecordatorio(int $sedeId): array
     {
@@ -200,14 +199,19 @@ class Cita
                AND c.estado IN ('pendiente', 'confirmada')
                AND c.imprevisto_motivo IS NULL
                AND c.recordatorio_enviado = 0
-               AND c.fecha_hora BETWEEN DATE_ADD(NOW(), INTERVAL 24 HOUR) AND DATE_ADD(NOW(), INTERVAL 30 HOUR)
+               AND c.fecha_hora >= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+               AND c.fecha_hora < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
              ORDER BY c.fecha_hora ASC"
         );
         $stmt->execute(['sede_id' => $sedeId]);
         return $stmt->fetchAll();
     }
 
-    /** Igual que pendientesDeRecordatorio() pero para todos los negocios a la vez (usado por el cron). */
+    /**
+     * Para el cron (todos los negocios a la vez): citas a 24-30 horas sin
+     * recordatorio. Ventana de 6 horas (no un corte exacto a las 24h) para
+     * que un cron que corre cada tanto no se salte ninguna.
+     */
     public static function pendientesDeRecordatorioGlobal(): array
     {
         $stmt = Database::conexion()->prepare(
@@ -449,17 +453,28 @@ class Cita
         }
 
         if ($empleadoId !== null) {
-            $sql .= ' AND empleado_id = :empleado_id';
+            // Una cita sin profesional asignado (de antes de tener equipo, o
+            // de la fila) ocupa a todos: nadie sabe quién la atiende.
+            $sql .= ' AND (empleado_id = :empleado_id OR empleado_id IS NULL)';
             $params['empleado_id'] = $empleadoId;
         }
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute($params);
-
-        return array_map(
+        $ocupados = array_map(
             fn ($fila) => ['inicio' => $fila['fecha_hora'], 'duracion_min' => (int) $fila['duracion_min']],
             $stmt->fetchAll()
         );
+        // Día libre de esa persona ("se me complicó el día"): ocupada todo el día.
+        if ($empleadoId !== null) {
+            $libre = Database::conexion()->prepare('SELECT 1 FROM empleado_dias_libres WHERE empleado_id = :e AND fecha = :f');
+            $libre->execute(['e' => $empleadoId, 'f' => $fecha]);
+            if ($libre->fetchColumn() !== false) {
+                $ocupados[] = ['inicio' => $fecha . ' 00:00:00', 'duracion_min' => 24 * 60];
+            }
+        }
+
+        return $ocupados;
     }
 
     /**

@@ -145,7 +145,7 @@ unset($columna);
 
 <?php if ($historialLimitado): ?>
   <div class="pq-alerta pq-alerta-aviso pq-historial-aviso">
-    Tu plan muestra hasta 30 días de historial. <a href="<?= e(base_url('/panel/plan')) ?>">Sube a Pro</a> para ver el histórico completo y exportarlo a CSV.
+    Tu plan muestra hasta 30 días de historial (la exportación a CSV trae todo). <a href="<?= e(base_url('/panel/plan')) ?>">Sube a Pro</a> para ver el histórico completo y sus estadísticas en el panel.
   </div>
 <?php endif; ?>
 

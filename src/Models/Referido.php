@@ -63,9 +63,12 @@ class Referido
      * Si este negocio llegó invitado y es su primer plan pagado, le regala
      * los días al que lo invitó: extiende su plan pago vigente o, si está en
      * Gratis, le da Barrio esos días. Una sola vez por invitado.
+     * El premio nunca vale más que lo que pagó el invitado: con un Barrio
+     * mensual ($29.900) no se compran 30 días de Pro ($69.900), así abrir
+     * cuentas de mentira y pagarles el plan más barato no deja ganancia.
      * Devuelve el id del negocio premiado (o null).
      */
-    public static function premiarPorPago(int $referidoId): ?int
+    public static function premiarPorPago(int $referidoId, int $montoPagado = 0): ?int
     {
         $pdo = Database::conexion();
         $pdo->beginTransaction();
@@ -77,7 +80,11 @@ class Referido
                 $pdo->rollBack();
                 return null;
             }
-            $stmt = $pdo->prepare('SELECT plan_id, plan_vence_en FROM negocios WHERE id = :id FOR UPDATE');
+            $stmt = $pdo->prepare(
+                'SELECT n.plan_id, n.plan_vence_en, p.precio_mensual,
+                        (SELECT precio_mensual FROM planes WHERE id = 2) AS precio_barrio
+                 FROM negocios n JOIN planes p ON p.id = n.plan_id WHERE n.id = :id FOR UPDATE'
+            );
             $stmt->execute(['id' => $referido['referidor_id']]);
             $referidor = $stmt->fetch();
             if ($referidor === false) {
@@ -86,14 +93,20 @@ class Referido
             }
             $dias = (int) $referido['dias_premio'];
             $hoy = date('Y-m-d');
-            if ((int) $referidor['plan_id'] > 1 && !empty($referidor['plan_vence_en']) && $referidor['plan_vence_en'] >= $hoy) {
+            $extiende = (int) $referidor['plan_id'] > 1 && !empty($referidor['plan_vence_en']) && $referidor['plan_vence_en'] >= $hoy;
+            // Los días que alcanza lo pagado, al precio del plan que se regala.
+            $precioDia = (int) ($extiende ? $referidor['precio_mensual'] : $referidor['precio_barrio']);
+            if ($montoPagado > 0 && $precioDia > 0) {
+                $dias = min($dias, max(1, intdiv($montoPagado * 30, $precioDia)));
+            }
+            if ($extiende) {
                 $pdo->prepare('UPDATE negocios SET plan_vence_en = DATE_ADD(plan_vence_en, INTERVAL :d DAY) WHERE id = :id')
                     ->execute(['d' => $dias, 'id' => $referido['referidor_id']]);
             } else {
                 $pdo->prepare("UPDATE negocios SET plan_id = 2, plan_estado = 'activo', plan_ciclo = 'mensual', plan_vence_en = DATE_ADD(CURDATE(), INTERVAL :d DAY) WHERE id = :id")
                     ->execute(['d' => $dias, 'id' => $referido['referidor_id']]);
             }
-            $pdo->prepare('UPDATE referidos SET premiado_en = NOW() WHERE id = :id')->execute(['id' => $referido['id']]);
+            $pdo->prepare('UPDATE referidos SET premiado_en = NOW(), dias_premio = :d WHERE id = :id')->execute(['d' => $dias, 'id' => $referido['id']]);
             $pdo->commit();
 
             return (int) $referido['referidor_id'];

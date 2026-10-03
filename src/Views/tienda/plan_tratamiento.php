@@ -39,7 +39,7 @@ $validoHasta = date('Y-m-d', (strtotime((string) $plan['creado_en']) ?: time()) 
             <span class="pq-plan-fase-numero" aria-hidden="true"><?= (int) $fase['orden'] ?></span>
             <span class="pq-plan-fase-texto">
               <strong><?= e($fase['nombre']) ?></strong>
-              <span class="pq-ayuda"><?= (int) $fase['sesiones'] ?> sesión<?= (int) $fase['sesiones'] === 1 ? '' : 'es' ?><?= $plan['estado'] === 'aprobado' ? ' · ' . (int) $fase['hechas'] . ' hecha' . ((int) $fase['hechas'] === 1 ? '' : 's') : '' ?></span>
+              <span class="pq-ayuda"><?= (int) $fase['sesiones'] === 1 ? '1 sesión' : (int) $fase['sesiones'] . ' sesiones' ?><?= $plan['estado'] === 'aprobado' ? ' · ' . (int) $fase['hechas'] . ' hecha' . ((int) $fase['hechas'] === 1 ? '' : 's') : '' ?></span>
               <?php if ($plan['estado'] !== 'propuesto'): ?>
                 <span class="pq-plan-perforado" role="img" aria-label="<?= (int) $fase['hechas'] ?> de <?= (int) $fase['sesiones'] ?> sesiones hechas">
                   <?php for ($i = 0; $i < (int) $fase['sesiones']; $i++): ?><span class="pq-plan-hueco<?= $i < (int) $fase['hechas'] ? ' pq-plan-hueco-hecho' : ($i < (int) $fase['hechas'] + (int) $fase['agendadas'] ? ' pq-plan-hueco-agendado' : '') ?>"></span><?php endfor; ?>

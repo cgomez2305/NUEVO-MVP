@@ -236,10 +236,15 @@ class PlanTratamiento
 
                 return false;
             }
-            $pdo->prepare(
-                "UPDATE citas SET plan_id = NULL, plan_fase_id = NULL, descuento = 0
-                 WHERE plan_id = :p AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso')"
-            )->execute(['p' => $id, 's' => $sedeId]);
+            // Cancelado: lo que seguía agendado ya no lo cubre el plan y se
+            // cobra aparte. Terminado: el paciente ya pagó el tratamiento, así
+            // que un control que quedó agendado sigue dentro del plan ($0).
+            if ($estado === 'cancelado') {
+                $pdo->prepare(
+                    "UPDATE citas SET plan_id = NULL, plan_fase_id = NULL, descuento = 0
+                     WHERE plan_id = :p AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso')"
+                )->execute(['p' => $id, 's' => $sedeId]);
+            }
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();

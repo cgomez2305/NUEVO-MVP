@@ -14,8 +14,40 @@ use App\Database;
  */
 class PushSubscripcion
 {
+    /** Los servicios de push de los navegadores: solo a ellos se les envía (nada de URLs arbitrarias). */
+    private const HOSTS_PERMITIDOS = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'web.push.apple.com'];
+    private const SUFIJOS_PERMITIDOS = ['.notify.windows.com', '.push.apple.com', '.push.services.mozilla.com'];
+    public const MAX_POR_USUARIO = 10;
+
+    /** ¿Es la URL de un servicio de push real (https y host conocido)? */
+    public static function endpointValido(string $endpoint): bool
+    {
+        if (strlen($endpoint) > 600 || parse_url($endpoint, PHP_URL_SCHEME) !== 'https') {
+            return false;
+        }
+        $host = strtolower((string) parse_url($endpoint, PHP_URL_HOST));
+        if (in_array($host, self::HOSTS_PERMITIDOS, true)) {
+            return true;
+        }
+        foreach (self::SUFIJOS_PERMITIDOS as $sufijo) {
+            if (str_ends_with($host, $sufijo)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function guardar(int $usuarioId, string $endpoint, string $p256dh, string $auth): void
     {
+        if (!self::endpointValido($endpoint) || strlen($p256dh) > 200 || strlen($auth) > 100) {
+            return;
+        }
+        // Un dueño con 10 navegadores ya es mucho: el más viejo cede su lugar.
+        Database::conexion()->prepare(
+            'DELETE FROM push_subscripciones WHERE usuario_id = :u AND id NOT IN (
+               SELECT id FROM (SELECT id FROM push_subscripciones WHERE usuario_id = :u2 ORDER BY id DESC LIMIT ' . (self::MAX_POR_USUARIO - 1) . ') ultimas)'
+        )->execute(['u' => $usuarioId, 'u2' => $usuarioId]);
         $stmt = Database::conexion()->prepare(
             'INSERT INTO push_subscripciones (usuario_id, endpoint, p256dh, auth)
              VALUES (:usuario_id, :endpoint, :p256dh, :auth)

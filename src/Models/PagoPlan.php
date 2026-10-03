@@ -204,7 +204,7 @@ class PagoPlan
         }
         // Si este negocio llegó invitado, quien lo invitó gana sus días
         // ahora que pagó (solo la primera vez; ver Referido).
-        Referido::premiarPorPago((int) $pago['negocio_id']);
+        Referido::premiarPorPago((int) $pago['negocio_id'], (int) $pago['monto']);
 
         return true;
     }

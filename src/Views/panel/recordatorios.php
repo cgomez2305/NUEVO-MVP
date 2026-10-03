@@ -4,7 +4,7 @@
     <h1 class="pq-h1">Citas de mañana</h1>
   </div>
 </div>
-<p class="pq-lead pq-pagina-bajada-panel">Citas de las próximas 24 a 30 horas que aún no tienen recordatorio.</p>
+<p class="pq-lead pq-pagina-bajada-panel">Todas las citas de mañana que aún no tienen recordatorio, para enviarlos de una vez.</p>
 
 <?php if (!empty($ok)): ?>
   <div class="pq-alerta pq-alerta-ok pq-pagina-aviso"><?= e($ok) ?></div>

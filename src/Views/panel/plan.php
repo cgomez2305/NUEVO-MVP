@@ -106,6 +106,11 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
       if ($plan['nombre'] === 'gratis') {
           $bullets[] = 'Sello "Hecho con Veci" visible';
       }
+      // Con más sedes de las que el plan incluye (y sin sedes extra a la venta), se avisa antes de elegirlo.
+      $sobran = empty($plan['precio_sede_extra']) ? (int) $totalSedes - (int) $plan['sedes_incluidas'] : 0;
+      if ($sobran > 0) {
+          $bullets[] = 'Ojo: incluye ' . (int) $plan['sedes_incluidas'] . ' sede; ' . ($sobran === 1 ? 'tu otra sede queda' : 'tus otras ' . $sobran . ' sedes quedan') . ' en pausa';
+      }
     ?>
     <div class="pq-plan-card<?= $esActual ? ' pq-plan-card-actual' : '' ?>">
       <?php if ($esActual): ?><span class="pq-plan-card-badge">Tu plan</span><?php endif; ?>

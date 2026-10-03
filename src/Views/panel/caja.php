@@ -70,9 +70,18 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
       <?php if ((int) $resumen['citas'] > 0): ?>
         <div class="pq-comanda-linea">
           <div class="pq-comanda-fila">
-            <span class="pq-comanda-nombre">Servicios <span class="pq-cierre-z-cuenta"><?= (int) $resumen['citas'] ?> citas</span></span>
+            <span class="pq-comanda-nombre">Servicios <span class="pq-cierre-z-cuenta"><?= (int) $resumen['citas'] ?> cita<?= (int) $resumen['citas'] === 1 ? '' : 's' ?></span></span>
             <span class="pq-plato-guia" aria-hidden="true"></span>
             <span class="pq-comanda-subtotal"><?= pesos((int) $resumen['total_citas']) ?></span>
+          </div>
+        </div>
+      <?php endif; ?>
+      <?php if ((int) ($resumen['bonos'] ?? 0) > 0): ?>
+        <div class="pq-comanda-linea">
+          <div class="pq-comanda-fila">
+            <span class="pq-comanda-nombre">Bonos de sesiones <span class="pq-cierre-z-cuenta"><?= (int) $resumen['bonos'] ?> vendido<?= (int) $resumen['bonos'] === 1 ? '' : 's' ?></span></span>
+            <span class="pq-plato-guia" aria-hidden="true"></span>
+            <span class="pq-comanda-subtotal"><?= pesos((int) $resumen['total_bonos']) ?></span>
           </div>
         </div>
       <?php endif; ?>
@@ -130,6 +139,14 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
         <?= (int) $resumen['sin_entregar'] === 1 ? 'Un pedido de este día sigue' : (int) $resumen['sin_entregar'] . ' pedidos de este día siguen' ?> sin marcar como entregado: ya suman en lo vendido.
         <a href="<?= e(base_url('/panel/pedidos')) ?>">Ver pedidos</a>
       </p>
+    <?php endif; ?>
+    <?php if (!$cerrada && (int) ($resumen['citas_por_venir'] ?? 0) > 0): ?>
+      <p class="pq-ayuda">
+        <?= (int) $resumen['citas_por_venir'] === 1 ? 'Una cita de este día todavía no llega' : (int) $resumen['citas_por_venir'] . ' citas de este día todavía no llegan' ?>: no suman hasta su hora o hasta que las marques como atendidas.
+      </p>
+    <?php endif; ?>
+    <?php if ((int) ($resumen['bonos'] ?? 0) > 0): ?>
+      <p class="pq-ayuda">Los bonos no dicen cómo te los pagaron: si fue en efectivo, súmalo a lo que debería haber en el cajón.</p>
     <?php endif; ?>
     <?php if ((int) $resumen['anticipos'] > 0): ?>
       <p class="pq-ayuda">Anticipos ya pagados de las citas del día: <?= pesos((int) $resumen['anticipos']) ?> (incluidos en servicios).</p>

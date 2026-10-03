@@ -55,15 +55,26 @@ class CierreCaja
         $stmt->execute($rango);
         $cancelados = (int) $stmt->fetchColumn();
 
-        // Citas del día (las de la agenda de ese día, no las reservadas ese día).
+        // Citas del día (las de la agenda de ese día, no las reservadas ese
+        // día). Solo las que ya pasaron: si el dueño cierra a las 2 p. m., la
+        // cita de las 5 p. m. todavía no es plata en el cajón (va aparte como
+        // "por venir"). Las ya atendidas cuentan aunque fueran más tarde.
         $stmt = $pdo->prepare(
             'SELECT COUNT(*) AS citas, COALESCE(SUM(' . Cita::sqlValor() . "), 0) AS total,
                     COALESCE(SUM(CASE WHEN anticipo_estado = 'pagado' THEN anticipo_monto ELSE 0 END), 0) AS anticipos
              FROM citas
-             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta AND " . Cita::sqlCuenta()
+             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta AND " . Cita::sqlCuenta() . "
+               AND (estado IN ('completada', 'en_curso') OR fecha_hora <= NOW())"
         );
         $stmt->execute($rango);
         $citas = $stmt->fetch() ?: ['citas' => 0, 'total' => 0, 'anticipos' => 0];
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM citas
+             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta
+               AND estado IN ('pendiente', 'confirmada') AND fecha_hora > NOW()"
+        );
+        $stmt->execute($rango);
+        $citasPorVenir = (int) $stmt->fetchColumn();
         // El anticipo que se quedó el negocio porque el cliente no llegó
         // (regla "se pierde": sin cupón de abono) es plata que sí entró.
         $stmt = $pdo->prepare(
@@ -97,6 +108,14 @@ class CierreCaja
         // entró (las citas del plan valen $0 para no cobrarlas dos veces).
         $abonosPlanes = PlanTratamiento::abonosDelRango($sedeId, $rango['desde'], $rango['hasta']);
         $totalAbonosPlanes = array_sum(array_column($abonosPlanes, 'total'));
+        // Bonos de sesiones vendidos ese día: se pagan completos al
+        // venderlos (las citas con bono valen solo la diferencia).
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) AS bonos, COALESCE(SUM(precio_pagado), 0) AS total FROM bonos
+             WHERE sede_id = :s AND creado_en >= :desde AND creado_en < :hasta'
+        );
+        $stmt->execute($rango);
+        $bonos = $stmt->fetch() ?: ['bonos' => 0, 'total' => 0];
 
         return [
             'mostrador'     => $mostrador,
@@ -114,7 +133,10 @@ class CierreCaja
             'citas'         => (int) $citas['citas'],
             'total_citas'   => (int) $citas['total'],
             'anticipos'     => (int) $citas['anticipos'],
-            'ventas_total'  => $totalPedidos + (int) $citas['total'] + $mostradorCobrado + $totalAbonosPlanes,
+            'citas_por_venir' => $citasPorVenir,
+            'bonos'         => (int) $bonos['bonos'],
+            'total_bonos'   => (int) $bonos['total'],
+            'ventas_total'  => $totalPedidos + (int) $citas['total'] + $mostradorCobrado + $totalAbonosPlanes + (int) $bonos['total'],
         ];
     }
 

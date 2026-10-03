@@ -69,9 +69,10 @@ class Usuario
         }
     }
 
+    /** Cambia la contraseña y sube sesion_version: las otras sesiones abiertas se cierran. */
     public static function cambiarPassword(int $id, string $password): void
     {
-        $stmt = Database::conexion()->prepare('UPDATE usuarios SET password_hash = :hash WHERE id = :id');
+        $stmt = Database::conexion()->prepare('UPDATE usuarios SET password_hash = :hash, sesion_version = sesion_version + 1 WHERE id = :id');
         $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
     }
 
@@ -117,14 +118,16 @@ class Usuario
     {
         $stmt = Database::conexion()->prepare(
             'UPDATE usuarios SET password_hash = :hash, reset_token = NULL, reset_token_expira = NULL,
-             intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = :id'
+             intentos_fallidos = 0, bloqueado_hasta = NULL, sesion_version = sesion_version + 1 WHERE id = :id'
         );
         $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
     }
 
     public static function buscarPorId(int $id): ?array
     {
-        $stmt = Database::conexion()->prepare('SELECT * FROM usuarios WHERE id = :id');
+        $stmt = Database::conexion()->prepare(
+            'SELECT u.*, n.suspendido AS negocio_suspendido FROM usuarios u JOIN negocios n ON n.id = u.negocio_id WHERE u.id = :id'
+        );
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
     }

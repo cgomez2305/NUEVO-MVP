@@ -63,6 +63,8 @@ function url_publica(string $ruta = ''): string
 
 function redirigir(string $ruta): never
 {
+    // Un salto de línea en la ruta partiría la cabecera: nunca llega.
+    $ruta = str_replace(["\r", "\n", "\0"], '', $ruta);
     header('Location: ' . base_url($ruta));
     exit;
 }
@@ -576,6 +578,22 @@ function metodo_pago_legible(string $metodo): string
  *   - cedula:  5 a 10 dígitos (acepta puntos).
  *   - correo:  un correo válido, en minúsculas.
  */
+/**
+ * Celular colombiano de 10 dígitos que empieza por 3, aceptando "+57",
+ * espacios y guiones: "+57 300 123 4567" → "3001234567". null si no lo es.
+ * Así una misma persona no puede tener dos cuentas ("57300…" y "300…") ni
+ * quedar un número que no abre WhatsApp.
+ */
+function whatsapp_normalizado(string $texto): ?string
+{
+    $digitos = (string) preg_replace('/\D+/', '', $texto);
+    if (strlen($digitos) === 12 && str_starts_with($digitos, '57')) {
+        $digitos = substr($digitos, 2);
+    }
+
+    return preg_match('/^3\d{9}$/', $digitos) === 1 ? $digitos : null;
+}
+
 function llave_breb_normalizada(string $tipo, string $valor): ?string
 {
     $valor = trim($valor);

@@ -97,6 +97,7 @@ class Pedido
                 $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0)
                     + (!empty($item['gramos']) ? (int) $item['gramos'] / Producto::GRAMOS_POR_KILO : (int) $item['cantidad']);
             }
+            $movido = [];
             foreach (self::demandaDeUnidades($pdo, $pedidas) as $productoId => $unidades) {
                 $stmtStock->execute(['id' => $productoId, 'sede' => $sedeId]);
                 $fila = $stmtStock->fetch();
@@ -111,7 +112,11 @@ class Pedido
                         : "Solo quedan {$quedan} de {$fila['nombre']}. Ajusta la cantidad y vuelve a enviar.");
                 }
                 $stmtDescontar->execute(['cantidad' => $unidades, 'id' => $productoId]);
+                $movido[$productoId] = $unidades;
             }
+            // Lo descontado, tal cual: cancelar devuelve esto (ver actualizarEstado).
+            $pdo->prepare('UPDATE pedidos SET inventario_movido = :m WHERE id = :id')
+                ->execute(['m' => json_encode($movido, JSON_FORCE_OBJECT), 'id' => $pedidoId]);
 
             // por_peso se copia: cancelar devuelve en la unidad en que se pidió.
             $stmtPeso = $pdo->prepare("SELECT vende_por = 'peso' FROM productos WHERE id = :id AND sede_id = :sede");
@@ -233,7 +238,8 @@ class Pedido
         $pdo = Database::conexion();
 
         $stmtTotales = $pdo->prepare(
-            "SELECT COUNT(*) AS total, COALESCE(SUM(p.total), 0) AS suma
+            // Lo "vendido" no incluye los cancelados (sí se cuentan en el total de pedidos).
+            "SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN p.estado <> 'cancelado' THEN p.total ELSE 0 END), 0) AS suma
              FROM pedidos p JOIN clientes c ON c.id = p.cliente_id
              WHERE {$where}"
         );
@@ -293,13 +299,14 @@ class Pedido
         $pdo = Database::conexion();
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare('SELECT estado FROM pedidos WHERE id = :id AND sede_id = :sede_id FOR UPDATE');
+            $stmt = $pdo->prepare('SELECT estado, inventario_movido FROM pedidos WHERE id = :id AND sede_id = :sede_id FOR UPDATE');
             $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
-            $antes = $stmt->fetchColumn();
-            if ($antes === false) {
+            $pedido = $stmt->fetch();
+            if ($pedido === false) {
                 $pdo->rollBack();
                 return;
             }
+            $antes = $pedido['estado'];
             $pdo->prepare('UPDATE pedidos SET estado = :estado WHERE id = :id AND sede_id = :sede_id')
                 ->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
             // Cancelar devuelve las unidades al inventario (y "descancelar"
@@ -309,7 +316,27 @@ class Pedido
                 $antes === 'cancelado' && $estado !== 'cancelado' => '-',
                 default => null,
             };
-            if ($signo !== null) {
+            $movido = $pedido['inventario_movido'] !== null ? json_decode((string) $pedido['inventario_movido'], true) : null;
+            if ($signo !== null && is_array($movido)) {
+                // Exactamente lo que este pedido descontó al crearse.
+                ksort($movido);
+                $bloquear = $pdo->prepare('SELECT nombre, stock, vende_por FROM productos WHERE id = :p FOR UPDATE');
+                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
+                foreach ($movido as $productoId => $unidades) {
+                    if ($signo === '-') {
+                        // Reabrir un pedido cancelado vuelve a tomar inventario:
+                        // solo si todavía alcanza (no se deja el stock en negativo).
+                        $bloquear->execute(['p' => (int) $productoId]);
+                        $fila = $bloquear->fetch();
+                        if ($fila !== false && $fila['stock'] !== null && (int) $fila['stock'] < (int) $unidades) {
+                            $quedan = $fila['vende_por'] === 'peso' ? Producto::gramosLegibles((int) $fila['stock']) : (string) $fila['stock'];
+                            throw new \DomainException("No se puede reabrir: de {$fila['nombre']} quedan {$quedan} y este pedido necesita más.");
+                        }
+                    }
+                    $ajustar->execute(['n' => (int) $unidades, 'p' => (int) $productoId]);
+                }
+            } elseif ($signo !== null) {
+                // Pedidos de antes de guardar lo movido: se calcula como entonces.
                 $stmtItems = $pdo->prepare('SELECT producto_id, cantidad, por_peso, gramos FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
                 $stmtItems->execute(['id' => $id]);
                 $pedidas = [];
@@ -387,8 +414,8 @@ class Pedido
     public static function contarHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT COUNT(*) AS total FROM pedidos
-             WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE()'
+            "SELECT COUNT(*) AS total FROM pedidos
+             WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE() AND estado <> 'cancelado'"
         );
         $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
