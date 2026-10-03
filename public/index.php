@@ -24,7 +24,8 @@ use App\Controllers\VisitaController;
 use App\Controllers\WebhookController;
 use App\Router;
 
-$router = new Router();
+// Los webhooks se autentican con la firma o el secreto del proveedor.
+$router = new Router(['/webhooks/breb', '/webhooks/wompi']);
 
 $home = new HomeController();
 $auth = new AuthController();
@@ -187,6 +188,9 @@ $router->post('/panel/colaboradores/{id}/eliminar', [$panel, 'eliminarColaborado
 $router->get('/panel/cuenta', [$panel, 'cuenta']);
 $router->post('/panel/cuenta/correo', [$panel, 'actualizarCorreo']);
 $router->post('/panel/cuenta/password', [$panel, 'actualizarPasswordCuenta']);
+$router->post('/panel/cuenta/cerrar-sesiones', [$panel, 'cerrarOtrasSesiones']);
+$router->get('/panel/confirmar', [$panel, 'confirmarIdentidadVista']);
+$router->post('/panel/confirmar', [$panel, 'confirmarIdentidad']);
 $router->get('/panel/plan', [$panel, 'plan']);
 $router->post('/panel/plan/solicitar', [$panel, 'solicitarCambioPlan']);
 $router->post('/panel/plan/cancelar', [$panel, 'cancelarSolicitudPlan']);

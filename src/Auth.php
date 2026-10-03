@@ -4,35 +4,69 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Models\DispositivoConfianza;
+use App\Models\EventoSeguridad;
+use App\Models\LimiteTasa;
 use App\Models\Sede;
 use App\Models\Usuario;
 
 class Auth
 {
     /**
-     * false puede significar credenciales inválidas o cuenta bloqueada
-     * temporalmente; usa estaBloqueado() antes de intentar el login para
-     * distinguir el mensaje que le muestras al usuario.
+     * Por qué falló el último intentarLogin(): null (datos incorrectos),
+     * 'frenado' (demasiados intentos desde aquí), 'solo_conocidos' (la
+     * cuenta está bajo ataque: solo entra un celular conocido) o 'suspendido'.
      */
-    /** Por qué falló el último intentarLogin(): null (datos incorrectos) o 'suspendido'. */
     public static ?string $motivoFallo = null;
 
+    /** Intentos fallidos con un mismo número desde un mismo lugar (IP o celular conocido) antes de frenar 15 minutos. */
+    private const MAX_INTENTOS = 5;
+
+    /**
+     * Intentos fallidos con un mismo número desde lugares DESCONOCIDOS en una
+     * hora antes de aceptar solo celulares conocidos: eso ya es un ataque
+     * repartido entre muchas IPs, no alguien que olvidó su contraseña.
+     */
+    private const MAX_DESCONOCIDOS_HORA = 30;
+
+    /**
+     * Antes el bloqueo era por cuenta: cualquiera que supiera el WhatsApp de
+     * un dueño lo dejaba por fuera 15 minutos con 5 intentos. Ahora el freno
+     * es por número + lugar, así que el atacante solo se frena a sí mismo, y
+     * desde un celular donde el dueño ya entró se sigue entrando aunque la
+     * cuenta esté bajo ataque. Todo va por el número escrito (exista o no la
+     * cuenta): las respuestas no revelan qué números tienen cuenta.
+     */
     public static function intentarLogin(string $whatsapp, string $password): bool
     {
         self::$motivoFallo = null;
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
-        if ($usuario === null) {
-            // Mismo trabajo que con una cuenta real: por el tiempo de respuesta
-            // no se puede saber qué números tienen cuenta.
-            password_verify($password, '$2y$10$abcdefghijklmnopqrstuuJ1lYcjS8Yl2bJ0n1tq5bWm1N3oQ5rS.');
+        $conocido = $usuario !== null ? DispositivoConfianza::deEsteNavegador((int) $usuario['id']) : null;
+        $claveLugar = 'w' . $whatsapp . '|' . ($conocido !== null ? 'd' . $conocido['id'] : ip_cliente());
+        $claveNumero = 'w' . $whatsapp;
+
+        if (LimiteTasa::excedido('login_cuenta', $claveLugar, self::MAX_INTENTOS, 15 * 60)) {
+            self::$motivoFallo = 'frenado';
             return false;
         }
-        if (Usuario::bloqueado($usuario)) {
+        if ($conocido === null && LimiteTasa::excedido('login_desconocido', $claveNumero, self::MAX_DESCONOCIDOS_HORA, 3600)) {
+            self::$motivoFallo = 'solo_conocidos';
             return false;
         }
 
-        if (!password_verify($password, $usuario['password_hash'])) {
-            Usuario::registrarIntentoFallido((int) $usuario['id']);
+        // Con o sin cuenta, el mismo trabajo: por el tiempo de respuesta no
+        // se puede saber qué números tienen cuenta.
+        $hash = $usuario['password_hash'] ?? '$2y$10$abcdefghijklmnopqrstuuJ1lYcjS8Yl2bJ0n1tq5bWm1N3oQ5rS.';
+        if (!password_verify($password, (string) $hash) || $usuario === null) {
+            LimiteTasa::registrar('login_cuenta', $claveLugar);
+            if ($conocido === null) {
+                LimiteTasa::registrar('login_desconocido', $claveNumero);
+            }
+            // Una sola vez por freno (el intento que lo activa), no por cada fallo.
+            if ($usuario !== null && LimiteTasa::excedido('login_cuenta', $claveLugar, self::MAX_INTENTOS, 15 * 60)
+                && !LimiteTasa::excedido('login_cuenta', $claveLugar, self::MAX_INTENTOS + 1, 15 * 60)) {
+                EventoSeguridad::registrar('cuenta_frenada', (int) $usuario['negocio_id'], (int) $usuario['id'], self::MAX_INTENTOS . ' contraseñas incorrectas seguidas');
+            }
             return false;
         }
         // "Suspendida" solo se le dice a quien ya demostró la contraseña.
@@ -41,27 +75,15 @@ class Auth
             return false;
         }
 
-        Usuario::registrarLoginExitoso((int) $usuario['id']);
+        LimiteTasa::limpiar('login_cuenta', $claveLugar);
+        EventoSeguridad::registrar($conocido !== null ? 'login' : 'login_nuevo', (int) $usuario['negocio_id'], (int) $usuario['id']);
+        DispositivoConfianza::recordar((int) $usuario['id']);
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['sesion_version'] = (int) $usuario['sesion_version'];
         unset($_SESSION['sede_id']); // se elige de nuevo, por si el usuario ya no tiene acceso a la que tenía antes
 
         return true;
-    }
-
-    /** Máximo 5 intentos fallidos seguidos antes de bloquear la cuenta 15 minutos. */
-    public static function estaBloqueado(string $whatsapp): bool
-    {
-        $usuario = Usuario::buscarPorWhatsapp($whatsapp);
-        return $usuario !== null && Usuario::bloqueado($usuario);
-    }
-
-    /** El negocio de esa cuenta fue suspendido por el equipo de Veci (ver AdminController). */
-    public static function estaSuspendido(string $whatsapp): bool
-    {
-        $usuario = Usuario::buscarPorWhatsapp($whatsapp);
-        return $usuario !== null && (int) $usuario['negocio_suspendido'] === 1;
     }
 
     /**
@@ -104,6 +126,45 @@ class Auth
         }
 
         return $usuario;
+    }
+
+    /** Minutos que dura una confirmación de identidad para acciones sensibles. */
+    private const MINUTOS_IDENTIDAD = 10;
+
+    /**
+     * ¿El usuario escribió su contraseña hace poco? Las acciones que un
+     * intruso con una sesión robada (celular prestado, sesión abierta en un
+     * computador ajeno) usaría para quedarse con el negocio o su plata la
+     * piden otra vez: cambiar la llave Bre-B o el correo de recuperación,
+     * crear colaboradores, exportar la lista de clientes.
+     */
+    public static function identidadReciente(): bool
+    {
+        return isset($_SESSION['identidad_en']) && time() - (int) $_SESSION['identidad_en'] <= self::MINUTOS_IDENTIDAD * 60;
+    }
+
+    /**
+     * true si ya la confirmó hace poco o si $password es la suya (y la deja
+     * confirmada por 10 minutos). 5 intentos fallidos por 15 minutos: no se
+     * puede adivinar la contraseña desde una sesión robada.
+     */
+    public static function confirmarIdentidad(array $contexto, string $password): bool
+    {
+        if (self::identidadReciente()) {
+            return true;
+        }
+        $clave = 'u' . (int) $contexto['usuario_id'];
+        if ($password === '' || LimiteTasa::excedido('identidad', $clave, 5, 15 * 60)) {
+            return false;
+        }
+        $usuario = Usuario::buscarPorId((int) $contexto['usuario_id']);
+        if ($usuario === null || !password_verify($password, (string) $usuario['password_hash'])) {
+            LimiteTasa::registrar('identidad', $clave);
+            return false;
+        }
+        $_SESSION['identidad_en'] = time();
+
+        return true;
     }
 
     /** Tras cambiar la contraseña en esta sesión: esta sigue abierta, las demás no. */

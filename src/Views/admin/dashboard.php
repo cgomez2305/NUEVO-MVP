@@ -115,3 +115,28 @@ $vacio = [
     </ul>
   <?php endif; ?>
 </section>
+
+<?php
+// Quién del equipo hizo qué: confirmar pagos, suspender cuentas y generar
+// enlaces de recuperación son poderes grandes, y quedan a la vista de todos
+// los admins (y en la bitácora del negocio afectado).
+?>
+<section class="pq-seguridad" aria-labelledby="pq-titulo-equipo">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-equipo">Actividad del equipo</h2>
+  <?php if ($actividadEquipo === []): ?>
+    <p class="pq-ayuda">Todavía no hay actividad registrada.</p>
+  <?php else: ?>
+    <ol class="pq-bitacora">
+      <?php foreach ($actividadEquipo as $evento): $tipo = (string) $evento['tipo']; ?>
+        <li class="pq-bitacora-fila<?= in_array($tipo, ['reset_generado', 'negocio_suspendido', 'pago_confirmado'], true) ? ' pq-bitacora-alerta' : '' ?>">
+          <span class="pq-bitacora-punto" aria-hidden="true"></span>
+          <div class="pq-bitacora-texto">
+            <span class="pq-bitacora-titulo"><?= e(\App\Models\EventoSeguridad::TIPOS[$tipo] ?? $tipo) ?><?= $evento['negocio_nombre'] !== null ? ' · ' . e($evento['negocio_nombre']) : '' ?></span>
+            <span class="pq-ayuda"><?= e($evento['admin_nombre']) ?><?= $evento['detalle'] !== '' ? ' · ' . e($evento['detalle']) : '' ?> · <?= e($evento['descripcion']) ?><?= $evento['ip'] !== '' ? ' · IP ' . e($evento['ip']) : '' ?></span>
+          </div>
+          <time class="pq-bitacora-hora pq-mono" datetime="<?= e(date('c', strtotime((string) $evento['creado_en']))) ?>"><?= e(fecha_corta((string) $evento['creado_en'], ' ')) ?></time>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+  <?php endif; ?>
+</section>

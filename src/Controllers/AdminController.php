@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\AdminAuth;
 use App\Database;
+use App\Models\EventoSeguridad;
 use App\Models\LimiteTasa;
 use App\Models\Negocio;
 use App\Models\PagoPlan;
@@ -45,14 +46,20 @@ class AdminController
         $password = (string) ($_POST['password'] ?? '');
 
         $ip = ip_cliente();
-        if (AdminAuth::estaBloqueado($correo) || LimiteTasa::excedido('login_admin', $ip, 10, 15 * 60)) {
+        if (LimiteTasa::excedido('login_admin', $ip, 10, 15 * 60)) {
             flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
             redirigir('/admin/login');
         }
 
-        if (!AdminAuth::intentarLogin($correo, $password)) {
-            LimiteTasa::registrar('login_admin', $ip);
-            flash_set('error', 'Correo o contraseña incorrectos.');
+        if (!AdminAuth::intentarLogin($correo, $password, (string) ($_POST['codigo'] ?? ''))) {
+            if (AdminAuth::$motivoFallo === null) {
+                LimiteTasa::registrar('login_admin', $ip);
+            }
+            flash_set('error', match (AdminAuth::$motivoFallo) {
+                'frenado' => 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.',
+                'sin_2fa' => 'Esta cuenta todavía no tiene segundo factor. Actívalo en el servidor con: php bin/admin_2fa.php ' . $correo,
+                default   => 'Correo, contraseña o código incorrectos.',
+            });
             redirigir('/admin/login');
         }
 
@@ -84,6 +91,7 @@ class AdminController
             'filtro'          => $filtro,
             'resumen'         => Negocio::resumenAdmin(),
             'pagosPendientes' => PagoPlan::listarPendientes(),
+            'actividadEquipo' => EventoSeguridad::recientesDeAdmins(15),
             'ok'              => flash_obtener('ok'),
             'error'           => flash_obtener('error'),
         ], 'admin');
@@ -139,6 +147,7 @@ class AdminController
             } elseif (!PagoPlan::confirmar((int) $pago['id'], (int) $admin['id'])) {
                 flash_set('error', 'Ese pago ya estaba confirmado.');
             } else {
+                EventoSeguridad::registrar('pago_confirmado', (int) $pago['negocio_id'], null, 'Pago #' . (int) $pago['id'] . ' por ' . pesos((int) $pago['monto']), (int) $admin['id']);
                 flash_set('ok', 'Pago confirmado: el plan de ' . $this->nombreNegocio((int) $pago['negocio_id']) . ' ya quedó activo.');
             }
         }
@@ -149,7 +158,7 @@ class AdminController
     /** Descarta una solicitud de cambio de plan que nunca se pagó, para que el dueño pueda volver a pedir. */
     public function rechazarPago(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
         $pago = PagoPlan::buscarPorId((int) $parametros['id']);
 
         if ($pago === null) {
@@ -158,6 +167,7 @@ class AdminController
 
         if (csrf_verificar()) {
             if (PagoPlan::rechazar((int) $pago['id'])) {
+                EventoSeguridad::registrar('pago_rechazado', (int) $pago['negocio_id'], null, 'Pago #' . (int) $pago['id'], (int) $admin['id']);
                 flash_set('ok', 'Solicitud descartada.');
             } else {
                 flash_set('error', 'Ese pago ya estaba confirmado; no se puede descartar.');
@@ -169,10 +179,11 @@ class AdminController
 
     public function suspender(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
 
-        if (csrf_verificar()) {
+        if (csrf_verificar() && Negocio::buscarPorId((int) $parametros['id']) !== null) {
             Negocio::suspender((int) $parametros['id']);
+            EventoSeguridad::registrar('negocio_suspendido', (int) $parametros['id'], null, '', (int) $admin['id']);
             flash_set('ok', 'Cuenta suspendida. Nadie de ese negocio puede entrar ni su tienda pública responde.');
         }
 
@@ -181,10 +192,11 @@ class AdminController
 
     public function reactivar(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
 
-        if (csrf_verificar()) {
+        if (csrf_verificar() && Negocio::buscarPorId((int) $parametros['id']) !== null) {
             Negocio::reactivar((int) $parametros['id']);
+            EventoSeguridad::registrar('negocio_reactivado', (int) $parametros['id'], null, '', (int) $admin['id']);
             flash_set('ok', 'Cuenta reactivada.');
         }
 
@@ -194,7 +206,7 @@ class AdminController
     /** Genera un enlace de recuperación de contraseña para un usuario y lo muestra una sola vez, para que el admin lo copie y lo mande por WhatsApp. */
     public function generarReset(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
         $usuario = Usuario::buscarPorId((int) $parametros['usuario']);
 
         if ($usuario === null) {
@@ -203,6 +215,9 @@ class AdminController
 
         if (csrf_verificar()) {
             $token = Usuario::generarTokenReset((int) $usuario['id']);
+            // Queda en la bitácora del negocio: el dueño ve que soporte generó
+            // un enlace para entrar a su cuenta (y para quién).
+            EventoSeguridad::registrar('reset_generado', (int) $usuario['negocio_id'], (int) $usuario['id'], 'Para ' . $usuario['nombre'], (int) $admin['id']);
             flash_set('reset_enlace', url_publica('/reset-password/' . $token));
             flash_set('reset_usuario', $usuario['nombre'] . ' (' . $usuario['whatsapp'] . ')');
         }

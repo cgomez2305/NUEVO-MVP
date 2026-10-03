@@ -20,6 +20,7 @@
       <input class="pq-input" id="cuenta-correo" type="email" name="correo" placeholder="tu@correo.com" maxlength="160" autocomplete="email" value="<?= e($usuario['correo'] ?? '') ?>">
       <span class="pq-ayuda">Solo para recuperar tu contraseña si algún día la olvidas.</span>
     </div>
+    <?php $motivoIdentidad = 'Con ese correo se puede recuperar el acceso a tu cuenta.'; $idCampoIdentidad = 'confirmar-correo'; require __DIR__ . '/_confirmar_identidad.php'; ?>
     <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Guardar correo</button>
   </form>
 
@@ -49,6 +50,60 @@
     <p id="push-estado" class="pq-ayuda" aria-live="polite"></p>
   </section>
 </div>
+
+<?php
+// Seguridad: dónde está abierta la cuenta y qué ha pasado en ella. La
+// bitácora es la forma de darse cuenta a tiempo si algo no lo hizo uno.
+$alerta = ['login_nuevo', 'cuenta_frenada', 'cobro_cambiado', 'correo_cambiado', 'reset_generado', 'reset_solicitado', 'password_restablecida', 'exportacion', 'colaborador_creado', 'sede_whatsapp', 'negocio_suspendido'];
+$esteCelular = \App\Models\DispositivoConfianza::deEsteNavegador((int) $negocio['usuario_id']);
+?>
+<section class="pq-seguridad" aria-labelledby="pq-titulo-seguridad">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-seguridad">Seguridad</h2>
+
+  <div class="pq-card pq-seguridad-celulares">
+    <span class="pq-cuenta-push-titulo">Dónde has entrado</span>
+    <?php if ($dispositivos === []): ?>
+      <p class="pq-ayuda">Todavía no hay celulares guardados.</p>
+    <?php else: ?>
+      <ul class="pq-seguridad-dispositivos">
+        <?php foreach ($dispositivos as $dispositivo): ?>
+          <li>
+            <span><?= e($dispositivo['descripcion'] !== '' ? $dispositivo['descripcion'] : 'Navegador desconocido') ?><?php if ($esteCelular !== null && (int) $esteCelular['id'] === (int) $dispositivo['id']): ?> <span class="pq-chip-este">Este</span><?php endif; ?></span>
+            <span class="pq-ayuda pq-mono">Última vez <?= e(fecha_corta((string) $dispositivo['usado_en'])) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+    <p class="pq-ayuda">Si perdiste un celular o dejaste la sesión abierta en un computador ajeno, ciérrala desde aquí.</p>
+    <form method="post" action="<?= e(base_url('/panel/cuenta/cerrar-sesiones')) ?>" data-confirmar="¿Cerrar tu sesión en todos los demás celulares y computadores? Este se queda abierto.">
+      <?= csrf_campo() ?>
+      <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Cerrar sesión en los demás dispositivos</button>
+    </form>
+  </div>
+
+  <h3 class="pq-seguridad-subtitulo">Actividad reciente<?= $negocio['rol'] === 'dueno' ? ' del negocio' : '' ?></h3>
+  <?php if ($eventos === []): ?>
+    <p class="pq-ayuda">Aquí vas a ver cada inicio de sesión y los cambios importantes de tu cuenta.</p>
+  <?php else: ?>
+    <ol class="pq-bitacora">
+      <?php foreach ($eventos as $evento): $tipo = (string) $evento['tipo']; ?>
+        <li class="pq-bitacora-fila<?= in_array($tipo, $alerta, true) ? ' pq-bitacora-alerta' : '' ?>">
+          <span class="pq-bitacora-punto" aria-hidden="true"></span>
+          <div class="pq-bitacora-texto">
+            <span class="pq-bitacora-titulo"><?= e(\App\Models\EventoSeguridad::TIPOS[$tipo] ?? $tipo) ?><?= $evento['detalle'] !== '' ? ' · ' . e($evento['detalle']) : '' ?></span>
+            <span class="pq-ayuda">
+              <?= $evento['admin_id'] !== null ? 'Equipo de Veci' : e($evento['usuario_nombre'] ?? 'Usuario eliminado') ?>
+              <?= $evento['descripcion'] !== '' ? ' · ' . e($evento['descripcion']) : '' ?>
+              <?= $evento['ip'] !== '' && $evento['admin_id'] === null ? ' · IP ' . e($evento['ip']) : '' ?>
+            </span>
+          </div>
+          <time class="pq-bitacora-hora pq-mono" datetime="<?= e(date('c', strtotime((string) $evento['creado_en']))) ?>"><?= e(fecha_corta((string) $evento['creado_en'], ' ')) ?></time>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+    <p class="pq-ayuda pq-bitacora-nota">¿Ves algo que no hiciste tú? Cambia tu contraseña y cierra la sesión en los demás dispositivos. Se guarda 6 meses.</p>
+  <?php endif; ?>
+</section>
 
 <form method="post" action="<?= e(base_url('/logout')) ?>" class="pq-cuenta-salir">
   <?= csrf_campo() ?>

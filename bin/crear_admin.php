@@ -53,8 +53,8 @@ if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
     exit(1);
 }
 
-if (strlen($password) < 8) {
-    fwrite(STDERR, "Usa una contraseña de al menos 8 caracteres para una cuenta de panel interno.\n");
+if (strlen($password) < 12) {
+    fwrite(STDERR, "Usa una contraseña de al menos 12 caracteres para una cuenta de panel interno.\n");
     exit(1);
 }
 
@@ -64,4 +64,5 @@ if (Admin::buscarPorCorreo($correo) !== null) {
 }
 
 $id = Admin::crear($nombre, $correo, $password);
-echo "Admin #{$id} creado: {$nombre} <{$correo}>. Ya puede entrar en /admin/login.\n";
+echo "Admin #{$id} creado: {$nombre} <{$correo}>.\n";
+echo "Falta el segundo factor: corre ahora  php bin/admin_2fa.php {$correo}  (sin él no puede entrar a /admin).\n";

@@ -19,5 +19,11 @@
     <input class="pq-input" type="password" id="password" name="password" required autocomplete="current-password">
   </div>
 
+  <div class="pq-campo">
+    <label class="pq-label" for="codigo">Código de tu app autenticadora</label>
+    <input class="pq-input pq-mono" type="text" id="codigo" name="codigo" required inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code" placeholder="123 456">
+    <p class="pq-ayuda">Los 6 dígitos que muestra Google Authenticator (o la que uses) para Veci.</p>
+  </div>
+
   <button type="submit" class="pq-btn pq-btn-sello">Entrar →</button>
 </form>

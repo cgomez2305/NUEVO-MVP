@@ -43,6 +43,7 @@
     </div>
     <span class="pq-ayuda">Aquí te transfieren tus clientes. Revísala bien: si está mal, el pago rebota.</span>
   </div>
+  <?php $motivoIdentidad = 'Solo hace falta si cambias la llave Bre-B.'; $identidadOpcional = true; $idCampoIdentidad = 'confirmar-llave'; require __DIR__ . '/_confirmar_identidad.php'; ?>
 
   <?php $colorActualMarca = strtoupper(color_seguro($sede['color_marca'] ?? null)); ?>
   <fieldset class="pq-onb-colores">

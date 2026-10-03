@@ -173,6 +173,94 @@ function ip_cliente(): string
     return $ip;
 }
 
+/**
+ * La IP para mostrar en la bitácora de seguridad, sin el último bloque
+ * (190.25.10.0): alcanza para reconocer "desde mi casa" o "desde otro
+ * lado" sin guardar la dirección exacta de nadie.
+ */
+function ip_recortada(): string
+{
+    $ip = ip_cliente();
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return preg_replace('/\.\d+$/', '.0', $ip) ?? $ip;
+    }
+
+    return $ip; // IPv6 ya llega como su /64
+}
+
+/**
+ * Por qué una contraseña es demasiado fácil de adivinar, o null si sirve.
+ * Lo primero que prueba quien ataca una cuenta: el mismo número de
+ * WhatsApp, 12345678, "contraseña", el nombre del negocio. Exigir
+ * símbolos raros no ayuda (se anotan en un papel); esto sí.
+ *
+ * @param array<int, string> $datosPropios WhatsApp, nombre del negocio... que no deben ser la contraseña
+ */
+function password_debil(string $password, array $datosPropios = []): ?string
+{
+    if (strlen($password) < 8) {
+        return 'La contraseña debe tener al menos 8 caracteres.';
+    }
+    $simple = mb_strtolower(preg_replace('/[\s._-]+/', '', $password) ?? $password);
+    $comunes = [
+        '12345678', '123456789', '1234567890', '87654321', '11111111', '00000000', '12341234', '11223344',
+        'password', 'password1', 'contrasena', 'contraseña', 'qwertyui', 'qwerty123', 'asdfghjk', 'abcd1234',
+        'abc12345', 'iloveyou', 'teamo123', 'colombia', 'colombia1', 'bogota123', 'medellin', 'veci1234',
+        'veci12345', 'tuveci', 'admin123', 'administrador', 'negocio1', 'mitienda', 'tienda123',
+    ];
+    if (in_array($simple, $comunes, true) || preg_match('/^(.)\1+$/u', $simple)) {
+        return 'Esa contraseña es de las primeras que prueba cualquiera. Usa una frase que solo tú sepas, como "arepas-de-la-abuela-1987".';
+    }
+    if (str_contains('01234567890 98765432109876543210 abcdefghijklmnopqrstuvwxyz', $simple)) {
+        return 'Una secuencia (1234…, abcd…) se adivina en segundos. Usa una frase que solo tú sepas.';
+    }
+    foreach ($datosPropios as $dato) {
+        $dato = mb_strtolower(preg_replace('/[\s._-]+/', '', (string) $dato) ?? '');
+        if (mb_strlen($dato) >= 4 && (str_contains($simple, $dato) || str_contains($dato, $simple))) {
+            return 'No uses tu número de WhatsApp ni el nombre de tu negocio en la contraseña: es lo primero que se prueba.';
+        }
+    }
+
+    return null;
+}
+
+/** "ca***@gmail.com": para la bitácora, sin dejar el correo completo a la vista. */
+function correo_enmascarado(string $correo): string
+{
+    [$usuario, $dominio] = array_pad(explode('@', $correo, 2), 2, '');
+
+    return mb_substr($usuario, 0, 2) . '***@' . $dominio;
+}
+
+/** "Chrome en Android", "Safari en iPhone": para que el dueño reconozca sus propios celulares. */
+function descripcion_navegador(): string
+{
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $sistema = match (true) {
+        str_contains($ua, 'iPhone') => 'iPhone',
+        str_contains($ua, 'iPad') => 'iPad',
+        str_contains($ua, 'Android') => 'Android',
+        str_contains($ua, 'Windows') => 'Windows',
+        str_contains($ua, 'Mac OS') => 'Mac',
+        str_contains($ua, 'Linux') => 'Linux',
+        default => '',
+    };
+    $navegador = match (true) {
+        str_contains($ua, 'Edg/') => 'Edge',
+        str_contains($ua, 'OPR/') || str_contains($ua, 'Opera') => 'Opera',
+        str_contains($ua, 'SamsungBrowser') => 'Samsung Internet',
+        str_contains($ua, 'Firefox/') || str_contains($ua, 'FxiOS') => 'Firefox',
+        str_contains($ua, 'Chrome/') || str_contains($ua, 'CriOS') => 'Chrome',
+        str_contains($ua, 'Safari/') => 'Safari',
+        default => '',
+    };
+    if ($navegador === '' && $sistema === '') {
+        return 'Navegador desconocido';
+    }
+
+    return trim($navegador . ($navegador !== '' && $sistema !== '' ? ' en ' : '') . $sistema);
+}
+
 function flash_set(string $clave, string $mensaje): void
 {
     $_SESSION['_flash'][$clave] = $mensaje;

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
+use App\Models\DispositivoConfianza;
+use App\Models\EventoSeguridad;
 use App\Models\Negocio;
 use App\Models\LimiteTasa;
 use App\Models\Sede;
@@ -55,6 +57,11 @@ class AuthController
 
         if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
             flash_set('error', 'El correo no es válido. Puedes dejarlo en blanco si prefieres.');
+            redirigir('/registro');
+        }
+        $debil = password_debil($password, [$whatsapp, $nombre]);
+        if ($debil !== null) {
+            flash_set('error', $debil);
             redirigir('/registro');
         }
 
@@ -139,22 +146,26 @@ class AuthController
         $password = (string) ($_POST['password'] ?? '');
         $ip = ip_cliente();
 
-        // El bloqueo por cuenta (5 intentos) no ve a quien prueba UNA
-        // contraseña común contra cientos de números distintos: eso se
-        // frena por IP. 20 fallos en 15 minutos es mucho más de lo que hace
-        // una persona equivocándose, aun detrás de una IP compartida.
-        if (Auth::estaBloqueado($whatsapp) || LimiteTasa::excedido('login', $ip, 20, 15 * 60)) {
+        // El freno por número + lugar (ver Auth::intentarLogin) no ve a quien
+        // prueba UNA contraseña común contra cientos de números distintos:
+        // eso se frena por IP. 20 fallos en 15 minutos es mucho más de lo que
+        // hace una persona equivocándose, aun detrás de una IP compartida.
+        if (LimiteTasa::excedido('login', $ip, 20, 15 * 60)) {
             flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
             redirigir('/login');
         }
 
         if (!Auth::intentarLogin($whatsapp, $password)) {
-            if (Auth::$motivoFallo === 'suspendido') {
-                flash_set('error', 'Esta cuenta está suspendida. Escríbenos a soporte@tuveci.co para resolverlo.');
-                redirigir('/login');
+            $mensaje = match (Auth::$motivoFallo) {
+                'suspendido'     => 'Esta cuenta está suspendida. Escríbenos a soporte@tuveci.co para resolverlo.',
+                'frenado'        => 'Demasiados intentos fallidos. Espera 15 minutos e intenta de nuevo, o recupera tu contraseña.',
+                'solo_conocidos' => 'Por seguridad, esta cuenta recibió muchos intentos fallidos y por ahora solo deja entrar desde un celular donde ya iniciaste sesión. Si no tienes uno a mano, recupera tu contraseña.',
+                default          => 'WhatsApp o contraseña incorrectos.',
+            };
+            if (Auth::$motivoFallo === null) {
+                LimiteTasa::registrar('login', $ip);
             }
-            LimiteTasa::registrar('login', $ip);
-            flash_set('error', 'WhatsApp o contraseña incorrectos.');
+            flash_set('error', $mensaje);
             redirigir('/login');
         }
 
@@ -213,6 +224,7 @@ class AuthController
         if (!$limitado && $usuario !== null && !empty($usuario['correo']) && Correo::disponible()) {
             LimiteTasa::registrar('reset_cuenta', $whatsapp);
             $token = Usuario::generarTokenReset((int) $usuario['id']);
+            EventoSeguridad::registrar('reset_solicitado', (int) $usuario['negocio_id'], (int) $usuario['id'], 'Enviado a ' . correo_enmascarado((string) $usuario['correo']));
             $enlace = url_publica('/reset-password/' . $token);
             Correo::enviar(
                 (string) $usuario['correo'],
@@ -262,8 +274,19 @@ class AuthController
             flash_set('error', 'La contraseña debe tener al menos 8 caracteres y coincidir en ambos campos.');
             redirigir('/reset-password/' . $token);
         }
+        $debil = password_debil($password, [(string) $usuario['whatsapp'], (string) $usuario['nombre']]);
+        if ($debil !== null) {
+            flash_set('error', $debil);
+            redirigir('/reset-password/' . $token);
+        }
 
         Usuario::restablecerPassword((int) $usuario['id'], $password);
+        // Recuperar la cuenta es también echar a quien la tuviera: todas las
+        // sesiones ya se cerraron (sesion_version) y ningún celular queda como
+        // conocido salvo este, que acaba de demostrar que recibe el enlace.
+        DispositivoConfianza::olvidarTodos((int) $usuario['id']);
+        DispositivoConfianza::recordar((int) $usuario['id']);
+        EventoSeguridad::registrar('password_restablecida', (int) $usuario['negocio_id'], (int) $usuario['id']);
         flash_set('ok', 'Tu contraseña quedó actualizada. Ya puedes iniciar sesión.');
         redirigir('/login');
     }

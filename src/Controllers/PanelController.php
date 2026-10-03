@@ -10,7 +10,9 @@ use App\Models\Cliente;
 use App\Models\Consentimiento;
 use App\Models\Copiloto;
 use App\Models\Cupon;
+use App\Models\DispositivoConfianza;
 use App\Models\Empleado;
+use App\Models\EventoSeguridad;
 use App\Models\FechaBloqueada;
 use App\Models\Imprevisto;
 use App\Models\Fidelidad;
@@ -276,7 +278,7 @@ class PanelController
         $resultado = Pedido::buscarPorSede((int) $negocio['id'], $filtro, $busqueda, $desde, $hasta, 1, null);
         $pedidos = $resultado['filas'];
 
-        $salida = $this->abrirDescargaCsv('pedidos');
+        $salida = $this->abrirDescargaCsv('pedidos', $negocio);
         $this->escribirFilaCsv($salida, ['ID', 'Fecha', 'Cliente', 'Teléfono', 'Total', 'Método de pago', 'Estado']);
         foreach ($pedidos as $pedido) {
             $this->escribirFilaCsv($salida, [
@@ -826,7 +828,7 @@ class PanelController
         Auth::exigirDueno($negocio);
         $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
-        $salida = $this->abrirDescargaCsv('citas');
+        $salida = $this->abrirDescargaCsv('citas', $negocio);
         $this->escribirFilaCsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio reservado', 'Descuento', 'Valor (cobrado)', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
         foreach ($citas as $cita) {
             $this->escribirFilaCsv($salida, [
@@ -855,7 +857,7 @@ class PanelController
         Auth::exigirDueno($negocio);
         $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
-        $salida = $this->abrirDescargaCsv('clientes');
+        $salida = $this->abrirDescargaCsv('clientes', $negocio);
         // "Acepta promociones" va en el archivo: quien exporta la lista para
         // escribir por fuera de Veci tiene que saber a quién sí puede.
         $this->escribirFilaCsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Acepta promociones', 'Promociones desde', 'Cliente desde']);
@@ -1558,6 +1560,9 @@ class PanelController
                 }
                 // La llave Bre-B solo se elegía al abrir la tienda: si el
                 // dueño cambiaba de cuenta, no tenía dónde corregirla.
+                if ($whatsapp !== (string) $sede['whatsapp']) {
+                    EventoSeguridad::registrar('sede_whatsapp', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], $nombre . ': ahora termina en ' . substr($whatsapp, -4));
+                }
                 if (isset($_POST['llave_tipo'])) {
                     $tipo = in_array($_POST['llave_tipo'], ['celular', 'cedula', 'correo'], true) ? $_POST['llave_tipo'] : 'celular';
                     $llave = llave_breb_normalizada($tipo, (string) ($_POST['llave_valor'] ?? ''));
@@ -1565,7 +1570,17 @@ class PanelController
                         flash_set('error', 'Guardamos lo demás, pero la llave Bre-B no parece válida: un celular tiene 10 dígitos y empieza por 3; una cédula, solo números.');
                         redirigir('/panel/sedes/' . $sede['id'] . '/editar');
                     }
-                    Sede::guardarLlaveBreB((int) $sede['id'], $tipo, $llave);
+                    $cambiaLlave = $tipo !== (string) ($sede['llave_breb_tipo'] ?? '') || $llave !== (string) ($sede['llave_breb_valor'] ?? '');
+                    if ($cambiaLlave) {
+                        // A donde le pagan al negocio: lo primero que cambiaría
+                        // alguien con la sesión del dueño. Se pide la contraseña.
+                        if (!Auth::confirmarIdentidad($negocio, (string) ($_POST['confirmar_password'] ?? ''))) {
+                            flash_set('error', 'Guardamos lo demás, pero la llave Bre-B no cambió: para cambiarla escribe tu contraseña de Veci.');
+                            redirigir('/panel/sedes/' . $sede['id'] . '/editar');
+                        }
+                        Sede::guardarLlaveBreB((int) $sede['id'], $tipo, $llave);
+                        EventoSeguridad::registrar('cobro_cambiado', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], $nombre . ': llave ' . $tipo . ' terminada en ' . mb_substr($llave, -4));
+                    }
                 }
                 flash_set('ok', 'Datos de ' . $nombre . ' actualizados.');
             }
@@ -1615,6 +1630,16 @@ class PanelController
                 redirigir('/panel/colaboradores');
             }
 
+            if (!Auth::confirmarIdentidad($negocio, (string) ($_POST['confirmar_password'] ?? ''))) {
+                flash_set('error', 'No se creó: escribe tu contraseña de Veci al final del formulario para confirmar que eres tú.');
+                redirigir('/panel/colaboradores');
+            }
+            $debil = password_debil($password, [$whatsapp, $nombre, (string) $negocio['negocio_nombre']]);
+            if ($debil !== null) {
+                flash_set('error', 'La contraseña inicial del colaborador no sirve: ' . lcfirst($debil));
+                redirigir('/panel/colaboradores');
+            }
+
             if (Usuario::buscarPorWhatsapp($whatsapp) !== null) {
                 flash_set('error', 'Ya existe una cuenta con ese número de WhatsApp.');
                 redirigir('/panel/colaboradores');
@@ -1622,6 +1647,7 @@ class PanelController
 
             $colaboradorId = Usuario::crear((int) $negocio['negocio_id'], $nombre, $whatsapp, $password, 'colaborador');
             Usuario::asignarSedes($colaboradorId, $sedeIds);
+            EventoSeguridad::registrar('colaborador_creado', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], $nombre . ' (termina en ' . substr($whatsapp, -4) . ')');
             flash_set('ok', 'Colaborador creado.');
         }
 
@@ -1640,6 +1666,7 @@ class PanelController
                 $sedeIds = array_map('intval', (array) ($_POST['sedes'] ?? []));
                 $sedeIds = array_values(array_intersect($sedeIds, array_map('intval', $sedesDelNegocio)));
                 Usuario::asignarSedes((int) $colaborador['id'], $sedeIds);
+                EventoSeguridad::registrar('colaborador_sedes', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], (string) $colaborador['nombre']);
                 flash_set('ok', 'Sedes actualizadas para ' . $colaborador['nombre'] . '.');
             }
         }
@@ -1653,7 +1680,11 @@ class PanelController
         Auth::exigirDueno($negocio);
 
         if (csrf_verificar()) {
-            Usuario::eliminar((int) $parametros['id'], (int) $negocio['negocio_id']);
+            $colaborador = Usuario::buscarPorIdYNegocio((int) $parametros['id'], (int) $negocio['negocio_id']);
+            if ($colaborador !== null && $colaborador['rol'] === 'colaborador') {
+                Usuario::eliminar((int) $colaborador['id'], (int) $negocio['negocio_id']);
+                EventoSeguridad::registrar('colaborador_eliminado', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], (string) $colaborador['nombre']);
+            }
         }
 
         redirigir('/panel/colaboradores');
@@ -1665,11 +1696,20 @@ class PanelController
         $negocio = Auth::exigirSesion();
         $usuario = Usuario::buscarPorId((int) $negocio['usuario_id']);
 
+        // El dueño ve la actividad de todo el negocio (también la de sus
+        // colaboradores y la del equipo de Veci); un colaborador, la suya.
+        $eventos = EventoSeguridad::recientesDelNegocio((int) $negocio['negocio_id'], 40);
+        if ($negocio['rol'] !== 'dueno') {
+            $eventos = array_values(array_filter($eventos, fn ($e) => (int) $e['usuario_id'] === (int) $negocio['usuario_id']));
+        }
+
         ver('panel/cuenta', [
             'titulo'  => 'Mi cuenta · Veci',
             'activo'  => 'cuenta',
             'negocio' => $negocio,
             'usuario' => $usuario,
+            'eventos' => array_slice($eventos, 0, 20),
+            'dispositivos' => DispositivoConfianza::listar((int) $negocio['usuario_id']),
             'ok'      => flash_obtener('ok'),
             'error'   => flash_obtener('error'),
         ], 'panel');
@@ -1686,8 +1726,14 @@ class PanelController
                 flash_set('error', 'Ese correo no es válido.');
                 redirigir('/panel/cuenta');
             }
+            // Quien controla el correo de recuperación controla la cuenta.
+            if (!Auth::confirmarIdentidad($negocio, (string) ($_POST['confirmar_password'] ?? ''))) {
+                flash_set('error', 'El correo no cambió: escribe tu contraseña de Veci para confirmar que eres tú.');
+                redirigir('/panel/cuenta');
+            }
 
             if (Usuario::guardarCorreo((int) $negocio['usuario_id'], $correo === '' ? null : $correo)) {
+                EventoSeguridad::registrar('correo_cambiado', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], $correo === '' ? 'Correo eliminado' : correo_enmascarado($correo));
                 flash_set('ok', $correo === '' ? 'Correo eliminado de tu cuenta.' : 'Correo guardado. Ya puedes recuperar tu contraseña con él.');
             } else {
                 flash_set('error', 'Ese correo ya está en uso por otra cuenta.');
@@ -1708,16 +1754,121 @@ class PanelController
 
             if ($usuario === null || !password_verify($actual, $usuario['password_hash'])) {
                 flash_set('error', 'Tu contraseña actual no coincide.');
-            } elseif (strlen($nueva) < 8) {
-                flash_set('error', 'La contraseña nueva debe tener al menos 8 caracteres.');
+            } elseif (($debil = password_debil($nueva, [(string) $usuario['whatsapp'], (string) $negocio['negocio_nombre'], (string) $usuario['nombre']])) !== null) {
+                flash_set('error', $debil);
+            } elseif (hash_equals($actual, $nueva)) {
+                flash_set('error', 'La contraseña nueva es igual a la actual.');
             } else {
                 Usuario::cambiarPassword((int) $negocio['usuario_id'], $nueva);
                 Auth::renovarVersionDeSesion();
-                flash_set('ok', 'Contraseña actualizada.');
+                // Las demás sesiones ya se cerraron (sesion_version); los
+                // celulares conocidos también se olvidan, menos este.
+                DispositivoConfianza::olvidarTodos((int) $negocio['usuario_id']);
+                DispositivoConfianza::recordar((int) $negocio['usuario_id']);
+                EventoSeguridad::registrar('password_cambiada', (int) $negocio['negocio_id'], (int) $negocio['usuario_id']);
+                flash_set('ok', 'Contraseña actualizada. Se cerró la sesión en tus otros dispositivos.');
             }
         }
 
         redirigir('/panel/cuenta');
+    }
+
+    /**
+     * "Cerrar sesión en los demás dispositivos": para el celular que se
+     * perdió o el computador prestado donde quedó la sesión abierta. Esta
+     * sesión sigue; las demás se cierran en su siguiente clic.
+     */
+    public function cerrarOtrasSesiones(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+
+        if (csrf_verificar()) {
+            Usuario::cerrarSesiones((int) $negocio['usuario_id']);
+            Auth::renovarVersionDeSesion();
+            DispositivoConfianza::olvidarTodos((int) $negocio['usuario_id']);
+            DispositivoConfianza::recordar((int) $negocio['usuario_id']);
+            EventoSeguridad::registrar('sesiones_cerradas', (int) $negocio['negocio_id'], (int) $negocio['usuario_id']);
+            flash_set('ok', 'Listo: se cerró tu sesión en todos los demás dispositivos. Si crees que alguien conoce tu contraseña, cámbiala también.');
+        }
+
+        redirigir('/panel/cuenta');
+    }
+
+    /** "Confirma que eres tú" antes de una descarga (ver abrirDescargaCsv). */
+    public function confirmarIdentidadVista(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $descarga = $this->descargaPedida();
+        if (Auth::identidadReciente() && $descarga !== null) {
+            redirigir($descarga['url']);
+        }
+
+        ver('panel/confirmar_identidad', [
+            'titulo'   => 'Confirma que eres tú · Veci',
+            'activo'   => 'cuenta',
+            'negocio'  => $negocio,
+            'descarga' => $descarga,
+            'listo'    => false,
+            'error'    => flash_obtener('error'),
+        ], 'panel');
+    }
+
+    public function confirmarIdentidad(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $descarga = $this->descargaPedida();
+        if (!Auth::confirmarIdentidad($negocio, (string) ($_POST['confirmar_password'] ?? ''))) {
+            flash_set('error', 'Esa no es tu contraseña. Después de 5 intentos hay que esperar 15 minutos.');
+            redirigir('/panel/confirmar' . ($descarga !== null ? '?' . $descarga['consulta'] : ''));
+        }
+        if ($descarga === null) {
+            redirigir('/panel');
+        }
+
+        // La descarga no cambia de página: esta queda diciendo qué pasó y a
+        // dónde volver (la descarga la dispara un meta refresh, sin JS).
+        ver('panel/confirmar_identidad', [
+            'titulo'   => 'Descargando · Veci',
+            'activo'   => 'cuenta',
+            'negocio'  => $negocio,
+            'descarga' => $descarga,
+            'listo'    => true,
+            'error'    => null,
+        ], 'panel');
+    }
+
+    /**
+     * Qué descarga se pidió (?descargar=clientes&filtros...), solo entre las
+     * tres que existen: nunca una URL armada por quien manda el enlace.
+     *
+     * @return array{url: string, volver: string, nombre: string, consulta: string}|null
+     */
+    private function descargaPedida(): ?array
+    {
+        $rutas = [
+            'pedidos'  => ['/panel/pedidos/exportar.csv', '/panel/pedidos', 'tus pedidos'],
+            'citas'    => ['/panel/citas/exportar.csv', '/panel/citas', 'tus citas'],
+            'clientes' => ['/panel/clientes/exportar.csv', '/panel/copiloto', 'tus clientes'],
+        ];
+        $clave = (string) ($_POST['descargar'] ?? $_GET['descargar'] ?? '');
+        if (!isset($rutas[$clave])) {
+            return null;
+        }
+        // Los filtros de la lista de pedidos viajan tal cual (los valida exportarPedidosCsv).
+        $filtros = array_intersect_key($_POST + $_GET, array_flip(['estado', 'q', 'rango', 'desde', 'hasta']));
+        $filtros = array_filter(array_map(fn ($v) => is_string($v) ? mb_substr($v, 0, 80) : '', $filtros), fn ($v) => $v !== '');
+        $consultaFiltros = http_build_query($filtros);
+
+        return [
+            'url'      => $rutas[$clave][0] . ($consultaFiltros !== '' ? '?' . $consultaFiltros : ''),
+            'volver'   => $rutas[$clave][1],
+            'nombre'   => $rutas[$clave][2],
+            'consulta' => http_build_query(['descargar' => $clave] + $filtros),
+            'clave'    => $clave,
+            'filtros'  => $filtros,
+        ];
     }
 
     /**
@@ -1922,8 +2073,17 @@ class PanelController
     }
 
     /** Envía las cabeceras de descarga y devuelve el stream donde escribir las filas del CSV. */
-    private function abrirDescargaCsv(string $nombreBase)
+    /**
+     * Exportar es sacar de Veci todos los teléfonos de tus clientes: lo
+     * primero que haría alguien con tu sesión abierta. Pide la contraseña
+     * (si no se confirmó hace 10 minutos) y queda en la bitácora.
+     */
+    private function abrirDescargaCsv(string $nombreBase, array $negocio)
     {
+        if (!Auth::identidadReciente()) {
+            redirigir('/panel/confirmar?descargar=' . rawurlencode($nombreBase) . (($_SERVER['QUERY_STRING'] ?? '') !== '' ? '&' . $_SERVER['QUERY_STRING'] : ''));
+        }
+        EventoSeguridad::registrar('exportacion', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], ucfirst($nombreBase) . ' de ' . $negocio['nombre']);
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreBase . '-' . date('Y-m-d') . '.csv"');
 

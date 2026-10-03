@@ -95,8 +95,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
   whatsapp           VARCHAR(20)  NOT NULL UNIQUE,
   password_hash      VARCHAR(255) NOT NULL,
   rol                ENUM('dueno','colaborador') NOT NULL DEFAULT 'dueno',
-  intentos_fallidos  TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  bloqueado_hasta    DATETIME     DEFAULT NULL,
   -- Correo opcional: solo sirve para poder recuperar la contraseña por ese
   -- canal (ver src/Controllers/AuthController.php). Sin correo, la única
   -- salida si se pierde el acceso es que el equipo de Veci genere un
@@ -476,17 +474,17 @@ CREATE TABLE IF NOT EXISTS lista_espera (
 -- todos los negocios, suspenderlos y generar enlaces de recuperación de
 -- contraseña para soporte. Completamente aparte de `usuarios`: no hay
 -- registro público, solo se crea con bin/crear_admin.php.
--- intentos_fallidos/bloqueado_hasta: mismo mecanismo de fuerza bruta que
--- usuarios (5 intentos → 15 min bloqueado, ver Admin::MAX_INTENTOS_LOGIN).
--- Un admin puede confirmar pagos y suspender cuentas, así que esta
--- contraseña necesita el mismo blindaje que cualquier login de negocio.
+-- Un admin puede confirmar pagos y suspender cuentas: entra con contraseña
+-- + código TOTP (totp_secreto, se activa con bin/admin_2fa.php);
+-- totp_ultimo_paso impide reusar un código. Los intentos fallidos se
+-- frenan en limites_tasa (ver AdminAuth::intentarLogin).
 CREATE TABLE IF NOT EXISTS admins (
   id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre             VARCHAR(120) NOT NULL,
   correo             VARCHAR(160) NOT NULL UNIQUE,
   password_hash      VARCHAR(255) NOT NULL,
-  intentos_fallidos  TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  bloqueado_hasta    DATETIME     DEFAULT NULL,
+  totp_secreto       VARCHAR(64)  DEFAULT NULL,
+  totp_ultimo_paso   BIGINT UNSIGNED DEFAULT NULL,
   creado_en          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -502,6 +500,38 @@ CREATE TABLE IF NOT EXISTS limites_tasa (
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_limites_tasa (accion, clave, creado_en),
   INDEX idx_limites_tasa_fecha (creado_en)
+) ENGINE=InnoDB;
+
+-- Celulares de confianza: donde el usuario ya entró con su contraseña.
+--    Si alguien ataca la cuenta desde muchas IPs, desde un celular conocido
+--    se sigue entrando. Solo se guarda el hash del token de la cookie.
+CREATE TABLE IF NOT EXISTS dispositivos_confianza (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id  INT UNSIGNED NOT NULL,
+  token_hash  CHAR(64)     NOT NULL,
+  descripcion VARCHAR(80)  NOT NULL DEFAULT '',
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  usado_en    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_dispositivo_token (token_hash),
+  INDEX idx_dispositivo_usuario (usuario_id),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Bitácora de seguridad: quién entró, desde dónde, qué cambió en la
+--    cuenta (contraseña, colaboradores, exportes). El dueño la ve en Mi
+--    cuenta. La IP se guarda recortada (sin el último bloque).
+CREATE TABLE IF NOT EXISTS eventos_seguridad (
+  id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id  INT UNSIGNED DEFAULT NULL,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  admin_id    INT UNSIGNED DEFAULT NULL,
+  tipo        VARCHAR(40)  NOT NULL,
+  detalle     VARCHAR(255) NOT NULL DEFAULT '',
+  ip          VARCHAR(45)  NOT NULL DEFAULT '',
+  descripcion VARCHAR(80)  NOT NULL DEFAULT '',
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_eventos_negocio (negocio_id, creado_en),
+  INDEX idx_eventos_admin (admin_id, creado_en)
 ) ENGINE=InnoDB;
 
 -- Suscripciones de Web Push de cada USUARIO del panel (no por sede: un
@@ -1131,4 +1161,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_31_dias_libres_empleado.sql'),
   ('2026-10-03_32_consentimientos.sql'),
   ('2026-10-03_33_recompra_dispositivo.sql'),
-  ('2026-10-03_34_dispositivo_por_pedido.sql');
+  ('2026-10-03_34_dispositivo_por_pedido.sql'),
+  ('2026-10-03_35_seguridad.sql');

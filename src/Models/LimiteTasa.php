@@ -43,6 +43,13 @@ class LimiteTasa
         return (int) $stmt->fetchColumn() >= $maximo;
     }
 
+    /** Borra el conteo (tras un login correcto, los fallos anteriores ya no cuentan). */
+    public static function limpiar(string $accion, string $clave): void
+    {
+        Database::conexion()->prepare('DELETE FROM limites_tasa WHERE accion = :accion AND clave = :clave')
+            ->execute(['accion' => $accion, 'clave' => $clave]);
+    }
+
     public static function registrar(string $accion, string $clave): void
     {
         $pdo = Database::conexion();

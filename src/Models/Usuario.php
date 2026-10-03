@@ -14,9 +14,6 @@ use App\Database;
  */
 class Usuario
 {
-    private const MAX_INTENTOS_LOGIN = 5;
-    private const BLOQUEO_MINUTOS = 15;
-
     public static function crear(int $negocioId, string $nombre, string $whatsapp, string $password, string $rol = 'dueno'): int
     {
         if (!in_array($rol, ['dueno', 'colaborador'], true)) {
@@ -70,6 +67,12 @@ class Usuario
     }
 
     /** Cambia la contraseña y sube sesion_version: las otras sesiones abiertas se cierran. */
+    /** Sube la versión de sesión: todas las sesiones abiertas de ese usuario se cierran (ver Auth::usuarioActual). */
+    public static function cerrarSesiones(int $id): void
+    {
+        Database::conexion()->prepare('UPDATE usuarios SET sesion_version = sesion_version + 1 WHERE id = :id')->execute(['id' => $id]);
+    }
+
     public static function cambiarPassword(int $id, string $password): void
     {
         $stmt = Database::conexion()->prepare('UPDATE usuarios SET password_hash = :hash, sesion_version = sesion_version + 1, reset_token = NULL, reset_token_expira = NULL WHERE id = :id');
@@ -100,7 +103,6 @@ class Usuario
      * Compara contra date('Y-m-d H:i:s') en PHP, no NOW() de SQL: el server
      * de la app corre en America/Bogota (ver src/bootstrap.php) pero MySQL
      * suele correr en UTC, así que NOW() desfasaría la expiración 5 horas.
-     * Mismo patrón que bloqueado() más abajo.
      */
     public static function buscarPorTokenReset(string $token): ?array
     {
@@ -118,7 +120,7 @@ class Usuario
     {
         $stmt = Database::conexion()->prepare(
             'UPDATE usuarios SET password_hash = :hash, reset_token = NULL, reset_token_expira = NULL,
-             intentos_fallidos = 0, bloqueado_hasta = NULL, sesion_version = sesion_version + 1 WHERE id = :id'
+             sesion_version = sesion_version + 1 WHERE id = :id'
         );
         $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
     }
@@ -212,36 +214,5 @@ class Usuario
         );
         $stmt->execute(['sede_id' => $sedeId, 'sede_id2' => $sedeId]);
         return $stmt->fetchAll();
-    }
-
-    public static function bloqueado(array $usuario): bool
-    {
-        return !empty($usuario['bloqueado_hasta']) && (string) $usuario['bloqueado_hasta'] > date('Y-m-d H:i:s');
-    }
-
-    public static function registrarIntentoFallido(int $id): void
-    {
-        $pdo = Database::conexion();
-
-        $stmt = $pdo->prepare('UPDATE usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-
-        $stmt = $pdo->prepare('SELECT intentos_fallidos FROM usuarios WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        $intentos = (int) ($stmt->fetch()['intentos_fallidos'] ?? 0);
-
-        if ($intentos >= self::MAX_INTENTOS_LOGIN) {
-            $hasta = date('Y-m-d H:i:s', time() + self::BLOQUEO_MINUTOS * 60);
-            $stmt = $pdo->prepare('UPDATE usuarios SET bloqueado_hasta = :hasta WHERE id = :id');
-            $stmt->execute(['hasta' => $hasta, 'id' => $id]);
-        }
-    }
-
-    public static function registrarLoginExitoso(int $id): void
-    {
-        $stmt = Database::conexion()->prepare(
-            'UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = :id'
-        );
-        $stmt->execute(['id' => $id]);
     }
 }

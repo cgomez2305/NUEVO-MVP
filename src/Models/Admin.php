@@ -13,17 +13,6 @@ use App\Database;
  */
 class Admin
 {
-    /**
-     * Mismo umbral que Usuario::MAX_INTENTOS_LOGIN/BLOQUEO_MINUTOS: 5
-     * intentos fallidos seguidos bloquean la cuenta 15 minutos. Antes este
-     * login no tenía ningún límite — y ahora un admin puede confirmar
-     * pagos (activar Barrio/Pro gratis) y suspender cuentas, así que esa
-     * sola contraseña sin fuerza-bruta-protegida era el camino más corto
-     * para regalar planes pagos sin pagar un peso.
-     */
-    private const MAX_INTENTOS_LOGIN = 5;
-    private const BLOQUEO_MINUTOS = 15;
-
     public static function crear(string $nombre, string $correo, string $password): int
     {
         $pdo = Database::conexion();
@@ -53,34 +42,24 @@ class Admin
         return $stmt->fetch() ?: null;
     }
 
-    public static function bloqueado(array $admin): bool
+    /** Activa (o cambia) el segundo factor. null lo desactiva. */
+    public static function guardarTotp(int $id, ?string $secreto): void
     {
-        return !empty($admin['bloqueado_hasta']) && (string) $admin['bloqueado_hasta'] > date('Y-m-d H:i:s');
+        Database::conexion()->prepare('UPDATE admins SET totp_secreto = :s, totp_ultimo_paso = NULL WHERE id = :id')
+            ->execute(['s' => $secreto, 'id' => $id]);
     }
 
-    public static function registrarIntentoFallido(int $id): void
-    {
-        $pdo = Database::conexion();
-
-        $stmt = $pdo->prepare('UPDATE admins SET intentos_fallidos = intentos_fallidos + 1 WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-
-        $stmt = $pdo->prepare('SELECT intentos_fallidos FROM admins WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        $intentos = (int) ($stmt->fetch()['intentos_fallidos'] ?? 0);
-
-        if ($intentos >= self::MAX_INTENTOS_LOGIN) {
-            $hasta = date('Y-m-d H:i:s', time() + self::BLOQUEO_MINUTOS * 60);
-            $stmt = $pdo->prepare('UPDATE admins SET bloqueado_hasta = :hasta WHERE id = :id');
-            $stmt->execute(['hasta' => $hasta, 'id' => $id]);
-        }
-    }
-
-    public static function registrarLoginExitoso(int $id): void
+    /**
+     * Marca el código como usado solo si nadie usó ese paso o uno posterior
+     * (dos peticiones con el mismo código a la vez: solo una pasa).
+     */
+    public static function consumirPasoTotp(int $id, int $paso): bool
     {
         $stmt = Database::conexion()->prepare(
-            'UPDATE admins SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = :id'
+            'UPDATE admins SET totp_ultimo_paso = :p WHERE id = :id AND (totp_ultimo_paso IS NULL OR totp_ultimo_paso < :p2)'
         );
-        $stmt->execute(['id' => $id]);
+        $stmt->execute(['p' => $paso, 'p2' => $paso, 'id' => $id]);
+
+        return $stmt->rowCount() === 1;
     }
 }

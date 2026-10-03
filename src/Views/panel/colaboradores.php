@@ -77,6 +77,7 @@
         </label>
       <?php endforeach; ?>
     </fieldset>
+    <?php $motivoIdentidad = 'Un colaborador puede entrar a tu panel.'; require __DIR__ . '/_confirmar_identidad.php'; ?>
     <button type="submit" class="pq-btn pq-btn-sello">Agregar colaborador</button>
   </form>
 </details>
