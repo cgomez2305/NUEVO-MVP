@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-03 (QA funcional de 3 frentes corregido, migraciones 29-31)
+# Estado de la sesión — 2026-10-03 (núcleo clientes + recompra: consentimiento, recuperado, Hoy, repetir, huecos; migraciones 32-33)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -134,6 +134,31 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
     historial/exportar detalle en Gratis se mantiene como estaba.
   Suites de regresión (scratchpad `yo/correr.sh <suite>`) y rastreador
   (`barrido.js`) en verde tras los arreglos.
+
+- Rumbo acordado con el usuario (no volver a discutir): Veci = el
+  copiloto comercial del negocio que vende por WhatsApp. Toda feature
+  nueva debe mejorar vender, operar, cobrar o hacer volver; si no, va al
+  backlog. Acción primero, información después. IA invisible (explicable,
+  sin "probabilidades" inventadas). Sin comisión por venta.
+- Bloque "núcleo clientes + recompra" (pedido: "arranca por el punto 1 y
+  sigue con el resto"):
+  1. Consentimiento real (migración 32, `Consentimiento`, `/preferencias/
+     {token}`, `PreferenciasController`): el copiloto solo propone
+     promociones a quien autorizó; "Pedir permiso" una sola vez; cada
+     mensaje lleva el enlace de baja; la reserva ofrece la casilla; olvidar
+     marcarla ya no borra el permiso. Política de privacidad al día.
+  2. Dinero recuperado (`Copiloto::recuperado`): primera compra/reserva en
+     14 días tras un mensaje, una venta cuenta una vez. Abrir WhatsApp
+     desde el copiloto ya registra el contacto. Se ve en copiloto, plan e
+     inicio.
+  3. Inicio "Hoy" (`Hoy::tareas`): tareas por urgencia antes que cifras.
+  4. "Volver a pedir" (cookie `veci_r{negocio}` con `clientes.
+     token_recompra`, migración 33; "No soy X") y "¿Reservas lo de
+     siempre?"; "Llenar huecos" (`Huecos`, `/panel/copiloto/huecos`): el
+     próximo día que abre, clientes en su ritmo cuyo servicio cabe.
+  5. Auditoría de seguridad integral + `tests/aislamiento.php` (todas las
+     rutas del panel con ids de otros negocios; probado con 5 cuentas;
+     control negativo comprobado).
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`

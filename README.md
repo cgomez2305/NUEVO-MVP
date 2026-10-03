@@ -299,6 +299,24 @@ querer en un cambio futuro):
   `.htaccess` de la raíz bloquea `config/`, `src/`, `database/` y `bin/`
   por si el dominio no apunta a `public/`.
 
+- **Datos de clientes y promociones** (Ley 1581): el permiso de
+  promociones es aparte del de datos; cada alta o retiro queda en
+  `consentimientos` (origen, versión de la política e IP si lo hizo el
+  cliente). El copiloto no propone escribirle con ofertas a quien no
+  autorizó; a ese cliente solo se le puede pedir permiso una vez. Cada
+  promoción lleva el enlace `/preferencias/{token}` para retirarlo. La
+  tienda reconoce al cliente para "volver a pedir" solo por una cookie en
+  el celular donde ya pidió, nunca por el número que alguien escriba.
+- **Aislamiento entre negocios**: `tests/aislamiento.php` entra como el
+  dueño (o colaborador) de un negocio y prueba todas las rutas del panel
+  que llevan un id con ids de OTROS negocios; falla si alguna respuesta
+  muestra nombres o teléfonos ajenos o si alguna fila de otro negocio
+  cambia. Correrlo contra una base de prueba antes de cada entrega:
+
+  ```bash
+  php tests/aislamiento.php http://localhost:8000 3001234567 veci123
+  ```
+
 Pendiente fuera del código: HTTPS obligatorio en el hosting, backups
 diarios de la base y monitorear el log de errores de PHP.
 
