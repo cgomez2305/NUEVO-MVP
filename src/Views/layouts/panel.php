@@ -27,6 +27,8 @@ $pqIconos = [
     'empleados'      => '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="18" cy="8.5" r="2.6"/><path d="M16.5 14.3c2.3.5 4 2.5 4.5 5.7"/>',
     'fila'           => '<circle cx="6" cy="7" r="2.2"/><circle cx="12" cy="7" r="2.2"/><circle cx="18" cy="7" r="2.2"/><path d="M3 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4M9 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4M15 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4"/><path d="M3 20h18"/>',
     'comisiones'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 15l8-6"/><circle cx="8.5" cy="9.5" r="1.3"/><circle cx="15.5" cy="14.5" r="1.3"/>',
+    'repetir'        => '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7"/><path d="M20 4v4.7h-4.7"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.3"/><path d="M4 20v-4.7h4.7"/>',
+    'cobertura'      => '<path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13.5M15 6.5V20"/>',
     'horario'        => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
     'productos'      => '<path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/>',
     'sedes'          => '<path d="M12 21s7-6.4 7-11.5a7 7 0 1 0-14 0C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/>',
@@ -51,17 +53,25 @@ $pqIcono = static function (string $clave) use ($pqIconos): string {
 // se agrupa bajo "Más" — así ambas navegaciones nunca se desincronizan.
 $tipoReservas = ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas';
 $esDueno = $negocio['rol'] === 'dueno';
+$aDomicilio = $tipoReservas && ($negocio['modalidad'] ?? 'local') === 'domicilio';
 
 $navOperacion = [['panel', 'Panel', base_url('/panel')]];
 if ($tipoReservas) {
     $navOperacion[] = ['citas', 'Agenda', base_url('/panel/citas')];
     $navOperacion[] = ['recordatorios', 'Recordatorios', base_url('/panel/recordatorios')];
-    $navOperacion[] = ['fila', 'Fila de hoy', base_url('/panel/fila')];
+    // La fila es para quien llega sin cita al local; un técnico va a la casa.
+    if (!$aDomicilio) {
+        $navOperacion[] = ['fila', 'Fila de hoy', base_url('/panel/fila')];
+    }
+    $navOperacion[] = ['repetir', 'Toca repetir', base_url('/panel/repetir')];
     $navOperacion[] = ['servicios', 'Servicios', base_url('/panel/servicios')];
     $navOperacion[] = ['paquetes', 'Paquetes y bonos', base_url('/panel/paquetes')];
     if ($esDueno) {
         $navOperacion[] = ['empleados', 'Equipo', base_url('/panel/empleados')];
         $navOperacion[] = ['comisiones', 'Comisiones', base_url('/panel/comisiones')];
+        if ($aDomicilio) {
+            $navOperacion[] = ['cobertura', 'Zonas que cubres', base_url('/panel/cobertura')];
+        }
         $navOperacion[] = ['horario', 'Horario', base_url('/panel/horario')];
     }
 } else {

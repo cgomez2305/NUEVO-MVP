@@ -266,3 +266,19 @@ llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
   turno es la de la panadería (`.pq-cola-ficha`): cartón con muescas a los
   lados, franja de marca arriba y el número enorme; "Acércate" cuando el
   negocio lo llama. Se refresca sola cada 30 s (meta refresh, sin JS).
+
+## Visitas a domicilio
+- **¿Cuándo te visitamos?**: dos ventanillas (`.pq-franja`: Mañana / Tarde
+  con su rango; llena = punteada) en vez de la grilla de horas. Por dentro
+  se reserva el primer turno libre de la franja con el primer técnico libre
+  (el cliente no elige técnico). Sin cupo: "Próxima visita libre".
+- Formulario con `fieldset.pq-visita-datos`: zona (con transporte),
+  dirección, apto/cómo llegar, qué pasa, fotos (privadas) y, si el servicio
+  se repite, "Recuérdame el próximo en N meses".
+- Página de la visita: "Te visita" / "Va en camino · llega hacia las…" con
+  la foto del técnico (`.pq-quien-visita`, borde de la marca: es seguridad),
+  aviso de cotización y "Así quedó" con antes y después.
+- **Cotización** (`/cotizacion/{token}`): el presupuesto en el papel de la
+  comanda, agrupado (mano de obra, materiales, otros, descuentos), sello
+  "Por aprobar / Aprobada", garantía y validez; Aprobar / Por ahora no; si
+  pide anticipo, los pasos de pago Bre-B.

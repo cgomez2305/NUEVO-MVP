@@ -625,3 +625,15 @@ function dias_desde(string $fecha): int
 
     return max(0, (int) round((strtotime(date('Y-m-d')) - $dia) / 86400));
 }
+
+/**
+ * A dónde volver después de una acción sobre una cita: la agenda, o la
+ * hoja de la visita si la acción se hizo desde ahí (solo esa ruta: nada de
+ * redirigir a lo que mande el formulario).
+ */
+function destino_agenda(): string
+{
+    $volver = (string) ($_POST['volver'] ?? '');
+
+    return preg_match('#^/panel/visitas/\d+$#', $volver) ? $volver : '/panel/citas';
+}

@@ -47,6 +47,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
         </span>
       </label>
+      <label class="pq-card-borde pq-tipo-opcion">
+        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="domicilio">
+        <span class="pq-tipo-opcion-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M14.5 13.5l-3 3m0-3 3 3"/></svg>
+        </span>
+        <span class="pq-stack pq-tipo-opcion-texto">
+          <span class="pq-tipo-opcion-titulo">Visitas a domicilio</span>
+          <span class="pq-ayuda">Plomero, técnico de aires, electricista: vas a la casa del cliente y cotizas allá.</span>
+        </span>
+        <span class="pq-tipo-opcion-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+      </label>
     </div>
   </div>
 

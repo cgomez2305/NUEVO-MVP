@@ -91,6 +91,10 @@ PHP puro + MySQL, sin framework:
    |---|---|---|---|---|
    | Doña María | Pedidos | `3001234567` | `veci123` | `/t/donamaria` |
    | Salón Bonita | Reservas | `3005556677` | `veci123` | `/t/salonbonita` |
+   | Frío Express | Visitas a domicilio | `3007778899` | `veci123` | `/t/frioexpress` |
+
+   Frío Express (técnicos de aires) no está en `seed.sql`: se carga aparte,
+   también sobre una base que ya existe, con `mysql veci < database/demo_visitas.sql`.
 
 ## Publicar en hosting compartido (cPanel)
 
@@ -144,8 +148,9 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    confirma que la extensión `pdo_mysql` esté activada (casi siempre lo
    está por defecto).
 
-7. **Da permisos de escritura** a `public/uploads/menus/`, `public/uploads/productos/`, `public/uploads/equipo/` y
-   `public/uploads/logos/` (clic derecho → Permissions → 755, o 775 si
+7. **Da permisos de escritura** a `public/uploads/menus/`, `public/uploads/productos/`, `public/uploads/equipo/`,
+   `public/uploads/logos/` y `storage/visitas/` (fotos privadas de las visitas a
+   domicilio, fuera de la web; clic derecho → Permissions → 755, o 775 si
    tu hosting lo exige) para que las fotos de menú se puedan guardar.
 
 8. **Pruébala:** entra a `https://app.tudominio.com/registro`, crea un

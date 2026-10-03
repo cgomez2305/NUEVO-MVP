@@ -202,7 +202,8 @@ class FilaController
     private function sedeConFila(string $slug): array
     {
         $sede = Sede::buscarPorSlugPublicada($slug);
-        if ($sede === null || $sede['tipo_negocio'] !== 'reservas') {
+        // La fila es para quien llega al local; un negocio a domicilio no la tiene.
+        if ($sede === null || $sede['tipo_negocio'] !== 'reservas' || \App\Models\Visita::esDomicilio($sede)) {
             abortar404();
         }
 

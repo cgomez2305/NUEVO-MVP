@@ -76,6 +76,15 @@ class CierreCaja
         $retenido = (int) $stmt->fetchColumn();
         $citas['total'] = (int) $citas['total'] + $retenido;
         $citas['anticipos'] = (int) $citas['anticipos'] + $retenido;
+        // Visitas: el anticipo de materiales de una cotización aprobada ya
+        // llegó por transferencia; "cobrado" lo incluye, el cajón no.
+        $stmt = $pdo->prepare(
+            "SELECT COALESCE(SUM(q.anticipo), 0) FROM cotizaciones q JOIN citas c ON c.id = q.cita_id
+             WHERE c.sede_id = :s AND c.fecha_hora >= :desde AND c.fecha_hora < :hasta
+               AND c.estado = 'completada' AND q.estado = 'aprobada' AND q.anticipo_pagado = 1"
+        );
+        $stmt->execute($rango);
+        $citas['anticipos'] = (int) $citas['anticipos'] + (int) $stmt->fetchColumn();
 
         // Tiendas (fase 4): ventas de mostrador (no anuladas) y abonos de
         // fiado. Lo fiado no es plata que entró: no suma a "Vendido" ni al

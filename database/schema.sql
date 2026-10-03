@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS negocios (
   nombre        VARCHAR(120) NOT NULL,
   color_marca   CHAR(7)      DEFAULT '#E8452C',
   tipo_negocio  ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
+  -- Reservas en el local o visitas a la casa del cliente (técnicos).
+  modalidad     ENUM('local','domicilio') NOT NULL DEFAULT 'local',
   plan_id       TINYINT UNSIGNED NOT NULL DEFAULT 1,
   plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
   plan_vence_en DATE         DEFAULT NULL,
@@ -281,6 +283,8 @@ CREATE TABLE IF NOT EXISTS servicios (
   deposito_valor INT UNSIGNED NOT NULL DEFAULT 0,
   orden         SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Servicio que se repite (mantenimiento cada N meses); NULL = no.
+  repetir_cada_meses TINYINT UNSIGNED DEFAULT NULL,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   INDEX idx_servicios_sede (sede_id, activo)
 ) ENGINE=InnoDB;
@@ -370,6 +374,18 @@ CREATE TABLE IF NOT EXISTS citas (
   cupon_abono_id      INT UNSIGNED DEFAULT NULL,
   bono_devuelto_id    INT UNSIGNED DEFAULT NULL,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Visitas a domicilio (ver migrations/2026-10-03_16_visitas.sql).
+  direccion            VARCHAR(200) DEFAULT NULL,
+  direccion_referencia VARCHAR(160) DEFAULT NULL,
+  zona_nombre          VARCHAR(80)  DEFAULT NULL,
+  recargo_zona         INT UNSIGNED NOT NULL DEFAULT 0,
+  problema             TEXT         DEFAULT NULL,
+  franja_inicio        TIME         DEFAULT NULL,
+  franja_fin           TIME         DEFAULT NULL,
+  en_camino_en         DATETIME     DEFAULT NULL,
+  llegada_estimada     DATETIME     DEFAULT NULL,
+  recordar_repetir     TINYINT(1)   NOT NULL DEFAULT 0,
+  repetir_avisado_en   DATETIME     DEFAULT NULL,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
   FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
@@ -915,6 +931,48 @@ CREATE TABLE IF NOT EXISTS codigos_barras (
   actualizado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- Fotos de visitas a domicilio (ver migrations/2026-10-03_16_visitas.sql), guardadas fuera de public/.
+CREATE TABLE IF NOT EXISTS cita_fotos (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  cita_id   INT UNSIGNED NOT NULL,
+  archivo   VARCHAR(80)  NOT NULL,
+  momento   ENUM('cliente','antes','despues') NOT NULL,
+  creado_en DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE,
+  INDEX idx_cita_fotos (cita_id, momento)
+) ENGINE=InnoDB;
+
+-- Cotizaciones por ítems (ver migrations/2026-10-03_17_cotizaciones.sql).
+CREATE TABLE IF NOT EXISTS cotizaciones (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id         INT UNSIGNED NOT NULL,
+  cita_id         INT UNSIGNED NOT NULL,
+  token           CHAR(32)     NOT NULL,
+  estado          ENUM('enviada','aprobada','rechazada','reemplazada') NOT NULL DEFAULT 'enviada',
+  total           INT UNSIGNED NOT NULL DEFAULT 0,
+  anticipo        INT UNSIGNED NOT NULL DEFAULT 0,
+  anticipo_pagado TINYINT(1)   NOT NULL DEFAULT 0,
+  garantia_dias   SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  validez_dias    TINYINT UNSIGNED NOT NULL DEFAULT 8,
+  nota            VARCHAR(500) DEFAULT NULL,
+  respondida_en   DATETIME     DEFAULT NULL,
+  creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_cotizacion_token (token),
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE,
+  INDEX idx_cotizaciones_cita (cita_id, estado)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS cotizacion_items (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  cotizacion_id  INT UNSIGNED NOT NULL,
+  tipo           ENUM('mano_obra','material','otro','descuento') NOT NULL,
+  descripcion    VARCHAR(160) NOT NULL,
+  cantidad       SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  valor_unitario INT UNSIGNED NOT NULL,
+  FOREIGN KEY (cotizacion_id) REFERENCES cotizaciones(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -945,4 +1003,6 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_21_ventas_mostrador.sql'),
   ('2026-10-03_22_fiado.sql'),
   ('2026-10-03_23_compras.sql'),
-  ('2026-10-03_24_codigos_barras.sql');
+  ('2026-10-03_24_codigos_barras.sql'),
+  ('2026-10-03_16_visitas.sql'),
+  ('2026-10-03_17_cotizaciones.sql');

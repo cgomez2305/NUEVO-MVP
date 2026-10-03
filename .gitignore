@@ -19,3 +19,5 @@
 
 # Worktrees de subagentes (copias aisladas del repo)
 /.claude/worktrees/
+/storage/visitas/*
+!/storage/visitas/.gitkeep

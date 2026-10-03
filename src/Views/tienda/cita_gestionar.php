@@ -19,9 +19,15 @@ $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
 $esHoy = date('Y-m-d', $tsCita) === date('Y-m-d');
 $motivosDia = \App\Models\Imprevisto::MOTIVOS_DIA;
 $ajustePendiente = $cita['ajuste_estado'] === 'pendiente' && in_array($cita['estado'], ['pendiente', 'confirmada', 'en_curso'], true);
+$esVisita = \App\Models\Visita::esVisita($cita);
+$abierta = in_array($cita['estado'], ['pendiente', 'confirmada', 'en_curso'], true);
+$enCamino = $esVisita && !empty($cita['en_camino_en']) && in_array($cita['estado'], ['pendiente', 'confirmada'], true);
+$tecnico = $tecnico ?? null;
+$cotizacion = $cotizacion ?? null;
+$evidencia = $evidencia ?? [];
 ?>
 <div class="pq-content-tienda pq-flujo pq-flujo-angosto">
-  <h1 class="pq-pagina-titulo">Tu cita</h1>
+  <h1 class="pq-pagina-titulo"><?= $esVisita ? 'Tu visita' : 'Tu cita' ?></h1>
   <p class="pq-pagina-bajada">
     <?php if ($cita['estado'] === 'cancelada'): ?>
       Esta cita fue cancelada. Si quieres, puedes reservar otra cuando gustes.
@@ -99,9 +105,63 @@ $ajustePendiente = $cita['ajuste_estado'] === 'pendiente' && in_array($cita['est
     </section>
   <?php endif; ?>
 
+  <?php if ($esVisita && $abierta && ($tecnico !== null || $enCamino)): ?>
+    <?php // Quién te visita: en una visita a la casa, ver la cara de quien llega es seguridad, no adorno. ?>
+    <section class="pq-quien-visita<?= $enCamino ? ' pq-quien-visita-camino' : '' ?>" aria-live="polite">
+      <?php if ($tecnico !== null && !empty($tecnico['foto'])): ?>
+        <img src="<?= e(base_url($tecnico['foto'])) ?>" alt="Foto de <?= e($tecnico['nombre']) ?>" width="64" height="64">
+      <?php elseif ($tecnico !== null): ?>
+        <span class="pq-quien-visita-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $tecnico['nombre'], 0, 1))) ?></span>
+      <?php endif; ?>
+      <div>
+        <?php if ($enCamino): ?>
+          <span class="pq-quien-visita-etiqueta"><span class="pq-cola-aviso-punto" aria-hidden="true"></span> Va en camino</span>
+          <strong><?= $tecnico !== null ? e($tecnico['nombre']) : 'El técnico' ?> llega hacia las <?= e(hora_completa(date('H:i', strtotime((string) $cita['llegada_estimada'])))) ?></strong>
+        <?php else: ?>
+          <span class="pq-quien-visita-etiqueta">Te visita</span>
+          <strong><?= e($tecnico['nombre']) ?></strong>
+        <?php endif; ?>
+        <?php if ($tecnico !== null && !empty($tecnico['especialidad'])): ?><span class="pq-ayuda"><?= e($tecnico['especialidad']) ?></span><?php endif; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <?php if ($cotizacion !== null): ?>
+    <?php $estadoCot = \App\Models\Cotizacion::vencida($cotizacion) ? 'vencida' : $cotizacion['estado']; ?>
+    <a class="pq-cotizacion-aviso pq-cotizacion-<?= e($estadoCot) ?>" href="<?= e(base_url('/cotizacion/' . $cotizacion['token'])) ?>">
+      <span>
+        <strong><?= match ($estadoCot) {
+            'enviada'   => 'Tienes una cotización por aprobar',
+            'aprobada'  => 'Aprobaste la cotización',
+            'rechazada' => 'No aprobaste la cotización',
+            default     => 'La cotización venció',
+        } ?></strong>
+        <span class="pq-ayuda"><?= pesos((int) $cotizacion['total']) ?><?= (int) $cotizacion['garantia_dias'] > 0 ? ' · garantía de ' . (int) $cotizacion['garantia_dias'] . ' días' : '' ?></span>
+      </span>
+      <span class="pq-cotizacion-ver">Ver detalle</span>
+    </a>
+  <?php endif; ?>
+
   <?php require __DIR__ . '/_tiquete_cita.php'; ?>
 
-  <?php if ($activa && $esHoy && empty($cita['imprevisto_motivo'])): ?>
+  <?php if ($evidencia !== []): ?>
+    <section class="pq-evidencia" aria-labelledby="pq-evidencia-titulo">
+      <h2 class="pq-carta-titulo" id="pq-evidencia-titulo">Así quedó</h2>
+      <?php foreach (['antes' => 'Antes', 'despues' => 'Después'] as $momento => $etiqueta): ?>
+        <?php $deMomento = array_values(array_filter($evidencia, fn ($f) => $f['momento'] === $momento)); ?>
+        <?php if ($deMomento !== []): ?>
+          <p class="pq-evidencia-momento"><?= $etiqueta ?></p>
+          <ul class="pq-profesional-trabajos">
+            <?php foreach ($deMomento as $foto): ?>
+              <li><a href="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/fotos/' . (int) $foto['id'])) ?>" target="_blank" rel="noopener"><img src="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/fotos/' . (int) $foto['id'])) ?>" alt="Foto de <?= mb_strtolower($etiqueta) ?> del trabajo" loading="lazy" width="300" height="300"></a></li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </section>
+  <?php endif; ?>
+
+  <?php if (!$esVisita && $activa && $esHoy && empty($cita['imprevisto_motivo'])): ?>
     <?php // "Llego tarde": la cortesía de avisar, con la tolerancia del negocio a la vista. ?>
     <details class="pq-llego-tarde"<?= (int) $cita['retraso_cliente_min'] > 0 ? ' open' : '' ?>>
       <summary>¿Se te hizo tarde?</summary>
@@ -124,9 +184,9 @@ $ajustePendiente = $cita['ajuste_estado'] === 'pendiente' && in_array($cita['est
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
         Cambiar día u hora
       </a>
-      <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" data-confirmar="¿Seguro que quieres cancelar tu cita?">
+      <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/cancelar')) ?>" data-confirmar="¿Seguro que quieres cancelar tu <?= $esVisita ? 'visita' : 'cita' ?>?">
         <?= csrf_campo() ?>
-        <button type="submit" class="pq-boton-peligro">Cancelar cita</button>
+        <button type="submit" class="pq-boton-peligro">Cancelar <?= $esVisita ? 'visita' : 'cita' ?></button>
       </form>
     </div>
   <?php else: ?>

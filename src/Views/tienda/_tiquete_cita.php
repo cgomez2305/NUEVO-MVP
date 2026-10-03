@@ -17,7 +17,12 @@ $valorCita = \App\Models\Cita::valor($cita);
       <span>Reserva #<?= (int) $cita['id'] ?></span>
     </p>
     <div class="pq-tiquete-turno">
-      <span class="pq-turno-hora"><?= e(hora_completa(date('H:i', $tsCita))) ?></span>
+      <?php if (\App\Models\Visita::esVisita($cita)): ?>
+        <span class="pq-turno-hora"><?= (string) $cita['franja_inicio'] < '12:00' ? 'Mañana' : 'Tarde' ?></span>
+        <span class="pq-turno-franja">Llegamos <?= e(\App\Models\Visita::textoFranja($cita)) ?></span>
+      <?php else: ?>
+        <span class="pq-turno-hora"><?= e(hora_completa(date('H:i', $tsCita))) ?></span>
+      <?php endif; ?>
       <span class="pq-turno-fecha"><?= e(ucfirst((date('Y-m-d', $tsCita) === date('Y-m-d') ? 'hoy, ' : '') . fecha_larga(date('Y-m-d', $tsCita)))) ?></span>
     </div>
     <div class="pq-comanda-linea">
@@ -50,6 +55,12 @@ $valorCita = \App\Models\Cita::valor($cita);
       </div>
     <?php endif; ?>
     <dl class="pq-comanda-datos">
+      <?php if (\App\Models\Visita::esVisita($cita)): ?>
+        <div>
+          <dt>Dirección</dt>
+          <dd><?= e((string) $cita['direccion']) ?><?= !empty($cita['zona_nombre']) ? ' · ' . e($cita['zona_nombre']) : '' ?></dd>
+        </div>
+      <?php endif; ?>
       <div>
         <dt>Duración</dt>
         <dd><?= (int) $cita['duracion_min'] ?> min</dd>

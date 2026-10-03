@@ -18,6 +18,7 @@ use App\Controllers\MostradorController;
 use App\Controllers\OnboardingController;
 use App\Controllers\PanelController;
 use App\Controllers\TiendaController;
+use App\Controllers\VisitaController;
 use App\Controllers\WebhookController;
 use App\Router;
 
@@ -35,6 +36,7 @@ $admin = new AdminController();
 $agenda = new AgendaController();
 $equipo = new EquipoController();
 $fila = new FilaController();
+$visita = new VisitaController();
 
 // --- Público ---------------------------------------------------------
 $router->get('/', [$home, 'index']);
@@ -226,6 +228,24 @@ $router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
 $router->get('/t/{slug}/equipo/{empleado}', [$tienda, 'profesional']);
 $router->get('/t/{slug}/fila', [$fila, 'formulario']);
 $router->post('/t/{slug}/fila', [$fila, 'anotarse']);
+// Visitas a domicilio (fase 3)
+$router->get('/panel/visitas/{id}', [$visita, 'hoja']);
+$router->post('/panel/visitas/{id}/en-camino', [$visita, 'enCamino']);
+$router->post('/panel/visitas/{id}/fotos', [$visita, 'subirFotos']);
+$router->post('/panel/visitas/{id}/fotos/{foto}/eliminar', [$visita, 'eliminarFoto']);
+$router->get('/panel/visitas/{id}/fotos/{foto}', [$visita, 'fotoPanel']);
+$router->post('/panel/visitas/{id}/cotizar', [$visita, 'cotizar']);
+$router->post('/panel/visitas/{id}/anticipo', [$visita, 'anticipoCotizacion']);
+$router->get('/panel/cobertura', [$visita, 'cobertura']);
+$router->post('/panel/cobertura', [$visita, 'guardarZona']);
+$router->post('/panel/cobertura/{id}', [$visita, 'guardarZona']);
+$router->post('/panel/cobertura/{id}/alternar', [$visita, 'alternarZona']);
+$router->post('/panel/cobertura/{id}/eliminar', [$visita, 'eliminarZona']);
+$router->get('/panel/repetir', [$visita, 'porRepetir']);
+$router->post('/panel/repetir/{id}', [$visita, 'recordar']);
+$router->get('/cotizacion/{token}', [$visita, 'cotizacionCliente']);
+$router->post('/cotizacion/{token}', [$visita, 'responderCotizacion']);
+$router->get('/cita/{token}/fotos/{foto}', [$visita, 'fotoCliente']);
 $router->get('/fila/{token}', [$fila, 'estado']);
 $router->post('/fila/{token}/salir', [$fila, 'salir']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);

@@ -11,6 +11,9 @@ $sufijoEmpleado = ($empleadoElegido !== null ? '&empleado=' . (int) $empleadoEle
 $urlReservar = base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']);
 $precioMostrado = ['precio' => $condiciones['precio'] + $precioAdicionales, 'precio_tipo' => $condiciones['precio_tipo'], 'precio_max' => $condiciones['precio_max'] !== null ? $condiciones['precio_max'] + $precioAdicionales : null];
 $fechaEsHoy = $fecha === date('Y-m-d');
+$aDomicilio = !empty($aDomicilio);
+$franjas = $franjas ?? [];
+$hayFranjaLibre = array_filter(array_column($franjas, 'hora')) !== [];
 $horaCompleta = 'hora_completa';
 $mesActual = ucfirst($mesesLargo[(int) date('n', strtotime($fecha)) - 1]) . ' ' . date('Y', strtotime($fecha));
 // Mañana/tarde para escanear la grilla más rápido cuando hay muchos cupos
@@ -132,6 +135,58 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
     </details>
   </section>
 
+  <?php if ($aDomicilio): ?>
+  <?php // Visita a domicilio: se promete una franja de llegada, no una hora exacta (con tráfico, nadie la cumple). ?>
+  <section class="pq-reserva-bloque" id="disponibilidad">
+    <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span>¿Cuándo te visitamos?</h2>
+    <?php if (!empty($disponibilidadError)): ?>
+      <div class="pq-disponibilidad-error">
+        <span class="pq-disponibilidad-error-titulo">No pudimos cargar la disponibilidad</span>
+        <p class="pq-ayuda">Puede ser algo pasajero. Intenta de nuevo o escribe directo por WhatsApp.</p>
+        <a href="<?= e($urlReservar . '?fecha=' . $fecha . $sufijoAdicionales) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reintentar</a>
+      </div>
+    <?php elseif (empty($sinProfesional)): ?>
+      <?php if ($franjas !== []): ?>
+        <p class="pq-ayuda pq-reserva-nota">Te damos una franja de llegada. Cuando el técnico salga para tu casa, te escribe por WhatsApp con la hora.</p>
+        <div class="pq-franjas">
+          <?php foreach ($franjas as $franja): ?>
+            <?php
+            $rango = hora_completa($franja['inicio']) . ' – ' . hora_completa($franja['fin']);
+            $activa = $franjaElegida !== null && $franjaElegida['clave'] === $franja['clave'];
+            ?>
+            <?php if ($franja['hora'] === null): ?>
+              <div class="pq-franja pq-franja-llena">
+                <span class="pq-franja-nombre"><?= e($franja['etiqueta']) ?></span>
+                <span class="pq-franja-rango"><?= e($rango) ?></span>
+                <span class="pq-franja-estado">Ya no hay cupo</span>
+              </div>
+            <?php else: ?>
+              <a class="pq-franja<?= $activa ? ' pq-franja-activa' : '' ?>"<?= $activa ? ' aria-current="true"' : '' ?> href="<?= e($urlReservar . '?fecha=' . $fecha . '&franja=' . $franja['clave'] . $sufijoAdicionales) ?>#confirmar">
+                <span class="pq-franja-nombre"><?= e($franja['etiqueta']) ?></span>
+                <span class="pq-franja-rango"><?= e($rango) ?></span>
+                <span class="pq-franja-estado"><?= $activa ? 'Elegida' : 'Hay cupo' ?></span>
+              </a>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <?php if (!$hayFranjaLibre): ?>
+        <div class="pq-sin-cupos">
+          <span class="pq-sin-cupos-titulo"><?= !empty($bloqueada) || $franjas === [] ? 'Ese día no hacemos visitas' : 'Ese día ya está lleno' ?></span>
+          <?php if ($proximoDisponible !== null): ?>
+            <div class="pq-sin-cupos-proximo">
+              <span class="pq-ayuda">Próxima visita libre</span>
+              <span class="pq-sin-cupos-fecha"><?= e(ucfirst($diasLargo[(int) date('w', strtotime($proximoDisponible['fecha']))])) ?> <?= (int) date('j', strtotime($proximoDisponible['fecha'])) ?> de <?= e($mesesLargo[(int) date('n', strtotime($proximoDisponible['fecha'])) - 1]) ?> · en la <?= e(mb_strtolower($proximoDisponible['etiqueta'])) ?></span>
+            </div>
+            <a href="<?= e($urlReservar . '?fecha=' . $proximoDisponible['fecha'] . '&franja=' . $proximoDisponible['franja'] . $sufijoAdicionales) ?>#confirmar" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Pedir esa visita</a>
+          <?php else: ?>
+            <p class="pq-ayuda">No encontramos cupo en los próximos días. Escríbenos por WhatsApp y lo cuadramos.</p>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
+    <?php endif; ?>
+  </section>
+  <?php else: ?>
   <section class="pq-reserva-bloque" id="disponibilidad">
     <div class="pq-etapa-fila">
       <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span>Elige la hora</h2>
@@ -273,12 +328,18 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
       </div>
     <?php endif; ?>
   </section>
+  <?php endif; ?>
 
   <?php if ($horaElegida !== null): ?>
     <section id="confirmar" class="pq-reserva-bloque pq-confirmar">
-      <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span>Confirma tu turno</h2>
+      <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span><?= $aDomicilio ? 'Confirma tu visita' : 'Confirma tu turno' ?></h2>
       <div class="pq-turno">
+        <?php if ($aDomicilio && $franjaElegida !== null): ?>
+          <span class="pq-turno-hora"><?= e($franjaElegida['etiqueta']) ?></span>
+          <span class="pq-turno-franja">Llegamos entre <?= e(hora_completa($franjaElegida['inicio'])) ?> y <?= e(hora_completa($franjaElegida['fin'])) ?></span>
+        <?php else: ?>
         <span class="pq-turno-hora"><?= e($horaCompleta($horaElegida)) ?></span>
+        <?php endif; ?>
         <span class="pq-turno-fecha"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></span>
         <span class="pq-turno-servicio"><?= e($servicio['nombre']) ?><?= $adicionalesElegidos !== [] ? ' + ' . e(implode(' + ', array_column($adicionalesElegidos, 'nombre'))) : '' ?><?= $empleadoElegido !== null ? ' · con ' . e($empleadoElegido['nombre']) : '' ?></span>
         <span class="pq-turno-total"><?= e(precio_texto($precioMostrado)) ?> · <?= (int) $duracionTotal ?> min</span>
@@ -287,14 +348,23 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
         <p class="pq-turno-anticipo">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>
       <?php endif; ?>
       <?php // Las reglas se dicen antes de reservar, no después: nadie se entera de una política cuando ya la incumplió. ?>
+      <?php if ($aDomicilio): ?>
+      <p class="pq-turno-reglas">
+        Cuando el técnico salga para tu casa te escribe por WhatsApp con la hora de llegada y su foto, para que sepas quién va.
+        <?php if ($anticipo > 0): ?>
+          Si no estás en casa, <?= $negocio['anticipo_no_asiste'] === 'se_abona' ? 'el anticipo queda abonado para otra visita' : 'el anticipo no se devuelve' ?>.
+        <?php endif; ?>
+      </p>
+      <?php else: ?>
       <p class="pq-turno-reglas">
         Te esperamos hasta <?= (int) $negocio['tolerancia_min'] ?> minutos; si se te hace tarde, avísanos desde el enlace de tu cita.
         <?php if ($anticipo > 0): ?>
           Si no llegas, <?= $negocio['anticipo_no_asiste'] === 'se_abona' ? 'el anticipo queda abonado para tu próxima cita' : 'el anticipo no se devuelve' ?>.
         <?php endif; ?>
       </p>
+      <?php endif; ?>
 
-      <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/cita')) ?>" id="pq-form-reserva" class="pq-confirmar-form">
+      <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/cita')) ?>" id="pq-form-reserva" class="pq-confirmar-form"<?= $aDomicilio ? ' enctype="multipart/form-data"' : '' ?>>
         <?= csrf_campo() ?>
         <input type="hidden" name="servicio_id" value="<?= (int) $servicio['id'] ?>">
         <input type="hidden" name="fecha" value="<?= e($fecha) ?>">
@@ -304,6 +374,9 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
         <?php endif; ?>
         <?php if ($idsAdicionales !== ''): ?>
           <input type="hidden" name="adicionales" value="<?= e($idsAdicionales) ?>">
+        <?php endif; ?>
+        <?php if ($aDomicilio && $franjaElegida !== null): ?>
+          <input type="hidden" name="franja" value="<?= e($franjaElegida['clave']) ?>">
         <?php endif; ?>
 
         <div class="pq-campo">
@@ -318,6 +391,51 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             <input class="pq-input" type="tel" inputmode="numeric" id="telefono" name="telefono" placeholder="300 123 4567" required maxlength="20" autocomplete="tel-national">
           </div>
         </div>
+
+        <?php if ($aDomicilio): ?>
+          <?php // Lo que el técnico necesita para llegar y para llevar lo correcto. ?>
+          <fieldset class="pq-visita-datos">
+            <legend class="pq-visita-datos-titulo">La visita</legend>
+            <?php if (!empty($zonas)): ?>
+              <div class="pq-campo">
+                <label class="pq-label" for="zona_id">Barrio o zona</label>
+                <select class="pq-select pq-input" id="zona_id" name="zona_id" required>
+                  <option value="">Elige tu zona</option>
+                  <?php foreach ($zonas as $zona): ?>
+                    <option value="<?= (int) $zona['id'] ?>"><?= e($zona['nombre']) ?><?= (int) $zona['costo'] > 0 ? ' · +' . pesos((int) $zona['costo']) . ' de transporte' : '' ?></option>
+                  <?php endforeach; ?>
+                </select>
+                <span class="pq-ayuda">¿No está tu zona? Escríbenos por WhatsApp antes de pedir la visita.</span>
+              </div>
+            <?php endif; ?>
+            <div class="pq-campo">
+              <label class="pq-label" for="direccion">Dirección</label>
+              <input class="pq-input" type="text" id="direccion" name="direccion" required minlength="5" maxlength="200" autocomplete="street-address" placeholder="Calle 45 # 12-30">
+            </div>
+            <div class="pq-campo">
+              <label class="pq-label" for="referencia">Apto, torre o cómo llegar <span class="pq-ayuda">(opcional)</span></label>
+              <input class="pq-input" type="text" id="referencia" name="referencia" maxlength="160" placeholder="Torre 2, apto 504 · portería por la 46">
+            </div>
+            <div class="pq-campo">
+              <label class="pq-label" for="problema">¿Qué pasa?</label>
+              <textarea class="pq-input" id="problema" name="problema" rows="3" required minlength="3" maxlength="1000" placeholder="Ej.: el aire gotea agua por dentro y no enfría"></textarea>
+            </div>
+            <div class="pq-campo">
+              <label class="pq-label" for="fotos">Fotos del daño <span class="pq-ayuda">(opcional, hasta <?= \App\Models\Visita::MAX_FOTOS_CLIENTE ?>)</span></label>
+              <input class="pq-input" type="file" id="fotos" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple>
+              <span class="pq-ayuda">Ayudan a llevar el repuesto correcto. Solo las ven el negocio y tú.</span>
+            </div>
+            <?php if (!empty($servicio['repetir_cada_meses'])): ?>
+              <label class="pq-consentimiento">
+                <input type="checkbox" name="recordar_repetir" value="1">
+                <span>
+                  <span class="pq-consentimiento-titulo">Recuérdame el próximo en <?= (int) $servicio['repetir_cada_meses'] ?> <?= (int) $servicio['repetir_cada_meses'] === 1 ? 'mes' : 'meses' ?></span>
+                  <span class="pq-ayuda">Un solo mensaje por WhatsApp cuando toque, nada más.</span>
+                </span>
+              </label>
+            <?php endif; ?>
+          </fieldset>
+        <?php endif; ?>
 
         <details class="pq-cupon-entrada pq-cupon-entrada-reserva"<?= !empty($error) && str_starts_with((string) $error, 'Cupón') ? ' open' : '' ?>>
           <summary>¿Tienes un cupón de descuento?</summary>

@@ -575,11 +575,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     var formReserva = document.getElementById('pq-form-reserva');
     if (formReserva) {
-      activarValidacionFormulario(formReserva, [
+      var reglasReserva = [
         regla('nombre', '#nombre', errorNombre),
         regla('telefono', '#telefono', errorTelefono),
-        reglaConsentimiento('Debes aceptar el uso de datos para continuar.'),
-      ]);
+      ];
+      // Visita a domicilio: dirección, zona y qué pasa (solo si el form los trae).
+      if (formReserva.querySelector('#direccion')) {
+        reglasReserva.push(regla('direccion', '#direccion', function (f) { return errorRequerido(f, '#direccion', 'Escribe la dirección de la visita.'); }));
+        reglasReserva.push(regla('problema', '#problema', function (f) { return errorRequerido(f, '#problema', 'Cuéntanos qué pasa para llevar lo necesario.'); }));
+      }
+      if (formReserva.querySelector('#zona_id')) {
+        reglasReserva.push(regla('zona_id', '#zona_id', function (f) { return errorRequerido(f, '#zona_id', 'Elige tu barrio o zona.'); }));
+      }
+      reglasReserva.push(reglaConsentimiento('Debes aceptar el uso de datos para continuar.'));
+      activarValidacionFormulario(formReserva, reglasReserva);
     }
 
     var formListaEspera = document.getElementById('pq-form-lista-espera');

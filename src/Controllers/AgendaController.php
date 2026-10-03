@@ -99,7 +99,7 @@ class AgendaController
             : null;
         Cita::terminar((int) $cita['id'], (int) $negocio['id'], $cobrado);
         flash_set('ok', 'Cita de ' . $cita['cliente_nombre'] . ' terminada.');
-        redirigir('/panel/citas');
+        redirigir(destino_agenda());
     }
 
     public function noVino(array $parametros): void

@@ -100,6 +100,15 @@ class Servicio
         return $tipo;
     }
 
+    /** Cada cuántos meses se puede repetir un servicio (0 = no se repite). */
+    public const REPETIR_MESES = [0, 1, 2, 3, 4, 6, 12];
+
+    public static function guardarRepetir(int $id, int $sedeId, int $meses): void
+    {
+        Database::conexion()->prepare('UPDATE servicios SET repetir_cada_meses = :m WHERE id = :id AND sede_id = :s')
+            ->execute(['m' => in_array($meses, self::REPETIR_MESES, true) && $meses > 0 ? $meses : null, 'id' => $id, 's' => $sedeId]);
+    }
+
     public static function actualizarDuracion(int $id, int $sedeId, int $duracionMin): void
     {
         Database::conexion()->prepare('UPDATE servicios SET duracion_min = :d WHERE id = :id AND sede_id = :s')

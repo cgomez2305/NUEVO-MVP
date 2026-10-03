@@ -102,6 +102,15 @@ $resumenAnticipo = static function (array $servicio): string {
                 </div>
               </div>
             </div>
+            <div class="pq-campo">
+              <label class="pq-label" for="<?= $idBase ?>-repetir">¿Se repite?</label>
+              <select class="pq-select" id="<?= $idBase ?>-repetir" name="repetir_cada_meses">
+                <?php foreach (\App\Models\Servicio::REPETIR_MESES as $meses): ?>
+                  <option value="<?= $meses ?>" <?= (int) ($servicio['repetir_cada_meses'] ?? 0) === $meses ? 'selected' : '' ?>><?= $meses === 0 ? 'No se repite' : 'Cada ' . $meses . ($meses === 1 ? ' mes' : ' meses') ?></option>
+                <?php endforeach; ?>
+              </select>
+              <span class="pq-ayuda">Como un mantenimiento o un retoque: al reservarlo, el cliente puede pedir que se lo recuerdes.</span>
+            </div>
             <?php if ($esDueno): ?>
               <fieldset class="pq-servicio-panel-anticipo">
                 <legend class="pq-label">Anticipo para confirmar la cita <span class="pq-ayuda">(opcional)</span></legend>

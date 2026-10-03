@@ -646,6 +646,9 @@ class PanelController
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
+            if (isset($_POST['repetir_cada_meses'])) {
+                Servicio::guardarRepetir((int) $parametros['id'], (int) $negocio['id'], (int) $_POST['repetir_cada_meses']);
+            }
             if (isset($_POST['precio_tipo'])) {
                 $tipoGuardado = Servicio::guardarTipoPrecio((int) $parametros['id'], (int) $negocio['id'], (string) $_POST['precio_tipo'], dinero_desde_texto((string) ($_POST['precio_max'] ?? '')));
                 $rangoInvalido = $tipoGuardado !== $_POST['precio_tipo'];
@@ -767,7 +770,7 @@ class PanelController
             }
         }
 
-        redirigir('/panel/citas');
+        redirigir(destino_agenda());
     }
 
     public function marcarContactadoListaEspera(array $parametros): void

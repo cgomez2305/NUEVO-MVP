@@ -200,9 +200,16 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
               </div>
               <span class="pq-ayuda">
                 <?= e($cita['nombre_servicio']) ?><?php if (!empty($cita['adicionales_texto'])): ?> <strong class="pq-agenda-adicionales">+ <?= e($cita['adicionales_texto']) ?></strong><?php endif; ?> · <span class="pq-mono"><?= e(precio_texto($cita)) ?></span>
-                <?php if ($cita['precio_final'] !== null): ?> · cobrado <span class="pq-mono"><?= pesos(\App\Models\Cita::valor($cita)) ?></span><?php endif; ?>
-                <?php if (!empty($cita['empleado_nombre'])): ?> · con <?= e($cita['empleado_nombre']) ?><?php endif; ?>
+                <?php if ($cita['precio_final'] !== null): ?> · <?= $cita['estado'] === 'completada' ? 'cobrado' : 'valor aprobado' ?> <span class="pq-mono"><?= pesos(\App\Models\Cita::valor($cita)) ?></span><?php endif; ?>
+                <?php if (!empty($cita['empleado_nombre'])): ?> · <?= \App\Models\Visita::esVisita($cita) ? 'va' : 'con' ?> <?= e($cita['empleado_nombre']) ?><?php endif; ?>
               </span>
+              <?php if (\App\Models\Visita::esVisita($cita)): ?>
+                <?php // La visita en una línea: franja prometida, dirección y la hoja con todo lo demás. ?>
+                <a class="pq-agenda-visita" href="<?= e(base_url('/panel/visitas/' . $cita['id'])) ?>">
+                  <span><?= e(\App\Models\Visita::textoFranja($cita)) ?> · <?= e((string) $cita['direccion']) ?><?= !empty($cita['zona_nombre']) ? ', ' . e($cita['zona_nombre']) : '' ?></span>
+                  <span class="pq-agenda-visita-ver">Ver visita →</span>
+                </a>
+              <?php endif; ?>
               <?php
               // Lo que se movió en esta cita, en una sola línea de marcas.
               $marcas = [];

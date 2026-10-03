@@ -36,11 +36,15 @@ Profesional con foto, especialidad y portafolio; servicios por profesional
 (precio/duración propios); horario por profesional; adicionales al reservar;
 fila virtual para clientes sin cita; liquidación de comisiones.
 
-## Fase 3 · Visitas (técnicos a domicilio) — migraciones 16-17
-Tercer `tipo_negocio = 'visitas'`: solicitud con fotos y dirección, franja
-horaria, visita de diagnóstico, cotización aprobable, anticipo de materiales,
-"voy en camino", evidencia antes/después, garantía, mantenimiento recurrente,
-zonas de cobertura.
+## Fase 3 · Visitas (técnicos a domicilio) — migraciones 16-17 ✓
+Decisión: no es un tercer `tipo_negocio` (habría partido 66 condiciones y
+dejado a los técnicos sin agenda, equipo, imprevistos, anticipos, garantía)
+sino `negocios.modalidad = 'domicilio'` sobre reservas. Hecho: franja de
+llegada (mañana/tarde) con técnico asignado al primero libre, dirección +
+zona con transporte + qué pasa + fotos privadas (storage/visitas/), "voy en
+camino" con hora y foto del técnico, cotización por ítems aprobable (pasa a
+ser el valor de la visita) con garantía y anticipo de materiales, evidencia
+antes/después, zonas de cobertura, "toca repetir" con permiso específico.
 
 ## Fase 4 · Tiendas (subagente) — migraciones 20-29
 Mostrador con escáner (lector o cámara), código de barras/costo/peso en

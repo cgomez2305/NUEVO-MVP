@@ -44,6 +44,37 @@ class Subida
     }
 
     /**
+     * Foto privada (de adentro de una casa): se guarda en storage/visitas/,
+     * fuera de public/, y solo se sirve por un controlador que revisa
+     * quién la pide. Devuelve el nombre del archivo o null.
+     *
+     * @param array{name?:string, tmp_name?:string, error?:int, size?:int}|null $archivo
+     */
+    public static function imagenPrivada(?array $archivo, string $prefijo): ?string
+    {
+        if ($archivo === null || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string) $archivo['tmp_name'])) {
+            return null;
+        }
+        $mime = mime_content_type((string) $archivo['tmp_name']) ?: '';
+        if (!isset(self::TIPOS[$mime]) || (int) $archivo['size'] > self::MAX_BYTES || !preg_match('/^[a-z]+$/', $prefijo)) {
+            return null;
+        }
+        $nombre = $prefijo . '-' . bin2hex(random_bytes(12)) . '.jpg';
+
+        return Imagen::normalizar((string) $archivo['tmp_name'], self::rutaPrivada($nombre), 1400, 80) ? $nombre : null;
+    }
+
+    /** Ruta en disco de una foto privada (null si el nombre no es uno nuestro). */
+    public static function rutaPrivada(string $nombre): ?string
+    {
+        if (!preg_match('/^[a-z]+-[a-f0-9]{24}\.jpg$/', $nombre)) {
+            return null;
+        }
+
+        return __DIR__ . '/../../storage/visitas/' . $nombre;
+    }
+
+    /**
      * Las entradas de un <input type="file" multiple name="x[]">, separadas
      * en archivos sueltos.
      *

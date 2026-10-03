@@ -358,3 +358,26 @@ Lógica en `EquipoController`, `FilaController`, `Empleado`, `Adicional`,
   por persona (citas, vendido, %, comisión) y, al tocar el monto, la
   **liquidación imprimible** como comanda (`.pq-comision-tiquete`). Se calcula
   sobre lo cobrado de citas completadas; Veci no paga, solo calcula.
+
+## Visitas a domicilio (técnicos, migraciones 16-17)
+
+Un negocio de reservas con `negocios.modalidad = 'domicilio'` (se elige en el
+registro: "Visitas a domicilio"). Usa toda la agenda; lo propio está en
+`Visita`, `Cotizacion` y `VisitaController`.
+- **Agenda**: cada visita trae una línea punteada (`.pq-agenda-visita`) con la
+  franja prometida, la dirección y "Ver visita →".
+- **Hoja de la visita** (`/panel/visitas/{id}`, `.pq-visita-hoja`): la
+  dirección en grande primero (es lo que se mira con el carro andando) con
+  mapa / escribirle / llamar; "Qué pasa" con las fotos del cliente; "Ahora"
+  (Voy en camino con minutos → mensaje listo en `.pq-visita-wa`, Confirmar /
+  Llegué, empezar / Terminar con lo cobrado, volviendo a la hoja con
+  `destino_agenda()`); cotización por renglones fijos sin JS (los vacíos no
+  se guardan; tarjetica en celular, fila desde 720 px) con garantía, validez
+  y anticipo de materiales; antes y después (fotos privadas).
+- **Zonas que cubres** (`/panel/cobertura`, dueño): reutiliza
+  `zonas_domicilio`; el transporte se suma a la visita.
+- **Toca repetir** (`/panel/repetir`, todas las reservas): servicios con
+  "¿Se repite?" (`servicios.repetir_cada_meses`) cuyo cliente pidió el
+  recordatorio al reservar (permiso específico, Ley 1581); "Recordarle" abre
+  WhatsApp y lo saca de la lista.
+- Sin "Fila de hoy" para negocios a domicilio.

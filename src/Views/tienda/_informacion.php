@@ -18,7 +18,7 @@ $pedidoMinimo = (int) ($negocio['pedido_minimo'] ?? 0);
   <div class="pq-info-grupo">
     <?php if ($zonas !== [] || $pedidoMinimo > 0): ?>
       <section class="pq-info" id="domicilios" aria-labelledby="pq-info-domicilios">
-        <h2 class="pq-info-titulo" id="pq-info-domicilios"><?= $zonas !== [] ? 'Domicilios' : 'Pedido mínimo' ?></h2>
+        <h2 class="pq-info-titulo" id="pq-info-domicilios"><?= \App\Models\Visita::esDomicilio($negocio) ? 'Zonas que cubrimos' : ($zonas !== [] ? 'Domicilios' : 'Pedido mínimo') ?></h2>
         <?php if ($zonas !== []): ?>
           <dl class="pq-horario pq-zonas-info">
             <?php foreach ($zonas as $zona): ?>
