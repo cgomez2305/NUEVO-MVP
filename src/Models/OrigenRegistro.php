@@ -87,6 +87,48 @@ class OrigenRegistro
     }
 
     /** Sin etiquetas, sin caracteres de control, sin espacios de sobra, máximo 80. */
+    /**
+     * Reporte de campañas para el panel interno: negocios registrados en los
+     * últimos $dias días (null = desde siempre) agrupados por fuente, medio y
+     * campaña, con cuántos publicaron su tienda, cuántos pagaron un plan y
+     * cuántos canjearon una oferta. Los que llegaron sin utm salen juntos
+     * como directos (fuente null). Cuenta negocios, no visitas: lo que pasó
+     * antes del registro lo mide el sitio, no la app.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function reporte(?int $dias): array
+    {
+        $desde = $dias !== null ? date('Y-m-d H:i:s', strtotime('-' . $dias . ' days')) : '1970-01-01 00:00:00';
+        $stmt = Database::conexion()->prepare(
+            "SELECT o.utm_source AS fuente, o.utm_medium AS medio, o.utm_campaign AS campana,
+                    COUNT(*) AS registros,
+                    SUM(EXISTS(SELECT 1 FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1)) AS publicaron,
+                    SUM(EXISTS(SELECT 1 FROM pagos_plan p WHERE p.negocio_id = n.id AND p.concepto = 'plan'
+                                  AND p.confirmado_en IS NOT NULL AND p.cancelado_en IS NULL)) AS pagaron,
+                    SUM(EXISTS(SELECT 1 FROM ofertas_canjes c WHERE c.negocio_id = n.id AND c.estado = 'confirmado')) AS con_oferta,
+                    SUM(o.oferta_codigo IS NOT NULL) AS llegaron_con_codigo,
+                    SUM(o.plan_interes = 'barrio') AS interes_barrio,
+                    SUM(o.plan_interes = 'pro') AS interes_pro,
+                    MAX(n.creado_en) AS ultimo
+               FROM negocios n
+               LEFT JOIN negocio_origen o ON o.negocio_id = n.id
+              WHERE n.creado_en >= :desde
+              GROUP BY o.utm_source, o.utm_medium, o.utm_campaign
+              ORDER BY registros DESC, ultimo DESC
+              LIMIT 200"
+        );
+        $stmt->execute(['desde' => $desde]);
+
+        return array_map(static function (array $fila): array {
+            foreach (['registros', 'publicaron', 'pagaron', 'con_oferta', 'llegaron_con_codigo', 'interes_barrio', 'interes_pro'] as $campo) {
+                $fila[$campo] = (int) $fila[$campo];
+            }
+
+            return $fila;
+        }, $stmt->fetchAll());
+    }
+
     private static function textoPlano(string $valor): string
     {
         $valor = strip_tags($valor);

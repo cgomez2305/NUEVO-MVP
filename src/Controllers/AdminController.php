@@ -240,6 +240,22 @@ class AdminController
         ], 'admin');
     }
 
+    /** De qué campañas (utm del sitio) llegan los negocios y cuántos terminan pagando. */
+    public function origenes(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $periodos = ['7' => 7, '30' => 30, '90' => 90, 'todo' => null];
+        $periodo = array_key_exists((string) ($_GET['periodo'] ?? ''), $periodos) ? (string) $_GET['periodo'] : '30';
+
+        ver('admin/origenes', [
+            'titulo'   => 'Campañas · Panel interno · Veci',
+            'admin'    => $admin,
+            'periodo'  => $periodo,
+            'filas'    => \App\Models\OrigenRegistro::reporte($periodos[$periodo]),
+            'demo'     => \App\Models\DemoIA::resumen($periodos[$periodo]),
+        ], 'admin');
+    }
+
     public function guardarOferta(array $parametros): void
     {
         $admin = AdminAuth::exigirSesion();

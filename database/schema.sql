@@ -610,6 +610,35 @@ CREATE TABLE IF NOT EXISTS ofertas_canjes (
 INSERT IGNORE INTO ofertas_plan (codigo, descripcion, porcentaje, cupo_total)
 VALUES ('VECICHAT30', '30% del primer mes de Barrio o Pro (pago mensual), solo negocios nuevos', 30, 300);
 
+-- Códigos de un solo uso enviados por WhatsApp (OTP). Primer uso: el
+--    titular confirma su WhatsApp antes de aplicar una oferta de plan. Solo
+--    se guarda el HMAC del código; vence a los 10 minutos y aguanta 5 intentos.
+CREATE TABLE IF NOT EXISTS verificaciones_whatsapp (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id    INT UNSIGNED NOT NULL,
+  proposito     VARCHAR(30)  NOT NULL,
+  codigo_hash   CHAR(64)     NOT NULL,
+  expira_en     DATETIME     NOT NULL,
+  intentos      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  verificado_en DATETIME     DEFAULT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_verificaciones_usuario (usuario_id, proposito, creado_en),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- "Sube tu foto sin cuenta" (el sitio lee un menú con IA sin registro):
+--    una fila por lectura para el tope diario de uso de la API. No guarda la
+--    foto ni la IP (solo su HMAC), ni lo que se leyó.
+CREATE TABLE IF NOT EXISTS demo_ia_usos (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ip_hash         CHAR(64)     NOT NULL,
+  estado          VARCHAR(12)  NOT NULL,
+  tokens_entrada  INT UNSIGNED NOT NULL DEFAULT 0,
+  tokens_salida   INT UNSIGNED NOT NULL DEFAULT 0,
+  creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_demo_ia_fecha (creado_en)
+) ENGINE=InnoDB;
+
 -- Suscripciones de Web Push de cada USUARIO del panel (no por sede: un
 -- colaborador que entra a varias sedes recibe todo en el mismo celular).
 -- endpoint/p256dh/auth vienen tal cual de PushSubscription.toJSON().
@@ -1262,4 +1291,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_35_seguridad.sql'),
   ('2026-10-03_36_codigos_votos.sql'),
   ('2026-10-03_37_pagos_cancelados.sql'),
-  ('2026-10-03_38_origen_y_ofertas.sql');
+  ('2026-10-03_38_origen_y_ofertas.sql'),
+  ('2026-10-03_39_otp_y_demo_ia.sql');

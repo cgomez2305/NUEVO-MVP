@@ -30,6 +30,18 @@ return [
     // funcione igual de principio a fin. Ver src/Services/ExtractorMenu.php.
     'anthropic_api_key' => null,
 
+    // "Sube tu foto sin cuenta" del sitio: POST /api/menu-demo. Solo responde
+    // a los orígenes de la lista (CORS) y se frena sola: lecturas por IP al
+    // día, y un tope diario de lecturas y de tokens para toda la demo (cuando
+    // se llega, responde "vuelve mañana"). Sin anthropic_api_key no lee nada.
+    'demo_ia' => [
+        'origenes'           => ['https://tuveci.co', 'https://www.tuveci.co'],
+        'por_ip_al_dia'      => 2,
+        'lecturas_al_dia'    => 150,
+        'tope_tokens_al_dia' => 1500000,
+        'max_items'          => 15,
+    ],
+
     // Opcional. Credenciales de WhatsApp Business API (Meta Cloud API) para
     // enviar recordatorios de cita y notificaciones de forma automática.
     // Sin esto, los recordatorios se quedan como una cola de envío manual
@@ -38,6 +50,12 @@ return [
     'whatsapp_api' => [
         'token'              => null,
         'phone_number_id'    => null,
+        // Opcional. Plantilla de categoría "autenticación" aprobada en Meta
+        // (cuerpo con el código + botón "Copiar código"). Con ella, aplicar
+        // un código de oferta de plan pide además confirmar el WhatsApp de
+        // la cuenta con un código de 6 dígitos. Sin ella, no se pide.
+        'plantilla_codigo'   => null,
+        'plantilla_idioma'   => 'es',
     ],
 
     // Opcional. Secreto compartido para verificar la firma de las

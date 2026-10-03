@@ -14,8 +14,9 @@ class Router
 
     /**
      * Rutas POST que no llevan token CSRF porque no las llama un navegador
-     * con sesión sino un proveedor (Wompi, el banco): se autentican con su
-     * propia firma o secreto dentro del controlador.
+     * con sesión sino un proveedor (Wompi, el banco), que se autentica con
+     * su propia firma o secreto dentro del controlador, o porque son
+     * públicas y no tocan ninguna cuenta (la demo /api/menu-demo).
      *
      * @param array<int, string> $sinCsrf patrones exactos, p. ej. '/webhooks/wompi'
      */
@@ -31,6 +32,12 @@ class Router
     public function post(string $patron, callable $manejador): void
     {
         $this->agregar('POST', $patron, $manejador);
+    }
+
+    /** Preflight de CORS (lo pide el navegador antes de un POST desde otro dominio). */
+    public function options(string $patron, callable $manejador): void
+    {
+        $this->agregar('OPTIONS', $patron, $manejador);
     }
 
     private function agregar(string $metodo, string $patron, callable $manejador): void

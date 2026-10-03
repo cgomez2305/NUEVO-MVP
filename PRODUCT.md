@@ -79,7 +79,7 @@ Ya existen y se aplican en el servidor (tabla `planes`; el plan vigente se calcu
 - **Solo negocios nuevos.** Se rechaza si el WhatsApp del dueño o el documento ya tuvieron otro negocio en Veci, aunque esté borrado o suspendido, o si ya usaron una oferta.
   - El documento se normaliza: sin el dígito de verificación, solo números.
   - Ambos se guardan solo como HMAC-SHA256 con una clave del servidor (`app.clave_hash`), nunca en claro.
-  - Es la medida mientras no exista verificación por OTP.
+  - Con la API de WhatsApp configurada, además se confirma con un código que el WhatsApp de la cuenta es de quien usa la oferta (ver abajo).
 - **Solo el primer mes de Barrio o Pro mensual:** se rechaza si el negocio ya pagó un plan. El descuento se calcula sobre el precio del plan; las sedes extra no tienen descuento.
 - **Fecha de fin, cupo total y porcentaje** se cambian desde `/admin/ofertas`. Desde ahí también se pausa una oferta o se crea otra.
   - El cupo se cuenta con la oferta bloqueada, así que dos negocios a la vez no pasan del cupo (probado).
@@ -90,7 +90,11 @@ Ya existen y se aplican en el servidor (tabla `planes`; el plan vigente se calcu
 
 Los `cupones` de cada negocio para sus propios clientes son aparte y siguen igual.
 
-**Pendiente:** verificar por OTP el WhatsApp del titular antes de aplicar la oferta. **Próximamente.**
+**Código por WhatsApp (OTP) para usar una oferta: construido, se enciende al configurar la API de WhatsApp.**
+- Con `whatsapp_api.token`, `phone_number_id` y una plantilla de autenticación aprobada por Meta (`whatsapp_api.plantilla_codigo`), aplicar un código de oferta manda un código de 6 dígitos al WhatsApp de la cuenta. La oferta solo queda aplicada al escribirlo bien.
+- El código vence a los 10 minutos y admite 5 intentos; en la base solo queda su HMAC. Un código nuevo anula el anterior. Máximo 3 códigos por hora por cuenta y 6 por IP.
+- Una vez confirmado, vale 30 minutos en esa sesión (quitar y volver a aplicar no pide otro). Al confirmar se vuelve a evaluar la oferta (si se pausó o se agotó mientras tanto, no se aplica).
+- **Hoy, sin la API de WhatsApp configurada, no se pide el código** y la protección es la de arriba (huellas del WhatsApp y del documento). No se puede prometer "verificamos tu WhatsApp" hasta configurarla.
 
 ### Referidos, pasarela, Excel y webhooks
 
@@ -127,10 +131,21 @@ Los `cupones` de cada negocio para sus propios clientes son aparte y siguen igua
 - **Tiendas:** mostrador con escáner, fiado, compras, inventario y venta por peso.
 - **Más funciones:** fidelidad con sellos, cupones, bonos de sesiones, reseñas, fila virtual, cierre de caja, PWA con notificaciones push e inicio "Hoy".
 
-### Pendientes para conectar con el sitio
+### Conexión con el sitio
 
-- **Reporte de atribución:** los `utm_*` se guardan por negocio, pero el panel interno todavía no tiene un reporte. Por ahora se consultan en la tabla `negocio_origen`. **Próximamente.**
-- **"Sube tu foto sin cuenta"** (lectura del menú con IA desde el sitio, sin registrarse): **Próximamente.** Es el punto 3 de `PENDIENTES-APP.md`. No existen ni el endpoint ni el permiso CORS para `https://tuveci.co`.
+- **Reporte de campañas (atribución): construido** en el panel interno, `/admin/origenes` ("Campañas").
+  - Embudo del período (7, 30, 90 días o desde siempre): se registraron, publicaron su tienda, pagaron un plan, usaron un código de oferta.
+  - Una fila por fuente / medio / campaña (`utm_source`, `utm_medium`, `utm_campaign`) con esas mismas cifras y el plan que miraban; los que llegaron sin utm salen juntos como "Sin campaña".
+  - Cuenta **negocios registrados**, no visitas ni clics: lo de antes del registro lo mide el sitio.
+  - También muestra cuántas lecturas y tokens gastó la demo de la foto en el período.
+- **"Sube tu foto sin cuenta": construido.** `POST https://<dominio de la app>/api/menu-demo` (el mismo dominio de `app.url`). **El sitio debe permitir esa URL en su CSP (`connect-src`).**
+  - Envío `multipart/form-data`: `foto` (JPG, PNG o WebP, hasta 4 MB, entre 100×100 y 30 megapíxeles) y `tipo` opcional (`pedidos` o `reservas`; por defecto `pedidos`).
+  - Respuesta JSON `{estado, mensaje, tipo, items}`. `estado`: `ok` (con ítems), `vacio` (la foto no tenía precios), `foto_invalida` (400), `foto_grande` (413), `limite_ip` y `muchos_intentos` (429), `tope_diario` y `no_disponible` (503), `fallo` (502), `origen_no_permitido` (403). El `mensaje` ya viene en español para mostrarlo tal cual.
+  - Ítems de `pedidos`: `nombre`, `precio`, `categoria`, `descripcion`. De `reservas`: `nombre`, `precio`, `duracion_min`. Como máximo 15 ítems (los primeros de la carta), sin etiquetas HTML; el sitio los pinta como texto.
+  - CORS solo para `https://tuveci.co` y `https://www.tuveci.co` (`demo_ia.origenes`). Otro origen o sin `Origin`: 403.
+  - **Frenos:** 2 lecturas al día por IP, 20 intentos por hora por IP, y un tope diario para toda la demo de 150 lecturas y 1.500.000 tokens (configurables en `demo_ia`). Al llegar al tope responde "vuelve mañana". El `Origin` lo puede falsear quien no use un navegador: lo que limita el gasto son los topes.
+  - **No se guarda la foto** (se lee del archivo temporal y se borra) ni la IP (solo su huella). No abre sesión ni deja cookies.
+  - Sin `anthropic_api_key` en el servidor responde `no_disponible`: el sitio debe tener un estado para eso.
 
 ### Datos, seguridad y Ley 1581: qué se puede prometer
 
@@ -159,7 +174,7 @@ Resultado de dos auditorías de seguridad y de pruebas automáticas (`tests/aisl
 
 - **"Datos cifrados" o "cifrado de extremo a extremo":** la base no está cifrada a nivel de aplicación. El cifrado en tránsito (HTTPS) depende del hosting. Decir "conexión segura (HTTPS)" solo si el hosting lo tiene activo.
 - **Backups, disponibilidad, certificaciones** (ISO, SOC 2, PCI) **o "nivel bancario":** no hay nada de eso en el código. Backups diarios: tarea del hosting, **Próximamente** como compromiso escrito.
-- **Verificación del número del cliente por código de WhatsApp (OTP): Próximamente.** Hoy el número es lo que la persona escribe. La identidad se protege con el celular reconocido y los enlaces privados, no con verificación.
+- **Verificación del número del cliente por código de WhatsApp (OTP): Próximamente.** Hoy el número es lo que la persona escribe. (El código por WhatsApp existe solo para el dueño que usa una oferta de plan, y solo con la API de WhatsApp configurada.) La identidad se protege con el celular reconocido y los enlaces privados, no con verificación.
 - **"Cumplimos la Ley 1581" como certificación:** se puede decir que la app tiene las herramientas (autorizaciones separadas, registro de consentimiento, retiro, supresión). El cumplimiento de cada negocio como responsable del tratamiento depende de cómo los use.
 
 ## Brand Commitments

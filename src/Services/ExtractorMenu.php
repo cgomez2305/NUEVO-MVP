@@ -31,8 +31,11 @@ class ExtractorMenu
     /** La API rechaza imágenes de más de 5 MB; se deja margen por el base64. */
     private const MAX_BYTES_IMAGEN = 3_500_000;
 
+    /** Tokens de la última llamada a la API (para el tope diario de la demo pública). */
+    private static array $ultimoUso = ['entrada' => 0, 'salida' => 0];
+
     /** @return array{estado:string, items:array<int, array{nombre:string, precio:int, categoria:string, descripcion:?string}>} */
-    public static function extraer(string $rutaAbsolutaImagen): array
+    public static function extraer(string $rutaAbsolutaImagen, ?int $soloPrimeros = null): array
     {
         $prompt = 'Esta es la foto del menú o carta de un negocio de barrio en Colombia '
             . '(restaurante, panadería, tienda, cafetería…). Extrae cada producto que se venda '
@@ -46,7 +49,8 @@ class ExtractorMenu
             . "\"Corrientazo\"…), corto. Si el menú no tiene secciones, agrupa en categorías obvias.\n"
             . "- descripcion: lo que el menú dice que trae (\"con queso y mantequilla\"), o cadena vacía.\n\n"
             . 'No inventes productos que no estén en la foto. Si la foto no es un menú o no se lee, '
-            . 'devuelve la lista vacía.';
+            . 'devuelve la lista vacía.'
+            . self::recorte($soloPrimeros, 'productos');
 
         $esquema = self::esquemaLista([
             'nombre'      => ['type' => 'string'],
@@ -55,7 +59,7 @@ class ExtractorMenu
             'descripcion' => ['type' => 'string'],
         ]);
 
-        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema);
+        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema, $soloPrimeros);
         if ($lectura['estado'] !== 'ok') {
             return $lectura;
         }
@@ -80,7 +84,7 @@ class ExtractorMenu
     }
 
     /** @return array{estado:string, items:array<int, array{nombre:string, precio:int, duracion_min:int}>} */
-    public static function extraerServicios(string $rutaAbsolutaImagen): array
+    public static function extraerServicios(string $rutaAbsolutaImagen, ?int $soloPrimeros = null): array
     {
         $prompt = 'Esta es la foto de la lista de servicios y precios de un negocio de barrio en '
             . 'Colombia (peluquería, barbería, spa, uñas, taller, consultorio…). Extrae cada '
@@ -92,7 +96,8 @@ class ExtractorMenu
             . "- duracion_min: la duración en minutos si está escrita; si no, la duración típica "
             . "de ese servicio en un salón de barrio, en múltiplos de 5.\n\n"
             . 'No inventes servicios que no estén en la foto. Si la foto no es una lista de '
-            . 'servicios o no se lee, devuelve la lista vacía.';
+            . 'servicios o no se lee, devuelve la lista vacía.'
+            . self::recorte($soloPrimeros, 'servicios');
 
         $esquema = self::esquemaLista([
             'nombre'       => ['type' => 'string'],
@@ -100,7 +105,7 @@ class ExtractorMenu
             'duracion_min' => ['type' => 'integer'],
         ]);
 
-        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema);
+        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema, $soloPrimeros);
         if ($lectura['estado'] !== 'ok') {
             return $lectura;
         }
@@ -184,9 +189,10 @@ class ExtractorMenu
      *
      * @return array{estado:string, items:array<int, mixed>}
      */
-    private static function leer(string $ruta, string $prompt, array $esquema): array
+    private static function leer(string $ruta, string $prompt, array $esquema, ?int $soloPrimeros = null): array
     {
-        $apiKey = config('anthropic_api_key');
+        self::$ultimoUso = ['entrada' => 0, 'salida' => 0];
+        $apiKey = self::urlDePrueba() !== null ? 'prueba' : config('anthropic_api_key');
         if (!is_string($apiKey) || $apiKey === '') {
             return ['estado' => 'sin_llave', 'items' => []];
         }
@@ -201,7 +207,8 @@ class ExtractorMenu
 
         $cuerpo = json_encode([
             'model'         => self::MODELO,
-            'max_tokens'    => 16000,
+            // Una lectura recortada (la demo del sitio) no necesita tanto espacio.
+            'max_tokens'    => $soloPrimeros !== null ? 4000 : 16000,
             'fallbacks'     => 'default',
             'output_config' => ['format' => ['type' => 'json_schema', 'schema' => $esquema]],
             'messages'      => [[
@@ -216,7 +223,7 @@ class ExtractorMenu
             return ['estado' => 'fallo', 'items' => []];
         }
 
-        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        $ch = curl_init(self::urlDePrueba() ?? 'https://api.anthropic.com/v1/messages');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
@@ -242,6 +249,13 @@ class ExtractorMenu
         }
 
         $json = json_decode($respuesta, true);
+        if (is_array($json) && is_array($json['usage'] ?? null)) {
+            $uso = $json['usage'];
+            self::$ultimoUso = [
+                'entrada' => (int) ($uso['input_tokens'] ?? 0) + (int) ($uso['cache_creation_input_tokens'] ?? 0) + (int) ($uso['cache_read_input_tokens'] ?? 0),
+                'salida'  => (int) ($uso['output_tokens'] ?? 0),
+            ];
+        }
         if (!is_array($json) || ($json['stop_reason'] ?? null) === 'refusal') {
             return ['estado' => 'fallo', 'items' => []];
         }
@@ -260,6 +274,41 @@ class ExtractorMenu
         }
 
         return ['estado' => 'ok', 'items' => array_values(array_filter($datos['items'], 'is_array'))];
+    }
+
+    /** ¿Hay con qué leer fotos? (llave de Anthropic configurada). */
+    public static function disponible(): bool
+    {
+        $apiKey = config('anthropic_api_key');
+
+        return self::urlDePrueba() !== null || (is_string($apiKey) && $apiKey !== '');
+    }
+
+    /**
+     * Solo para pruebas locales (tests/menu_demo.php): con la variable de
+     * entorno VECI_IA_PRUEBA_URL apuntando a un servidor falso en localhost,
+     * las lecturas van allá en vez de a Anthropic. Solo con el servidor de
+     * desarrollo de PHP; nunca la definas en producción.
+     */
+    private static function urlDePrueba(): ?string
+    {
+        $url = getenv('VECI_IA_PRUEBA_URL');
+
+        return PHP_SAPI === 'cli-server' && is_string($url) && str_starts_with($url, 'http://localhost:') ? $url : null;
+    }
+
+    /** @return array{entrada:int, salida:int} tokens de la última lectura (0 si no llegó a la API). */
+    public static function ultimoUso(): array
+    {
+        return self::$ultimoUso;
+    }
+
+    /** Instrucción para leer solo los primeros N ítems (la demo pública no necesita la carta entera). */
+    private static function recorte(?int $soloPrimeros, string $que): string
+    {
+        return $soloPrimeros !== null
+            ? "\n\nDevuelve como máximo {$soloPrimeros} {$que}: los primeros que aparezcan en la foto."
+            : '';
     }
 
     /**

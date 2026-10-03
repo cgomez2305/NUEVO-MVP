@@ -5489,11 +5489,17 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
    muescas a los lados (el "talón" de papel de la ruta Tiquete). El precio
    tachado solo aparece en la tarjeta donde aplica, junto a "el primer
    mes": nunca se insinúa que el descuento dura más. */
-.pq-oferta-form { margin: 0 0 var(--esp-4); max-width: 520px; }
+.pq-oferta-form { margin: var(--esp-4) 0; max-width: 520px; }
 .pq-oferta-resumen { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--sello); min-height: 28px; display: flex; align-items: center; }
 .pq-oferta-resumen:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; border-radius: 4px; }
 .pq-oferta-campos { display: flex; flex-direction: column; gap: var(--esp-3); margin-top: var(--esp-3); }
 .pq-oferta-campos .pq-btn { align-self: flex-start; }
+/* Paso de confirmar el WhatsApp: no es un <details>, el título no se toca.
+   El código va espaciado para leerlo de una vez contra el mensaje. */
+.pq-oferta-verificar .pq-oferta-resumen { display: block; cursor: default; margin: 0; }
+.pq-oferta-verificar .pq-ayuda { margin: var(--esp-1) 0 0; }
+.pq-oferta-verificar #oferta-otp { max-width: 180px; font-size: 18px; letter-spacing: 0.2em; }
+.pq-oferta-otras { display: flex; flex-wrap: wrap; gap: var(--esp-2) var(--esp-5); margin-top: var(--esp-3); }
 .pq-oferta-aplicada {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3);
   margin: 0 0 var(--esp-4); padding: var(--esp-3) var(--esp-4); max-width: 640px;
@@ -5520,7 +5526,8 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 /* ---------- Panel interno · ofertas ---------- */
 .pq-admin-nav { display: flex; gap: var(--esp-1); margin-left: auto; margin-right: var(--esp-3); }
 .pq-admin-nav a { padding: 6px 10px; border-radius: 8px; color: var(--carbon); font-size: 14px; font-weight: 600; text-decoration: none; }
-.pq-admin-nav a:hover { background: var(--tinte-sello); color: var(--sello); }
+.pq-admin-nav a:hover, .pq-admin-nav a[aria-current="page"] { background: var(--tinte-sello); color: var(--sello); }
+.pq-admin-nav a:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
 .pq-ofertas-lista { display: flex; flex-direction: column; gap: var(--esp-3); margin-bottom: var(--esp-4); }
 .pq-oferta-admin { display: flex; flex-direction: column; gap: var(--esp-3); }
 .pq-oferta-admin-cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); }
@@ -5529,3 +5536,47 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-oferta-admin-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-3); }
 .pq-canjes td, .pq-canjes th { white-space: nowrap; }
 .pq-tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- Panel interno: campañas (/admin/origenes) ----------
+   El embudo es una fila de pasos con una barra que mide cada paso contra
+   los registrados: el ancho sale del dato (--parte), no es decoración. */
+.pq-embudo {
+  list-style: none; margin: var(--esp-4) 0 var(--esp-6); padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--esp-3);
+}
+.pq-embudo-paso {
+  display: flex; flex-direction: column; gap: var(--esp-1);
+  padding: var(--esp-3) var(--esp-4); background: var(--tiquete);
+  border: 1px solid var(--borde); border-radius: var(--radio-m);
+}
+.pq-embudo-barra { display: block; height: 4px; border-radius: 2px; background: var(--borde); position: relative; overflow: hidden; margin-bottom: var(--esp-2); }
+.pq-embudo-barra::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--parte, 0%); background: var(--sello); border-radius: inherit; }
+.pq-embudo-cifra { font-size: 28px; font-weight: 600; line-height: 1.1; color: var(--carbon); }
+.pq-embudo-nombre { font-size: 13.5px; color: var(--gris-texto); }
+.pq-embudo-tasa { font-size: 14px; font-weight: 600; color: var(--sello); margin-left: var(--esp-1); }
+.pq-campanas .pq-num { text-align: right; white-space: nowrap; }
+.pq-campanas tbody th { text-align: left; font-weight: 600; padding: 11px 14px; border-bottom: 1px solid var(--recibo); white-space: nowrap; }
+.pq-campanas td { white-space: nowrap; }
+.pq-campanas tbody tr:last-child th { border-bottom: none; }
+/* Una campaña con nombre largo no empuja las cifras fuera de la vista:
+   se corta y el nombre completo queda en el title. */
+.pq-campana-nombre { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.pq-campana-directa { font-family: inherit; }
+.pq-campana-tasa { color: var(--gris-texto); font-size: 12px; margin-left: var(--esp-1); }
+
+/* Tablas del panel interno con scroll propio (canjes, campañas): en el
+   celular siguen siendo tabla y se desplazan dentro de su caja; la regla
+   que vuelve tarjetas las filas del historial de pedidos no les sirve. */
+@media (max-width: 639px) {
+  .pq-tabla-scroll .pq-tabla { display: table; }
+  .pq-tabla-scroll .pq-tabla thead { display: table-header-group; }
+  .pq-tabla-scroll .pq-tabla tbody { display: table-row-group; }
+  .pq-tabla-scroll .pq-tabla tbody tr { display: table-row; padding: 0; }
+  .pq-tabla-scroll .pq-tabla tbody td { padding: 11px 14px; border-bottom: 1px solid var(--recibo); }
+  /* Cabecera del panel interno: con tres secciones el menú baja a su
+     propia fila y se desplaza si no cabe, en vez de montarse en el sello. */
+  .pq-admin-cabeza { flex-wrap: wrap; row-gap: var(--esp-1); }
+  .pq-admin-nav { order: 3; flex-basis: 100%; margin: 0; overflow-x: auto; }
+  .pq-admin-nav a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
+}
+.pq-campanas-demo { margin: calc(-1 * var(--esp-3)) 0 0; font-size: 13.5px; color: var(--gris-texto); }

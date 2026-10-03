@@ -263,6 +263,22 @@ $ok((int) $editada['porcentaje'] === 25 && $editada['vence_en'] === '2030-12-31'
 $sinSesion = $pedir('anon', 'GET', '/admin/ofertas');
 $ok($sinSesion['codigo'] === 302 && str_contains($sinSesion['location'], '/admin/login'), 'sin sesión de admin no se ve');
 
+echo "== Panel interno de campañas\n";
+$filaWeb = null;
+foreach (\App\Models\OrigenRegistro::reporte(7) as $fila) {
+    if ($fila['fuente'] === 'web' && $fila['medio'] === 'chatbot') {
+        $filaWeb = $fila;
+    }
+}
+$ok($filaWeb !== null && $filaWeb['registros'] >= 1 && $filaWeb['pagaron'] >= 1 && $filaWeb['con_oferta'] >= 1 && $filaWeb['interes_pro'] >= 1, 'la campaña web/chatbot cuenta el registro, el pago, la oferta y el plan que miraba');
+$sinCampana = array_values(array_filter(\App\Models\OrigenRegistro::reporte(7), fn ($f) => $f['fuente'] === null && $f['medio'] === null && $f['campana'] === null));
+$ok($sinCampana !== [] && $sinCampana[0]['registros'] >= 4, 'los registros sin utm salen juntos como "sin campaña"');
+$campanas = $pedir('adm', 'GET', '/admin/origenes?periodo=7');
+$ok(str_contains($campanas['cuerpo'], 'chatbot') && str_contains($campanas['cuerpo'], 'Sin campaña') && str_contains($campanas['cuerpo'], 'pq-embudo'), '/admin/origenes muestra el embudo y las campañas');
+$ok(str_contains($pedir('adm', 'GET', '/admin/origenes?periodo=<x>')['cuerpo'], 'href="' . base_url('/admin/origenes') . '?periodo=30" class="pq-segmento pq-segmento-activo"'), 'un período inválido cae en 30 días');
+$sinSesion = $pedir('anon', 'GET', '/admin/origenes');
+$ok($sinSesion['codigo'] === 302 && str_contains($sinSesion['location'], '/admin/login'), 'campañas sin sesión de admin no se ve');
+
 foreach ($jars as $jar) {
     @unlink($jar);
 }

@@ -47,7 +47,11 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
-session_start();
+// La API pública (/api/menu-demo) no usa sesión: sin cookie ni archivo de
+// sesión por cada visita del sitio.
+if (preg_match('#/api/[a-z-]+/?$#', (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH)) !== 1) {
+    session_start();
+}
 
 // Cabeceras de seguridad para toda respuesta de la app (no aplica a los
 // activos estáticos de docs/, que sirve GitHub Pages por separado).

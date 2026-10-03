@@ -127,6 +127,30 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
         <button type="submit" class="pq-enlace-boton">Quitar</button>
       </form>
     </div>
+  <?php elseif (!empty($ofertaPorVerificar)): ?>
+    <?php // El código va al WhatsApp con que se registró la cuenta; sin él la oferta no queda aplicada. ?>
+    <div class="pq-card pq-oferta-form pq-oferta-verificar">
+      <p class="pq-oferta-resumen">Confirma tu WhatsApp para usar <span class="pq-mono"><?= e((string) $ofertaPorVerificar['codigo']) ?></span></p>
+      <p class="pq-ayuda">Te enviamos un código de 6 dígitos al WhatsApp de tu cuenta (<span class="pq-mono"><?= e($whatsappEnmascarado) ?></span>). Vence en 10 minutos.</p>
+      <form method="post" action="<?= e(base_url('/panel/plan/oferta/verificar')) ?>" class="pq-oferta-campos">
+        <?= csrf_campo() ?>
+        <div class="pq-campo">
+          <label class="pq-label" for="oferta-otp">Código de WhatsApp</label>
+          <input class="pq-input pq-mono" id="oferta-otp" name="codigo_whatsapp" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code" required placeholder="123456">
+        </div>
+        <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Confirmar</button>
+      </form>
+      <div class="pq-oferta-otras">
+        <form method="post" action="<?= e(base_url('/panel/plan/oferta/codigo')) ?>">
+          <?= csrf_campo() ?>
+          <button type="submit" class="pq-enlace-boton">Enviarme otro código</button>
+        </form>
+        <form method="post" action="<?= e(base_url('/panel/plan/oferta/quitar')) ?>">
+          <?= csrf_campo() ?>
+          <button type="submit" class="pq-enlace-boton">Cancelar</button>
+        </form>
+      </div>
+    </div>
   <?php else: ?>
     <details class="pq-card pq-oferta-form"<?= $codigoSugerido !== '' ? ' open' : '' ?>>
       <summary class="pq-oferta-resumen">¿Tienes un código de oferta?</summary>

@@ -243,6 +243,23 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
        correr.sh ahora hace DROP/CREATE DATABASE antes de restaurar.
      - Punto 3 ("Sube tu foto sin cuenta") queda para después; docs/ no se toca.
 
+  8. "Continúa con lo pendiente" (migración 39: verificaciones_whatsapp, demo_ia_usos):
+     - OTP de ofertas: `VerificacionWhatsapp` + `CodigoWhatsapp` (plantilla
+       whatsapp_api.plantilla_codigo; sin ella no se pide). Oferta queda en
+       `$_SESSION['oferta_por_verificar']` hasta /panel/plan/oferta/verificar;
+       reenviar /panel/plan/oferta/codigo. Prueba: tests/ofertas_otp.php (23)
+       con VECI_OTP_ARCHIVO en un servidor aparte (8001).
+     - /admin/origenes ("Campañas"): `OrigenRegistro::reporte($dias)` + embudo.
+       Admin nav con aria-current; tablas .pq-tabla-scroll ya no se vuelven
+       tarjetas en el celular. Checks agregados a tests/registro_ofertas.php (51).
+     - /api/menu-demo: `DemoController` (OPTIONS + POST, Router::options, exento
+       de CSRF, sin sesión por bootstrap), `DemoIA` (GET_LOCK + tope del día),
+       `ExtractorMenu` con $soloPrimeros (4000 max_tokens) y ultimoUso().
+       Prueba: tests/menu_demo.php (29) contra tests/apoyo/anthropic_falso.php
+       (8003) y app en 8002 con VECI_IA_PRUEBA_URL y PHP_CLI_SERVER_WORKERS=4.
+     - Falta: el dominio de producción de la app para decirle al sitio la URL
+       exacta (connect-src); decisiones de precio fundador y anticipos.
+
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).

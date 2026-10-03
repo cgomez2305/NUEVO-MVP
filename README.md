@@ -296,8 +296,28 @@ cron diario:
   intentos por hora por IP y por negocio. El pago guarda el monto ya con el
   descuento (es lo que el admin ve como "Debe llegar" y lo que cobra Wompi) y
   `/admin/ofertas` lleva el registro de canjes y si pagaron el segundo mes.
-- Prueba de punta a punta (base de prueba y servidor local):
-  `php tests/registro_ofertas.php http://localhost:8000`.
+- **Código por WhatsApp al usar una oferta** (`App\Models\VerificacionWhatsapp`,
+  `App\Services\CodigoWhatsapp`): solo si están `whatsapp_api.token`,
+  `phone_number_id` y `plantilla_codigo` (plantilla de autenticación aprobada
+  en Meta). 6 dígitos, 10 minutos, 5 intentos, 3 códigos por hora; en la base
+  solo su HMAC. Sin esa configuración no se pide.
+- **Reporte de campañas** en `/admin/origenes`: negocios por
+  `utm_source`/`utm_medium`/`utm_campaign` con cuántos publicaron, pagaron y
+  usaron oferta, por período; y el gasto de la demo de la foto.
+- **"Sube tu foto sin cuenta"**: `POST /api/menu-demo` (multipart `foto` +
+  `tipo` opcional) responde JSON con lo que leyó la IA (máx. 15 ítems). CORS
+  solo para `demo_ia.origenes`; 2 lecturas por IP al día, 20 intentos por
+  hora y tope diario de lecturas y tokens (`demo_ia` en la config). No guarda
+  la foto ni abre sesión. El sitio debe permitir esa URL en `connect-src`.
+- Pruebas de punta a punta (base de prueba y servidor local):
+  `php tests/registro_ofertas.php http://localhost:8000`;
+  el código por WhatsApp con un servidor que lo escribe en un archivo
+  (`VECI_OTP_ARCHIVO=/tmp/otp.txt php -S localhost:8001 serve.php`, luego
+  `php tests/ofertas_otp.php http://localhost:8001 /tmp/otp.txt`); y la demo
+  contra una API falsa (`php -S localhost:8003 tests/apoyo/anthropic_falso.php`,
+  `VECI_IA_PRUEBA_URL=http://localhost:8003/v1/messages PHP_CLI_SERVER_WORKERS=4 php -S localhost:8002 serve.php`,
+  `php tests/menu_demo.php http://localhost:8002`). Esas dos variables de
+  entorno solo funcionan con el servidor de desarrollo de PHP.
 
 ## Seguridad y anti-abuso
 

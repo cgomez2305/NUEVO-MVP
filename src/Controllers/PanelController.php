@@ -1915,6 +1915,8 @@ class PanelController
         $ofertaAplicada = $_SESSION['oferta_plan'][$negocioId] ?? null;
         $puedeUsarOferta = !\App\Models\OfertaPlan::negocioYaPagoPlan($negocioId) && \App\Models\OfertaPlan::canjeActivoDeNegocio($negocioId) === null;
         $origen = \App\Models\OrigenRegistro::deNegocio($negocioId);
+        // Oferta esperando el código de WhatsApp (ver aplicarOfertaPlan).
+        $ofertaPorVerificar = $puedeUsarOferta ? ($_SESSION['oferta_por_verificar'][$negocioId] ?? null) : null;
 
         ver('panel/plan', [
             'titulo'            => 'Tu plan · Veci',
@@ -1925,6 +1927,8 @@ class PanelController
             'ofertaAplicada'    => $puedeUsarOferta ? $ofertaAplicada : null,
             'puedeUsarOferta'   => $puedeUsarOferta,
             'codigoSugerido'    => (string) ($origen['oferta_codigo'] ?? ''),
+            'ofertaPorVerificar' => $ofertaPorVerificar,
+            'whatsappEnmascarado' => $ofertaPorVerificar !== null ? '••• ' . substr((string) (Usuario::buscarPorId((int) $negocio['usuario_id'])['whatsapp'] ?? ''), -4) : '',
             'planes'            => Plan::listarTodos(),
             'totalSedes'        => Sede::contarPorNegocio($negocioId),
             'pendiente'         => PagoPlan::pendientePorNegocio($negocioId),
@@ -2067,12 +2071,79 @@ class PanelController
             redirigir('/panel/plan');
         }
         // La sesión guarda el hash del documento, nunca el número.
-        $_SESSION['oferta_plan'][$negocioId] = [
+        $oferta = [
             'codigo'         => (string) $evaluacion['oferta']['codigo'],
             'porcentaje'     => (int) $evaluacion['oferta']['porcentaje'],
             'documento_hash' => $evaluacion['documento_hash'],
         ];
-        flash_set('ok', 'Código ' . $evaluacion['oferta']['codigo'] . ' aplicado: ' . (int) $evaluacion['oferta']['porcentaje'] . '% menos en el primer mes de Barrio o Pro (pago mensual). Elige tu plan.');
+        // Con la API de WhatsApp lista, la oferta pide además confirmar que el
+        // WhatsApp de la cuenta es de quien la usa (nadie lo verificó al
+        // registrarse): así un número inventado no cuenta como "persona nueva".
+        $usuarioId = (int) $negocio['usuario_id'];
+        if (\App\Services\CodigoWhatsapp::disponible() && !\App\Models\VerificacionWhatsapp::verificadoEnSesion($usuarioId, 'oferta')) {
+            $_SESSION['oferta_por_verificar'][$negocioId] = $oferta;
+            $this->enviarCodigoOferta($usuarioId);
+            redirigir('/panel/plan');
+        }
+        $this->guardarOfertaEnSesion($negocioId, $oferta);
+    }
+
+    /** Reenvía el código de WhatsApp de la oferta que espera verificación. */
+    public function reenviarCodigoOferta(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        if (isset($_SESSION['oferta_por_verificar'][(int) $negocio['negocio_id']])) {
+            $this->enviarCodigoOferta((int) $negocio['usuario_id']);
+        }
+        redirigir('/panel/plan');
+    }
+
+    /** Comprueba el código de WhatsApp y, si es el correcto, deja la oferta aplicada. */
+    public function verificarCodigoOferta(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $usuarioId = (int) $negocio['usuario_id'];
+        $pendiente = $_SESSION['oferta_por_verificar'][$negocioId] ?? null;
+        if (!is_array($pendiente)) {
+            redirigir('/panel/plan');
+        }
+        if (!\App\Models\VerificacionWhatsapp::verificar($usuarioId, 'oferta', (string) ($_POST['codigo_whatsapp'] ?? ''))) {
+            flash_set('error', \App\Models\VerificacionWhatsapp::hayCodigoVigente($usuarioId, 'oferta')
+                ? 'Ese no es el código que te enviamos. Revísalo e intenta de nuevo.'
+                : 'El código venció o ya no admite más intentos. Pide uno nuevo.');
+            redirigir('/panel/plan');
+        }
+        // Mientras llegaba el código pudo acabarse el cupo o vencer la oferta:
+        // se vuelve a evaluar con la misma huella del documento.
+        $evaluacion = \App\Models\OfertaPlan::evaluar($negocio, (string) $pendiente['codigo'], (string) $pendiente['documento_hash'], false, true);
+        unset($_SESSION['oferta_por_verificar'][$negocioId]);
+        if (!$evaluacion['ok']) {
+            flash_set('error', $evaluacion['mensaje']);
+            redirigir('/panel/plan');
+        }
+        $this->guardarOfertaEnSesion($negocioId, $pendiente);
+    }
+
+    private function enviarCodigoOferta(int $usuarioId): void
+    {
+        $usuario = Usuario::buscarPorId($usuarioId);
+        $resultado = $usuario !== null
+            ? \App\Models\VerificacionWhatsapp::enviar($usuarioId, (string) $usuario['whatsapp'], 'oferta')
+            : 'fallo';
+        match ($resultado) {
+            'enviado' => flash_set('ok', 'Te enviamos un código de 6 dígitos por WhatsApp. Escríbelo abajo para aplicar la oferta.'),
+            'frenado' => flash_set('error', 'Ya pediste varios códigos. Espera una hora para pedir otro.'),
+            default   => flash_set('error', 'No pudimos enviarte el código por WhatsApp. Intenta de nuevo en unos minutos.'),
+        };
+    }
+
+    private function guardarOfertaEnSesion(int $negocioId, array $oferta): never
+    {
+        $_SESSION['oferta_plan'][$negocioId] = $oferta;
+        flash_set('ok', 'Código ' . $oferta['codigo'] . ' aplicado: ' . (int) $oferta['porcentaje'] . '% menos en el primer mes de Barrio o Pro (pago mensual). Elige tu plan.');
         redirigir('/panel/plan');
     }
 
@@ -2080,7 +2151,7 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        unset($_SESSION['oferta_plan'][(int) $negocio['negocio_id']]);
+        unset($_SESSION['oferta_plan'][(int) $negocio['negocio_id']], $_SESSION['oferta_por_verificar'][(int) $negocio['negocio_id']]);
         redirigir('/panel/plan');
     }
 

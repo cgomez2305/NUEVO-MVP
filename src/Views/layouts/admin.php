@@ -17,8 +17,14 @@
       <span class="pq-admin-sello" aria-hidden="true">Interno</span>
     </a>
     <nav class="pq-admin-nav" aria-label="Panel interno">
-      <a href="<?= e(base_url('/admin')) ?>">Negocios</a>
-      <a href="<?= e(base_url('/admin/ofertas')) ?>">Ofertas</a>
+      <?php
+        $rutaAdmin = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        $seccionAdmin = str_contains($rutaAdmin, '/admin/ofertas') ? 'ofertas' : (str_contains($rutaAdmin, '/admin/origenes') ? 'origenes' : 'negocios');
+        $actualAdmin = fn (string $seccion): string => $seccion === $seccionAdmin ? ' aria-current="page"' : '';
+      ?>
+      <a href="<?= e(base_url('/admin')) ?>"<?= $actualAdmin('negocios') ?>>Negocios</a>
+      <a href="<?= e(base_url('/admin/ofertas')) ?>"<?= $actualAdmin('ofertas') ?>>Ofertas</a>
+      <a href="<?= e(base_url('/admin/origenes')) ?>"<?= $actualAdmin('origenes') ?>>Campañas</a>
     </nav>
     <div class="pq-admin-sesion">
       <span class="pq-admin-quien"><?= e($admin['nombre']) ?></span>

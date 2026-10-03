@@ -10,6 +10,7 @@ use App\Controllers\AuthController;
 use App\Controllers\CajaController;
 use App\Controllers\ComprasController;
 use App\Controllers\CrecimientoController;
+use App\Controllers\DemoController;
 use App\Controllers\EquipoController;
 use App\Controllers\FilaController;
 use App\Controllers\FiadoController;
@@ -24,8 +25,9 @@ use App\Controllers\VisitaController;
 use App\Controllers\WebhookController;
 use App\Router;
 
-// Los webhooks se autentican con la firma o el secreto del proveedor.
-$router = new Router(['/webhooks/breb', '/webhooks/wompi']);
+// Los webhooks se autentican con la firma o el secreto del proveedor; la
+// demo pública no toca ninguna cuenta y se frena con sus propios topes.
+$router = new Router(['/webhooks/breb', '/webhooks/wompi', '/api/menu-demo']);
 
 $home = new HomeController();
 $auth = new AuthController();
@@ -196,6 +198,8 @@ $router->post('/panel/plan/solicitar', [$panel, 'solicitarCambioPlan']);
 $router->post('/panel/plan/cancelar', [$panel, 'cancelarSolicitudPlan']);
 $router->post('/panel/plan/oferta', [$panel, 'aplicarOfertaPlan']);
 $router->post('/panel/plan/oferta/quitar', [$panel, 'quitarOfertaPlan']);
+$router->post('/panel/plan/oferta/codigo', [$panel, 'reenviarCodigoOferta']);
+$router->post('/panel/plan/oferta/verificar', [$panel, 'verificarCodigoOferta']);
 $router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente']);
 
 // Tiendas (fase 4): mostrador con lector, fiado, compras a proveedor y el
@@ -304,6 +308,11 @@ $router->post('/preferencias/{token}', [$preferencias, 'guardar']);
 $router->post('/webhooks/breb', [$webhook, 'breb']);
 $router->post('/webhooks/wompi', [$webhook, 'wompi']);
 
+// "Sube tu foto sin cuenta" del sitio (CORS solo para demo_ia.origenes).
+$demo = new DemoController();
+$router->options('/api/menu-demo', [$demo, 'preflight']);
+$router->post('/api/menu-demo', [$demo, 'leerMenu']);
+
 // --- Panel interno del equipo de Veci (no de un negocio) ---------------
 $router->get('/admin/login', [$admin, 'formularioLogin']);
 $router->post('/admin/login', [$admin, 'iniciarSesion']);
@@ -315,6 +324,7 @@ $router->post('/admin/negocios/{id}/reactivar', [$admin, 'reactivar']);
 $router->post('/admin/usuarios/{usuario}/generar-reset', [$admin, 'generarReset']);
 $router->post('/admin/pagos/{id}/confirmar', [$admin, 'confirmarPago']);
 $router->post('/admin/pagos/{id}/rechazar', [$admin, 'rechazarPago']);
+$router->get('/admin/origenes', [$admin, 'origenes']);
 $router->get('/admin/ofertas', [$admin, 'ofertas']);
 $router->post('/admin/ofertas', [$admin, 'guardarOferta']);
 $router->post('/admin/ofertas/{id}', [$admin, 'guardarOferta']);
