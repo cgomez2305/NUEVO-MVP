@@ -413,4 +413,266 @@ class Producto
 
         return (int) $stmt->fetch()['total'];
     }
+
+    // ------------------------------------------------------------------
+    // Tiendas (fase 4): código de barras, costo y venta por peso.
+    //
+    // Por peso, `precio` y `costo` son POR KILO y `stock` va en GRAMOS. La
+    // "cantidad de venta" (lo que dice el tiquete) es en unidades o en kilos;
+    // la "cantidad de stock" (lo que se descuenta) en unidades o en gramos.
+    // ------------------------------------------------------------------
+
+    /** Gramos que caben en un kilo: la conversión entre cantidad de venta y stock. */
+    public const GRAMOS_POR_KILO = 1000;
+
+    /**
+     * El código tal como lo manda el lector o la cámara, limpio: sin
+     * espacios y en mayúsculas (Code 128 trae letras). null si no sirve.
+     */
+    public static function normalizarCodigo(string $codigo): ?string
+    {
+        $codigo = strtoupper((string) preg_replace('/\s+/', '', $codigo));
+
+        return preg_match('/^[0-9A-Z.\-]{3,32}$/', $codigo) === 1 ? $codigo : null;
+    }
+
+    public static function buscarPorCodigo(int $sedeId, string $codigo): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT ' . self::COLUMNAS . ' FROM productos p WHERE sede_id = :sede_id AND codigo_barras = :codigo'
+        );
+        $stmt->execute(['sede_id' => $sedeId, 'codigo' => $codigo]);
+        $producto = $stmt->fetch();
+
+        return $producto ? self::conCombos([$producto], $sedeId)[0] : null;
+    }
+
+    /**
+     * Búsqueda por nombre para el mostrador y las compras (respaldo del
+     * lector). Incluye los ocultos de la tienda en línea: lo que no se vende
+     * por internet (cigarrillos, por ejemplo) sí se vende en el mostrador.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function buscarPorNombre(int $sedeId, string $texto, int $limite = 8): array
+    {
+        $limite = max(1, min(30, $limite));
+        $stmt = Database::conexion()->prepare(
+            'SELECT ' . self::COLUMNAS . " FROM productos p
+             WHERE sede_id = :sede_id AND (nombre LIKE :texto OR codigo_barras = :codigo)
+             ORDER BY (nombre LIKE :inicio) DESC, nombre ASC LIMIT {$limite}"
+        );
+        $stmt->execute([
+            'sede_id' => $sedeId,
+            'texto'   => '%' . addcslashes($texto, '%_\\') . '%',
+            'codigo'  => $texto,
+            'inicio'  => addcslashes($texto, '%_\\') . '%',
+        ]);
+
+        return self::conCombos($stmt->fetchAll(), $sedeId);
+    }
+
+    /**
+     * Guarda código, costo y forma de venta. Devuelve un aviso si el código
+     * ya lo tiene otro producto de la sede (el resto se guarda igual, sin
+     * código), o null si todo quedó. Un código nuevo para el producto se
+     * anota en el catálogo compartido (solo el nombre).
+     */
+    public static function guardarDatosTienda(int $id, int $sedeId, ?string $codigo, ?int $costo, string $vendePor): ?string
+    {
+        $pdo = Database::conexion();
+        $vendePor = $vendePor === 'peso' ? 'peso' : 'unidad';
+        $stmt = $pdo->prepare('SELECT nombre, codigo_barras FROM productos WHERE id = :id AND sede_id = :sede_id');
+        $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+        $actual = $stmt->fetch();
+        if ($actual === false) {
+            return null;
+        }
+
+        $aviso = null;
+        if ($codigo !== null) {
+            $otro = $pdo->prepare('SELECT nombre FROM productos WHERE sede_id = :sede_id AND codigo_barras = :codigo AND id <> :id');
+            $otro->execute(['sede_id' => $sedeId, 'codigo' => $codigo, 'id' => $id]);
+            $nombreOtro = $otro->fetchColumn();
+            if ($nombreOtro !== false) {
+                $aviso = "El código {$codigo} ya es de «{$nombreOtro}». «{$actual['nombre']}» quedó sin código.";
+                $codigo = $actual['codigo_barras'] !== null && $actual['codigo_barras'] !== $codigo ? (string) $actual['codigo_barras'] : null;
+            }
+        }
+
+        try {
+            $pdo->prepare(
+                'UPDATE productos SET codigo_barras = :codigo, costo = :costo, vende_por = :vende_por
+                 WHERE id = :id AND sede_id = :sede_id'
+            )->execute([
+                'codigo' => $codigo, 'costo' => $costo !== null ? max(0, $costo) : null,
+                'vende_por' => $vendePor, 'id' => $id, 'sede_id' => $sedeId,
+            ]);
+        } catch (\PDOException $e) {
+            // Dos personas guardando el mismo código a la vez: gana la primera.
+            if ((string) $e->getCode() !== '23000') {
+                throw $e;
+            }
+            $pdo->prepare('UPDATE productos SET costo = :costo, vende_por = :vende_por WHERE id = :id AND sede_id = :sede_id')
+                ->execute(['costo' => $costo !== null ? max(0, $costo) : null, 'vende_por' => $vendePor, 'id' => $id, 'sede_id' => $sedeId]);
+
+            return "El código {$codigo} ya es de otro producto. «{$actual['nombre']}» quedó sin código.";
+        }
+
+        if ($codigo !== null && $codigo !== $actual['codigo_barras']) {
+            CodigoBarras::registrar($codigo, (string) $actual['nombre']);
+        }
+
+        return $aviso;
+    }
+
+    /**
+     * Cuánto stock mueve una venta: producto_id => cantidad de venta
+     * (unidades o kilos) se vuelve producto_id => cantidad de stock
+     * (unidades o gramos), sumando las partes de cada combo. Ordenado por id
+     * para bloquear las filas siempre en el mismo orden (sin interbloqueos).
+     * Lo usan los pedidos de la tienda (donde 1 de un producto por peso es
+     * 1 kg) y la venta de mostrador.
+     *
+     * @param array<int, int|float> $cantidades
+     * @return array<int, int>
+     */
+    public static function demandaDeStock(\PDO $pdo, array $cantidades): array
+    {
+        $demanda = [];
+        if ($cantidades === []) {
+            return $demanda;
+        }
+        $marcas = implode(',', array_fill(0, count($cantidades), '?'));
+        $stmt = $pdo->prepare("SELECT combo_id, producto_id, cantidad FROM combo_items WHERE combo_id IN ({$marcas})");
+        $stmt->execute(array_keys($cantidades));
+        $enVenta = $cantidades;
+        foreach ($stmt->fetchAll() as $parte) {
+            $parteId = (int) $parte['producto_id'];
+            $enVenta[$parteId] = ($enVenta[$parteId] ?? 0) + (int) $parte['cantidad'] * $cantidades[(int) $parte['combo_id']];
+        }
+
+        $marcas = implode(',', array_fill(0, count($enVenta), '?'));
+        $stmt = $pdo->prepare("SELECT id, vende_por FROM productos WHERE id IN ({$marcas})");
+        $stmt->execute(array_keys($enVenta));
+        $porPeso = [];
+        foreach ($stmt->fetchAll() as $fila) {
+            $porPeso[(int) $fila['id']] = $fila['vende_por'] === 'peso';
+        }
+        foreach ($enVenta as $productoId => $cantidad) {
+            $demanda[(int) $productoId] = !empty($porPeso[(int) $productoId])
+                ? (int) round((float) $cantidad * self::GRAMOS_POR_KILO)
+                : (int) round((float) $cantidad);
+        }
+        ksort($demanda);
+
+        return $demanda;
+    }
+
+    /**
+     * Cantidad legible para el tiquete: "3", o en peso "250 g" / "1,5 kg".
+     * $cantidad es la de venta (unidades o kilos).
+     */
+    public static function cantidadLegible(float $cantidad, bool $porPeso): string
+    {
+        if (!$porPeso) {
+            return (string) (int) round($cantidad);
+        }
+
+        return self::gramosLegibles((int) round($cantidad * self::GRAMOS_POR_KILO));
+    }
+
+    /** 250 → "250 g"; 1500 → "1,5 kg"; 500 → "500 g". */
+    public static function gramosLegibles(int $gramos): string
+    {
+        if (abs($gramos) < self::GRAMOS_POR_KILO) {
+            return $gramos . ' g';
+        }
+        $kilos = rtrim(rtrim(number_format($gramos / self::GRAMOS_POR_KILO, 3, ',', '.'), '0'), ',');
+
+        return $kilos . ' kg';
+    }
+
+    /** "Quedan 3" / "Quedan 1,2 kg" para los chips del panel. */
+    public static function stockLegible(array $producto): string
+    {
+        $stock = (int) $producto['stock'];
+        if (($producto['vende_por'] ?? 'unidad') === 'peso') {
+            return 'Quedan ' . self::gramosLegibles($stock);
+        }
+
+        return $stock === 1 ? 'Queda 1' : 'Quedan ' . $stock;
+    }
+
+    /** Lo que hay, sin el "Quedan": "3" o "1,2 kg". */
+    public static function existencias(array $producto): string
+    {
+        $stock = (int) $producto['stock'];
+
+        return ($producto['vende_por'] ?? 'unidad') === 'peso' ? self::gramosLegibles($stock) : (string) $stock;
+    }
+
+    /** Pocas existencias: 5 unidades, o medio kilo si va por peso. */
+    public static function quedaPoco(array $producto): bool
+    {
+        if ($producto['stock'] === null) {
+            return false;
+        }
+
+        return ($producto['vende_por'] ?? 'unidad') === 'peso'
+            ? (int) $producto['stock'] <= 500
+            : (int) $producto['stock'] <= self::POCAS_UNIDADES;
+    }
+
+    /**
+     * Precio de una línea por peso, redondeado a $50 (la moneda más chica que
+     * circula: así siempre hay cómo dar las vueltas). Nunca menos de $50.
+     */
+    public static function precioPorGramos(int $precioKilo, int $gramos): int
+    {
+        $exacto = $precioKilo * $gramos / self::GRAMOS_POR_KILO;
+
+        return max(50, (int) (round($exacto / 50) * 50));
+    }
+
+    /**
+     * Margen real: solo si hay costo y precio. null = no se sabe (no se
+     * inventa). Por peso, ambos son por kilo y el margen es el mismo.
+     *
+     * @return array{ganancia:int, porcentaje:int}|null
+     */
+    public static function margen(array $producto): ?array
+    {
+        if (!isset($producto['costo']) || $producto['costo'] === null || (int) $producto['precio'] <= 0) {
+            return null;
+        }
+        $ganancia = (int) $producto['precio'] - (int) $producto['costo'];
+
+        return ['ganancia' => $ganancia, 'porcentaje' => (int) floor($ganancia * 100 / (int) $producto['precio'])];
+    }
+
+    /**
+     * Catálogo compacto para el mostrador y las compras (lo lee el JS para
+     * que escanear no tenga que esperar al servidor).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function catalogoCompacto(int $sedeId): array
+    {
+        $salida = [];
+        foreach (self::listarPorSede($sedeId) as $p) {
+            $salida[] = [
+                'id'      => (int) $p['id'],
+                'nombre'  => (string) $p['nombre'],
+                'precio'  => (int) $p['precio'],
+                'costo'   => $p['costo'] !== null ? (int) $p['costo'] : null,
+                'codigo'  => $p['codigo_barras'],
+                'peso'    => $p['vende_por'] === 'peso',
+                'stock'   => $p['stock'] !== null ? (int) $p['stock'] : null,
+                'combo'   => $p['combo'] !== [],
+            ];
+        }
+
+        return $salida;
+    }
 }

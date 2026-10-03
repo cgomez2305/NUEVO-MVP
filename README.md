@@ -293,6 +293,44 @@ querer en un cambio futuro):
 Pendiente fuera del código: HTTPS obligatorio en el hosting, backups
 diarios de la base y monitorear el log de errores de PHP.
 
+## Tiendas de barrio: mostrador, fiado y compras
+
+Para negocios de **pedidos** que también venden en el local (la tienda de
+la esquina, la panadería, el minimercado):
+
+- **Mostrador** (`/panel/mostrador`, todo el equipo): se cobra con un lector
+  de códigos USB/Bluetooth (escribe el código y Enter), con la cámara del
+  celular donde el navegador tiene `BarcodeDetector` (Chrome Android; en
+  iPhone se explica que use un lector o escriba el número) o buscando por
+  nombre. Productos por peso con atajos (125 g, 250 g, 1 libra, 1 kg),
+  efectivo con "¿con cuánto paga?" y las vueltas, Nequi, Bre-B o fiado.
+  Descuenta el mismo inventario que la tienda en línea (si no alcanza, no se
+  vende nada), un doble toque no cobra dos veces, tiquete imprimible y
+  anulación (solo el dueño, el mismo día). Funciona sin JavaScript.
+- **Productos**: código de barras (único por sede), costo y venta por
+  unidad o por peso (precio y costo por kilo; inventario en gramos). Margen
+  por producto y "Lo que más te deja" con ventas reales (solo si hay datos
+  suficientes).
+- **Fiado** (`/panel/fiado`): saldo por cliente, abonos, cargos a mano,
+  límite por cliente que el mostrador respeta, y recordatorio de pago por
+  WhatsApp solo cuando la Ley 2300 de 2023 lo permite (lunes a viernes
+  7 a. m.–7 p. m., sábados 8 a. m.–3 p. m., nunca domingos ni festivos de
+  Colombia, uno por semana por cliente). Al crear un cliente para fiarle se
+  pide su autorización (Ley 1581).
+- **Compras a proveedor** (`/panel/compras`, solo el dueño): lo que llegó
+  del distribuidor, por lector o búsqueda; suma inventario y deja el último
+  costo. Un código que la tienda no tiene se crea ahí mismo.
+- **Catálogo compartido de códigos**: cuando una tienda escanea un código
+  que no tiene, Veci le sugiere cómo lo llaman otras tiendas (solo el nombre,
+  nunca precios ni datos de otra tienda).
+- **Cierre de caja**: suma el mostrador por forma de pago y los abonos de
+  fiado; lo fiado se muestra aparte ("Fiado hoy") porque no es plata que
+  entró.
+
+Las tablas nuevas vienen en `database/migrations/2026-10-03_20_*.sql` a
+`..._24_*.sql` (`php bin/migrar.php`). Detalle de pantallas y reglas en
+`.claude/skills/diseno-veci/references/tiendas.md`.
+
 ## Estructura
 
 ```

@@ -89,7 +89,7 @@ class Pedido
             // descuenta dentro de la misma transacción, así dos clientes a
             // la vez no se llevan la última unidad los dos.
             // Un combo descuenta también sus partes (ver demandaDeUnidades).
-            $stmtStock = $pdo->prepare('SELECT nombre, stock FROM productos WHERE id = :id AND sede_id = :sede FOR UPDATE');
+            $stmtStock = $pdo->prepare('SELECT nombre, stock, vende_por FROM productos WHERE id = :id AND sede_id = :sede FOR UPDATE');
             $stmtDescontar = $pdo->prepare('UPDATE productos SET stock = stock - :cantidad WHERE id = :id');
             $pedidas = [];
             foreach ($items as $item) {
@@ -102,9 +102,11 @@ class Pedido
                     continue;
                 }
                 if ((int) $fila['stock'] < $unidades) {
+                    // Por peso el stock va en gramos: se dice en kilos o gramos.
+                    $quedan = $fila['vende_por'] === 'peso' ? Producto::gramosLegibles((int) $fila['stock']) : (string) $fila['stock'];
                     throw new \DomainException((int) $fila['stock'] <= 0
                         ? "Se acabó {$fila['nombre']} mientras pedías. Revisa tu pedido."
-                        : "Solo quedan {$fila['stock']} de {$fila['nombre']}. Ajusta la cantidad y vuelve a enviar.");
+                        : "Solo quedan {$quedan} de {$fila['nombre']}. Ajusta la cantidad y vuelve a enviar.");
                 }
                 $stmtDescontar->execute(['cantidad' => $unidades, 'id' => $productoId]);
             }
@@ -323,26 +325,17 @@ class Pedido
      * Unidades que mueve un pedido por producto: lo pedido directo más, por
      * cada combo, sus partes × cantidad. Así "2 Almuerzos" descuenta 2
      * bandejas y 2 jugos aunque la bandeja también se pidiera suelta.
+     * Un producto por peso se pide por kilos en la tienda (1 = 1 kg) y su
+     * stock va en gramos: la conversión (y el orden fijo de bloqueo, sin
+     * interbloqueos) la hace Producto::demandaDeStock, que también usa la
+     * venta de mostrador.
      *
      * @param array<int, int> $pedidas producto_id => cantidad
      * @return array<int, int>
      */
     private static function demandaDeUnidades(\PDO $pdo, array $pedidas): array
     {
-        $demanda = $pedidas;
-        if ($pedidas === []) {
-            return $demanda;
-        }
-        $marcas = implode(',', array_fill(0, count($pedidas), '?'));
-        $stmt = $pdo->prepare("SELECT combo_id, producto_id, cantidad FROM combo_items WHERE combo_id IN ({$marcas})");
-        $stmt->execute(array_keys($pedidas));
-        foreach ($stmt->fetchAll() as $parte) {
-            $unidades = (int) $parte['cantidad'] * $pedidas[(int) $parte['combo_id']];
-            $demanda[(int) $parte['producto_id']] = ($demanda[(int) $parte['producto_id']] ?? 0) + $unidades;
-        }
-        ksort($demanda); // mismo orden de bloqueo en todos los pedidos: sin interbloqueos
-
-        return $demanda;
+        return Producto::demandaDeStock($pdo, $pedidas);
     }
 
     /** Pedidos creados después de cierto ID, para el polling de notificaciones del panel. */

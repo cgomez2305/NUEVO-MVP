@@ -4846,3 +4846,252 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-comision-total { max-width: 720px; margin: var(--esp-3) 0 0; text-align: right; font-size: 15px; }
 .pq-comision-tiquete { max-width: 520px; margin-top: var(--esp-6); scroll-margin-top: var(--esp-6); }
 .pq-comision-tiquete + .pq-btn { margin-top: var(--esp-3); }
+
+/* ---------- Tiendas: mostrador, compras, fiado (fase 4) ---------- */
+/* Ruta 2 "Tiquete y papel". El detalle propio de cada pantalla: el visor de
+   la registradora (mostrador), el cuaderno del fiado con su margen rojo y
+   la remisión del proveedor en el papel de la comanda. Ver
+   .claude/skills/diseno-veci/references/tiendas.md. */
+
+/* Mostrador: escanear a la izquierda, cobrar a la derecha (en celular, uno
+   debajo del otro: primero lo que se escanea, luego el cobro). */
+.pq-mostrador { display: grid; gap: var(--esp-5); align-items: start; margin-top: var(--esp-4); }
+@media (min-width: 960px) {
+  .pq-mostrador { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: var(--esp-8); }
+  .pq-mostrador-cobro { position: sticky; top: 76px; }
+}
+.pq-mostrador-principal { display: flex; flex-direction: column; gap: var(--esp-4); min-width: 0; }
+
+/* El campo del lector: grande, con el icono de barras, siempre a mano. */
+.pq-mostrador-lector { display: flex; flex-direction: column; gap: var(--esp-2); }
+.pq-mostrador-lector .pq-label { margin-bottom: 0; }
+.pq-mostrador-lector-fila { display: flex; gap: var(--esp-2); align-items: stretch; }
+.pq-mostrador-lector-fila .pq-btn { width: auto; flex-shrink: 0; min-height: 52px; padding-inline: var(--esp-5); }
+.pq-mostrador-lector-campo { position: relative; flex: 1; min-width: 0; }
+.pq-mostrador-lector-campo svg { position: absolute; left: var(--esp-3); top: 50%; width: 22px; height: 22px; transform: translateY(-50%); color: var(--gris-suave); pointer-events: none; }
+.pq-mostrador-lector-campo .pq-input { min-height: 52px; padding-left: 44px; font-size: 17px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.pq-mostrador-lector-campo .pq-input:focus { border-color: var(--sello); box-shadow: 0 0 0 3px var(--tinte-sello); }
+.pq-mostrador-camara-fila { display: flex; }
+.pq-mostrador-camara-fila .pq-enlace-boton { gap: var(--esp-2); min-height: 40px; }
+.pq-mostrador-camara-fila .pq-enlace-boton[hidden] { display: none; }
+.pq-mostrador-camara-fila svg { width: 18px; height: 18px; }
+.pq-mostrador-camara { position: relative; display: grid; gap: var(--esp-2); justify-items: start; }
+.pq-mostrador-camara[hidden] { display: none; }
+.pq-mostrador-camara video { width: 100%; max-width: 420px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radio-m); background: var(--carbon); }
+/* La mira: dónde poner el código. */
+.pq-mostrador-camara-mira { position: absolute; left: 12%; top: 38%; width: min(76%, 320px); height: 18%; max-height: 72px; border: 2px solid var(--caja); border-radius: var(--radio-s); box-shadow: 0 0 0 999px rgba(32, 33, 36, .28); pointer-events: none; }
+.pq-mostrador-aviso { margin: 0; font-size: 14px; line-height: 1.45; color: var(--gris-texto); }
+.pq-mostrador-aviso:empty { display: none; }
+.pq-mostrador-aviso-error { padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: #FDEDEA; color: #9c2c17; }
+.pq-mostrador-aviso-info { padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: var(--tinte-sello); color: var(--carbon); }
+.pq-mostrador-crear { display: inline-block; margin-left: var(--esp-1); color: inherit; font-weight: 700; }
+
+/* Sugerencias mientras se escribe un nombre (sin JS: los resultados del servidor). */
+.pq-mostrador-sugerencias { list-style: none; margin: 0; padding: var(--esp-1); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-media); }
+.pq-mostrador-sugerencias[hidden] { display: none; }
+.pq-mostrador-sugerencia { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); width: 100%; min-height: 44px; padding: var(--esp-2) var(--esp-3); border: 0; border-radius: var(--radio-s); background: none; color: var(--carbon); font: 500 15px/1.3 var(--fuente-texto); text-align: left; cursor: pointer; }
+.pq-mostrador-sugerencia:hover, .pq-mostrador-sugerencia:focus-visible { background: var(--tinte-sello); outline: none; }
+.pq-mostrador-sugerencia-nombre { min-width: 0; overflow-wrap: anywhere; }
+.pq-mostrador-resultados .pq-admin-tarjeta { margin-top: var(--esp-2); }
+.pq-mostrador-resultados .pq-admin-fila-texto strong { overflow-wrap: anywhere; }
+
+/* La báscula: atajos grandes como se pide en la tienda ("una libra"). */
+.pq-mostrador-bascula { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1.5px dashed var(--sello); border-radius: var(--radio-m); background: var(--tinte-sello); animation: pqAparece var(--medio) var(--curva) both; }
+.pq-mostrador-bascula-titulo { margin: 0; font: 700 18px/1.25 var(--fuente-titulo); color: var(--carbon); overflow-wrap: anywhere; }
+.pq-mostrador-bascula .pq-ayuda { margin: 0; }
+.pq-mostrador-pesos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-2); }
+@media (min-width: 560px) { .pq-mostrador-pesos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pq-mostrador-peso { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 60px; padding: var(--esp-2); border: 1.5px solid var(--borde); border-radius: var(--radio-m); background: #FFFFFF; color: var(--carbon); cursor: pointer; font: inherit; transition: border-color var(--rapido) ease, transform var(--rapido) ease; }
+.pq-mostrador-peso strong { font: 700 16px/1.2 var(--fuente-texto); }
+.pq-mostrador-peso span { font-size: 13px; color: var(--gris-texto); }
+.pq-mostrador-peso:hover { border-color: var(--sello); }
+.pq-mostrador-peso:active { transform: scale(.97); }
+.pq-mostrador-peso:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-mostrador-peso-otro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--esp-2); }
+.pq-mostrador-peso-otro .pq-label { grid-column: 1 / -1; margin-bottom: 0; }
+.pq-mostrador-peso-otro .pq-btn { min-height: 46px; }
+.pq-mostrador-bascula > .pq-enlace-boton { align-self: flex-start; }
+
+/* El tiquete en curso es la comanda; la línea recién escaneada se ilumina un momento. */
+.pq-mostrador-tiquete { margin: 0; }
+.pq-mostrador-tiquete .pq-comanda-hoja { min-height: 160px; }
+.pq-mostrador-lineas { list-style: none; margin: 0; padding: 0; }
+.pq-mostrador-lineas .pq-comanda-controles .pq-enlace-boton { min-height: 40px; }
+.pq-mostrador-vacio { margin: var(--esp-6) 0; text-align: center; color: var(--texto-tenue); font-size: 14px; }
+.pq-mostrador-vacio[hidden] { display: none; }
+.pq-mostrador-linea-nueva { animation: pqMostradorNueva .9s var(--curva) both; }
+@keyframes pqMostradorNueva { from { background: color-mix(in srgb, var(--caja) 18%, transparent); } to { background: transparent; } }
+.pq-mostrador-vaciar { align-self: flex-start; }
+.pq-mostrador-vaciar[hidden] { display: none; }
+
+/* El cobro, con el visor de la registradora: cifras grandes y claras sobre
+   carbón, legibles de lejos (y el cliente también las ve). */
+.pq-mostrador-cobro { display: flex; flex-direction: column; gap: var(--esp-4); padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-l); background: #FFFFFF; box-shadow: var(--sombra-suave); scroll-margin-top: 80px; }
+.pq-mostrador-visor { display: grid; gap: var(--esp-1); padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-m); background: var(--carbon); color: var(--tiquete); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .35); }
+.pq-mostrador-visor-fila { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-3); }
+.pq-mostrador-visor-fila[hidden] { display: none; }
+.pq-mostrador-visor-fila span { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--tiquete) 70%, transparent); }
+.pq-mostrador-visor-fila strong { font: 700 clamp(28px, 9vw, 38px)/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; letter-spacing: -.01em; overflow-wrap: anywhere; text-align: right; }
+.pq-mostrador-visor-vueltas { padding-top: var(--esp-1); border-top: 1px dashed color-mix(in srgb, var(--tiquete) 25%, transparent); }
+.pq-mostrador-visor-vueltas strong { color: #6EE7A8; }
+.pq-mostrador-visor-falta strong { color: #FF9B85; }
+
+/* Métodos de pago como teclas de la registradora (radios reales). */
+.pq-mostrador-metodos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--esp-2); min-inline-size: 0; margin: 0; padding: 0; border: 0; }
+.pq-mostrador-metodos-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pq-mostrador-metodos-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px; }
+.pq-mostrador-metodos legend { padding: 0; }
+.pq-mostrador-metodo { position: relative; cursor: pointer; }
+.pq-mostrador-metodo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pq-mostrador-metodo span { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 var(--esp-1); border: 1.5px solid var(--borde); border-radius: var(--radio-s); background: var(--tiquete); color: var(--gris-texto); font-size: 14px; font-weight: 600; text-align: center; line-height: 1.15; transition: background var(--rapido) ease, border-color var(--rapido) ease, color var(--rapido) ease; }
+.pq-mostrador-metodo input:checked + span { border-color: var(--sello); background: var(--tinte-sello); color: var(--sello); }
+.pq-mostrador-metodo input:focus-visible + span { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-mostrador-recibido { margin: 0; }
+.pq-mostrador-recibido-campo { min-height: 52px; font-size: 20px; font-weight: 700; }
+.pq-mostrador-billetes { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-2); }
+.pq-mostrador-billetes[hidden] { display: none; }
+.pq-mostrador-billete { min-height: 40px; padding: 0 var(--esp-3); border: 1px solid var(--borde); border-radius: 999px; background: var(--tiquete); color: var(--carbon); font: 600 13.5px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; cursor: pointer; }
+.pq-mostrador-billete:hover { border-color: var(--caja); background: var(--tinte-caja); }
+.pq-mostrador-billete:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-mostrador-billete-exacto { border-color: var(--caja); color: #0f6b45; }
+.pq-mostrador-billete-borrar { border-style: dashed; color: var(--gris-texto); }
+.pq-mostrador-fiado { display: flex; flex-direction: column; gap: var(--esp-3); }
+.pq-mostrador-fiado .pq-campo { margin: 0; }
+.pq-mostrador-cliente-nuevo { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-3); border: 1px dashed var(--borde); border-radius: var(--radio-m); }
+.pq-mostrador-cliente-nuevo .pq-campo { margin: 0; }
+.pq-mostrador-cliente-nuevo > .pq-label { margin: 0; color: var(--carbon); }
+.pq-mostrador-cobrar { min-height: 56px; font-size: 17px; }
+.pq-mostrador-cobrar span { font-variant-numeric: tabular-nums; }
+
+/* La venta recién cobrada: las vueltas, en grande. */
+.pq-mostrador-hecha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3) var(--esp-5); margin-top: var(--esp-4); padding: var(--esp-3) var(--esp-4); border: 1px solid #BFE3CE; border-radius: var(--radio-m); background: #EAF6EF; color: #16603f; animation: pqAparece var(--medio) var(--curva) both; }
+.pq-mostrador-hecha > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 200px; }
+.pq-mostrador-hecha strong { overflow-wrap: anywhere; }
+.pq-mostrador-hecha .pq-ayuda { color: #16603f; }
+.pq-mostrador-hecha-vueltas { display: flex; align-items: baseline; gap: var(--esp-2); margin: 0; }
+.pq-mostrador-hecha-vueltas span { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.pq-mostrador-hecha-vueltas strong { font: 700 28px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: #0f6b45; }
+.pq-mostrador-hecha .pq-btn { width: auto; }
+
+.pq-mostrador-venta-enlace { color: inherit; text-decoration: none; }
+.pq-mostrador-venta-enlace:hover strong { color: var(--sello); }
+.pq-mostrador-venta-total { display: flex; align-items: center; gap: var(--esp-2); flex-shrink: 0; font-weight: 700; }
+.pq-mostrador-venta-anulada .pq-mostrador-venta-total .pq-mono { text-decoration: line-through; color: var(--gris-suave); }
+.pq-mostrador-tiquete-nota { margin-top: var(--esp-3); max-width: 420px; }
+
+/* Producto: margen real (solo con costo) y la ayuda del código. */
+.pq-producto-margen { padding: 2px 8px; border-radius: 999px; background: var(--tinte-caja); color: #0f6b45; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-producto-margen.pq-producto-margen-perdida { background: #FBE3E0; color: #9c2c17; }
+[data-margen-producto].pq-producto-margen-perdida { color: #9c2c17; font-weight: 600; }
+.pq-codigo-sugerencia { display: block; margin-top: var(--esp-1); color: var(--carbon); }
+.pq-codigo-sugerencia[hidden] { display: none; }
+.pq-codigo-sugerencia .pq-enlace-boton { display: inline-flex; min-height: 32px; }
+/* La ayuda de "Unidades/Kilos disponibles" quedaba pegada al lado del campo angosto. */
+.pq-campo-unidades + .pq-ayuda { display: block; margin-top: var(--esp-1); }
+.pq-mas-deja .pq-mas-vendidos-barra { background: linear-gradient(90deg, var(--caja) calc(var(--parte) * 100%), var(--recibo) 0); }
+
+/* Cierre de caja: el fiado y los abonos van bajo el total, sin sumarse. */
+.pq-cierre-fiado { margin-top: var(--esp-2); padding-top: var(--esp-2); border-top: 1px dashed var(--linea-tienda); }
+.pq-cierre-cuadre .pq-chip[hidden] { display: none; }
+
+/* Fiado: la cifra grande de lo que está en la calle. */
+.pq-fiado-resumen { display: flex; flex-direction: column; gap: 2px; margin-top: var(--esp-4); padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); }
+.pq-fiado-resumen-etiqueta { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gris-texto); }
+.pq-fiado-resumen-cifra { font: 700 clamp(30px, 9vw, 40px)/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-fiado-limite { display: block; height: 6px; margin-top: var(--esp-2); border-radius: 3px; background: linear-gradient(90deg, var(--mostaza) calc(var(--uso) * 100%), var(--recibo) 0); }
+.pq-fiado-limite-lleno { background: linear-gradient(90deg, var(--aji) calc(var(--uso) * 100%), var(--recibo) 0); }
+.pq-fiado-fila { display: flex; align-items: center; gap: var(--esp-3); flex: 1; min-width: 0; min-height: 44px; color: inherit; text-decoration: none; }
+.pq-fiado-fila:hover .pq-fiado-nombre { color: var(--sello); }
+.pq-fiado-fila:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; border-radius: var(--radio-s); }
+.pq-fiado-fila .pq-admin-fila-texto { flex: 1; }
+.pq-fiado-nombre { overflow-wrap: anywhere; }
+.pq-fiado-inicial { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; background: var(--tinte-sello); color: var(--sello); font: 700 16px/1 var(--fuente-titulo); }
+.pq-fiado-saldo { flex-shrink: 0; font-weight: 700; font-size: 15.5px; color: var(--carbon); }
+.pq-fiado-viejo { color: #9c2c17; font-weight: 600; }
+.pq-fiado-buscar { max-width: 520px; margin-top: var(--esp-6); }
+.pq-fiado-buscar-fila { display: flex; gap: var(--esp-2); }
+.pq-fiado-buscar-fila .pq-select { flex: 1; min-width: 0; }
+.pq-fiado-buscar-fila .pq-btn { flex-shrink: 0; }
+.pq-fiado-titulo { overflow-wrap: anywhere; }
+.pq-fiado-detalle { display: grid; gap: var(--esp-6); align-items: start; margin-top: var(--esp-4); }
+@media (min-width: 960px) { .pq-fiado-detalle { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); } }
+.pq-fiado-columna { display: flex; flex-direction: column; gap: var(--esp-4); min-width: 0; }
+.pq-fiado-columna .pq-fiado-resumen { margin-top: 0; }
+.pq-fiado-abono .pq-seccion-titulo { margin: 0; }
+.pq-fiado-abono .pq-campo { margin: 0; }
+.pq-fiado-recordatorio { margin-top: 0; display: flex; flex-direction: column; gap: var(--esp-3); }
+.pq-fiado-recordatorio .pq-seccion-titulo { margin: 0; }
+.pq-fiado-recordatorio .pq-wa-fondo { margin-top: 0; }
+.pq-fiado-recordatorio .pq-ayuda { margin: 0; }
+.pq-fiado-burbuja { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.pq-fiado-razon { margin: 0; padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: #FDF1DA; color: #6b4600; font-size: 14px; line-height: 1.45; }
+.pq-fiado-columna .pq-detalle-mas { margin-top: 0; max-width: none; }
+
+/* El cuaderno del fiado: renglones azules, margen rojo, y el saldo que va
+   quedando a la derecha, como lo lleva el tendero a lápiz. */
+.pq-libreta {
+  --renglon: 44px;
+  --linea-cuaderno: rgba(59, 76, 202, .16);
+  --margen-cuaderno: rgba(232, 69, 44, .55);
+  position: relative;
+  padding: var(--esp-4) var(--esp-3) var(--esp-4) 0;
+  border: 1px solid var(--recibo);
+  border-radius: var(--radio-m);
+  background: #FFFFFF;
+  box-shadow: var(--sombra-suave);
+  overflow: hidden;
+}
+.pq-libreta::before { content: ""; position: absolute; top: 0; bottom: 0; left: 64px; border-left: 2px solid var(--margen-cuaderno); pointer-events: none; }
+.pq-libreta-titulo { margin: 0 0 var(--esp-2) 76px; font: 700 18px/1.2 var(--fuente-titulo); color: var(--carbon); }
+.pq-libreta-vacia { margin: var(--esp-6) 0 var(--esp-6) 76px; color: var(--gris-texto); font-size: 14px; }
+.pq-libreta-renglones { list-style: none; margin: 0; padding: 0; }
+.pq-libreta-renglon {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  grid-template-areas: "fecha concepto monto" "fecha concepto saldo";
+  column-gap: var(--esp-3);
+  align-items: center;
+  min-height: var(--renglon);
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--linea-cuaderno);
+  font-size: 14px;
+}
+@media (min-width: 560px) {
+  .pq-libreta-renglon { grid-template-columns: 64px minmax(0, 1fr) auto 96px; grid-template-areas: "fecha concepto monto saldo"; }
+}
+.pq-libreta-fecha { grid-area: fecha; padding-left: var(--esp-2); font-size: 12.5px; color: var(--gris-texto); font-variant-numeric: tabular-nums; }
+.pq-libreta-concepto { grid-area: concepto; padding-left: var(--esp-1); color: var(--carbon); overflow-wrap: anywhere; }
+.pq-libreta-concepto a { color: inherit; text-decoration-color: var(--borde); text-underline-offset: 3px; }
+.pq-libreta-concepto a:hover { color: var(--sello); }
+.pq-libreta-nota { display: block; font-size: 12px; color: var(--gris-texto); }
+.pq-libreta-monto { grid-area: monto; justify-self: end; font-weight: 600; white-space: nowrap; color: var(--carbon); }
+.pq-libreta-saldo { grid-area: saldo; justify-self: end; font-size: 12.5px; color: var(--gris-texto); white-space: nowrap; }
+@media (min-width: 560px) { .pq-libreta-saldo { font-size: 14px; font-weight: 700; color: var(--carbon); } }
+.pq-libreta-abono .pq-libreta-monto { color: #0f6b45; }
+.pq-libreta-anulado .pq-libreta-monto, .pq-libreta-anulado .pq-libreta-concepto a { text-decoration: line-through; text-decoration-color: var(--margen-cuaderno); color: var(--gris-suave); }
+.pq-libreta-anterior .pq-libreta-concepto { font-style: italic; color: var(--gris-texto); }
+
+/* Compras: la compra en curso es un solo formulario. */
+.pq-compra { display: flex; flex-direction: column; gap: var(--esp-4); max-width: 720px; margin-top: var(--esp-4); }
+.pq-compra .pq-campo { margin: 0; }
+.pq-compra-nuevo { max-width: 720px; margin-top: var(--esp-4); }
+.pq-compra-nuevo .pq-seccion-titulo { margin: 0; }
+.pq-compra-nuevo-form .pq-campo { margin: 0 0 var(--esp-3); }
+.pq-compra-sugerencia { margin: 0; padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: var(--tinte-sello); font-size: 14px; color: var(--carbon); overflow-wrap: anywhere; }
+.pq-compra-lineas { list-style: none; margin: var(--esp-3) 0 0; padding: 0 var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; box-shadow: var(--sombra-suave); }
+.pq-compra-linea { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-4) 0; }
+.pq-compra-linea + .pq-compra-linea { border-top: 1px dashed var(--borde); }
+.pq-compra-linea-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-3); }
+.pq-compra-linea-nombre { min-width: 0; font-size: 15.5px; overflow-wrap: anywhere; }
+.pq-compra-linea-cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-3); }
+.pq-compra-linea-cifras .pq-campo { margin: 0; }
+.pq-compra-sin-control { color: #6b4600; }
+.pq-compra-perdida { color: #9c2c17; font-weight: 600; }
+.pq-compra-total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-3); margin: var(--esp-3) 0 0; padding: var(--esp-3) var(--esp-4); border-top: 4px double var(--recibo); font: 700 16px/1.2 var(--fuente-titulo); }
+.pq-compra-total strong { font: 700 21px/1.1 var(--fuente-texto); font-variant-numeric: tabular-nums; }
+.pq-compra-botones { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); margin-top: var(--esp-3); }
+.pq-compra-botones .pq-btn { width: auto; flex: 0 1 260px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pq-mostrador-linea-nueva, .pq-mostrador-bascula, .pq-mostrador-hecha { animation: none; }
+}

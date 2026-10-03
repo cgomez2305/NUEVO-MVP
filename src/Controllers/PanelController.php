@@ -24,6 +24,7 @@ use App\Models\Sede;
 use App\Models\Servicio;
 use App\Models\UsoIA;
 use App\Models\Usuario;
+use App\Models\Venta;
 use App\Services\AvisoEstado;
 use App\Services\RecordatorioWhatsapp;
 
@@ -312,6 +313,9 @@ class PanelController
             'orden'          => $orden,
             'ok'             => flash_obtener('ok'),
             'masVendidos'    => Producto::masPedidos($sedeId, 5, 1),
+            // Tiendas (fase 4): ganancia real de 30 días (vacío si no hay datos suficientes).
+            'masDeja'        => Venta::loQueMasDeja($sedeId),
+            'error'          => flash_obtener('error'),
             'nombresPorId'   => array_column(Producto::listarPorSede($sedeId), 'nombre', 'id'),
         ], 'panel');
     }
@@ -327,6 +331,8 @@ class PanelController
             'producto'   => null,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
             'partesPosibles' => $this->partesPosiblesDeCombo((int) $negocio['id'], null),
+            // Tiendas (fase 4): "Crear un producto con este código" desde el mostrador.
+            'codigoInicial'  => Producto::normalizarCodigo((string) ($_GET['codigo'] ?? '')),
         ], 'panel');
     }
 
@@ -399,9 +405,13 @@ class PanelController
             if (!isset($_POST['visible'])) {
                 Producto::establecerActivo($id, (int) $negocio['id'], false);
             }
+            $aviso = $this->guardarDatosTienda($id, (int) $negocio['id']);
             Producto::establecerStock($id, (int) $negocio['id'], $this->stockDelFormulario());
             Producto::guardarComponentes($id, (int) $negocio['id'], (array) ($_POST['combo'] ?? []));
             flash_set('ok', "«{$nombre}» se agregó a tu catálogo.");
+            if ($aviso !== null) {
+                flash_set('error', $aviso);
+            }
         }
 
         redirigir($volver);
@@ -427,6 +437,7 @@ class PanelController
             Producto::actualizar($id, $sedeId, $nombre, $precio, $categoria, $descripcion);
             Producto::establecerAgotado($id, $sedeId, !isset($_POST['disponible']));
             Producto::establecerActivo($id, $sedeId, isset($_POST['visible']));
+            $aviso = $this->guardarDatosTienda($id, $sedeId);
             Producto::establecerStock($id, $sedeId, $this->stockDelFormulario());
             // Solo si el formulario trae la sección: un producto que ya está
             // dentro de un combo no la muestra y no debe perder nada.
@@ -441,6 +452,9 @@ class PanelController
                 Producto::actualizarImagen($id, $sedeId, $imagen);
             }
             flash_set('ok', "«{$nombre}» se actualizó.");
+            if ($aviso !== null) {
+                flash_set('error', $aviso);
+            }
         }
 
         redirigir($volver);
@@ -516,12 +530,50 @@ class PanelController
         redirigir($volver);
     }
 
-    /** Unidades del formulario: vacío = no llevar inventario de este producto. */
+    /**
+     * Unidades del formulario: vacío = no llevar inventario de este producto.
+     * Por peso se escriben kilos ("2,5") y se guardan gramos (2500).
+     */
     private function stockDelFormulario(): ?int
     {
         $texto = trim((string) ($_POST['stock'] ?? ''));
+        if ($texto === '') {
+            return null;
+        }
+        if (($_POST['vende_por'] ?? '') === 'peso') {
+            $kilos = (float) str_replace(',', '.', (string) preg_replace('/[^\d,.]/', '', $texto));
 
-        return $texto === '' ? null : max(0, (int) preg_replace('/\D+/', '', $texto));
+            return max(0, (int) round($kilos * Producto::GRAMOS_POR_KILO));
+        }
+
+        return max(0, (int) preg_replace('/\D+/', '', $texto));
+    }
+
+    /**
+     * Tiendas (fase 4): código de barras, costo y si se vende por unidad o
+     * por peso. Devuelve un aviso si el código ya lo tenía otro producto.
+     */
+    private function guardarDatosTienda(int $id, int $sedeId): ?string
+    {
+        $textoCodigo = trim((string) ($_POST['codigo_barras'] ?? ''));
+        $codigo = Producto::normalizarCodigo($textoCodigo);
+        if ($textoCodigo !== '' && $codigo === null) {
+            // Un código mal escrito no borra el que ya tenía.
+            $codigo = Producto::buscar($id, $sedeId)['codigo_barras'] ?? null;
+        }
+        $textoCosto = trim((string) ($_POST['costo'] ?? ''));
+        $aviso = Producto::guardarDatosTienda(
+            $id,
+            $sedeId,
+            $codigo,
+            $textoCosto === '' ? null : dinero_desde_texto($textoCosto),
+            (string) ($_POST['vende_por'] ?? 'unidad')
+        );
+        if ($textoCodigo !== '' && $codigo === null) {
+            return 'El código «' . mb_substr($textoCodigo, 0, 40) . '» no se guardó: solo números, letras, puntos o guiones (de 3 a 32).';
+        }
+
+        return $aviso;
     }
 
     /** "Visible en la tienda": distinto de agotado — esto lo saca por completo del catálogo público. */
