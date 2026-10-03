@@ -28,58 +28,64 @@ $inicialNegocio = mb_strtoupper(mb_substr((string) ($negocio['inicial'] ?? $nomb
 <?php endif; ?>
 
 <?php
-// Las cifras del día como el cierre de caja de una registradora: una sola
-// tira de papel con casillas, no cuatro tarjetas de color iguales. El único
-// número con color es el que pide acción (clientes por reactivar).
+// Acción primero, información después: lo que pide una decisión ahora va
+// arriba, en una sola lista ordenada por urgencia (rojo: algo se demora;
+// sello: falta un paso; verde: plata por ganar). Si no hay nada, se dice.
 ?>
-<div class="pq-caja-dia" role="group" aria-label="Cifras de hoy">
+<section class="pq-hoy" aria-labelledby="pq-titulo-hoy">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-hoy">
+    <?= $tareas === [] ? 'Todo al día' : (count($tareas) === 1 ? '1 cosa necesita tu atención' : count($tareas) . ' cosas necesitan tu atención') ?>
+  </h2>
+  <?php if ($tareas === []): ?>
+    <p class="pq-hoy-vacio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+      Nada pendiente ahora mismo. Veci te avisa aquí cuando algo se demore o alguien deba volver.
+    </p>
+  <?php else: ?>
+    <ul class="pq-hoy-lista">
+      <?php foreach ($tareas as $tarea): ?>
+        <li>
+          <a href="<?= e(base_url($tarea['url'])) ?>" class="pq-hoy-tarea pq-hoy-<?= e($tarea['tono']) ?>">
+            <span class="pq-hoy-punto" aria-hidden="true"></span>
+            <span class="pq-hoy-texto">
+              <span class="pq-hoy-titulo"><?= e($tarea['texto']) ?></span>
+              <?php if (!empty($tarea['detalle'])): ?><span class="pq-ayuda"><?= e($tarea['detalle']) ?></span><?php endif; ?>
+            </span>
+            <svg class="pq-hoy-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
+</section>
+
+<?php
+// Las cifras del día como el cierre de caja de una registradora: una sola
+// tira de papel con casillas. Lo recuperado con el copiloto (si lo tiene)
+// reemplaza a "recurrentes": es el mismo tema, dicho en plata.
+?>
+<h2 class="pq-seccion-titulo pq-hoy-cifras-titulo">Tu negocio hoy</h2>
+<div class="pq-caja-dia pq-caja-dia-3 pq-caja-dia-hoy" role="group" aria-label="Cifras de hoy">
+  <div class="pq-caja-casilla">
+    <span class="pq-caja-valor"><?= pesos($ventasHoy) ?></span>
+    <span class="pq-caja-etiqueta">Vendido hoy</span>
+  </div>
   <div class="pq-caja-casilla">
     <span class="pq-caja-valor"><?= (int) $pedidosHoy ?></span>
     <span class="pq-caja-etiqueta"><?= e(ucfirst($sustantivo)) ?> hoy</span>
   </div>
-  <div class="pq-caja-casilla">
-    <span class="pq-caja-valor"><?= pesos($ventasHoy) ?></span>
-    <span class="pq-caja-etiqueta">Ventas hoy</span>
-  </div>
-  <div class="pq-caja-casilla">
-    <span class="pq-caja-valor"><?= (int) $recompraPct ?>%</span>
-    <span class="pq-caja-etiqueta">Recurrentes este mes</span>
-  </div>
-  <?php if ($aReactivar > 0): ?>
-    <a href="<?= e(base_url('/panel/copiloto') . '?segmento=inactivo') ?>" class="pq-caja-casilla pq-caja-casilla-alerta">
-      <span class="pq-caja-valor"><?= (int) $aReactivar ?></span>
-      <span class="pq-caja-etiqueta">Por reactivar →</span>
+  <?php if ($recuperado !== null): ?>
+    <a href="<?= e(base_url('/panel/copiloto')) ?>" class="pq-caja-casilla">
+      <span class="pq-caja-valor"><?= pesos((int) $recuperado['total']) ?></span>
+      <span class="pq-caja-etiqueta">Recuperado este mes →</span>
     </a>
   <?php else: ?>
     <div class="pq-caja-casilla">
-      <span class="pq-caja-valor">0</span>
-      <span class="pq-caja-etiqueta">Por reactivar</span>
+      <span class="pq-caja-valor"><?= (int) $recompraPct ?>%</span>
+      <span class="pq-caja-etiqueta">Recurrentes este mes</span>
     </div>
   <?php endif; ?>
 </div>
-
-<?php if ($aReactivar > 0): ?>
-  <div class="pq-recomendacion">
-    <div class="pq-recomendacion-texto">
-      <span class="pq-recomendacion-eyebrow">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2Z"/></svg>
-        Oportunidad de hoy
-      </span>
-      <strong><?= $aReactivar === 1 ? '1 cliente lleva más de 30 días sin comprar' : "{$aReactivar} clientes llevan más de 30 días sin comprar" ?></strong>
-    </div>
-    <a href="<?= e(base_url('/panel/copiloto') . '?segmento=inactivo') ?>" class="pq-btn pq-btn-sello pq-btn-chico">Ver clientes →</a>
-  </div>
-<?php endif; ?>
-
-<?php if ($listaEsperaCount > 0): ?>
-  <div class="pq-recomendacion pq-recomendacion-espera">
-    <div class="pq-recomendacion-texto">
-      <strong><?= $listaEsperaCount === 1 ? '1 persona espera un cupo' : "{$listaEsperaCount} personas esperan un cupo" ?></strong>
-      <span>Avísales si se libera un horario</span>
-    </div>
-    <a href="<?= e(base_url('/panel/citas')) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico">Ver lista →</a>
-  </div>
-<?php endif; ?>
 
 <?php
 // La vitrina: la tienda tal como la ve el cliente (mismo toldo, misma

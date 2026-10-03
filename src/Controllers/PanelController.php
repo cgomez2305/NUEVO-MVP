@@ -57,15 +57,21 @@ class PanelController
             ? ($esReservas ? Cita::contarEsteMesPorNegocio($negocioId) : Pedido::contarEsteMesPorNegocio($negocioId))
             : null;
 
+        $aReactivar = count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio']));
+        $esDueno = ($negocio['rol'] ?? '') === 'dueno';
+
         ver('panel/dashboard', [
             'titulo'          => 'Panel · Veci',
             'activo'          => 'panel',
             'negocio'         => $negocio,
             'esReservas'      => $esReservas,
+            // Acción primero: lo que hay que hacer ahora, antes que las cifras.
+            'tareas'          => \App\Models\Hoy::tareas($negocio, $aReactivar),
+            'recuperado'      => $esDueno && Copiloto::disponiblePara($negocio) ? Copiloto::recuperadoEsteMes($negocioId, $negocio['tipo_negocio']) : null,
             'pedidosHoy'      => $esReservas ? Cita::contarHoy($sedeId) : Pedido::contarHoy($sedeId),
             'ventasHoy'       => $esReservas ? Cita::ventasHoy($sedeId) : Pedido::ventasHoy($sedeId),
             'recompraPct'     => Copiloto::recompraMensualPct($negocioId, $negocio['tipo_negocio']),
-            'aReactivar'      => count(Copiloto::clientesAReactivar($negocioId, $negocio['tipo_negocio'])),
+            'aReactivar'      => $aReactivar,
             'ultimosPedidos'  => $esReservas ? [] : array_slice(Pedido::listarPorSede($sedeId), 0, 5),
             'proximasCitas'   => $esReservas ? array_slice(Cita::listarProximas($sedeId), 0, 5) : [],
             'listaEsperaCount' => $esReservas ? ListaEspera::contarPendientesPorSede($sedeId) : 0,
