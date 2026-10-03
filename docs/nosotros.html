@@ -33,8 +33,8 @@
   <div class="wrap">
     <nav class="nav-clara">
       <a href="index.html" class="brand">
-        <img class="logo-claro" src="assets/img/logo-veci-lockup.png" alt="Veci" height="26">
-        <img class="logo-oscuro" src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="26">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -167,55 +167,80 @@
   </div>
 </section>
 
-<div class="cierre reveal">
-  <div class="wrap">
-    <h2>Empieza hoy mismo</h2>
-    <p>Publica tu tienda gratis y empieza a cobrar por Bre-B sin pagar comisión.</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
-      <a href="demo.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Probar las demos →</a>
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Abre tu local en internet <em>hoy</em>.</h2>
+      <p>Publica tu tienda gratis y cobra por Bre-B sin pagar comisión. Te acompañamos en el proceso.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="demo.html">o prueba las demos sin registrarte</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
     </div>
-    <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<footer class="footer-grande reveal">
+<footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
         <a href="index.html#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
-        <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
         <a href="blog/index.html">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
+        <a href="index.html#faq">Preguntas frecuentes</a>
+        <a href="referidos.html">Referidos</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
-    <span class="footer-wordmark" aria-hidden="true">veci</span>
   </div>
 </footer>
 
