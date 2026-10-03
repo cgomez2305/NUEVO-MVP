@@ -325,8 +325,10 @@ class Fiado
             'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en, acepta_marketing)
              VALUES (:n, :nombre, :t, 1, NOW(), 0)'
         )->execute(['n' => $negocioId, 'nombre' => $nombre, 't' => $telefono]);
+        $id = (int) $pdo->lastInsertId();
+        Consentimiento::registrar($negocioId, $id, 'datos', true, 'panel');
 
-        return ['id' => (int) $pdo->lastInsertId(), 'nuevo' => true, 'nombre' => $nombre];
+        return ['id' => $id, 'nuevo' => true, 'nombre' => $nombre];
     }
 
     /** Sin tildes, mayúsculas ni signos, con un solo espacio entre palabras. */

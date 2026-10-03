@@ -67,6 +67,12 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
   <?php endforeach; ?>
 </nav>
 <p class="pq-ayuda pq-segmento-ayuda"><?= e($ayudaSegmento[$filtro]) ?></p>
+<?php if (!empty($sinPermiso)): ?>
+  <p class="pq-ayuda pq-copiloto-permiso-nota">
+    <?= (int) $sinPermiso === 1 ? '1 cliente de este grupo no ha' : (int) $sinPermiso . ' clientes de este grupo no han' ?> autorizado promociones por WhatsApp:
+    no se les escribe con ofertas (Ley 1581). Puedes pedirles permiso una sola vez.
+  </p>
+<?php endif; ?>
 
 <?php if ($lista === []): ?>
   <div class="pq-vacio-panel">
@@ -84,6 +90,9 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
             <?php foreach ($fila['tags'] as $tag): ?>
               <span class="pq-chip pq-chip-mini <?= $colorTag[$tag] ?? '' ?>"><?= e($etiquetas[$tag]) ?></span>
             <?php endforeach; ?>
+            <?php if (!$fila['contactable']): ?>
+              <span class="pq-chip pq-chip-mini pq-chip-sin-permiso">Sin permiso</span>
+            <?php endif; ?>
           </span>
           <span class="pq-ayuda">
             <?php if ($segmentoEfectivo === 'inactivo' && $fila['frecuencia_prom'] !== null): ?>
@@ -94,12 +103,27 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
           </span>
         </div>
         <div class="pq-cliente-acciones">
-          <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje') . '?segmento=' . $segmentoEfectivo) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Escribir</a>
+          <?php if ($fila['contactable']): ?>
+            <a href="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/mensaje') . '?segmento=' . $segmentoEfectivo) ?>" class="pq-btn pq-btn-sello pq-btn-chico">Escribir</a>
+          <?php elseif (!empty($cliente['permiso_pedido_en'])): ?>
+            <span class="pq-ayuda pq-copiloto-permiso-pedido">Permiso pedido el <?= e(explode(' · ', fecha_corta((string) $cliente['permiso_pedido_en']))[0]) ?></span>
+          <?php elseif (!empty($cliente['telefono'])): ?>
+            <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/permiso')) ?>" data-confirmar="Se abrirá WhatsApp con un mensaje para preguntarle a <?= e($cliente['nombre']) ?> si quiere recibir promociones, con su enlace para activarlo. Solo se puede pedir una vez.">
+              <?= csrf_campo() ?>
+              <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Pedir permiso</button>
+            </form>
+          <?php endif; ?>
           <details class="pq-menu-kebab">
             <summary aria-label="Más acciones para <?= e($cliente['nombre']) ?>">
               <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
             </summary>
             <div class="pq-menu-kebab-panel">
+              <?php if ($fila['contactable']): ?>
+                <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/sin-promociones')) ?>" data-confirmar="¿<?= e($cliente['nombre']) ?> te pidió no recibir más promociones? Dejará de aparecer para mensajes; sus pedidos y su historial quedan igual.">
+                  <?= csrf_campo() ?>
+                  <button type="submit">Me pidió no escribirle más</button>
+                </form>
+              <?php endif; ?>
               <form method="post" action="<?= e(base_url('/panel/copiloto/' . $cliente['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar todos los datos de <?= e($cliente['nombre']) ?> (incluye su historial de pedidos/citas)? Esta acción no se puede deshacer.">
                 <?= csrf_campo() ?>
                 <button type="submit" class="pq-peligro">Eliminar sus datos</button>

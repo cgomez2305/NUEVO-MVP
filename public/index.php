@@ -17,6 +17,7 @@ use App\Controllers\HomeController;
 use App\Controllers\MostradorController;
 use App\Controllers\OnboardingController;
 use App\Controllers\PanelController;
+use App\Controllers\PreferenciasController;
 use App\Controllers\SaludController;
 use App\Controllers\TiendaController;
 use App\Controllers\VisitaController;
@@ -33,6 +34,7 @@ $crecimiento = new CrecimientoController();
 $caja = new CajaController();
 $tienda = new TiendaController();
 $webhook = new WebhookController();
+$preferencias = new PreferenciasController();
 $admin = new AdminController();
 $agenda = new AgendaController();
 $equipo = new EquipoController();
@@ -137,6 +139,8 @@ $router->get('/panel/copiloto', [$panel, 'copiloto']);
 $router->get('/panel/copiloto/{cliente}/mensaje', [$panel, 'mensajeCopiloto']);
 $router->post('/panel/copiloto/{cliente}/enviar', [$panel, 'registrarEnvioCopiloto']);
 $router->post('/panel/copiloto/{cliente}/whatsapp', [$panel, 'abrirWhatsappCopiloto']);
+$router->post('/panel/copiloto/{cliente}/permiso', [$panel, 'pedirPermisoCopiloto']);
+$router->post('/panel/copiloto/{cliente}/sin-promociones', [$panel, 'quitarPromocionesCopiloto']);
 $router->get('/panel/cupones', [$crecimiento, 'cupones']);
 $router->post('/panel/cupones', [$crecimiento, 'crearCupon']);
 $router->post('/panel/cupones/{id}/alternar', [$crecimiento, 'alternarCupon']);
@@ -281,6 +285,10 @@ $router->post('/cita/{token}/tarde', [$tienda, 'llegoTardeCliente']);
 $router->post('/cita/{token}/espero', [$tienda, 'esperoCliente']);
 $router->get('/cita/{token}/reprogramar', [$tienda, 'reprogramarCitaVista']);
 $router->post('/cita/{token}/reprogramar', [$tienda, 'guardarReprogramacion']);
+
+// --- Preferencias de mensajes del cliente, sin login (token) ------------
+$router->get('/preferencias/{token}', [$preferencias, 'mostrar']);
+$router->post('/preferencias/{token}', [$preferencias, 'guardar']);
 
 // --- Webhooks de proveedores externos -----------------------------------
 $router->post('/webhooks/breb', [$webhook, 'breb']);

@@ -489,6 +489,14 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             <span class="pq-ayuda">Necesario para procesar la reserva y avisarte sobre cambios.</span>
           </span>
         </label>
+        <label class="pq-consentimiento">
+          <input type="checkbox" name="acepta_marketing" value="1">
+          <span>
+            <span class="pq-consentimiento-titulo">Promociones por WhatsApp</span>
+            <span class="pq-ayuda">Quiero recibir promociones y novedades de <?= e(nombre_publico_sede($negocio)) ?>. Opcional; lo puedes quitar cuando quieras.</span>
+          </span>
+        </label>
+        <span class="pq-ayuda">Al continuar aceptas nuestra <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" class="pq-enlace-suave">política de privacidad</a>.</span>
 
         <button type="submit" class="pq-btn pq-btn-whatsapp pq-confirmar-boton">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="#0b3d24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>

@@ -78,7 +78,7 @@ $estaAtrasado = $contexto !== null && $segmento === 'inactivo' && $contexto['fre
     <input type="hidden" name="descuento" value="<?= (int) $descuento ?>">
     <div class="pq-wa-fondo">
       <label class="pq-sr-solo" for="mensaje-copiloto">Texto del mensaje</label>
-      <textarea name="text" id="mensaje-copiloto" class="pq-burbuja-out pq-wa-editable" rows="4" maxlength="500" data-contador><?= e($mensaje) ?></textarea>
+      <textarea name="text" id="mensaje-copiloto" class="pq-burbuja-out pq-wa-editable" rows="6" maxlength="700" data-contador><?= e($mensaje) ?></textarea>
     </div>
     <?php if ($cupon !== null): ?>
       <p class="pq-wa-cupon">
@@ -86,7 +86,7 @@ $estaAtrasado = $contexto !== null && $segmento === 'inactivo' && $contexto['fre
         <span class="pq-ayuda">Cupón personal de <?= (int) $descuento ?>%: solo sirve con su número de WhatsApp, una vez, hasta el <?= e(fecha_larga($cupon['vence_en'])) ?>. Se crea al abrir WhatsApp.</span>
       </p>
     <?php endif; ?>
-    <p class="pq-ayuda pq-wa-nota">Puedes editarlo. Veci nunca ofrece descuentos por su cuenta: solo si los eliges arriba.</p>
+    <p class="pq-ayuda pq-wa-nota">Puedes editarlo. Veci nunca ofrece descuentos por su cuenta: solo si los eliges arriba. Deja el enlace del final: es cómo el cliente deja de recibir promociones si quiere.</p>
     <div class="pq-wa-secundarias">
       <a href="<?= e($urlActual) ?>" class="pq-enlace-boton">Otra versión</a>
       <button type="button" class="pq-enlace-boton" data-copiar-de="#mensaje-copiloto">Copiar texto</button>

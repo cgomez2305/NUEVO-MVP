@@ -245,7 +245,7 @@
           <input type="checkbox" name="acepta_marketing" value="1">
           <span>
             <span class="pq-consentimiento-titulo">Promociones por WhatsApp</span>
-            <span class="pq-ayuda">Quiero recibir promociones y novedades. Opcional.</span>
+            <span class="pq-ayuda">Quiero recibir promociones y novedades de <?= e(nombre_publico_sede($negocio)) ?>. Opcional; lo puedes quitar cuando quieras.</span>
           </span>
         </label>
         <span class="pq-ayuda">Al continuar aceptas nuestra <a href="https://tuveci.co/privacidad.html" target="_blank" rel="noopener" class="pq-enlace-suave">política de privacidad</a>.</span>

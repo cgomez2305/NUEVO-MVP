@@ -71,7 +71,7 @@ class FilaController
                 $empleado = $persona;
             }
         }
-        $clienteId = Cliente::buscarOCrear((int) $sede['negocio_id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $sede['negocio_id'], $nombre, $telefono, true, false, 'reserva');
         $turno = TurnoFila::anotar(
             (int) $sede['id'],
             $clienteId,

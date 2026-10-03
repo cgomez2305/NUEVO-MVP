@@ -11,31 +11,39 @@ class Cliente
     /**
      * Crea el cliente o, si ya existe (mismo teléfono en el mismo negocio),
      * actualiza su nombre. $aceptaMarketing es un opt-in APARTE del
-     * consentimiento de procesar el pedido: se reescribe en cada pedido, así
-     * que un cliente que cambia de opinión (marca o desmarca la casilla la
-     * próxima vez) queda reflejado.
+     * consentimiento de procesar el pedido y solo SUMA: marcar la casilla
+     * otorga el permiso de promociones; no marcarla en un pedido siguiente
+     * no lo retira (olvidar una casilla no es retirar un permiso). Retirarlo
+     * es explícito: el enlace de preferencias del cliente o el panel.
+     * $origen queda en el registro de consentimientos (pedido, reserva, panel).
      */
-    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos, bool $aceptaMarketing = false): int
+    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos, bool $aceptaMarketing = false, string $origen = 'pedido'): int
     {
         $pdo = Database::conexion();
 
         $stmt = $pdo->prepare(
-            'SELECT id FROM clientes WHERE negocio_id = :negocio_id AND telefono = :telefono'
+            'SELECT id, autorizo_datos FROM clientes WHERE negocio_id = :negocio_id AND telefono = :telefono'
         );
         $stmt->execute(['negocio_id' => $negocioId, 'telefono' => $telefono]);
         $existente = $stmt->fetch();
 
         if ($existente !== false) {
-            $actualizar = $pdo->prepare(
-                'UPDATE clientes SET nombre = :nombre, acepta_marketing = :acepta_marketing WHERE id = :id'
-            );
-            $actualizar->execute(['nombre' => $nombre, 'acepta_marketing' => $aceptaMarketing ? 1 : 0, 'id' => $existente['id']]);
-            return (int) $existente['id'];
+            $id = (int) $existente['id'];
+            $pdo->prepare('UPDATE clientes SET nombre = :nombre WHERE id = :id')->execute(['nombre' => $nombre, 'id' => $id]);
+            if ($autorizoDatos && (int) $existente['autorizo_datos'] !== 1) {
+                $pdo->prepare('UPDATE clientes SET autorizo_datos = 1, autorizado_en = NOW() WHERE id = :id')->execute(['id' => $id]);
+                Consentimiento::registrar($negocioId, $id, 'datos', true, $origen);
+            }
+            if ($aceptaMarketing) {
+                Consentimiento::cambiarMarketing($negocioId, $id, true, $origen);
+            }
+
+            return $id;
         }
 
         $crear = $pdo->prepare(
-            'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en, acepta_marketing)
-             VALUES (:negocio_id, :nombre, :telefono, :autorizo, :autorizado_en, :acepta_marketing)'
+            'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en, acepta_marketing, marketing_actualizado_en)
+             VALUES (:negocio_id, :nombre, :telefono, :autorizo, :autorizado_en, :acepta_marketing, :marketing_en)'
         );
         $crear->execute([
             'negocio_id'       => $negocioId,
@@ -44,9 +52,75 @@ class Cliente
             'autorizo'         => $autorizoDatos ? 1 : 0,
             'autorizado_en'    => $autorizoDatos ? date('Y-m-d H:i:s') : null,
             'acepta_marketing' => $aceptaMarketing ? 1 : 0,
+            'marketing_en'     => $aceptaMarketing ? date('Y-m-d H:i:s') : null,
         ]);
+        $id = (int) $pdo->lastInsertId();
+        if ($autorizoDatos) {
+            Consentimiento::registrar($negocioId, $id, 'datos', true, $origen);
+        }
+        if ($aceptaMarketing) {
+            Consentimiento::registrar($negocioId, $id, 'marketing', true, $origen);
+        }
 
-        return (int) $pdo->lastInsertId();
+        return $id;
+    }
+
+    /**
+     * Enlace sin login para que el cliente active o retire las promociones
+     * de este negocio. Se crea la primera vez que hace falta.
+     */
+    public static function tokenPreferencias(int $id, int $negocioId): ?string
+    {
+        $pdo = Database::conexion();
+        $stmt = $pdo->prepare('SELECT token_preferencias FROM clientes WHERE id = :id AND negocio_id = :n');
+        $stmt->execute(['id' => $id, 'n' => $negocioId]);
+        $token = $stmt->fetchColumn();
+        if ($token === false) {
+            return null;
+        }
+        if (is_string($token) && $token !== '') {
+            return $token;
+        }
+        $nuevo = bin2hex(random_bytes(16));
+        // Solo si sigue vacío: dos pestañas a la vez no deben dejar dos tokens.
+        $pdo->prepare('UPDATE clientes SET token_preferencias = :t WHERE id = :id AND token_preferencias IS NULL')
+            ->execute(['t' => $nuevo, 'id' => $id]);
+        $stmt->execute(['id' => $id, 'n' => $negocioId]);
+
+        return (string) $stmt->fetchColumn();
+    }
+
+    public static function buscarPorTokenPreferencias(string $token): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
+            return null;
+        }
+        $stmt = Database::conexion()->prepare('SELECT * FROM clientes WHERE token_preferencias = :t');
+        $stmt->execute(['t' => $token]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    /** ¿Se le pueden mandar promociones? Permiso vigente y un WhatsApp al que escribir. */
+    public static function contactable(array $cliente): bool
+    {
+        return (int) ($cliente['acepta_marketing'] ?? 0) === 1 && !empty($cliente['telefono']);
+    }
+
+    /**
+     * El negocio le pide permiso UNA vez a quien no lo ha dado: después de
+     * eso, insistir sería justo el contacto no autorizado que la ley castiga.
+     * Devuelve false si ya se le pidió.
+     */
+    public static function marcarPermisoPedido(int $id, int $negocioId): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE clientes SET permiso_pedido_en = NOW()
+             WHERE id = :id AND negocio_id = :n AND permiso_pedido_en IS NULL AND acepta_marketing = 0'
+        );
+        $stmt->execute(['id' => $id, 'n' => $negocioId]);
+
+        return $stmt->rowCount() === 1;
     }
 
     /**
@@ -65,8 +139,10 @@ class Cliente
         Database::conexion()->prepare(
             'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en) VALUES (:n, :nombre, :t, 1, NOW())'
         )->execute(['n' => $negocioId, 'nombre' => mb_substr($nombre, 0, 120), 't' => $telefono]);
+        $nuevo = (int) Database::conexion()->lastInsertId();
+        Consentimiento::registrar($negocioId, $nuevo, 'datos', true, 'panel');
 
-        return (int) Database::conexion()->lastInsertId();
+        return $nuevo;
     }
 
     public static function buscar(int $id, int $negocioId): ?array

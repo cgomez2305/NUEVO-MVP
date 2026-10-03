@@ -24,15 +24,17 @@ class Copiloto
      * Clientes con al menos 2 pedidos cuyo silencio actual supera 1.5x
      * su frecuencia habitual (con un piso de 14 días para no molestar
      * a quien compra casi a diario). Es el segmento "inactivo" de
-     * segmentar(), en el formato que ya usaba el dashboard.
+     * segmentar(), en el formato que ya usaba el dashboard, y solo con
+     * clientes que autorizaron promociones (Cliente::contactable).
      *
      * @return array<int, array{cliente: array<string, mixed>, dias_sin_pedir: int, frecuencia_prom: int, motivo: string}>
      */
     public static function clientesAReactivar(int $negocioId, string $tipoNegocio = 'pedidos'): array
     {
+        // Solo a quien autorizó promociones: el resto no es "a quién escribirle".
         $inactivos = array_filter(
             self::segmentar($negocioId, $tipoNegocio),
-            fn ($fila) => in_array('inactivo', $fila['tags'], true)
+            fn ($fila) => in_array('inactivo', $fila['tags'], true) && $fila['contactable']
         );
 
         return array_values(array_map(fn ($fila) => [
@@ -54,7 +56,7 @@ class Copiloto
      * Cupon::asegurarPersonal): sin código el cliente no tiene cómo cobrarlo
      * en la tienda, y "tienes 10%" quedaba como una promesa de palabra.
      */
-    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo', int $descuentoPct = 0, ?string $codigo = null, ?string $venceEn = null): string
+    public static function mensajeSugerido(array $cliente, string $segmento = 'inactivo', int $descuentoPct = 0, ?string $codigo = null, ?string $venceEn = null, ?string $enlacePreferencias = null): string
     {
         $nombreParaSaludo = self::nombreParaSaludo((string) $cliente['nombre']);
         $fraseDescuento = null;
@@ -82,7 +84,26 @@ class Copiloto
             ],
         };
 
-        return implode(' ', array_filter($partes));
+        $texto = implode(' ', array_filter($partes));
+        // Cada promoción lleva cómo dejar de recibirlas (Ley 1581): retirar
+        // el permiso tiene que ser tan fácil como darlo.
+        if ($enlacePreferencias !== null) {
+            $texto .= "\n\nSi prefieres no recibir más promociones: " . $enlacePreferencias;
+        }
+
+        return $texto;
+    }
+
+    /**
+     * El único mensaje que se le puede mandar a quien NO autorizó
+     * promociones: pedirle permiso, una vez, con su enlace para darlo.
+     */
+    public static function mensajePermiso(array $cliente, string $marca, string $enlacePreferencias): string
+    {
+        $nombre = self::nombreParaSaludo((string) $cliente['nombre']);
+
+        return "Hola {$nombre}, te escribimos de {$marca}. ¿Te gustaría recibir por WhatsApp nuestras promociones y novedades? "
+            . "Si quieres, actívalo aquí: {$enlacePreferencias}\n\nSi no, no te volveremos a escribir por esto.";
     }
 
     private static function nombreParaSaludo(string $nombreCompleto): string
@@ -121,7 +142,7 @@ class Copiloto
                WHERE s.negocio_id = :negocio_id AND ' . Cita::sqlCuenta('c') . ' ORDER BY c.cliente_id ASC, c.fecha_hora ASC'
             : 'SELECT p.cliente_id, p.creado_en AS fecha, p.total AS monto FROM pedidos p
                JOIN sedes s ON s.id = p.sede_id
-               WHERE s.negocio_id = :negocio_id ORDER BY p.cliente_id ASC, p.creado_en ASC';
+               WHERE s.negocio_id = :negocio_id AND p.estado <> \'cancelado\' ORDER BY p.cliente_id ASC, p.creado_en ASC';
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute(['negocio_id' => $negocioId]);
@@ -167,6 +188,7 @@ class Copiloto
                 'dias_desde_alta'      => $diasDesdeAlta,
                 'frecuencia_prom'      => $frecuenciaProm,
                 'ultima_compra_monto'  => end($datos['montos']),
+                'contactable'          => Cliente::contactable($cliente),
             ];
         }
 
@@ -227,7 +249,7 @@ class Copiloto
                GROUP BY c.cliente_id'
             : 'SELECT p.cliente_id, COUNT(*) AS total FROM pedidos p
                JOIN sedes s ON s.id = p.sede_id
-               WHERE s.negocio_id = :negocio_id AND p.creado_en >= NOW() - INTERVAL 30 DAY
+               WHERE s.negocio_id = :negocio_id AND p.creado_en >= NOW() - INTERVAL 30 DAY AND p.estado <> \'cancelado\'
                GROUP BY p.cliente_id';
 
         $stmt = Database::conexion()->prepare($sql);
@@ -298,7 +320,8 @@ class Copiloto
                WHERE s.negocio_id = :negocio_id AND c.cliente_id = :cliente_id AND ' . Cita::sqlCuenta('c') . '
                  AND c.fecha_hora > :fecha LIMIT 1'
             : 'SELECT 1 FROM pedidos p JOIN sedes s ON s.id = p.sede_id
-               WHERE s.negocio_id = :negocio_id AND p.cliente_id = :cliente_id AND p.creado_en > :fecha LIMIT 1';
+               WHERE s.negocio_id = :negocio_id AND p.cliente_id = :cliente_id AND p.creado_en > :fecha
+                 AND p.estado <> \'cancelado\' LIMIT 1';
 
         $stmt = Database::conexion()->prepare($sql);
         $stmt->execute([

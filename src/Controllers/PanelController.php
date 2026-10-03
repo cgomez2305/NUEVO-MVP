@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Auth;
 use App\Models\Cita;
 use App\Models\Cliente;
+use App\Models\Consentimiento;
 use App\Models\Copiloto;
 use App\Models\Cupon;
 use App\Models\Empleado;
@@ -842,13 +843,18 @@ class PanelController
         $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
         $salida = $this->abrirDescargaCsv('clientes');
-        $this->escribirFilaCsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Cliente desde']);
+        // "Acepta promociones" va en el archivo: quien exporta la lista para
+        // escribir por fuera de Veci tiene que saber a quién sí puede.
+        $this->escribirFilaCsv($salida, ['ID', 'Nombre', 'Teléfono', 'Autorizó datos', 'Acepta promociones', 'Promociones desde', 'Cliente desde']);
         foreach ($clientes as $cliente) {
+            $acepta = (int) ($cliente['acepta_marketing'] ?? 0) === 1;
             $this->escribirFilaCsv($salida, [
                 $cliente['id'],
                 $cliente['nombre'],
                 $cliente['telefono'],
                 ((int) $cliente['autorizo_datos'] === 1) ? 'Sí' : 'No',
+                $acepta ? 'Sí' : 'No',
+                $acepta ? (string) ($cliente['marketing_actualizado_en'] ?? '') : '',
                 $cliente['creado_en'],
             ]);
         }
@@ -1089,8 +1095,11 @@ class PanelController
             ? $segmentos
             : array_values(array_filter($segmentos, fn ($fila) => in_array($filtro, $fila['tags'], true)));
 
+        $sinPermiso = count(array_filter($lista, fn ($fila) => !$fila['contactable']));
+
         ver('panel/copiloto', [
             'titulo'          => 'Copiloto de recompra · Veci',
+            'sinPermiso'      => $sinPermiso,
             'activo'          => 'copiloto',
             'negocio'         => $negocio,
             'lista'           => $lista,
@@ -1115,9 +1124,10 @@ class PanelController
         }
 
         $segmento = $this->segmentoValido($_GET['segmento'] ?? null);
+        $this->exigirPermisoPromociones($cliente, $segmento);
         $descuento = $this->descuentoValido($_GET['descuento'] ?? null);
         $cupon = $descuento > 0 ? $this->cuponCopiloto($negocioId, (int) $cliente['id'], $descuento) : null;
-        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null);
+        $mensaje = Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null, $this->enlacePreferencias($cliente));
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
 
         $clienteId = (int) $cliente['id'];
@@ -1152,6 +1162,7 @@ class PanelController
         if (csrf_verificar()) {
             $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
             if ($cliente !== null) {
+                $this->exigirPermisoPromociones($cliente, $segmento);
                 $descuento = $this->descuentoValido($_POST['descuento'] ?? null);
                 // "Ya le escribí" también vale si copió el texto en vez de
                 // usar el botón de WhatsApp: el cupón que nombra tiene que existir.
@@ -1159,7 +1170,7 @@ class PanelController
                 Copiloto::registrarEnvio(
                     (int) $negocio['negocio_id'],
                     (int) $cliente['id'],
-                    Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null)
+                    Copiloto::mensajeSugerido($cliente, $segmento, $descuento, $cupon['codigo'] ?? null, $cupon['vence_en'] ?? null, $this->enlacePreferencias($cliente))
                 );
                 flash_set('ok', 'Quedó registrado el contacto con ' . $cliente['nombre'] . ' hoy.');
             }
@@ -1185,16 +1196,77 @@ class PanelController
         if ($cliente === null || !csrf_verificar()) {
             redirigir('/panel/copiloto');
         }
+        $this->exigirPermisoPromociones($cliente, 'inactivo');
 
         $descuento = $this->descuentoValido($_POST['descuento'] ?? null);
         if ($descuento > 0) {
             $this->crearCuponCopiloto($negocioId, (int) $cliente['id'], $descuento);
         }
-        $texto = mb_substr(trim((string) ($_POST['text'] ?? '')), 0, 500);
+        $texto = mb_substr(trim((string) ($_POST['text'] ?? '')), 0, 700);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
 
         header('Location: https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($texto));
         exit;
+    }
+
+    /**
+     * A quien no autorizó promociones solo se le puede pedir permiso, una
+     * vez: abre WhatsApp con la pregunta y su enlace para activarlo él
+     * mismo (así la autorización queda con su IP y la versión de la
+     * política, no "porque el negocio dijo").
+     */
+    public function pedirPermisoCopiloto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $cliente = Cliente::buscar((int) $parametros['cliente'], $negocioId);
+        if ($cliente === null || !csrf_verificar() || empty($cliente['telefono'])) {
+            redirigir('/panel/copiloto');
+        }
+        if (Cliente::contactable($cliente)) {
+            redirigir('/panel/copiloto/' . (int) $cliente['id'] . '/mensaje');
+        }
+        if (!Cliente::marcarPermisoPedido((int) $cliente['id'], $negocioId)) {
+            flash_set('error', 'Ya le pediste permiso a ' . $cliente['nombre'] . '. Si no lo activó, no se le insiste.');
+            redirigir('/panel/copiloto?segmento=todos');
+        }
+        $texto = Copiloto::mensajePermiso($cliente, (string) ($negocio['negocio_nombre'] ?? $negocio['nombre']), $this->enlacePreferencias($cliente));
+        $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
+
+        header('Location: https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($texto));
+        exit;
+    }
+
+    /** "Me pidió que no le escribiera más": se retira su permiso y queda en el registro. */
+    public function quitarPromocionesCopiloto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $cliente = Cliente::buscar((int) $parametros['cliente'], $negocioId);
+        if ($cliente !== null && csrf_verificar()) {
+            Consentimiento::cambiarMarketing($negocioId, (int) $cliente['id'], false, 'panel', (int) $negocio['usuario_id']);
+            flash_set('ok', 'Listo: ' . $cliente['nombre'] . ' ya no aparece para promociones.');
+        }
+
+        redirigir('/panel/copiloto');
+    }
+
+    /** Sin permiso de promociones no se arma ni se registra un mensaje comercial. */
+    private function exigirPermisoPromociones(array $cliente, string $segmento): void
+    {
+        if (Cliente::contactable($cliente)) {
+            return;
+        }
+        flash_set('error', $cliente['nombre'] . ' no ha autorizado promociones por WhatsApp. Puedes pedirle permiso una vez desde la lista.');
+        redirigir('/panel/copiloto?segmento=' . $segmento);
+    }
+
+    private function enlacePreferencias(array $cliente): string
+    {
+        return url_publica('/preferencias/' . Cliente::tokenPreferencias((int) $cliente['id'], (int) $cliente['negocio_id']));
     }
 
     /**

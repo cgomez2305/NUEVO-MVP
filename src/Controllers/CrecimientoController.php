@@ -390,7 +390,7 @@ class CrecimientoController
             redirigir('/panel/paquetes');
         }
         // El cliente autoriza sus datos en el local al comprar (lo pide quien vende).
-        $clienteId = \App\Models\Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $clienteId = \App\Models\Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, false, 'panel');
         $bono = Bono::vender($paquete, $clienteId, (int) $negocio['usuario_id']);
         redirigir('/panel/paquetes?vendido=' . $bono['token']);
     }

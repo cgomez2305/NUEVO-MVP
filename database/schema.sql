@@ -211,11 +211,36 @@ CREATE TABLE IF NOT EXISTS clientes (
   -- procesar el pedido (requerido); este es, además, querer recibir
   -- promociones (opcional). El checkout público los pide por separado.
   acepta_marketing TINYINT(1)  NOT NULL DEFAULT 0,
+  -- Ver consentimientos (migración 32): cuándo cambió el permiso de
+  -- promociones, el enlace sin login para que el cliente lo active o lo
+  -- retire, y cuándo el negocio le pidió permiso (una sola vez).
+  marketing_actualizado_en DATETIME DEFAULT NULL,
+  token_preferencias CHAR(32)  DEFAULT NULL,
+  permiso_pedido_en DATETIME   DEFAULT NULL,
   -- Tope de lo que se le fía (NULL = sin tope). Ver fiado_movimientos.
   fiado_limite    INT UNSIGNED DEFAULT NULL,
   creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
-  UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono)
+  UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono),
+  UNIQUE KEY uniq_cliente_token_preferencias (token_preferencias)
+) ENGINE=InnoDB;
+
+-- Registro de consentimientos (Ley 1581): cada cambio con origen, versión
+-- de la política e IP si lo hizo el cliente. Solo de agregar.
+CREATE TABLE IF NOT EXISTS consentimientos (
+  id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id       INT UNSIGNED NOT NULL,
+  cliente_id       INT UNSIGNED NOT NULL,
+  finalidad        ENUM('datos', 'marketing') NOT NULL,
+  otorgado         TINYINT(1)   NOT NULL,
+  origen           VARCHAR(20)  NOT NULL,
+  politica_version VARCHAR(20)  NOT NULL,
+  usuario_id       INT UNSIGNED DEFAULT NULL,
+  ip               VARCHAR(45)  DEFAULT NULL,
+  creado_en        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  INDEX idx_consentimientos_cliente (cliente_id, finalidad, id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS pedidos (
@@ -1097,4 +1122,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_28_planes_presencial.sql'),
   ('2026-10-03_29_sesion_version.sql'),
   ('2026-10-03_30_inventario_movido.sql'),
-  ('2026-10-03_31_dias_libres_empleado.sql');
+  ('2026-10-03_31_dias_libres_empleado.sql'),
+  ('2026-10-03_32_consentimientos.sql');

@@ -5290,3 +5290,20 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-plan-carta .pq-comanda-hoja, .pq-cotizacion .pq-comanda-hoja { padding-bottom: 64px; }
 .pq-recordar-quitar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2); margin-top: var(--esp-4); }
 .pq-recordar-quitar .pq-ayuda { margin: 0; }
+
+/* ---------- Preferencias de mensajes del cliente (tienda) ----------
+   Un solo estado y un solo botón: retirar el permiso tiene que ser tan
+   fácil como darlo. El punto verde = recibe; gris = no recibe. */
+.pq-preferencias { display: grid; gap: var(--esp-3); margin-top: var(--esp-5); }
+.pq-preferencias-estado { display: flex; align-items: center; gap: var(--esp-2); margin: 0; font-size: 17px; font-weight: 700; color: var(--tinta); }
+.pq-preferencias-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--gris-suave); flex: none; }
+.pq-preferencias-punto-si { background: var(--caja); box-shadow: 0 0 0 4px var(--tinte-caja); }
+.pq-preferencias .pq-ayuda { margin: 0; }
+.pq-preferencias-nota { margin-top: var(--esp-5); color: var(--texto-tenue); }
+
+/* ---------- Copiloto: permiso de promociones (panel) ----------
+   Quien no autorizó promociones se ve en la lista (es información del
+   negocio) pero sin "Escribir": solo se le puede pedir permiso una vez. */
+.pq-chip-sin-permiso { background: transparent; border: 1px dashed var(--borde); color: var(--gris-texto); }
+.pq-copiloto-permiso-nota { margin-top: calc(var(--esp-2) * -1); margin-bottom: var(--esp-4); }
+.pq-copiloto-permiso-pedido { white-space: nowrap; font-size: 12.5px; }

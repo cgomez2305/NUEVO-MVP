@@ -514,7 +514,7 @@ class TiendaController
             ];
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, !empty($_POST['acepta_marketing']), 'reserva');
         // El anticipo y el cupón son sobre el servicio, como se mostraron al
         // reservar: el transporte de la zona no entra en el porcentaje.
         $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal - $recargo] + $servicio);
@@ -660,7 +660,7 @@ class TiendaController
 
         $this->exigirTasaPublica('lista_espera', $negocio, $volverAReservar);
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, false, 'reserva');
         $this->registrarTasaPublica('lista_espera', $negocio);
         $listaEsperaId = ListaEspera::crear((int) $negocio['id'], $clienteId, (int) $servicio['id'], $servicio['nombre'], $fecha);
 
@@ -949,7 +949,7 @@ class TiendaController
             }
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing, 'pedido');
 
         // El cupón se revisa otra vez, ahora con el cliente: si es personal
         // de otro número o ya lo usó, se le devuelve al carrito explicando.
