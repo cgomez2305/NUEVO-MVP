@@ -2151,3 +2151,13 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
   .hero h1 .br-movil{display:block}
 }
 .hero h1 .br-movil{display:none}
+
+/* tarjetas de planes: cabecera en fila (ícono + nombre), precio completo,
+   línea antes de la lista y botón con el texto centrado + nota debajo. */
+.plan-cabeza{display:flex;align-items:center;gap:12px}
+.plan-cabeza .plan-icono{margin:0}
+.plan .precio{font-size:34px;letter-spacing:-.02em;line-height:1.1}
+.plan .precio small{margin-left:2px;letter-spacing:0}
+.plan .plan-sub{margin-top:-8px;padding-bottom:16px;border-bottom:1px dashed var(--borde)}
+.plan .btn{justify-content:center;text-align:center;width:100%;min-height:52px;margin-top:auto}
+.plan-nota{display:block;margin-top:-4px;text-align:center;font-size:12.5px;color:var(--texto-tenue)}
