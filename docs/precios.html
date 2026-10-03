@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Precios: planes desde $0 y 0% de comisión siempre | Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/precios.html">
@@ -23,6 +25,7 @@
 <link rel="preload" href="assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
+<script src="assets/js/veci-chat.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -42,8 +45,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="index.html" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -54,7 +58,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="./#como-funciona" class="item">
+              <a href="index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -73,9 +77,9 @@
             </div>
           </div>
         </div>
-        <a href="nosotros.html">Quiénes somos</a>
-        <a href="blog/">Blog</a>
-        <a href="demo.html" class="nav-chip">Ver demos →</a>
+        <a href="nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="blog/index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -96,7 +100,7 @@
 
 <div class="wrap">
   <div class="demo-hero">
-    <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:#16A36A"><span class="dot"></span> 0% DE COMISIÓN EN TODOS LOS PLANES</span>
+    <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:var(--caja-texto)"><span class="dot"></span> 0% DE COMISIÓN EN TODOS LOS PLANES</span>
     <h1>Precios claros, sin letra pequeña</h1>
     <p>Empieza gratis y sube de plan cuando tu negocio lo necesite. Nunca cobramos un porcentaje de lo que vendes.</p>
   </div>
@@ -112,48 +116,55 @@
 
     <div class="precios precios-3 reveal-fila">
       <div class="plan">
-        <span class="nombre">Gratis</span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div><span class="nombre">Gratis</span></div>
         <span class="precio">$0</span>
         <span class="plan-sub">Para probar sin arriesgar nada</span>
         <ul>
           <li>Hasta 50 pedidos o citas al mes</li>
-          <li>Tu menú o servicios leídos de una foto con IA (3 al mes)</li>
-          <li>Tienda con tu propio enlace</li>
+          <li>Hasta 3 fotos leídas con IA al mes</li>
+          <li>Tienda con tu propio enlace y catálogo con fotos</li>
           <li>Cobro por Bre-B, Nequi o efectivo</li>
+          <li>Panel de pedidos con tablero visual</li>
+          <li>Cupones, tarjeta de sellos, reseñas y más herramientas de <a href="funciones.html#crecimiento" style="color:inherit;text-decoration:underline">crecimiento</a></li>
           <li>Marca "Hecho con Veci" visible</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=gratis" class="btn btn-ghost-oscuro" style="margin-top:auto">Empezar gratis →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
       <div class="plan destacado">
         <span class="chip-popular">Más elegido</span>
-        <span class="nombre">Barrio</span>
-        <span class="precio"><span class="precio-mensual">$29<small>.900/mes</small></span><span class="precio-anual">$24<small>.900/mes, facturado anual</small></span></span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div><span class="nombre">Barrio</span></div>
+        <span class="precio"><span class="precio-mensual">$29.900<small>/mes</small></span><span class="precio-anual">$299.000<small>/año · 2 meses gratis</small></span></span>
         <span class="plan-sub">Para el negocio que ya vende todos los días</span>
         <ul>
-          <li>Pedidos o citas ilimitados</li>
-          <li>Copiloto de recompra</li>
-          <li>IA sin límite para cargar tu menú o servicios</li>
-          <li>Sin marca de Veci</li>
+          <li>Todo lo de Gratis, sin el límite de 50 al mes</li>
+          <li>Fotos leídas con IA sin límite</li>
+          <li>Copiloto de recompra: detecta quién dejó de comprar</li>
+          <li>Mensajes de reenganche listos para enviar por WhatsApp</li>
+          <li>Sin marca "Hecho con Veci" en tu tienda</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=barrio" class="btn btn-sello" style="margin-top:auto">Elegir plan Barrio →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
       <div class="plan">
-        <span class="nombre">Pro</span>
-        <span class="precio"><span class="precio-mensual">$69<small>.900/mes</small></span><span class="precio-anual">$58<small>.250/mes, facturado anual</small></span></span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="nombre">Pro</span></div>
+        <span class="precio"><span class="precio-mensual">$69.900<small>/mes</small></span><span class="precio-anual">$699.000<small>/año · 2 meses gratis</small></span></span>
         <span class="plan-sub">Para el negocio que ya tiene equipo</span>
         <ul>
           <li>Todo lo de Barrio</li>
+          <li>Hasta 3 sedes incluidas (+$19.900/mes cada sede extra)</li>
           <li>Historial completo y panel de estadísticas</li>
-          <li>3 sedes incluidas (+$19.900/mes cada sede extra)</li>
           <li>Soporte prioritario por WhatsApp</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=pro" class="btn btn-ghost-oscuro" style="margin-top:auto">Elegir plan Pro →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
     </div>
     <p class="precios-nota">Para comparar: una app de domicilios se queda con cerca del 30% de cada pedido. En un solo pedido de $100.000 eso ya es más que un mes entero del plan Barrio.</p>
+    <p class="precios-nota">¿Tienes más de un local? El plan Pro incluye <a href="integraciones.html" style="color:var(--sello)">hasta 3 sedes</a>, y cada sede adicional cuesta $19.900/mes. Los colaboradores con su propio acceso vienen incluidos en todos los planes.</p>
 
     <div class="callout-selfhost reveal">
-      <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4.5 8-11V5l-8-3-8 3v6c0 6.5 8 11 8 11Z"/></svg></div>
+      <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg></div>
       <div>
         <strong>Sin permanencia ni contrato</strong>
         <p>Cancelas cuando quieras y puedes exportar los datos de tu negocio en cualquier momento, en cualquier plan. Cambiar de plan o bajar de nivel no tiene costo ni penalidad.</p>
@@ -182,18 +193,30 @@
           <tr><td>Precio</td><td>$0</td><td>$29.900/mes</td><td>$69.900/mes</td></tr>
           <tr><td>Pedidos o citas al mes</td><td>Hasta 50</td><td>Ilimitados</td><td>Ilimitados</td></tr>
           <tr><td>Tienda con tu propio enlace</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Sedes incluidas</td><td>1</td><td>1</td><td>Hasta 3 (+$19.900/mes c/u extra)</td></tr>
+          <tr><td>Colaboradores con acceso propio</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
           <tr><td>Marca "Hecho con Veci"</td><td>Visible</td><td>Oculta</td><td>Oculta</td></tr>
-          <tr><td>Sedes (cada una con su tienda)</td><td>1</td><td>1</td><td>3 · +$19.900/mes c/u</td></tr>
-          <tr><td>Colaboradores con su propio acceso</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
 
           <tr class="categoria"><td colspan="4">Ventas y clientes</td></tr>
           <tr><td>Cobro por Bre-B, Nequi o efectivo</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
           <tr><td>Copiloto de recompra</td><td class="no">–</td><td class="si">✓</td><td class="si">✓</td></tr>
-          <tr><td>Menú o servicios leídos de una foto con IA</td><td>3 al mes</td><td>Sin límite</td><td>Sin límite</td></tr>
+          <tr><td>Onboarding con foto + IA (Claude)</td><td>Hasta 3 fotos al mes</td><td>Sin límite</td><td>Sin límite</td></tr>
+
+          <tr class="categoria"><td colspan="4">Herramientas de crecimiento</td></tr>
+          <tr><td>Cupones de descuento</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Tarjeta de sellos</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Reseñas por WhatsApp</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Combos y lo más pedido</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Domicilios por zona y pedido mínimo</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Inventario y "agotado por hoy"</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Paquetes y bonos de sesiones (reservas)</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
           <tr><td>Ventas de mostrador (tiendas)</td><td>Sin límite</td><td>Sin límite</td><td>Sin límite</td></tr>
+          <tr><td>Cierre de caja diario</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Avisos de estado por WhatsApp</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
+          <tr><td>Programa de referidos (30 días por invitado que pague)</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
 
           <tr class="categoria"><td colspan="4">Soporte y datos</td></tr>
-          <tr><td>Historial y panel de estadísticas</td><td>Básico</td><td>Básico</td><td>Completo</td></tr>
+          <tr><td>Historial en el panel</td><td>30 días</td><td>30 días</td><td>Completo, con estadísticas</td></tr>
           <tr><td>Soporte</td><td>Centro de ayuda</td><td>WhatsApp</td><td>WhatsApp prioritario</td></tr>
           <tr><td>Exportas tus datos cuando quieras</td><td class="si">✓</td><td class="si">✓</td><td class="si">✓</td></tr>
         </tbody>
@@ -209,7 +232,7 @@
     <details open>
       <summary>¿Qué incluye el plan Gratis?</summary>
       <div class="faq-cuerpo"><div class="faq-inner">
-        <p>Hasta 50 pedidos o citas al mes, tu propio enlace de tienda y cobro por Bre-B, Nequi o efectivo. Es gratis para siempre, no es una prueba con fecha de vencimiento.</p>
+        <p>Hasta 50 pedidos o citas al mes, hasta 3 fotos leídas con IA al mes, tu propio enlace de tienda y cobro por Bre-B, Nequi o efectivo. Es gratis para siempre, no es una prueba con fecha de vencimiento.</p>
       </div></div>
     </details>
     <details>
@@ -233,99 +256,84 @@
   </div>
 </section>
 
-<div class="cierre">
-  <div class="wrap">
-    <h2>Tu clientela es tuya.</h2>
-    <p>Empieza gratis hoy mismo. Sin intermediarios, sin comisión, sin letra pequeña.</p>
-    <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Tu clientela es <em>tuya</em>.</h2>
+      <p>Empieza gratis hoy mismo y sube de plan solo cuando lo necesites. Sin comisión, sin letra pequeña.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <button type="button" class="cierre-alt" data-abrir-chat>o pregúntale a Veci qué plan te sirve</button>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="index.html#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/index.html">Blog</a>
+        <a href="index.html#faq">Preguntas frecuentes</a>
         <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
-        <a href="blog/">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>
-  var btnMensual = document.getElementById('btnMensual');
-  var btnAnual = document.getElementById('btnAnual');
-  var contPrecios = document.querySelector('.precios');
-  var pastilla = document.querySelector('.precio-toggle .pastilla');
-
-  function moverPastilla(btn) {
-    pastilla.style.left = btn.offsetLeft + 'px';
-    pastilla.style.width = btn.offsetWidth + 'px';
-  }
-  function elegirCiclo(anual) {
-    contPrecios.classList.toggle('modo-anual', anual);
-    btnMensual.classList.toggle('activo', !anual);
-    btnAnual.classList.toggle('activo', anual);
-    moverPastilla(anual ? btnAnual : btnMensual);
-  }
-  btnMensual.addEventListener('click', function () { elegirCiclo(false); });
-  btnAnual.addEventListener('click', function () { elegirCiclo(true); });
-  moverPastilla(btnMensual);
-  window.addEventListener('resize', function () {
-    moverPastilla(btnAnual.classList.contains('activo') ? btnAnual : btnMensual);
-  });
-
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
-  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
-  var revisando = false;
-  function revisarReveal() {
-    pendientes = pendientes.filter(function (el) {
-      var rect = el.getBoundingClientRect();
-      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
-      if (enVista) el.classList.add('visto');
-      return !enVista;
-    });
-    revisando = false;
-  }
-  function pedirRevision() {
-    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
-  }
-  revisarReveal();
-  window.addEventListener('scroll', pedirRevision, { passive: true });
-  window.addEventListener('resize', pedirRevision);
-  setTimeout(function () {
-    pendientes.forEach(function (el) { el.classList.add('visto'); });
-    pendientes = [];
-  }, 1500);
-</script>
+<script src="assets/js/precios.js"></script>
 
 </body>
 </html>

@@ -2,24 +2,29 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Cómo cobrar por WhatsApp sin pagar comisión — Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="../assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/blog/como-cobrar-por-whatsapp.html">
-<meta name="description" content="Guía práctica para cobrar por WhatsApp en Colombia sin pagar comisión de pasarela: Bre-B, Nequi, Daviplata y efectivo contraentrega. Ventajas, límites y cómo ordenar el cobro cuando vendes por chat.">
+<meta name="description" content="Guía práctica para cobrar por WhatsApp en Colombia sin pagar comisión de pasarela: Bre-B, Nequi y efectivo contraentrega. Ventajas, límites y cómo ordenar el cobro cuando vendes por chat.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Veci">
 <meta property="og:title" content="Cómo cobrar por WhatsApp sin pagar comisión">
-<meta property="og:description" content="Guía práctica: Bre-B, Nequi, Daviplata y efectivo contraentrega para cobrar por WhatsApp sin comisión de pasarela.">
+<meta property="og:description" content="Guía práctica: Bre-B, Nequi y efectivo contraentrega para cobrar por WhatsApp sin comisión de pasarela.">
 <meta property="og:image" content="https://tuveci.co/assets/img/og-image.png">
 <meta property="og:url" content="https://tuveci.co/blog/como-cobrar-por-whatsapp.html">
 <link rel="preload" href="../assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/css/site.css">
 <script src="../assets/js/tema.js" defer></script>
+<script src="../assets/js/veci-chat.js" defer></script>
+<script src="../assets/js/blog.js" defer></script>
+<script src="../assets/js/calculadoras.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -29,7 +34,7 @@
   "dateModified": "2026-09-29",
   "author": { "@type": "Organization", "name": "Veci" },
   "publisher": { "@type": "Organization", "name": "Veci" },
-  "description": "Guía práctica para cobrar por WhatsApp en Colombia sin pagar comisión de pasarela: Bre-B, Nequi, Daviplata y efectivo contraentrega."
+  "description": "Guía práctica para cobrar por WhatsApp en Colombia sin pagar comisión de pasarela: Bre-B, Nequi y efectivo contraentrega."
 }
 </script>
 </head>
@@ -38,8 +43,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="../" class="brand" data-logo-claro="../assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="../assets/img/logo-veci-lockup-blanco.png">
-        <img src="../assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="../index.html" class="brand">
+        <img class="logo-claro" src="../assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="../assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -50,7 +56,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="../#como-funciona" class="item">
+              <a href="../index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -69,9 +75,9 @@
             </div>
           </div>
         </div>
-        <a href="../nosotros.html">Quiénes somos</a>
-        <a href="./">Blog</a>
-        <a href="../demo.html" class="nav-chip">Ver demos →</a>
+        <a href="../nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="../demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -90,12 +96,16 @@
   </div>
 </div>
 
+<div class="lectura-barra" aria-hidden="true"><span></span></div>
 <article class="articulo wrap-angosto">
-  <div class="articulo-meta">
-    <span class="fecha mono">29 SEP 2026</span>
-    <span class="fecha mono">· 4 min de lectura</span>
+  <a href="index.html" class="articulo-volver"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Volver al blog</a>
+  <div class="articulo-categoria">
+    <span class="icono" style="background:var(--tinte-sello)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></span>
+    <span>Pagos</span>
   </div>
+  <p class="articulo-firma"><time datetime="2026-09-29">29 sep 2026</time> · 4 min de lectura · Equipo Veci</p>
   <h1>Cómo cobrar por WhatsApp sin pagar comisión</h1>
+  <a class="compartir-wa compartir-arriba" href="https://wa.me/?text=C%C3%B3mo%20cobrar%20por%20WhatsApp%20sin%20pagar%20comisi%C3%B3n%20https%3A//tuveci.co/blog/como-cobrar-por-whatsapp.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Compartir por WhatsApp</a>
 
   <div class="articulo-cuerpo">
     <p>Vender por WhatsApp es gratis. El problema aparece a la hora de cobrar: una pasarela de tarjeta típica cobra comisión por transacción, y muchos negocios terminan pasándose a una app de domicilios solo para tener un botón de pago — pagando ahí una comisión todavía más alta. Hay formas de cobrar por WhatsApp sin pagar ninguna de las dos.</p>
@@ -104,8 +114,8 @@
     <p>Bre-B es el sistema de pagos inmediatos del Banco de la República: transfiere en menos de 20 segundos entre cualquier banco o billetera del país, las 24 horas. Es gratis para personas naturales durante sus primeros años de operación. Para cobrar, solo necesitas una <strong>llave</strong> — tu celular, tu cédula o tu correo — que le compartes a tu cliente para que transfiera directo.</p>
     <p>Es, hoy por hoy, la forma más barata de cobrar una transferencia bancaria en Colombia sin datáfono ni comisión de pasarela.</p>
 
-    <h2>Nequi y Daviplata: transferencia manual con comprobante</h2>
-    <p>Si tu cliente no tiene Bre-B activado todavía, Nequi y Daviplata siguen siendo una opción habitual: el cliente transfiere y te envía el comprobante por WhatsApp para que confirmes el pedido. Es más manual que Bre-B, pero igual de gratis.</p>
+    <h2>Nequi: transferencia manual con comprobante</h2>
+    <p>Si tu cliente no tiene Bre-B activado todavía, Nequi sigue siendo una opción habitual: el cliente transfiere y te envía el comprobante por WhatsApp para que confirmes el pedido. Es más manual que Bre-B, pero igual de gratis.</p>
 
     <h2>Efectivo contraentrega</h2>
     <p>Para negocios que ya reparten en su propio barrio, cobrar en efectivo al momento de la entrega sigue siendo válido — sin ninguna comisión, sin depender de que el cliente tenga una app de pagos instalada.</p>
@@ -113,50 +123,101 @@
     <h2>Lo que falta: ordenar el pedido antes del cobro</h2>
     <p>El cobro es solo la mitad del problema. La otra mitad es que el pedido llegue ordenado — con productos, cantidades y total claros — antes de pedir el pago. Cobrar por WhatsApp sin un carrito real significa anotar cada pedido a mano, calcular el total de memoria y mandar la llave de pago por separado, mensaje por mensaje.</p>
 
-    <div class="articulo-cta">
-      <p>Veci arma el carrito, calcula el total y te deja cobrar por Bre-B en el mismo flujo — tu cliente pide, paga, y el pedido te llega listo al WhatsApp.</p>
-      <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+    <div class="herramienta" data-calc="ahorro-apps">
+      <span class="herramienta-eyebrow">TU CUENTA, NO LA NUESTRA</span>
+      <h3>¿Cuánto le dejas a las apps este mes?</h3>
+      <p class="herramienta-intro">Mueve el control con lo que vendes al mes por Rappi, DiDi u otra app de domicilios.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-ventas">Ventas mensuales por apps</label>
+          <output for="calc-ventas" data-salida="ventas">$5.000.000</output>
+          <input type="range" class="calc-slider" id="calc-ventas" min="500000" max="30000000" step="500000" value="5000000" data-entrada="ventas">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila perdida"><span>Comisión de la app (25%–30%)</span><strong data-salida="comision">$1.250.000 – $1.500.000</strong></div>
+        <div class="recibo-fila"><span>Veci, plan Barrio</span><strong>$29.900 fijos</strong></div>
+        <div class="recibo-fila total"><span>Te quedarías al mes</span><strong data-salida="ahorro">$1.345.100</strong></div>
+      </div>
+      <p class="herramienta-nota">Con la comisión promedio de 27,5%; no incluye el costo de los domicilios. En un año: <span data-salida="anual">$16.141.200</span>.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello">Crear mi tienda gratis →</a>
+        <button type="button" class="btn-texto" data-abrir-chat="plan">¿Qué plan me sirve?</button>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
     </div>
 
-    <p class="fuente">Fuente: Banco de la República, documentación pública de Bre-B sobre el sistema de pagos inmediatos.</p>
+    <div class="articulo-fuentes">
+      <span>Fuentes</span>
+      <p>Banco de la República, documentación pública de Bre-B sobre el sistema de pagos inmediatos.</p>
+    </div>
+  </div>
+
+  <div class="articulo-compartir"><p>¿Le sirve a otro negocio del barrio? Pásaselo.</p><a class="compartir-wa " href="https://wa.me/?text=C%C3%B3mo%20cobrar%20por%20WhatsApp%20sin%20pagar%20comisi%C3%B3n%20https%3A//tuveci.co/blog/como-cobrar-por-whatsapp.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Compartir por WhatsApp</a></div>
+
+  <div class="articulo-relacionados">
+    <span>Sigue leyendo</span>
+    <div class="relacionados-grid">
+      <a class="articulo-card" href="que-es-bre-b.html">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="articulo-meta"><span>27 SEP 2026</span><span>·</span><span>3 min de lectura</span></div>
+        <h2>Qué es Bre-B y cómo te ahorra la comisión de tarjeta</h2>
+      </a>
+      <a class="articulo-card" href="alternativas-a-rappi.html">
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 7l-4 8h8L7 7Zm10 0l-4 8h8l-4-8Z"/><path d="M5 19h14"/></svg></div>
+        <div class="articulo-meta"><span>29 SEP 2026</span><span>·</span><span>5 min de lectura</span></div>
+        <h2>Alternativas a Rappi para negocios pequeños en Colombia</h2>
+      </a>
+    </div>
   </div>
 </article>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="../assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="../index.html" class="footer-logo"><img src="../assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="../#como-funciona">Cómo funciona</a>
+        <a href="../index.html#como-funciona">Cómo funciona</a>
         <a href="../funciones.html">Funciones</a>
-        <a href="../integraciones.html">Integraciones</a>
         <a href="../precios.html">Precios</a>
         <a href="../demo.html">Demos en vivo</a>
+        <a href="../integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="../tiendas.html">Tiendas y comida</a>
         <a href="../peluquerias.html">Peluquerías y barberías</a>
-        <a href="../entrenadores.html">Entrenadores personales</a>
-        <a href="../tiendas.html">Tiendas y minimarkets</a>
-        <a href="../odontologos.html">Consultorios odontológicos</a>
+        <a href="../odontologos.html">Consultorios</a>
+        <a href="../entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="../nosotros.html">Quiénes somos</a>
+        <a href="../blog/index.html">Blog</a>
+        <a href="../index.html#faq">Preguntas frecuentes</a>
         <a href="../referidos.html">Referidos</a>
-        <a href="../privacidad.html">Privacidad</a>
-        <a href="../terminos.html">Términos</a>
-        <a href="./">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="../privacidad.html">Privacidad</a>
+        <a href="../terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>

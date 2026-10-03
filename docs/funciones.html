@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Funciones: catálogo con IA, pedidos, reservas y cobro por Bre-B | Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/funciones.html">
@@ -23,14 +25,16 @@
 <link rel="preload" href="assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
+<script src="assets/js/veci-chat.js" defer></script>
 </head>
 <body>
 
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="index.html" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -41,7 +45,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="./#como-funciona" class="item">
+              <a href="index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -60,9 +64,9 @@
             </div>
           </div>
         </div>
-        <a href="nosotros.html">Quiénes somos</a>
-        <a href="blog/">Blog</a>
-        <a href="demo.html" class="nav-chip">Ver demos →</a>
+        <a href="nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="blog/index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -102,17 +106,17 @@
         <p>Subes una foto de tu menú o tus servicios y la IA arma tu catálogo con productos y precios. Tú solo revisas y publicas.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8 12h8"/></svg></div>
         <h3>Tienda con tu propio enlace</h3>
         <p>Una página con tu marca, tus productos y tu nombre — no un perfil genérico dentro de una app de terceros.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg></div>
         <h3>Modo pedidos o modo reservas</h3>
         <p>Catálogo con carrito para comida y productos, o agenda con horario para peluquerías, spas y talleres. Tú eliges cuál usar.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
         <h3>Edita cuándo quieras</h3>
         <p>Agrega, quita o cambia precios de productos desde tu panel, sin depender de nadie más para publicar un cambio.</p>
       </div>
@@ -176,7 +180,7 @@
       </div>
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
-        <h3>Nequi, Daviplata o efectivo</h3>
+        <h3>Nequi o efectivo</h3>
         <p>Además de Bre-B, aceptas transferencia por comprobante o pago contraentrega — tú decides qué métodos ofrecer.</p>
       </div>
       <div class="feature-card">
@@ -196,7 +200,7 @@
 
     <div class="feature-grid reveal-fila">
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".6" fill="#E8452C"/></svg></div>
         <h3>Detecta quién dejó de pedir</h3>
         <p>Compara cada cliente contra su propio ritmo habitual de compra, no contra un promedio genérico.</p>
       </div>
@@ -211,7 +215,7 @@
         <p>El botón abre la conversación con el mensaje ya escrito, listo para enviar sin copiar y pegar.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="16.4" y="3" width="3.6" height="17" rx="1"/></svg></div>
         <h3>Historial y estadísticas</h3>
         <p>En el plan Pro, revisa qué tanto vendiste y a quiénes les escribiste, con un panel de estadísticas completo.</p>
       </div>
@@ -219,80 +223,166 @@
   </div>
 </section>
 
-<div class="cierre">
+<section id="crecimiento" class="reveal">
   <div class="wrap">
-    <h2>Pruébalo tú mismo</h2>
-    <p>Dos tiendas de ejemplo, interactivas, corriendo ahora mismo en tu navegador.</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
-      <a href="demo.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Ver las demos →</a>
+    <span class="eyebrow" style="color:var(--sello)">HERRAMIENTAS DE CRECIMIENTO</span>
+    <h2>Para vender más y que vuelvan, sin pagar un plan aparte</h2>
+    <p class="lead">Todo esto viene incluido en los tres planes, desde Gratis. También tienes un <a href="referidos.html" style="color:var(--sello)">programa de referidos</a>: invita a otro negocio y gana 30 días de Veci cuando pague su primer plan.</p>
+
+    <div class="feature-grid reveal-fila">
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 3H5a2 2 0 0 0-2 2v7.5a2 2 0 0 0 .6 1.4l9 9a2 2 0 0 0 2.8 0l6.5-6.5a2 2 0 0 0 0-2.8l-9-9a2 2 0 0 0-1.4-.6Z"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></div>
+        <h3>Cupones de descuento</h3>
+        <p>Códigos por porcentaje o monto fijo, con mínimo de compra o solo para el primer pedido. Se validan solos en el carrito.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M18 9.8V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2.8"/></svg></div>
+        <h3>Tarjeta de sellos</h3>
+        <p>Cada compra suma un sello; al completarla, tu cliente gana el premio que definas. Se ve en la confirmación y en tu tienda.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.1 6.6L12 17.5l-5.8 3.1 1.1-6.6-4.8-4.6 6.6-.9Z"/></svg></div>
+        <h3>Reseñas por WhatsApp</h3>
+        <p>Solo opina quien te compró. Con 3 reseñas o más, tu tienda muestra el promedio y lo que dicen tus clientes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Combos y lo más pedido</h3>
+        <p>Arma combos con tus propios productos y descuenta el ahorro real. Tu tienda destaca sola lo que más se vende.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+        <h3>Domicilios por zona</h3>
+        <p>Define una tarifa por barrio y un pedido mínimo. Tu cliente ve el costo exacto antes de confirmar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+        <h3>Inventario y agotado</h3>
+        <p>Marca cuántas unidades tienes o que algo se acabó por hoy. Tu tienda nunca deja pedir lo que no tienes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 15l2.5 2.5L16 12"/></svg></div>
+        <h3>Paquetes de sesiones</h3>
+        <p>Para negocios de citas: vende bonos de varias sesiones a un precio y se van descontando solas al agendar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
+        <h3>Cierre de caja diario</h3>
+        <p>Cuadra el día sin hojas sueltas: cuánto vendiste, por qué medio y qué falta por cobrar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a6 6 0 0 0-6 6v3.5c0 .6-.2 1.1-.6 1.6L4 15h16l-1.4-1.9c-.4-.5-.6-1-.6-1.6V8a6 6 0 0 0-6-6Z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/></svg></div>
+        <h3>Avisos de estado por WhatsApp</h3>
+        <p>Cuando cambia el estado de un pedido o una cita, el panel te deja el mensaje escrito para tu cliente y lo envías con un toque.</p>
+      </div>
     </div>
   </div>
-</div>
+</section>
+
+<section class="reveal">
+  <div class="wrap">
+    <span class="eyebrow" style="color:var(--sello)">CUANDO CRECES</span>
+    <h2>Un local hoy, varios mañana</h2>
+    <p class="lead">Veci no te queda chico si tu negocio crece.</p>
+
+    <div class="feature-grid reveal-fila">
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg></div>
+        <h3>Varias sedes, una sola cuenta</h3>
+        <p>Si abres un segundo local, cada uno tiene su propia tienda, catálogo y horario — sin crear una cuenta nueva ni perder tu historial. Incluido en el plan Pro: hasta 3 sedes, y $19.900/mes por cada sede adicional.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="10" r="2.3"/><path d="M2.5 20c0-3.6 2.7-5.8 5.5-5.8s5.5 2.2 5.5 5.8"/><path d="M14.8 14.6c2 .4 3.7 2.1 3.7 5.4"/></svg></div>
+        <h3>Colaboradores con acceso por sede</h3>
+        <p>Invita a tu equipo al panel y dales acceso solo a la sede que les toca atender. Como dueño, tú siempre ves todas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a6 6 0 0 0-6 6v3.5c0 .6-.2 1.1-.6 1.6L4 15h16l-1.4-1.9c-.4-.5-.6-1-.6-1.6V8a6 6 0 0 0-6-6Z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/></svg></div>
+        <h3>Te avisamos aunque tengas el panel cerrado</h3>
+        <p>Llega un pedido o una cita nueva y te enteras al celular, sin tener que dejar la pantalla abierta todo el día.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Todo esto empieza en <em>$0</em>.</h2>
+      <p>Arrancas en el plan Gratis con lo esencial y subes de plan cuando tu negocio lo pida. Sin tarjeta.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="demo.html">o prueba las demos sin registrarte</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="index.html#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/index.html">Blog</a>
+        <a href="index.html#faq">Preguntas frecuentes</a>
         <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
-        <a href="blog/">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
-  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
-  var revisando = false;
-  function revisarReveal() {
-    pendientes = pendientes.filter(function (el) {
-      var rect = el.getBoundingClientRect();
-      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
-      if (enVista) el.classList.add('visto');
-      return !enVista;
-    });
-    revisando = false;
-  }
-  function pedirRevision() {
-    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
-  }
-  revisarReveal();
-  window.addEventListener('scroll', pedirRevision, { passive: true });
-  window.addEventListener('resize', pedirRevision);
-  setTimeout(function () {
-    pendientes.forEach(function (el) { el.classList.add('visto'); });
-    pendientes = [];
-  }, 1500);
-</script>
+<script src="assets/js/reveal.js"></script>
 
 </body>
 </html>

@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Blog — Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="../assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/blog/">
@@ -20,14 +22,17 @@
 <link rel="preload" href="../assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/css/site.css">
 <script src="../assets/js/tema.js" defer></script>
+<script src="../assets/js/veci-chat.js" defer></script>
+<script src="../assets/js/blog.js" defer></script>
 </head>
 <body>
 
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="../" class="brand" data-logo-claro="../assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="../assets/img/logo-veci-lockup-blanco.png">
-        <img src="../assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="../index.html" class="brand">
+        <img class="logo-claro" src="../assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="../assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -38,7 +43,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="../#como-funciona" class="item">
+              <a href="../index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -57,9 +62,9 @@
             </div>
           </div>
         </div>
-        <a href="../nosotros.html">Quiénes somos</a>
-        <a href="./" style="color:var(--sello)">Blog</a>
-        <a href="../demo.html" class="nav-chip">Ver demos →</a>
+        <a href="../nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="index.html" style="color:var(--sello)"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="../demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -78,88 +83,140 @@
   </div>
 </div>
 
-<div class="wrap-angosto blog-header">
-  <span class="eyebrow mono">Blog</span>
-  <h1 class="serif" style="font-size:clamp(28px,4vw,40px);margin:10px 0 0">Guías para vender por WhatsApp en Colombia</h1>
-  <p class="lead" style="margin-top:12px">Lo que un negocio de barrio necesita saber para dejar de pagarle comisión a las apps.</p>
-</div>
-
-<div class="wrap-angosto" style="padding-bottom:80px">
-  <div class="articulos">
-
-    <a class="articulo-card" href="alternativas-a-rappi.html">
-      <span class="fecha mono">29 SEP 2026</span>
-      <h2>Alternativas a Rappi para negocios pequeños en Colombia</h2>
-      <p>Qué opciones reales existen para vender sin depender solo de una app de domicilios: canal propio, redes sociales, otros marketplaces y el punto de venta físico.</p>
-    </a>
-
-    <a class="articulo-card" href="como-cobrar-por-whatsapp.html">
-      <span class="fecha mono">29 SEP 2026</span>
-      <h2>Cómo cobrar por WhatsApp sin pagar comisión</h2>
-      <p>Guía práctica: Bre-B, Nequi, Daviplata y efectivo contraentrega. Cómo cobrar sin datáfono ni comisión de pasarela.</p>
-    </a>
-
-    <a class="articulo-card" href="como-evitar-que-tus-clientes-no-vuelvan.html">
-      <span class="fecha mono">29 SEP 2026</span>
-      <h2>Cómo evitar que tus clientes dejen de comprarte</h2>
-      <p>Por qué un cliente se va sin avisar, y cómo un negocio pequeño puede darse cuenta a tiempo y reactivarlo sin un CRM caro.</p>
-    </a>
-
-    <a class="articulo-card" href="cuanto-le-dejas-a-rappi.html">
-      <span class="fecha mono">27 SEP 2026</span>
-      <h2>¿Cuánto le estás dejando a Rappi cada mes? La cuenta real</h2>
-      <p>Rappi y DiDi Food cobran entre 25% y 30% por pedido. Hacemos la cuenta con un caso real: cuánto se queda la app de un negocio que vende $8.000.000 al mes.</p>
-    </a>
-
-    <a class="articulo-card" href="que-es-bre-b.html">
-      <span class="fecha mono">27 SEP 2026</span>
-      <h2>Qué es Bre-B y cómo te ahorra la comisión de tarjeta</h2>
-      <p>El sistema de pagos inmediatos del Banco de la República: qué es, desde cuándo funciona, cuánto cuesta y cómo cobrar con tu llave en vez de un datáfono.</p>
-    </a>
-
-    <a class="articulo-card" href="foto-menu-ia.html">
-      <span class="fecha mono">27 SEP 2026</span>
-      <h2>Cómo tomar la foto de tu menú para que la IA la lea bien</h2>
-      <p>Siete minutos de diferencia entre una tienda con productos y precios perfectos, y una que hay que corregir a mano. Así se toma la foto.</p>
-    </a>
-
+<header class="wrap blog-cabeza">
+  <p class="blog-sobre">El blog de Veci</p>
+  <h1>Guías para vender por WhatsApp en Colombia</h1>
+  <p class="blog-bajada">Lo que un negocio de barrio necesita saber para dejar de pagarle comisión a las apps. Cortas, con cuentas reales y sin tecnicismos.</p>
+  <div class="blog-filtros" role="group" aria-label="Filtrar guías por tema">
+      <button type="button" class="blog-filtro" data-tema="todos" aria-pressed="true">Todos <span>6</span></button>
+      <button type="button" class="blog-filtro" data-tema="pagos" aria-pressed="false">Pagos <span>2</span></button>
+      <button type="button" class="blog-filtro" data-tema="comisiones" aria-pressed="false">Comisiones <span>2</span></button>
+      <button type="button" class="blog-filtro" data-tema="retencion" aria-pressed="false">Retención <span>1</span></button>
+      <button type="button" class="blog-filtro" data-tema="alta" aria-pressed="false">Alta del negocio <span>1</span></button>
   </div>
-</div>
+</header>
+
+<main class="wrap blog-lista">
+  <a class="blog-portada" href="como-cobrar-por-whatsapp.html" data-tema="pagos">
+    <span class="blog-portada-etiqueta"><span class="dot"></span> Lo más reciente · Pagos</span>
+    <h2>Cómo cobrar por WhatsApp sin pagar comisión</h2>
+    <p>Guía práctica: Bre-B, Nequi y efectivo contraentrega. Cómo cobrar sin datáfono ni comisión de pasarela.</p>
+    <span class="blog-portada-pie"><span><time datetime="2026-09-29">29 sep 2026</time> · 4 min de lectura</span> <span class="blog-portada-ir">Leer la guía<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+  </a>
+
+  <ol class="blog-filas" aria-live="polite">
+    <li data-tema="comisiones">
+      <a class="blog-fila" href="alternativas-a-rappi.html">
+        <span class="blog-fila-tema tema-aji">Comisiones</span>
+        <span class="blog-fila-texto"><strong>Alternativas a Rappi para negocios pequeños en Colombia</strong><span>Qué opciones reales existen para vender sin depender solo de una app de domicilios: canal propio, redes sociales, otros marketplaces y el punto de venta físico.</span></span>
+        <span class="blog-fila-meta"><time datetime="2026-09-29">29 sep 2026</time> · 5 min</span>
+      </a>
+    </li>
+    <li data-tema="retencion">
+      <a class="blog-fila" href="como-evitar-que-tus-clientes-no-vuelvan.html">
+        <span class="blog-fila-tema tema-caja">Retención</span>
+        <span class="blog-fila-texto"><strong>Cómo evitar que tus clientes dejen de comprarte</strong><span>Por qué un cliente se va sin avisar, y cómo un negocio pequeño puede darse cuenta a tiempo y reactivarlo sin un CRM caro.</span></span>
+        <span class="blog-fila-meta"><time datetime="2026-09-29">29 sep 2026</time> · 4 min</span>
+      </a>
+    </li>
+    <li data-tema="comisiones">
+      <a class="blog-fila" href="cuanto-le-dejas-a-rappi.html">
+        <span class="blog-fila-tema tema-aji">Comisiones</span>
+        <span class="blog-fila-texto"><strong>¿Cuánto le estás dejando a Rappi cada mes? La cuenta real</strong><span>Rappi y DiDi Food cobran entre 25% y 30% por pedido. Hacemos la cuenta con un caso real: cuánto se queda la app de un negocio que vende $8.000.000 al mes.</span></span>
+        <span class="blog-fila-meta"><time datetime="2026-09-27">27 sep 2026</time> · 4 min</span>
+      </a>
+    </li>
+    <li data-tema="pagos">
+      <a class="blog-fila" href="que-es-bre-b.html">
+        <span class="blog-fila-tema tema-sello">Pagos</span>
+        <span class="blog-fila-texto"><strong>Qué es Bre-B y cómo te ahorra la comisión de tarjeta</strong><span>El sistema de pagos inmediatos del Banco de la República: qué es, desde cuándo funciona, cuánto cuesta y cómo cobrar con tu llave en vez de un datáfono.</span></span>
+        <span class="blog-fila-meta"><time datetime="2026-09-27">27 sep 2026</time> · 3 min</span>
+      </a>
+    </li>
+    <li data-tema="alta">
+      <a class="blog-fila" href="foto-menu-ia.html">
+        <span class="blog-fila-tema tema-mostaza">Alta del negocio</span>
+        <span class="blog-fila-texto"><strong>Cómo tomar la foto de tu menú para que la IA la lea bien</strong><span>Siete minutos de diferencia entre una tienda con productos y precios perfectos, y una que hay que corregir a mano. Así se toma la foto.</span></span>
+        <span class="blog-fila-meta"><time datetime="2026-09-27">27 sep 2026</time> · 3 min</span>
+      </a>
+    </li>
+  </ol>
+  <p class="blog-vacio" hidden>No hay guías de este tema todavía.</p>
+</main>
+
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">¿Listo para publicar <em>tu</em> tienda?</h2>
+      <p>Una foto de tu menú o tus servicios, y en 10 minutos estás vendiendo por WhatsApp sin pagar comisión.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="../demo.html">o prueba las demos sin registrarte</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="../assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="../index.html" class="footer-logo"><img src="../assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="../#como-funciona">Cómo funciona</a>
+        <a href="../index.html#como-funciona">Cómo funciona</a>
         <a href="../funciones.html">Funciones</a>
-        <a href="../integraciones.html">Integraciones</a>
         <a href="../precios.html">Precios</a>
         <a href="../demo.html">Demos en vivo</a>
+        <a href="../integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="../tiendas.html">Tiendas y comida</a>
         <a href="../peluquerias.html">Peluquerías y barberías</a>
-        <a href="../entrenadores.html">Entrenadores personales</a>
-        <a href="../tiendas.html">Tiendas y minimarkets</a>
-        <a href="../odontologos.html">Consultorios odontológicos</a>
+        <a href="../odontologos.html">Consultorios</a>
+        <a href="../entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="../nosotros.html">Quiénes somos</a>
+        <a href="../blog/index.html">Blog</a>
+        <a href="../index.html#faq">Preguntas frecuentes</a>
         <a href="../referidos.html">Referidos</a>
-        <a href="../privacidad.html">Privacidad</a>
-        <a href="../terminos.html">Términos</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="../privacidad.html">Privacidad</a>
+        <a href="../terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>

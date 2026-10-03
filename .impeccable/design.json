@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-02T00:00:00Z",
+  "title": "Design System: Veci",
+  "extensions": {
+    "colorMeta": {
+      "sello": { "role": "primary", "displayName": "Azul Sello", "canonical": "#3B4CCA", "tonalRamp": ["#141B52", "#1F2B7D", "#2A3BA8", "#3B4CCA", "#5A68D4", "#7A85DB", "#A4ACE8", "#D2D6F4"] },
+      "caja": { "role": "secondary", "displayName": "Verde Caja", "canonical": "#16A36A", "tonalRamp": ["#063D29", "#0A5C3D", "#107E53", "#16A36A", "#2FBF84", "#5ED1A2", "#9BE4C4", "#D3F3E3"] },
+      "aji": { "role": "tertiary", "displayName": "Ají", "canonical": "#E8452C", "tonalRamp": ["#5C1105", "#8A1A08", "#BC280F", "#E8452C", "#EF6B54", "#F4927F", "#F9BCAF", "#FDE2DC"] },
+      "mostaza": { "role": "tertiary", "displayName": "Mostaza", "canonical": "#F2B632", "tonalRamp": ["#5C4206", "#8A630A", "#BC8912", "#F2B632", "#F5C65C", "#F8D689", "#FBE6B6", "#FDF5E2"] },
+      "tiquete": { "role": "neutral", "displayName": "Tiquete", "canonical": "#FFFDF8" },
+      "carbon": { "role": "neutral", "displayName": "Carbón", "canonical": "#202124" },
+      "recibo": { "role": "neutral", "displayName": "Recibo", "canonical": "#E9E4D8" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Headline del hero, una por página." },
+      "headline": { "displayName": "Headline", "purpose": "h2 de cada sección." },
+      "body": { "displayName": "Body", "purpose": "Párrafos y texto de interfaz; cifras con tabular-nums." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows en mayúsculas, etiquetas de categoría." }
+    },
+    "shadows": [
+      { "name": "suave", "value": "0 1px 2px rgba(32,33,36,.04), 0 10px 28px -12px rgba(32,33,36,.10)", "purpose": "Reposo de tarjetas." },
+      { "name": "media", "value": "0 4px 10px rgba(32,33,36,.05), 0 20px 40px -16px rgba(32,33,36,.16)", "purpose": "Hover de tarjetas y elementos destacados — la profundidad ganada." }
+    ],
+    "motion": [
+      { "name": "ease-entrada", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "Entradas de secciones y filas al hacer scroll (.reveal, .reveal-fila)." },
+      { "name": "ease-interaccion", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "Hover/transform de tarjetas y botones." },
+      { "name": "ease-estandar", "value": "cubic-bezier(.4,0,.2,1)", "purpose": "Transiciones de estado (toggle, pastilla deslizante)." },
+      { "name": "ease-pop", "value": "cubic-bezier(.34,1.56,.64,1)", "purpose": "Confirmación con rebote (p. ej. check de pago confirmado) — usar con moderación." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "560px" },
+      { "name": "md", "value": "860px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botón de acción principal — pill, fondo azul Sello.",
+      "html": "<button class=\"ds-btn-primary\">Empezar gratis →</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 15px; padding: 14px 24px; border-radius: 999px; border: none; background: #3B4CCA; color: #FFFDF8; cursor: pointer; transition: transform .15s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; } .ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -6px rgba(59,76,202,.55); } .ds-btn-primary:active { transform: scale(.98); } .ds-btn-primary:focus-visible { outline: 2px solid #7A85DB; outline-offset: 2px; }"
+    },
+    {
+      "name": "Feature Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Tarjeta de función/feature con ícono, título y descripción.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-icono\">★</div><h3>Título</h3><p>Descripción breve de la función.</p></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #E9E4D8; border-radius: 20px; padding: 26px; box-shadow: 0 1px 2px rgba(32,33,36,.04), 0 10px 28px -12px rgba(32,33,36,.10); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 4px 10px rgba(32,33,36,.05), 0 20px 40px -16px rgba(32,33,36,.16); } .ds-card h3 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; margin: 12px 0 6px; } .ds-card p { font-family: 'Inter Tight', sans-serif; font-size: 14px; color: #54565f; margin: 0; }"
+    },
+    {
+      "name": "Badge Pill",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Badge/eyebrow con tinte semántico suave.",
+      "html": "<span class=\"ds-badge\">Disponible</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 8px; font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; background: rgba(22,163,106,.12); color: #16A36A; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Mostrador del Barrio",
+    "overview": "Veci se diseña como el mostrador de la tienda de la esquina, no como el panel de un SaaS corporativo: directo, sin intermediarios, cercano al dueño que atiende con el celular en la mano. La tipografía (Bricolage Grotesque, bold y con carácter propio) le da peso y seguridad a los títulos; el cuerpo en Inter Tight mantiene todo legible y funcional. El sistema es el mismo que usa la app del producto: la web de marketing y el producto real deben sentirse como una sola cosa.",
+    "keyCharacteristics": [
+      "Un solo acento de color (azul Sello) usado con moderación",
+      "Tipografía con carácter (Bricolage Grotesque en pesos 700+) en vez de un sans-serif neutro",
+      "Profundidad que aparece como respuesta a la interacción, no de entrada",
+      "Pills y esquinas generosas, nada de esquinas vivas"
+    ],
+    "rules": [
+      { "name": "La Regla del Acento Escaso", "body": "El azul Sello se reserva para la acción principal y el estado activo.", "section": "colors" },
+      { "name": "La Regla de los Pesos Vivos", "body": "Bricolage Grotesque nunca se usa en peso 400 — mínimo 700 en cualquier headline.", "section": "typography" },
+      { "name": "La Regla de la Profundidad Ganada", "body": "Ninguna superficie nace elevada; se eleva porque el usuario la tocó o la enfocó.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reservar el azul Sello para una sola acción por pantalla",
+      "Do usar Bricolage Grotesque en 700 o más para cualquier título",
+      "Do dejar que la profundidad aparezca al interactuar, no de entrada",
+      "Do diseñar primero en 390px de ancho"
+    ],
+    "donts": [
+      "Don't mezclar otra familia tipográfica con Bricolage Grotesque / Inter Tight",
+      "Don't prometer en copy una función que no está construida",
+      "Don't usar sombra fuerte o elevación permanente en reposo",
+      "Don't inventar prueba social que no existe"
+    ]
+  }
+}

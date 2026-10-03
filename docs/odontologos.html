@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Software para consultorios odontológicos: citas por WhatsApp | Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/odontologos.html">
@@ -23,6 +25,9 @@
 <link rel="preload" href="assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
+<script src="assets/js/veci-chat.js" defer></script>
+<script src="assets/js/calculadoras.js" defer></script>
+<script src="assets/js/escenas.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -56,8 +61,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="index.html" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -68,7 +74,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="./#como-funciona" class="item">
+              <a href="index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -87,9 +93,9 @@
             </div>
           </div>
         </div>
-        <a href="nosotros.html">Quiénes somos</a>
-        <a href="blog/">Blog</a>
-        <a href="demo.html" class="nav-chip">Ver demos →</a>
+        <a href="nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="blog/index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -110,13 +116,14 @@
 
 <div class="wrap">
   <div class="demo-hero">
-    <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:#16A36A"><span class="dot"></span> PARA CONSULTORIOS ODONTOLÓGICOS</span>
+    <span class="hero-badge" style="background:var(--tinte-caja);border-color:transparent;color:var(--caja-texto)"><span class="dot"></span> PARA CONSULTORIOS ODONTOLÓGICOS</span>
     <h1>Software para consultorios odontológicos que quieren dejar de cuadrar citas por chat</h1>
     <p>Tu paciente agenda su cita, ve tus horarios reales y te llega confirmada al WhatsApp. Sin cruces, sin recordatorios manuales, sin perder de vista los controles periódicos.</p>
     <div class="hero-ctas" style="justify-content:center;margin-top:22px">
-      <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+      <a href="https://app.tuveci.co/registro?modo=reservas" class="btn btn-sello">Abrir mi agenda gratis →</a>
       <a href="demo.html#odontologo" class="btn btn-ghost-oscuro">Ver demo de odontología →</a>
     </div>
+    <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
   </div>
 </div>
 
@@ -163,7 +170,7 @@
     <span class="eyebrow" style="color:var(--sello)">CÓMO FUNCIONA PARA TU CONSULTORIO</span>
     <h2>Tu agenda, ordenada, en tres pasos</h2>
 
-    <div class="feature-grid reveal-fila" style="grid-template-columns:repeat(3,1fr)">
+    <div class="feature-grid reveal-fila">
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
         <h3>Publicas tus servicios y horarios</h3>
@@ -172,33 +179,100 @@
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
         <h3>Tu paciente agenda por su cuenta</h3>
-        <p>Elige el tipo de consulta y ve solo los horarios realmente libres. La cita confirmada llega directo al WhatsApp.</p>
+        <p>Elige el tipo de consulta, el odontólogo de su preferencia si el consultorio tiene más de uno, y ve solo los horarios realmente libres. La cita confirmada llega directo al WhatsApp.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".6" fill="#E8452C"/></svg></div>
         <h3>El copiloto recuerda los controles</h3>
         <p>Cada mañana revisa quién lleva más tiempo del habitual sin agendar un control y te deja el mensaje listo.</p>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:32px">
-      <a href="demo.html#odontologo" class="btn btn-ghost">Probar la agenda de Sonrisa Dental en vivo →</a>
+      <a href="demo.html#odontologo" class="btn btn-ghost-oscuro btn-contorno">Probar la agenda de Sonrisa Dental en vivo →</a>
     </div>
   </div>
 </section>
 
-<div class="cierre">
+<section class="reveal seccion-escena">
   <div class="wrap">
-    <h2>Deja de cuadrar citas por chat</h2>
-    <p>Publica tu agenda hoy. Empieza gratis, sin tarjeta de crédito, y sube de plan cuando la necesites.</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
-      <a href="precios.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Ver precios →</a>
+    <div class="escena-bloque escena" data-escena="reserva">
+      <div class="escena-bloque-texto">
+        <h2>Así agenda tu cliente</h2>
+        <p class="lead">Elige servicio, persona, día y hora con tus horarios reales, y la cita te llega lista a WhatsApp. Sin ida y vuelta de mensajes.</p>
+        <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Tu cliente abre tu agenda"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Tu cliente abre tu agenda</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Elige el servicio y con quién"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Elige el servicio y con quién</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Escoge el día"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Escoge el día</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Ve tus horarios reales"><span class="escena-guion-num">4</span><span class="escena-guion-txt">Ve tus horarios reales</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Confirma en un toque"><span class="escena-guion-num">5</span><span class="escena-guion-txt">Confirma en un toque</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="La cita te llega lista"><span class="escena-guion-num">6</span><span class="escena-guion-txt">La cita te llega lista</span><span class="escena-guion-barra"></span></button></li></ol></div>
+      </div>
+      <div class="escena-bloque-tel">
+        <div class="telefono telefono-escena" data-barra="papel" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-tienda ui-marca" data-vista="servicios" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-toldo "></div><div class="ui-fachada"><span class="ui-insignia">SD</span><strong class="ui-negocio">Sonrisa Dental</strong><span class="ui-meta">Consultorio odontológico · Bucaramanga</span><span class="ui-abierto"><i></i>Abierto · hasta las 7 p. m.</span></div><div class="ui-carta ui-servicios"><span class="ui-seccion">Servicios</span><div class="ui-servicio ui-servicio-1" style="--i:0"><span class="ui-servicio-txt"><strong>Limpieza dental</strong><small>40 min · $90.000</small></span><span class="ui-chip-hoy">Hoy · 3:00 p. m.</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ui-servicio ui-servicio-2" style="--i:1"><span class="ui-servicio-txt"><strong>Valoración</strong><small>30 min · $50.000</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ui-servicio ui-servicio-3" style="--i:2"><span class="ui-servicio-txt"><strong>Blanqueamiento</strong><small>1 h · $350.000</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></section><section class="ui-vista ui-tienda ui-marca" data-vista="quien" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">SD</span><span><strong>Sonrisa Dental</strong><small>Reservar</small></span></div></div><div class="ui-resumen-servicio"><strong>Limpieza dental</strong><small>40 min · $90.000</small></div><div class="ui-etapa"><span class="ui-etapa-num">1</span>¿Con quién?</div><div class="ui-personas"><span class="ui-persona" data-persona="1"><span class="ui-av ui-av-l" style="--c:#1F9AA6">DR</span><strong>Dra. Rojas</strong><small>Odontología general</small><span class="ui-persona-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span></span><span class="ui-persona" data-persona="2"><span class="ui-av ui-av-l" style="--c:#3B4CCA">DP</span><strong>Dr. Pérez</strong><small>Ortodoncia</small><span class="ui-persona-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span></span></div></section><section class="ui-vista ui-tienda ui-marca" data-vista="dia" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">SD</span><span><strong>Sonrisa Dental</strong><small>Reservar</small></span></div></div><div class="ui-resumen-servicio"><strong>Limpieza dental</strong><small>40 min · $90.000</small></div><div class="ui-etapa"><span class="ui-etapa-num">2</span>¿Qué día?</div><div class="ui-hojas"><span class="ui-hoja" data-dia="hoy"><small>Hoy</small><strong>3</strong><small>oct</small></span><span class="ui-hoja" data-dia="lun"><small>Lun</small><strong>5</strong><small>oct</small></span><span class="ui-hoja" data-dia="mar"><small>Mar</small><strong>6</strong><small>oct</small></span><span class="ui-hoja" data-dia="mie"><small>Mié</small><strong>7</strong><small>oct</small></span></div><span class="ui-ayuda">Domingo cerrado</span></section><section class="ui-vista ui-tienda ui-marca" data-vista="hora" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">SD</span><span><strong>Sonrisa Dental</strong><small>Reservar</small></span></div></div><div class="ui-resumen-servicio"><strong>Limpieza dental</strong><small>40 min · $90.000</small></div><div class="ui-etapa"><span class="ui-etapa-num">3</span>¿A qué hora?</div><span class="ui-sub">Martes 6 de octubre · con Dra. Rojas</span><div class="ui-horas"><span class="ui-hora-op" data-hora="900">9:00 a. m.</span><span class="ui-hora-op" data-hora="1030">10:30 a. m.</span><span class="ui-hora-op ocupada" data-hora="1200">12:00 p. m.</span><span class="ui-hora-op" data-hora="200">2:00 p. m.</span><span class="ui-hora-op ocupada" data-hora="330">3:30 p. m.</span><span class="ui-hora-op" data-hora="500">5:00 p. m.</span></div></section><section class="ui-vista ui-tienda ui-marca" data-vista="turno" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">SD</span><span><strong>Sonrisa Dental</strong><small>Reservar</small></span></div></div><div class="ui-turno"><small>Tu turno</small><strong>10:30 a. m.</strong><span>martes 6 de octubre</span><span>Limpieza dental · con Dra. Rojas</span></div><span class="ui-anticipo">Anticipo de $20.000 por Bre-B al confirmar</span><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Confirmar por WhatsApp</span></section><section class="ui-vista ui-tienda ui-marca" data-vista="confirmada" data-barra="papel" style="--m:#1F9AA6;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">SD</span><span><strong>Sonrisa Dental</strong><small>Tu cita</small></span></div></div><div class="ui-comanda ui-tiquete"><div class="ui-comanda-cab"><span>Tu cita</span><span>Sonrisa Dental</span></div><strong class="ui-tiquete-hora">10:30 a. m.</strong><span class="ui-tiquete-fecha">Martes 6 de octubre</span><div class="ui-linea"><span>Limpieza dental</span><span class="ui-guia"></span><span>$90.000</span></div><div class="ui-linea"><span>Duración</span><span class="ui-guia"></span><span>40 min</span></div><div class="ui-linea"><span>Con</span><span class="ui-guia"></span><span>Dra. Rojas</span></div><span class="ui-sello ui-sello-ok">Confirmada</span></div></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<section id="faq">
+<section class="seccion-herramienta reveal">
+  <div class="wrap">
+    <div class="herramienta" data-calc="citas-perdidas">
+      <span class="herramienta-eyebrow">CALCULADORA</span>
+      <h3>¿Cuánta plata se te va en citas que no llegan?</h3>
+      <p class="herramienta-intro">Pon tus números; los que ves son solo un ejemplo.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-citas">Citas por semana</label>
+          <input type="number" id="calc-citas" inputmode="numeric" min="1" max="400" step="1" value="30" data-entrada="citas">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-precio">Valor promedio de una cita (COP)</label>
+          <input type="number" id="calc-precio" inputmode="numeric" min="5000" max="2000000" step="1000" value="90000" data-entrada="precio">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-ausencia">De cada 100 citas, cuántas no llegan</label>
+          <output for="calc-ausencia" data-salida="ausencia">10%</output>
+          <input type="range" class="calc-slider" id="calc-ausencia" min="0" max="40" step="1" value="10" data-entrada="ausencia">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila"><span>Citas que se pierden al mes</span><strong data-salida="perdidas">–</strong></div>
+        <div class="recibo-fila total perdida"><span>Plata que no entra al mes</span><strong data-salida="plata">–</strong></div>
+      </div>
+      <p class="herramienta-nota">Calculado con 4,3 semanas por mes. En un año: <span data-salida="anual">–</span>.</p>
+      <p class="herramienta-remate">Con Veci tu cliente agenda sobre tus horarios reales, sin cruces, y puedes pedir un anticipo al reservar: quien ya pagó una parte tiene una razón más para llegar.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro?modo=reservas" class="btn btn-sello">Abrir mi agenda gratis →</a>
+        <a href="demo.html#odontologo" class="btn-texto">Probar la agenda de ejemplo</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Deja de cuadrar citas <em>por chat</em>.</h2>
+      <p>Publica tu agenda hoy y que tus pacientes reserven solos sobre tus horarios reales.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=reservas" class="btn btn-sello cierre-btn">Abrir mi agenda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="demo.html#odontologo">o prueba la agenda de ejemplo</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Agenda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Tus horarios reales, sin cruces</span><b>$0</b></li>
+        <li><span>Anticipo por Bre-B o Nequi</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 citas al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="reveal">
   <div class="wrap-angosto">
     <h2>Preguntas frecuentes</h2>
     <details open>
@@ -229,68 +303,56 @@
 </section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="index.html#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/index.html">Blog</a>
+        <a href="index.html#faq">Preguntas frecuentes</a>
         <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
-        <a href="blog/">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
-  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
-  var revisando = false;
-  function revisarReveal() {
-    pendientes = pendientes.filter(function (el) {
-      var rect = el.getBoundingClientRect();
-      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
-      if (enVista) el.classList.add('visto');
-      return !enVista;
-    });
-    revisando = false;
-  }
-  function pedirRevision() {
-    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
-  }
-  revisarReveal();
-  window.addEventListener('scroll', pedirRevision, { passive: true });
-  window.addEventListener('resize', pedirRevision);
-  setTimeout(function () {
-    pendientes.forEach(function (el) { el.classList.add('visto'); });
-    pendientes = [];
-  }, 1500);
-</script>
+<script src="assets/js/reveal.js"></script>
 
 </body>
 </html>

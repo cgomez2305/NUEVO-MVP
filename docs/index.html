@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Veci — vende por WhatsApp sin comisión</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/">
@@ -27,6 +29,7 @@
 <link rel="preload" href="assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
+<script src="assets/js/veci-chat.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -49,8 +52,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="index.html" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -97,9 +101,9 @@
           </div>
         </div>
 
-        <a href="nosotros.html">Quiénes somos</a>
-        <a href="blog/">Blog</a>
-        <a href="demo.html" class="nav-chip">Ver demos →</a>
+        <a href="nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="blog/index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -127,115 +131,39 @@
   <div class="wrap">
     <div class="hero-grid">
       <div class="hero-col-texto">
-        <span class="hero-badge"><span class="dot"></span> 0% DE COMISIÓN · TÚ COBRAS DIRECTO</span>
-        <h1><span class="palabra" style="animation-delay:.15s">Vende</span> <span class="palabra" style="animation-delay:.195s">por</span> <span class="palabra" style="animation-delay:.24s">WhatsApp</span> <em><span class="palabra" style="animation-delay:.285s">sin</span> <span class="palabra" style="animation-delay:.33s">pagar</span> <span class="palabra" style="animation-delay:.375s">comisión</span></em>. <span class="palabra" style="animation-delay:.42s">Y</span> <span class="palabra" style="animation-delay:.465s">haz</span> <span class="palabra" style="animation-delay:.51s">que</span> <span class="palabra" style="animation-delay:.555s">vuelvan.</span></h1>
-        <p>Publica tu tienda o tu agenda con una foto de tu catálogo o tus servicios, cobra por Bre-B en segundos y deja que el copiloto te diga cada mañana a quién escribirle hoy.</p>
+        <p class="hero-talon"><span class="hero-talon-et">Comisión de Veci por pedido</span><strong>$0</strong></p>
+        <h1><span class="palabra" style="animation-delay:0.15s">Vende</span> <span class="palabra" style="animation-delay:0.195s">por</span> <span class="palabra" style="animation-delay:0.24s">WhatsApp</span><span class="br-movil"></span> <em class="resaltado"><span class="palabra" style="animation-delay:0.285s">sin</span> <span class="palabra" style="animation-delay:0.33s">pagar</span> <span class="palabra" style="animation-delay:0.375s">comisión</span></em><span class="punto">.</span> <span class="hero-h1-b"><span class="palabra" style="animation-delay:0.42s">Y</span> <span class="palabra" style="animation-delay:0.465s">haz</span> <span class="palabra" style="animation-delay:0.51s">que</span> <span class="palabra" style="animation-delay:0.555s">vuelvan.</span></span></h1>
+        <p class="hero-bajada">Con una foto de tu menú o tus servicios armas tu tienda o tu agenda en 10 minutos. Tus clientes piden por WhatsApp y te pagan directo por Bre‑B.</p>
+
+        <div class="hero-elige" role="group" aria-label="¿Qué tienes?">
+          <span class="hero-elige-et">¿Qué tienes?</span>
+          <button type="button" class="hero-elige-op" aria-pressed="true" data-hero-modo="pedidos">Tienda o restaurante</button>
+          <button type="button" class="hero-elige-op" aria-pressed="false" data-hero-modo="reservas">Negocio con citas</button>
+        </div>
 
         <div class="hero-ctas">
-          <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
-          <a href="demo.html" class="btn btn-ghost-oscuro">Ver demo</a>
+          <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello hero-cta" data-hero-cta>Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a href="demo.html" class="hero-ver" data-hero-ver>Ver una tienda funcionando <span aria-hidden="true">→</span></a>
         </div>
 
-        <ul class="hero-trust">
-          <li><span class="hero-trust-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span> 0% de comisión, siempre</li>
-          <li><span class="hero-trust-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span> Listo en menos de 10 minutos</li>
-          <li><span class="hero-trust-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span> Bre-B desde el día uno</li>
-          <li><span class="hero-trust-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span> Sin tarjeta de crédito</li>
-        </ul>
+        <p class="hero-datos">Sin tarjeta <i></i> Sin permanencia <i></i> Listo en 10 minutos</p>
       </div>
 
-      <div class="hero-col-tel">
-        <div class="chip-flotante chip-pedido" aria-hidden="true">
-          <span class="icono-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2.2"><path d="M5 13l5 5L20 7"/></svg></span>
-          <span>Pedido nuevo<br><small>hace 12 segundos</small></span>
+      <div class="hero-col-tel escena escena-hero" data-escena="pedido">
+        <div class="hero-tel-marco">
+        <div class="chip-flotante chip-pedido" data-escena-reset aria-hidden="true">
+          <span class="chip-ticket-num mono">N.º 128</span>
+          <span class="chip-divisor"></span>
+          <span>Pedido nuevo<br><small>ahora mismo</small></span>
         </div>
-        <div class="chip-flotante chip-pago" aria-hidden="true">
-          <span class="icono-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="2.2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></span>
+        <div class="chip-flotante chip-pago" data-escena-reset aria-hidden="true">
+          <span class="chip-sello-marca"><span>Pagado</span></span>
+          <span class="chip-divisor"></span>
           <span>Pago Bre-B<br><small>confirmado</small></span>
         </div>
-        <div class="telefono" aria-hidden="true">
-          <span class="telefono-badge mono">EN VIVO EN WHATSAPP</span>
-          <div class="telefono-pantalla" data-telefono-vivo>
-            <div class="telefono-estado activo" data-telefono-estado="1">
-              <div class="telefono-header">
-                <div class="telefono-logo">DM</div>
-                <div>
-                  <div class="telefono-nombre">Doña María</div>
-                  <div class="telefono-sub">Comida casera · Barrio Restrepo</div>
-                </div>
-              </div>
-              <div class="telefono-productos">
-                <div class="telefono-producto">
-                  <div class="telefono-foto" style="background:#E8452C"></div>
-                  <span class="nombre">Bandeja paisa</span>
-                  <span class="precio">$18.000</span>
-                </div>
-                <div class="telefono-producto">
-                  <div class="telefono-foto" style="background:#F2B632"></div>
-                  <span class="nombre">Arepa con queso</span>
-                  <span class="precio">$4.500</span>
-                </div>
-                <div class="telefono-producto">
-                  <div class="telefono-foto" style="background:#5B7F3A"></div>
-                  <span class="nombre">Jugo de mora</span>
-                  <span class="precio">$5.000</span>
-                </div>
-                <div class="telefono-producto">
-                  <div class="telefono-foto" style="background:#3B4CCA"></div>
-                  <span class="nombre">Sancocho</span>
-                  <span class="precio">$16.000</span>
-                </div>
-              </div>
-              <div class="telefono-carrito">
-                <span>3 productos · $27.500</span>
-                <span class="wa">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
-                </span>
-              </div>
-            </div>
-
-            <div class="telefono-estado" data-telefono-estado="2">
-              <div class="telefono-confirmado">
-                <span class="telefono-check">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg>
-                </span>
-                <h4>Pago confirmado</h4>
-                <p>Bre-B · en 18 segundos</p>
-                <div class="telefono-recibo">
-                  <div class="fila"><span>3 productos</span><span>$27.500</span></div>
-                  <div class="fila"><span>Domicilio</span><span>$0</span></div>
-                  <div class="fila"><span>Total recibido</span><span>$27.500</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="telefono-estado" data-telefono-estado="3">
-              <div class="telefono-copiloto">
-                <div class="telefono-copiloto-header">
-                  <span class="eyebrow-mini">COPILOTO DE RECOMPRA</span>
-                  <h4>Buenos días, Doña María ☀️</h4>
-                </div>
-                <div class="telefono-cliente-card">
-                  <div class="fila-top">
-                    <span class="av">MJ</span>
-                    <div>
-                      <span class="nombre">María José</span>
-                      <span class="dato">No pide hace 18 días</span>
-                    </div>
-                  </div>
-                  <p class="msg">"Hola María José! Te tengo sancocho recién hecho hoy 🍲 ¿Te separo una porción?"</p>
-                  <button type="button" class="btn-enviar-mini">Enviar por WhatsApp
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="telefono-puntos" aria-hidden="true">
-              <span class="activo"></span><span></span><span></span>
-            </div>
-          </div>
+        <div class="telefono entrando" data-barra="papel" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-tienda ui-marca" data-vista="tienda" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-toldo "></div><div class="ui-fachada"><span class="ui-insignia">DM</span><strong class="ui-negocio">Doña María</strong><span class="ui-meta">Arepas y jugos · Bucaramanga</span><span class="ui-abierto"><i></i>Abierto · hasta las 6 p. m.</span></div><div class="ui-carta"><span class="ui-seccion">Comidas</span><div class="ui-plato" data-plato="bandeja" style="--i:0"><span class="ui-plato-nombre">Bandeja paisa</span><span class="ui-guia"></span><span class="ui-precio">$28.000</span><span class="ui-mas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg><span class="ui-mas-cuenta"></span></span></div><div class="ui-plato" data-plato="arepa" style="--i:1"><span class="ui-plato-nombre">Arepa con queso</span><span class="ui-guia"></span><span class="ui-precio">$6.000</span><span class="ui-mas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg><span class="ui-mas-cuenta"></span></span></div><div class="ui-plato" data-plato="jugo" style="--i:2"><span class="ui-plato-nombre">Jugo de mora</span><span class="ui-guia"></span><span class="ui-precio">$5.000</span><span class="ui-mas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg><span class="ui-mas-cuenta"></span></span></div></div><div class="ui-barra-pedido"><span class="ui-bolsa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="ui-barra-cuenta">1</span></span><span class="ui-barra-txt"><strong>Ver mi pedido</strong><span class="ui-barra-detalle">1 producto</span></span><span class="ui-barra-total">$28.000</span><span class="ui-barra-flecha">→</span></div></section><section class="ui-vista ui-tienda ui-marca" data-vista="comanda" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">DM</span><span><strong>Doña María</strong><small>Volver a la carta</small></span></div></div><div class="ui-comanda"><div class="ui-comanda-cab"><span>Comanda</span><span>2 productos</span></div><div class="ui-linea"><span>1× Bandeja paisa</span><span class="ui-guia"></span><span>$28.000</span></div><div class="ui-linea"><span>1× Arepa con queso</span><span class="ui-guia"></span><span>$6.000</span></div><div class="ui-total"><span>Total</span><strong>$34.000</strong></div></div><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Enviar pedido por WhatsApp</span></section><section class="ui-vista ui-wa" data-vista="chat" data-barra="wa"><div class="ui-wa-cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-wa-av" style="background:#F2B632;color:#1B1A17">DM</span><span><strong>Doña María</strong><small>en línea</small></span></div><div class="ui-wa-cuerpo"><span class="ui-wa-fecha">Hoy</span><div class="ui-burbuja-out"><span class="ui-escribe"></span><span class="ui-hora">9:15 a. m. <svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8l3.5 3.5L11 4.5"/><path d="M5.5 8l3.5 3.5L16 4.5"/></svg></span></div></div><div class="ui-wa-entrada"><span>Mensaje</span><span class="ui-wa-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span></div></section><section class="ui-vista ui-tienda ui-marca" data-vista="pago" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">DM</span><span><strong>Doña María</strong><small>Pedido #128</small></span></div></div><div class="ui-pago"><strong class="ui-h">Paga $34.000 por Bre-B</strong><span class="ui-sub">Pedido #128 · Doña María</span><div class="ui-copiable ui-copiable-llave"><span class="ui-copiable-et">Llave Bre-B</span><span class="ui-copiable-val">300 123 4567</span><span class="ui-copiar">Copiar</span></div><div class="ui-copiable"><span class="ui-copiable-et">Monto</span><span class="ui-copiable-val">$34.000</span></div><span class="ui-ayuda">Paga desde la app de tu banco o billetera y listo.</span></div><div class="ui-notif ui-notif-banco"><span class="ui-notif-ico ui-notif-ico-banco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10 12 4l9 6"/><path d="M5 10v8M19 10v8M9.5 10v8M14.5 10v8"/><path d="M3 20h18"/></svg></span><span><strong>Tu banco</strong><small>Transferencia enviada · $34.000 · 4 s</small></span></div></section><section class="ui-vista ui-panel" data-vista="panel" data-barra="crema" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">DM</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><strong class="ui-h">Pedidos</strong><span class="ui-col-titulo">Nuevos · 1</span><div class="ui-tarjeta"><div class="ui-tarjeta-fila"><strong>#128 · Laura</strong><span class="ui-tarjeta-total">$34.000</span></div><span class="ui-tarjeta-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M19 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M7 15h8l2-5h-4"/><path d="M13 6h2"/></svg>Domicilio · hace 1 min</span><span class="ui-tarjeta-meta ui-estado-pago">Pago Bre-B · por confirmar</span><span class="ui-btn-sello">Confirmar pago</span><span class="ui-sello ui-sello-ok">Pagado</span></div><span class="ui-comision">Comisión de Veci · $0</span></div><nav class="ui-nav"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8Z"/></svg>Panel</span><span class="activo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Pedidos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M12 12h.01"/></svg>Copiloto</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>Más</span></nav></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
         </div>
+        <div class="escena-control"><p class="escena-texto" aria-hidden="true"></p><ol class="escena-guion escena-guion--historia" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Tu cliente abre tu enlace"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Tu cliente abre tu enlace</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Arma su pedido en tu carta"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Arma su pedido en tu carta</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Revisa la comanda"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Revisa la comanda</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="El pedido te llega a WhatsApp"><span class="escena-guion-num">4</span><span class="escena-guion-txt">El pedido te llega a WhatsApp</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Paga con tu llave Bre-B"><span class="escena-guion-num">5</span><span class="escena-guion-txt">Paga con tu llave Bre-B</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Confirmas y queda pagado"><span class="escena-guion-num">6</span><span class="escena-guion-txt">Confirmas y queda pagado</span><span class="escena-guion-barra"></span></button></li></ol></div>
       </div>
     </div>
   </div>
@@ -247,43 +175,44 @@
   </div>
 </section>
 
-<section class="reveal">
-  <div class="wrap">
-    <h2>¿Te suena familiar?</h2>
-    <p class="lead">Los mismos dolores de siempre, casi todos los días.</p>
-
-    <div class="dolores reveal-fila">
-      <div class="dolor-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><path d="M4 4h16v12H7l-3 3V4Z"/></svg></div>
-        <div>
-          <h3>Todo se pierde en el chat</h3>
-          <p>Pedidos, citas y direcciones que se pierden entre mensajes de texto, notas de voz y conversaciones viejas.</p>
-        </div>
+<section class="seccion-dolor" data-cuaderno>
+  <div class="wrap dolor-grid">
+    <div class="dolor-intro">
+      <p class="dolor-eyebrow">¿Te suena familiar?</p>
+      <h2>Vender por chat sin orden te está costando plata.</h2>
+      <p class="dolor-lead">Así se ve la cuenta de un negocio que vende por WhatsApp a mano. Cámbiala a Veci y mira qué pasa con cada renglón.</p>
+      <div class="dolor-switch" role="group" aria-label="Ver la cuenta">
+        <button type="button" aria-pressed="true" data-cuaderno-modo="hoy">Hoy</button>
+        <button type="button" aria-pressed="false" data-cuaderno-modo="veci">Con Veci</button>
+        <span class="dolor-switch-pastilla" aria-hidden="true"></span>
       </div>
-      <div class="dolor-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-        <div>
-          <h3>Tu cliente es "de la app", no tuyo</h3>
-          <p>No tienes su número, no sabes cuándo dejó de comprarte o de agendar, no puedes escribirle para que vuelva.</p>
-        </div>
-      </div>
-      <div class="dolor-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l7-3"/></svg></div>
-        <div>
-          <h3>Los intermediarios se quedan con tu margen</h3>
-          <p>Apps de domicilio o marketplaces cobran hasta 30% por pedido, antes de que veas un peso.</p>
-        </div>
-      </div>
-      <div class="dolor-card">
-        <div class="icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg></div>
-        <div>
-          <h3>Publicar algo "de verdad" toma días</h3>
-          <p>Plantillas que no entiendes, fotos que hay que subir una por una, un curso de tecnología que nadie tiene tiempo de hacer.</p>
-        </div>
-      </div>
+      <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello dolor-cta">Crear mi tienda gratis →</a>
     </div>
-
-    <div class="dolores-cierre">Veci digitaliza, ordena y agiliza todo eso en <strong>10 minutos</strong>, con una foto de tu catálogo o tus servicios.</div>
+    <div class="cuaderno">
+      <p class="cuaderno-cabeza"><span>La cuenta del día</span><span class="cuaderno-estado" aria-live="polite">Hoy</span></p>
+      <ol class="cuaderno-renglones">
+        <li class="cuaderno-renglon" style="--i:0">
+          <div class="cuaderno-dolor"><strong><span class="tachar">Pedidos perdidos entre notas de voz</span></strong><span>Direcciones, cantidades y “¿ya me pagó?” enterrados en el chat.</span></div>
+          <div class="cuaderno-arreglo"><strong>Cada pedido te llega como comanda</strong><span>Con productos, total, dirección y estado de pago.</span></div>
+          <span class="cuaderno-costo"><span class="cuaderno-costo-hoy">pedidos que no anotaste</span><span class="cuaderno-costo-veci">ordenado</span></span>
+        </li>
+        <li class="cuaderno-renglon" style="--i:1">
+          <div class="cuaderno-dolor"><strong><span class="tachar">Tu cliente es “de la app”</span></strong><span>No tienes su número ni sabes cuándo dejó de comprarte.</span></div>
+          <div class="cuaderno-arreglo"><strong>El número y el historial son tuyos</strong><span>Y el copiloto te dice a quién volver a escribirle.</span></div>
+          <span class="cuaderno-costo"><span class="cuaderno-costo-hoy">0 datos de tu cliente</span><span class="cuaderno-costo-veci">tuyos</span></span>
+        </li>
+        <li class="cuaderno-renglon" style="--i:2">
+          <div class="cuaderno-dolor"><strong><span class="tachar">El intermediario se queda con tu margen</span></strong><span>Las apps de domicilio cobran por cada pedido antes de que veas un peso.</span></div>
+          <div class="cuaderno-arreglo"><strong>0% de comisión</strong><span>Te pagan directo por Bre-B, Nequi o en efectivo.</span></div>
+          <span class="cuaderno-costo"><span class="cuaderno-costo-hoy">hasta 30% por pedido</span><span class="cuaderno-costo-veci">0%</span></span>
+        </li>
+        <li class="cuaderno-renglon" style="--i:3">
+          <div class="cuaderno-dolor"><strong><span class="tachar">Publicar algo “de verdad” toma días</span></strong><span>Plantillas que no entiendes y fotos que hay que subir una por una.</span></div>
+          <div class="cuaderno-arreglo"><strong>Una foto y estás publicado</strong><span>La IA lee tu menú o tus servicios y arma el catálogo.</span></div>
+          <span class="cuaderno-costo"><span class="cuaderno-costo-hoy">días configurando</span><span class="cuaderno-costo-veci">10 min</span></span>
+        </li>
+      </ol>
+    </div>
   </div>
 </section>
 
@@ -308,7 +237,7 @@
         </div>
       </div>
       <div class="recibo-card">
-        <span class="recibo-badge mono">RECIBO EN VIVO</span>
+        <span class="recibo-badge mono"><span class="dot"></span> RECIBO EN VIVO</span>
         <div class="recibo-linea">
           <span class="etiqueta">VENDES</span>
           <span class="valor" id="reciboVentas">$0</span>
@@ -333,69 +262,39 @@
     <p class="lead">Sin curso de tecnología. Todo desde un Android de gama media, en el tiempo que dura un café.</p>
 
     <div class="pasos-alternados">
-      <div class="paso-fila reveal-der">
+      <div class="paso-fila reveal-der escena" data-escena="foto">
         <div class="paso-fila-texto">
           <span class="paso-fila-num mono">01</span>
           <h3>Tomas una foto de tu menú</h3>
-          <p>Una carta impresa, una pizarra o tus fotos de Instagram. No necesitas diseñar nada ni escribir el catálogo a mano.</p>
+          <p>Una carta impresa, una pizarra o tus fotos de Instagram. La IA lee productos y precios, y lo que no se alcanzó a leer te lo marca para que lo completes.</p>
+          <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Le tomas una foto a tu menú"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Le tomas una foto a tu menú</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="La IA lee productos y precios"><span class="escena-guion-num">2</span><span class="escena-guion-txt">La IA lee productos y precios</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Revisas y completas lo que falte"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Revisas y completas lo que falte</span><span class="escena-guion-barra"></span></button></li></ol></div>
         </div>
         <div class="paso-fila-visual">
-          <div class="mini-mockup">
-            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">tu-menu.jpg</span></div>
-            <div class="mini-mockup-cuerpo" style="text-align:center">
-              <div class="mm-icono-grande" style="background:var(--tinte-sello)">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.7"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
-              </div>
-              <svg class="mm-flecha" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-              <div style="background:var(--bg-suave);border-radius:10px;padding:10px 12px;text-align:left">
-                <div class="mm-linea"><span>Bandeja paisa</span><span class="precio">$28.000</span></div>
-                <div class="mm-linea"><span>Arepa con queso</span><span class="precio">$6.000</span></div>
-                <div class="mm-linea"><span>Jugo natural</span><span class="precio">$5.000</span></div>
-              </div>
-            </div>
-          </div>
+          <div class="telefono telefono-escena" data-barra="papel" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-camara-vista" data-vista="camara" data-barra="oscura"><div class="ui-camara"><div class="ui-pizarra"><span class="ui-tiza-t">Menú del día</span><span>Bandeja paisa <b>28.000</b></span><span>Arepa con queso <b>6.000</b></span><span>Jugo de mora <b>5.000</b></span><span>Sancocho</span></div><span class="ui-encuadre"></span><span class="ui-flash"></span></div><div class="ui-camara-pie"><span class="ui-obturador"></span></div></section><section class="ui-vista ui-onb" data-vista="leer" data-barra="crema"><div class="ui-onb-cab"><span class="ui-veci">veci</span><small>Paso 1 de 3</small></div><div class="ui-onb-pasos"><span class="activo">Foto</span><span class="">Catálogo</span><span class="">Abrir</span></div><strong class="ui-h">Tu foto</strong><span class="ui-sub">La leemos y armamos tu catálogo</span><div class="ui-foto-leida"><div class="ui-pizarra"><span class="ui-tiza-t">Menú del día</span><span>Bandeja paisa <b>28.000</b></span><span>Arepa con queso <b>6.000</b></span><span>Jugo de mora <b>5.000</b></span><span>Sancocho</span></div><span class="ui-escaner"></span></div><span class="ui-leyendo">Leyendo tu menú<i>.</i><i>.</i><i>.</i></span><span class="ui-btn-sello">Leer mi menú</span></section><section class="ui-vista ui-onb" data-vista="catalogo" data-barra="crema"><div class="ui-onb-cab"><span class="ui-veci">veci</span><small>Paso 2 de 3</small></div><div class="ui-onb-pasos"><span class="hecho">Foto</span><span class="activo">Catálogo</span><span class="">Abrir</span></div><strong class="ui-h">Tu catálogo</strong><span class="ui-sub">Revisa lo que leímos de tu foto</span><div class="ui-onb-lista"><div class="ui-item" style="--i:0"><span>Bandeja paisa</span><span class="ui-campo">$28.000</span></div><div class="ui-item" style="--i:1"><span>Arepa con queso</span><span class="ui-campo">$6.000</span></div><div class="ui-item" style="--i:2"><span>Jugo de mora</span><span class="ui-campo">$5.000</span></div><div class="ui-item ui-item-falta" style="--i:3"><span>Sancocho</span><span class="ui-campo"></span><small class="ui-falta-nota">Falta el precio</small><span class="ui-item-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span></div></div><span class="ui-btn-sello">Guardar y continuar</span></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
         </div>
       </div>
 
-      <div class="paso-fila reversa reveal-izq">
+      <div class="paso-fila reversa reveal-izq escena" data-escena="abrir">
         <div class="paso-fila-texto">
           <span class="paso-fila-num mono">02</span>
-          <h3>La IA arma tu tienda y tú la revisas</h3>
-          <p>Lee productos y precios de tu foto y arma tu catálogo. Tú solo confirmas, corriges lo que haga falta y publicas.</p>
+          <h3>Eliges tu color y abres tu tienda</h3>
+          <p>Tu tienda queda con tu nombre, tu color y tu propio enlace. Lo compartes por WhatsApp y tus clientes empiezan a pedir.</p>
+          <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Eliges el color de tu toldo"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Eliges el color de tu toldo</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Tu tienda queda publicada"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Tu tienda queda publicada</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Compartes tu enlace"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Compartes tu enlace</span><span class="escena-guion-barra"></span></button></li></ol></div>
         </div>
         <div class="paso-fila-visual">
-          <div class="mini-mockup">
-            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">veci.com/t/tu-negocio</span></div>
-            <div class="mini-mockup-cuerpo">
-              <div class="mm-grid">
-                <div class="item"><div class="foto" style="background:#E8452C"></div><span class="nombre">Bandeja paisa</span><span class="precio">$28.000</span></div>
-                <div class="item"><div class="foto" style="background:#F2B632"></div><span class="nombre">Arepa</span><span class="precio">$6.000</span></div>
-                <div class="item"><div class="foto" style="background:#5B7F3A"></div><span class="nombre">Jugo natural</span><span class="precio">$5.000</span></div>
-                <div class="item"><div class="foto" style="background:#3B4CCA"></div><span class="nombre">Sancocho</span><span class="precio">$16.000</span></div>
-              </div>
-            </div>
-          </div>
+          <div class="telefono telefono-escena" data-barra="papel" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-onb" data-vista="color" data-barra="crema"><div class="ui-onb-cab"><span class="ui-veci">veci</span><small>Paso 3 de 3</small></div><div class="ui-onb-pasos"><span class="hecho">Foto</span><span class="hecho">Catálogo</span><span class="activo">Abrir</span></div><strong class="ui-h">El color de tu toldo</strong><div class="ui-escaparate ui-marca"><div class="ui-toldo ui-toldo-escaparate on"></div><span class="ui-insignia">DM</span><strong>Doña María</strong><small>Así te ven tus clientes</small></div><div class="ui-colores"><span class="ui-color" data-color="aji" style="--c:#E8452C"><i></i>Ají</span><span class="ui-color" data-color="mango" style="--c:#F28C28"><i></i>Mango</span><span class="ui-color" data-color="mostaza" style="--c:#F2B632"><i></i>Mostaza</span><span class="ui-color" data-color="platano" style="--c:#3F8F4E"><i></i>Plátano</span><span class="ui-color" data-color="turquesa" style="--c:#1F9AA6"><i></i>Turquesa</span><span class="ui-color activo" data-color="anil" style="--c:#3B4CCA"><i></i>Añil</span><span class="ui-color" data-color="mora" style="--c:#7A4FB5"><i></i>Mora</span><span class="ui-color" data-color="guayaba" style="--c:#E85A8B"><i></i>Guayaba</span><span class="ui-color" data-color="cafe" style="--c:#8A5A3C"><i></i>Café</span></div><span class="ui-btn-sello">Abrir mi tienda</span></section><section class="ui-vista ui-tienda ui-marca" data-vista="abierta" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-toldo "></div><div class="ui-letrero"><span class="ui-insignia">DM</span><strong class="ui-negocio">¡Ya abriste!</strong><span class="ui-meta">Doña María ya tiene tienda</span></div><div class="ui-enlace-tienda"><small>Tu enlace</small><strong>tuveci.co/t/donamaria</strong></div><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Compartir por WhatsApp</span></section><section class="ui-vista ui-wa" data-vista="compartir" data-barra="wa"><div class="ui-wa-cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-wa-av" style="background:#5B7F3A;color:#fff">VC</span><span><strong>Vecinos de la cuadra</strong><small>48 participantes</small></span></div><div class="ui-wa-cuerpo"><span class="ui-wa-fecha">Hoy</span><div class="ui-burbuja-out"><span class="ui-escribe"></span><span class="ui-hora">10:02 a. m. <svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8l3.5 3.5L11 4.5"/><path d="M5.5 8l3.5 3.5L16 4.5"/></svg></span></div></div><div class="ui-wa-entrada"><span>Mensaje</span><span class="ui-wa-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span></div></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
         </div>
       </div>
 
-      <div class="paso-fila reveal-der">
+      <div class="paso-fila reveal-der escena" data-escena="cobro">
         <div class="paso-fila-texto">
           <span class="paso-fila-num mono">03</span>
-          <h3>Cobras por Bre-B, sin comisión de tarjeta</h3>
-          <p>Pagos en menos de 20 segundos, entre cualquier banco o billetera. Gratis para personas naturales los primeros 3 años.</p>
+          <h3>Cobras por Bre-B, sin comisión</h3>
+          <p>Tu cliente paga a tu llave desde cualquier banco o billetera, en segundos. Tú confirmas el pago al verlo y Veci no se queda con nada.</p>
+          <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Tu cliente ve cómo pagarte"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Tu cliente ve cómo pagarte</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Copia tu llave en un toque"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Copia tu llave en un toque</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Paga desde su banco"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Paga desde su banco</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Confirmas y queda pagado"><span class="escena-guion-num">4</span><span class="escena-guion-txt">Confirmas y queda pagado</span><span class="escena-guion-barra"></span></button></li></ol></div>
         </div>
         <div class="paso-fila-visual">
-          <div class="mini-mockup">
-            <div class="mini-mockup-barra"><span></span><span></span><span></span><span class="url">wa.me/57…</span></div>
-            <div class="mini-mockup-cuerpo">
-              <div class="mm-confirmacion">
-                <span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 7"/></svg></span>
-                <div><strong>Pago Bre-B confirmado</strong><span>Menos de 20 segundos</span></div>
-              </div>
-              <div class="mm-linea" style="margin-top:12px"><span>Total del pedido</span><span class="precio">$39.000</span></div>
-              <div class="mm-linea"><span>Comisión de Veci</span><span class="precio" style="color:#16A36A">$0</span></div>
-            </div>
-          </div>
+          <div class="telefono telefono-escena" data-barra="papel" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-tienda ui-marca" data-vista="tiquete" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">DM</span><span><strong>Doña María</strong><small>Tu pedido</small></span></div></div><div class="ui-comanda ui-tiquete"><div class="ui-comanda-cab"><span>Pedido #128</span><span>Hoy 9:15 a. m.</span></div><div class="ui-linea"><span>1× Bandeja paisa</span><span class="ui-guia"></span><span>$28.000</span></div><div class="ui-linea"><span>1× Arepa con queso</span><span class="ui-guia"></span><span>$6.000</span></div><div class="ui-total"><span>Total</span><strong>$34.000</strong></div><span class="ui-sello ui-sello-marca">Por pagar</span></div><span class="ui-ayuda ui-ayuda-c">Abajo te decimos cómo pagar ↓</span></section><section class="ui-vista ui-tienda ui-marca" data-vista="pagar" data-barra="papel" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-cab-corta"><div class="ui-toldo ui-toldo-corto on"></div><div class="ui-volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-insignia ui-insignia-s">DM</span><span><strong>Doña María</strong><small>Pedido #128</small></span></div></div><div class="ui-pago"><strong class="ui-h">Paga $34.000 por Bre-B</strong><span class="ui-sub">Pedido #128 · Doña María</span><div class="ui-copiable ui-copiable-llave"><span class="ui-copiable-et">Llave Bre-B</span><span class="ui-copiable-val">300 123 4567</span><span class="ui-copiar">Copiar</span></div><div class="ui-copiable"><span class="ui-copiable-et">Monto</span><span class="ui-copiable-val">$34.000</span></div><span class="ui-ayuda">Paga desde la app de tu banco o billetera y listo.</span></div></section><section class="ui-vista ui-banco" data-vista="banco" data-barra="banco"><div class="ui-banco-cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><strong>Tu banco</strong></div><div class="ui-banco-cuerpo"><strong class="ui-h">Enviar con llave Bre-B</strong><span class="ui-et">Llave</span><span class="ui-campo ui-campo-llave"><span class="ui-pegado">300 123 4567</span></span><span class="ui-et">Monto</span><span class="ui-campo ui-campo-monto"></span><span class="ui-btn-banco">Enviar</span></div><div class="ui-banco-ok"><span class="ui-banco-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span><strong>Enviado</strong><small>Llegó en 4 segundos</small></div></section><section class="ui-vista ui-panel" data-vista="confirma" data-barra="crema" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">DM</span></div><div class="ui-cenefa"></div><div class="ui-notif"><span class="ui-notif-ico">v</span><span><strong>Veci · Pago por confirmar</strong><small>#128 · Laura · $34.000</small></span></div><div class="ui-panel-cuerpo"><strong class="ui-h">Pedidos</strong><span class="ui-col-titulo">Nuevos · 1</span><div class="ui-tarjeta"><div class="ui-tarjeta-fila"><strong>#128 · Laura</strong><span class="ui-tarjeta-total">$34.000</span></div><span class="ui-tarjeta-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M19 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M7 15h8l2-5h-4"/><path d="M13 6h2"/></svg>Domicilio · hace 1 min</span><span class="ui-tarjeta-meta ui-estado-pago">Pago Bre-B · por confirmar</span><span class="ui-btn-sello">Ya me llegó</span><span class="ui-sello ui-sello-ok">Pagado</span></div><span class="ui-comision">Comisión de Veci · $0</span></div><nav class="ui-nav"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8Z"/></svg>Panel</span><span class="activo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Pedidos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M12 12h.01"/></svg>Copiloto</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>Más</span></nav></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
         </div>
       </div>
     </div>
@@ -425,7 +324,7 @@
         <p>Transferencias en menos de 20 segundos, sin pasarela de tarjeta ni comisión bancaria.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".6" fill="#E8452C"/></svg></div>
         <h3>Copiloto de recompra</h3>
         <p>Cada mañana revisa quién lleva más tiempo del habitual sin pedir y te sugiere a quién escribirle.</p>
       </div>
@@ -435,19 +334,19 @@
         <p>Subes una foto de tu menú o tus servicios y la IA arma tu catálogo. Tú solo revisas.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+        <div class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg></div>
         <h3>Pedidos o reservas</h3>
         <p>Catálogo con carrito para comida y tiendas, o agenda con horario para peluquerías, spas y talleres.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <div class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></div>
         <h3>Panel simple</h3>
         <p>Pedidos o agenda, catálogo y copiloto en un solo lugar. Sin curva de aprendizaje.</p>
       </div>
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4.5 8-11V5l-8-3-8 3v6c0 6.5 8 11 8 11Z"/></svg></div>
         <h3>Tus datos, protegidos</h3>
-        <p>Cumplimos la Ley 1581 de datos personales. La información de tus clientes es tuya, nunca la vendemos ni la compartimos.</p>
+        <p>Cada negocio ve solo sus datos, y la autorización de datos y la de promociones van por separado, como pide la Ley 1581. Nunca vendemos la información de tus clientes.</p>
       </div>
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
@@ -504,7 +403,12 @@
         <p class="lead" style="margin-bottom:24px">Cinco negocios de ejemplo, de industrias distintas, corriendo ahora mismo en tu navegador. Prueba la tienda tal como la vería tu cliente, y el panel tal como lo verías tú.</p>
         <a href="demo.html" class="btn btn-sello">Abrir las demos en vivo →</a>
       </div>
-      <div class="demo-teaser-tarjetas">
+      <div class="demo-teaser-tarjetas-wrap">
+        <div class="demo-teaser-barra">
+          <span class="demo-browser-puntos"><span></span><span></span><span></span></span>
+          <span class="demo-teaser-en-vivo mono"><span class="dot"></span> EN VIVO</span>
+        </div>
+        <div class="demo-teaser-tarjetas">
         <a href="demo.html#pedidos" class="demo-teaser-card">
           <span class="icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></svg></span>
           <strong>Doña María</strong>
@@ -516,7 +420,7 @@
           <span>Peluquería · reservas →</span>
         </a>
         <a href="demo.html#minimarket" class="demo-teaser-card">
-          <span class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></span>
+          <span class="icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3M3 9h18l-1 10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2L3 9Z"/><path d="M9 13v4M15 13v4"/></svg></span>
           <strong>El Ahorro</strong>
           <span>Minimarket · pedidos →</span>
         </a>
@@ -530,81 +434,63 @@
           <strong>Sonrisa Dental</strong>
           <span>Odontología · reservas →</span>
         </a>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="reveal">
+<section class="seccion-rutas" data-rutas>
   <div class="wrap">
-    <h2>Tu cliente nunca sale de WhatsApp</h2>
-    <p class="lead">Otras plataformas te dan una tienda web aparte y esperan que tu cliente aprenda a usarla. Aquí el pedido empieza y termina donde tu cliente ya está.</p>
+    <div class="rutas-intro">
+      <h2>Tu cliente nunca sale de WhatsApp</h2>
+      <p class="lead">Otras plataformas mandan a tu cliente a otra app y esperan que aprenda a usarla. Con Veci el pedido empieza y termina donde tu cliente ya está.</p>
+    </div>
 
-    <div class="tabla-comparativa reveal-fila">
-      <div class="tc-fila tc-header">
-        <span class="tc-label"></span>
-        <span class="tc-col">Apps de domicilio</span>
-        <span class="tc-col tc-col-veci">Veci</span>
+    <div class="rutas">
+      <div class="ruta ruta-app">
+        <p class="ruta-titulo"><span class="ruta-punto"></span>Con una app de domicilios</p>
+        <ol class="ruta-linea">
+        <li class="dentro" style="--i:0"><span class="ruta-zona-et">En WhatsApp</span><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15 9a3 3 0 0 1 0 6"/></svg></span><span class="ruta-paso">Ve tu anuncio en WhatsApp</span></li>
+        <li class="fuera" style="--i:1"><span class="ruta-zona-et">Fuera de WhatsApp</span><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="ruta-paso">Descarga otra app</span></li>
+        <li class="fuera" style="--i:2"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span><span class="ruta-paso">Crea una cuenta</span></li>
+        <li class="fuera" style="--i:3"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span><span class="ruta-paso">Paga con tarjeta en la app</span></li>
+        <li class="fuera" style="--i:4"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span><span class="ruta-paso">Queda como cliente de la app</span></li>
+        </ol>
+        <p class="ruta-talon"><span>5 pasos</span><span>25–30% de comisión</span><span>El cliente es de la app</span></p>
       </div>
-      <div class="tc-fila">
-        <span class="tc-label">Comisión por pedido</span>
-        <span class="tc-col tc-valor">25% – 30%</span>
-        <span class="tc-col tc-col-veci tc-valor">0%</span>
-      </div>
-      <div class="tc-fila">
-        <span class="tc-label">El pedido pasa por WhatsApp, no por una tienda web aparte</span>
-        <span class="tc-col"><svg class="tc-icono no" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10.75" stroke-width="1.4"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span class="tc-col tc-col-veci"><svg class="tc-icono si" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12"/><path d="m8 12 2.75 2.75L16 9.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-      <div class="tc-fila">
-        <span class="tc-label">Sabes quién es tu cliente y cuándo dejó de pedir</span>
-        <span class="tc-col"><svg class="tc-icono no" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10.75" stroke-width="1.4"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span class="tc-col tc-col-veci"><svg class="tc-icono si" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12"/><path d="m8 12 2.75 2.75L16 9.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-      <div class="tc-fila">
-        <span class="tc-label">Cobro por Bre-B, sin comisión de pasarela</span>
-        <span class="tc-col"><svg class="tc-icono no" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10.75" stroke-width="1.4"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span class="tc-col tc-col-veci"><svg class="tc-icono si" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12"/><path d="m8 12 2.75 2.75L16 9.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-      <div class="tc-fila">
-        <span class="tc-label">Copiloto que te dice a quién volver a escribirle</span>
-        <span class="tc-col"><svg class="tc-icono no" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10.75" stroke-width="1.4"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span class="tc-col tc-col-veci"><svg class="tc-icono si" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12"/><path d="m8 12 2.75 2.75L16 9.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-      <div class="tc-fila">
-        <span class="tc-label">Publicas tu catálogo con una foto (la IA lo arma)</span>
-        <span class="tc-col"><svg class="tc-icono no" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10.75" stroke-width="1.4"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span class="tc-col tc-col-veci"><svg class="tc-icono si" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12"/><path d="m8 12 2.75 2.75L16 9.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div class="ruta ruta-veci">
+        <p class="ruta-titulo"><span class="ruta-punto"></span>Con Veci</p>
+        <ol class="ruta-linea">
+        <li class="dentro" style="--i:0"><span class="ruta-zona-et">Todo pasa en WhatsApp</span><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="ruta-paso">Le mandas tu enlace por WhatsApp</span></li>
+        <li class="dentro" style="--i:1"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16l-1-5H5l-1 5Z"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg></span><span class="ruta-paso">Abre tu tienda sin descargar nada</span></li>
+        <li class="dentro" style="--i:2"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span class="ruta-paso">Arma su pedido</span></li>
+        <li class="dentro" style="--i:3"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="ruta-paso">Te llega la comanda a tu WhatsApp</span></li>
+        <li class="dentro" style="--i:4"><span class="ruta-nodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></span><span class="ruta-paso">Te paga por Bre-B</span></li>
+        </ol>
+        <p class="ruta-talon"><span>0% de comisión</span><span>Sin descargar nada</span><span>El cliente es tuyo</span></p>
       </div>
     </div>
+
+    <ul class="rutas-extra">
+      <li><strong>Sabes quién te compra</strong><span>Nombre, número y cuándo pidió por última vez.</span></li>
+      <li><strong>Copiloto de recompra</strong><span>Cada mañana te dice a quién volver a escribirle.</span></li>
+      <li><strong>Catálogo con una foto</strong><span>La IA lee tu menú o tus servicios y lo arma.</span></li>
+    </ul>
   </div>
 </section>
 
 <section id="copiloto" class="reveal">
   <div class="wrap">
-    <div class="copiloto-demo">
+    <div class="copiloto-demo escena" data-escena="copiloto">
       <div>
         <h2>El copiloto de recompra</h2>
-        <p class="lead">Guardar contactos no es fidelizar. Cada mañana, el copiloto revisa quién lleva más tiempo del habitual sin pedir y te sugiere el mensaje.</p>
-        <a href="https://app.tuveci.co/registro" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Empezar gratis →</a>
+        <p class="lead">Guardar contactos no es fidelizar. Cada mañana, el copiloto revisa quién lleva más tiempo del habitual sin pedir y te deja el mensaje listo. Tú decides si lo envías.</p>
+        <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Cada mañana revisa a tus clientes"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Cada mañana revisa a tus clientes</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Te dice quién se está alejando"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Te dice quién se está alejando</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Te deja el mensaje listo"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Te deja el mensaje listo</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Tú lo envías y te responden"><span class="escena-guion-num">4</span><span class="escena-guion-txt">Tú lo envías y te responden</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Ves la plata que recuperaste"><span class="escena-guion-num">5</span><span class="escena-guion-txt">Ves la plata que recuperaste</span><span class="escena-guion-barra"></span></button></li></ol></div>
+        <a href="https://app.tuveci.co/registro" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Crear mi tienda gratis →</a>
       </div>
-      <div>
-        <div class="lead-row">
-          <div class="avatar">M</div>
-          <div class="info">
-            <span class="nombre">Doña Marta</span>
-            <span class="motivo mono">No pide hace 18 días · antes cada 7</span>
-          </div>
-          <span class="btn-mini">Enviar</span>
-        </div>
-        <div class="lead-row">
-          <div class="avatar" style="background:var(--mostaza);color:var(--carbon)">P</div>
-          <div class="info">
-            <span class="nombre">Pedro Ruiz</span>
-            <span class="motivo mono">No pide hace 35 días · antes cada 10</span>
-          </div>
-          <span class="btn-mini">Enviar</span>
-        </div>
+      <div class="copiloto-tel">
+        <div class="telefono telefono-escena" data-barra="crema" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-panel" data-vista="lista" data-barra="crema" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">DM</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><div class="ui-recuperado"><div><div class="ui-recup-caja"><small>Recuperado este mes</small><strong class="ui-recuperado-cifra">$0</strong><span>Cuenta la primera compra en los 14 días después de tu mensaje</span></div></div></div><strong class="ui-h">Buenos días, Doña María</strong><span class="ui-sub">Hoy tienes 3 clientes para escribirles</span><div class="ui-tabs"><span class="activa">Inactivos · 3</span><span>VIP</span><span>Nuevos</span><span>Recurrentes</span></div><div class="ui-clientes"><div class="ui-cliente" data-cliente="mj" style="--i:0"><span class="ui-av" style="--c:#E85A8B">MJ</span><span class="ui-cliente-txt"><strong>María José</strong><small>No pide hace 18 días · compraba cada 7</small></span><span class="ui-respondio">Respondió</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ui-cliente" data-cliente="pr" style="--i:1"><span class="ui-av" style="--c:#1F9AA6">PR</span><span class="ui-cliente-txt"><strong>Pedro Ruiz</strong><small>Hace 35 días · compraba cada 10</small></span><span class="ui-respondio">Respondió</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ui-cliente" data-cliente="lg" style="--i:2"><span class="ui-av" style="--c:#7A4FB5">LG</span><span class="ui-cliente-txt"><strong>Lucía Gómez</strong><small>Hace 21 días · compraba cada 7</small></span><span class="ui-respondio">Respondió</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></div><nav class="ui-nav"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8Z"/></svg>Panel</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Pedidos</span><span class="activo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M12 12h.01"/></svg>Copiloto</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>Más</span></nav></section><section class="ui-vista ui-panel" data-vista="ficha" data-barra="crema" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">DM</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><span class="ui-volver-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Copiloto</span><div class="ui-ficha-cab"><span class="ui-av ui-av-l" style="--c:#E85A8B">MJ</span><span><strong class="ui-h">María José</strong><span class="ui-chip-rojo">Inactiva</span></span></div><dl class="ui-datos"><div><dt>Último pedido</dt><dd>Sancocho · hace 18 días</dd></div><div><dt>Pide en promedio</dt><dd>cada 7 días</dd></div><div><dt>Promociones</dt><dd class="ui-ok">Acepta ✓</dd></div></dl><span class="ui-btn-sello">Preparar mensaje</span></div><nav class="ui-nav"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8Z"/></svg>Panel</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Pedidos</span><span class="activo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M12 12h.01"/></svg>Copiloto</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>Más</span></nav></section><section class="ui-vista ui-panel ui-mensaje" data-vista="mensaje" data-barra="crema" style="--m:#F2B632;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">DM</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><span class="ui-volver-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Mensaje para María José</span><div class="ui-wa-fondo"><div class="ui-burbuja-out ui-editable"><span class="ui-escribe"></span></div></div><span class="ui-nota-baja">Incluye un enlace para dejar de recibir promociones</span><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Enviar por WhatsApp</span></div></section><section class="ui-vista ui-wa" data-vista="chat" data-barra="wa"><div class="ui-wa-cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-wa-av" style="background:#E85A8B;color:#fff">MJ</span><span><strong>María José</strong><small>en línea</small></span></div><div class="ui-wa-cuerpo"><span class="ui-wa-fecha">Hoy</span><div class="ui-burbuja-out"><span>¡Hola María José! Hoy hay sancocho recién hecho. ¿Te separo una porción?</span><span class="ui-hora">8:02 a. m. <svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8l3.5 3.5L11 4.5"/><path d="M5.5 8l3.5 3.5L16 4.5"/></svg></span></div><div class="ui-escribiendo"><i></i><i></i><i></i></div><div class="ui-burbuja-in"><span>¡Sí! Sepárame 2 porciones</span><span class="ui-hora">8:05 a. m.</span></div></div><div class="ui-wa-entrada"><span>Mensaje</span><span class="ui-wa-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span></div></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
       </div>
     </div>
   </div>
@@ -620,7 +506,7 @@
         <div class="icono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="2"><path d="M12 22s8-4.5 8-11V5l-8-3-8 3v6c0 6.5 8 11 8 11Z"/></svg></div>
         <div>
           <h3>Tus datos, protegidos</h3>
-          <p>Cumplimos la Ley 1581 de datos personales. La información de tus clientes es tuya: no la vendemos ni la compartimos con nadie.</p>
+          <p>Cada negocio ve solo sus propios datos, y lo comprobamos con pruebas automáticas. Para la Ley 1581 tienes autorizaciones separadas, registro de cada consentimiento y borrado completo de un cliente cuando lo pida. No vendemos ni compartimos la información de tus clientes.</p>
         </div>
       </div>
       <div class="verificable-item">
@@ -650,7 +536,8 @@
 
 <section id="precios" class="reveal">
   <div class="wrap">
-    <h2>Precios</h2>
+    <span class="eyebrow" style="color:var(--sello)">PRECIOS</span>
+    <h2>Paga una cuota fija. Nunca un porcentaje.</h2>
     <p class="lead">0% de comisión por pedido en todos los planes. Eso es lo que cambia frente a las apps.</p>
 
     <div class="precio-toggle" role="group" aria-label="Ciclo de facturación">
@@ -661,52 +548,55 @@
 
     <div class="precios precios-3 reveal-fila">
       <div class="plan">
-        <div class="plan-icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div>
-        <span class="nombre">Gratis</span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-caja)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A36A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Z"/></svg></div><span class="nombre">Gratis</span></div>
         <span class="precio">$0</span>
         <span class="plan-sub">Para probar sin arriesgar nada</span>
         <ul>
           <li>Hasta 50 pedidos o citas al mes</li>
-          <li>Tu menú o servicios leídos de una foto con IA (3 al mes)</li>
-          <li>Tienda con tu propio enlace</li>
+          <li>Hasta 3 fotos leídas con IA al mes</li>
+          <li>Tienda con tu propio enlace y catálogo con fotos</li>
           <li>Cobro por Bre-B, Nequi o efectivo</li>
+          <li>Panel de pedidos con tablero visual</li>
+          <li>Cupones, tarjeta de sellos, reseñas y más herramientas de <a href="funciones.html#crecimiento" style="color:inherit;text-decoration:underline">crecimiento</a></li>
           <li>Marca "Hecho con Veci" visible</li>
         </ul>
-        <a href="https://app.tuveci.co/registro" class="btn btn-ghost-oscuro" style="margin-top:auto">Empezar gratis →</a>
+        <a href="https://app.tuveci.co/registro?plan=gratis" class="btn btn-ghost-oscuro" style="margin-top:auto">Empezar gratis →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
       <div class="plan destacado">
         <span class="chip-popular">Más elegido</span>
-        <div class="plan-icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div>
-        <span class="nombre">Barrio</span>
-        <span class="precio"><span class="precio-mensual">$29<small>.900/mes</small></span><span class="precio-anual">$24<small>.900/mes, facturado anual</small></span></span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div><span class="nombre">Barrio</span></div>
+        <span class="precio"><span class="precio-mensual">$29.900<small>/mes</small></span><span class="precio-anual">$299.000<small>/año · 2 meses gratis</small></span></span>
         <span class="plan-sub">Para el negocio que ya vende todos los días</span>
         <ul>
-          <li>Pedidos o citas ilimitados</li>
-          <li>Copiloto de recompra</li>
-          <li>IA sin límite para cargar tu menú o servicios</li>
-          <li>Sin marca de Veci</li>
+          <li>Todo lo de Gratis, sin el límite de 50 al mes</li>
+          <li>Fotos leídas con IA sin límite</li>
+          <li>Copiloto de recompra: detecta quién dejó de comprar</li>
+          <li>Mensajes de reenganche listos para enviar por WhatsApp</li>
+          <li>Sin marca "Hecho con Veci" en tu tienda</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=barrio" class="btn btn-sello" style="margin-top:auto">Elegir plan Barrio →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
       <div class="plan">
-        <div class="plan-icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-        <span class="nombre">Pro</span>
-        <span class="precio"><span class="precio-mensual">$69<small>.900/mes</small></span><span class="precio-anual">$58<small>.250/mes, facturado anual</small></span></span>
+        <div class="plan-cabeza"><div class="plan-icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="nombre">Pro</span></div>
+        <span class="precio"><span class="precio-mensual">$69.900<small>/mes</small></span><span class="precio-anual">$699.000<small>/año · 2 meses gratis</small></span></span>
         <span class="plan-sub">Para el negocio que ya tiene equipo</span>
         <ul>
           <li>Todo lo de Barrio</li>
+          <li>Hasta 3 sedes incluidas (+$19.900/mes cada sede extra)</li>
           <li>Historial completo y panel de estadísticas</li>
-          <li>3 sedes incluidas (+$19.900/mes cada sede extra)</li>
           <li>Soporte prioritario por WhatsApp</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=pro" class="btn btn-ghost-oscuro" style="margin-top:auto">Elegir plan Pro →</a>
+        <span class="plan-nota">Sin tarjeta · sin permanencia</span>
       </div>
     </div>
-    <p class="precios-nota">¿Tienes varias sedes? Pro incluye 3 y cada sede extra cuesta $19.900/mes. Los colaboradores con su propio acceso vienen en todos los planes.</p>
+    <p class="precios-nota">¿Tienes más de un local? El plan Pro incluye <a href="integraciones.html" style="color:var(--sello)">hasta 3 sedes</a>, y cada sede adicional cuesta $19.900/mes. Los colaboradores con su propio acceso vienen incluidos en todos los planes.</p>
   </div>
 </section>
 
-<section id="faq">
+<section id="faq" class="reveal">
   <div class="wrap-angosto">
     <h2>Preguntas frecuentes</h2>
 
@@ -737,260 +627,85 @@
   </div>
 </section>
 
-<div class="cierre">
-  <div class="wrap">
-    <h2>Tu clientela es tuya.</h2>
-    <p>Publica tu tienda hoy y empieza a cobrar por Bre-B sin pagar comisión. Sin intermediarios, sin letra pequeña.</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
-      <a href="demo.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Probar las demos →</a>
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Tu clientela es <em>tuya</em>.</h2>
+      <p>Publica tu tienda hoy y cobra por Bre-B sin pagar comisión. Sin intermediarios, sin letra pequeña.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="demo.html">o prueba las demos sin registrarte</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
         <a href="#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
-        <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
-        <a href="blog/">Blog</a>
+        <a href="blog/index.html">Blog</a>
         <a href="#faq">Preguntas frecuentes</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
+        <a href="referidos.html">Referidos</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>
-  // ---- Calculadora: slider + recibo + ahorro ----
-  var input = document.getElementById('ventaApps');
-  var elValorGrande = document.getElementById('calcValorGrande');
-  var elVentas = document.getElementById('reciboVentas');
-  var elComision = document.getElementById('reciboComision');
-  var elAhorro = document.getElementById('calcAhorro');
-  var elAhorroFill = document.getElementById('calcAhorroFill');
-  var VECI_BARRIO = 29900;
-
-  function formatoCOP(n) {
-    return '$' + Math.round(n).toLocaleString('es-CO');
-  }
-
-  function calcular() {
-    var venta = parseInt(input.value, 10) || 0;
-    var baja = venta * 0.25;
-    var alta = venta * 0.30;
-    var promedio = venta * 0.275;
-    var ahorro = Math.max(0, promedio - VECI_BARRIO);
-
-    elValorGrande.textContent = formatoCOP(venta);
-    elVentas.textContent = formatoCOP(venta);
-    elComision.textContent = venta > 0 ? (formatoCOP(baja) + ' – ' + formatoCOP(alta)) : '$0 – $0';
-    elAhorro.textContent = formatoCOP(ahorro) + '/mes';
-
-    var pct = promedio > 0 ? Math.min(100, (ahorro / promedio) * 100) : 0;
-    elAhorroFill.style.width = pct + '%';
-
-    var pctSlider = ((venta - input.min) / (input.max - input.min)) * 100;
-    input.style.setProperty('--val', pctSlider + '%');
-
-    elValorGrande.classList.remove('calc-pulso');
-    void elValorGrande.offsetWidth;
-    elValorGrande.classList.add('calc-pulso');
-  }
-
-  input.addEventListener('input', calcular);
-  calcular();
-
-  // ---- Precios: toggle mensual / anual, con pastilla deslizante ----
-  var btnMensual = document.getElementById('btnMensual');
-  var btnAnual = document.getElementById('btnAnual');
-  var contPrecios = document.querySelector('.precios');
-  var pastilla = document.querySelector('.precio-toggle .pastilla');
-
-  function moverPastilla(btn) {
-    pastilla.style.left = btn.offsetLeft + 'px';
-    pastilla.style.width = btn.offsetWidth + 'px';
-  }
-
-  function elegirCiclo(anual) {
-    contPrecios.classList.toggle('modo-anual', anual);
-    btnMensual.classList.toggle('activo', !anual);
-    btnAnual.classList.toggle('activo', anual);
-    moverPastilla(anual ? btnAnual : btnMensual);
-  }
-  btnMensual.addEventListener('click', function () { elegirCiclo(false); });
-  btnAnual.addEventListener('click', function () { elegirCiclo(true); });
-  moverPastilla(btnMensual);
-  window.addEventListener('resize', function () {
-    moverPastilla(btnAnual.classList.contains('activo') ? btnAnual : btnMensual);
-  });
-
-  // ---- Animaciones al hacer scroll ----
-  // Un simple chequeo de posición (no IntersectionObserver) para que un
-  // salto directo a un ancla (#precios desde otra página) también revele
-  // todo lo que quedó "atrás" del salto, no solo lo que se cruza al hacer
-  // scroll normal.
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila, .reveal-der, .reveal-izq'));
-  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
-  var revisando = false;
-
-  function revisarReveal() {
-    pendientes = pendientes.filter(function (el) {
-      var rect = el.getBoundingClientRect();
-      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
-      if (enVista) el.classList.add('visto');
-      return !enVista;
-    });
-    revisando = false;
-  }
-
-  function pedirRevision() {
-    if (!revisando) {
-      revisando = true;
-      requestAnimationFrame(revisarReveal);
-    }
-  }
-
-  revisarReveal();
-  window.addEventListener('scroll', pedirRevision, { passive: true });
-  window.addEventListener('resize', pedirRevision);
-
-  // Red de seguridad: si algo quedó fuera de pantalla (un salto directo a
-  // un ancla, un rastreador que no hace scroll), que igual se muestre.
-  setTimeout(function () {
-    pendientes.forEach(function (el) { el.classList.add('visto'); });
-    pendientes = [];
-  }, 1500);
-
-  // ---- Luces de fondo del hero: reaccionan al mouse y al scroll ----
-  (function () {
-    var hero = document.querySelector('.hero');
-    var glows = document.querySelector('.hero-glows');
-    if (!hero || !glows) return;
-    var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducido) return;
-
-    hero.addEventListener('mousemove', function (e) {
-      var rect = hero.getBoundingClientRect();
-      var px = (e.clientX - rect.left) / rect.width - 0.5;
-      var py = (e.clientY - rect.top) / rect.height - 0.5;
-      glows.style.setProperty('--gx', (px * 46) + 'px');
-      glows.style.setProperty('--gy', (py * 36) + 'px');
-    });
-    hero.addEventListener('mouseleave', function () {
-      glows.style.setProperty('--gx', '0px');
-      glows.style.setProperty('--gy', '0px');
-    });
-
-    function actualizarScroll() {
-      var rect = hero.getBoundingClientRect();
-      var progreso = Math.max(0, Math.min(1, 1 - rect.bottom / (rect.height + window.innerHeight)));
-      glows.style.setProperty('--sy', (progreso * 70) + 'px');
-    }
-    var pidiendo = false;
-    window.addEventListener('scroll', function () {
-      if (!pidiendo) { pidiendo = true; requestAnimationFrame(function () { actualizarScroll(); pidiendo = false; }); }
-    }, { passive: true });
-    actualizarScroll();
-  })();
-
-  // ---- Spotlight que sigue el cursor en las tarjetas ----
-  document.querySelectorAll('.feature-card, .dolor-card, .plan, .industria-col').forEach(function (card) {
-    card.addEventListener('mousemove', function (e) {
-      var rect = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
-      card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
-    });
-  });
-
-  // ---- Frase con revelado de palabras por scroll ----
-  (function () {
-    var frase = document.querySelector('[data-scroll-frase]');
-    if (!frase) return;
-    var soportaMix = CSS.supports('color', 'color-mix(in srgb, red, blue)');
-    if (!soportaMix) return;
-
-    var texto = frase.textContent.trim();
-    frase.innerHTML = texto.split(' ').map(function (palabra) {
-      return '<span class="rf-w">' + palabra + '</span>';
-    }).join(' ');
-    var palabras = Array.prototype.slice.call(frase.querySelectorAll('.rf-w'));
-    var total = palabras.length;
-    var actualizando = false;
-
-    function actualizar() {
-      var rect = frase.getBoundingClientRect();
-      var vh = window.innerHeight;
-      var progreso = (vh * 0.82 - rect.top) / (rect.height + vh * 0.35);
-      progreso = Math.max(0, Math.min(1, progreso));
-      palabras.forEach(function (span, i) {
-        var local = (progreso - i / total) * total * 1.2;
-        local = Math.max(0, Math.min(1, local));
-        span.style.color = 'color-mix(in srgb, var(--texto) ' + (local * 100) + '%, var(--texto-tenue))';
-      });
-      actualizando = false;
-    }
-
-    function pedir() {
-      if (!actualizando) { actualizando = true; requestAnimationFrame(actualizar); }
-    }
-
-    actualizar();
-    window.addEventListener('scroll', pedir, { passive: true });
-    window.addEventListener('resize', pedir);
-  })();
-
-  // ---- Teléfono del hero: cicla entre pedido / pago confirmado / copiloto ----
-  (function () {
-    var pantalla = document.querySelector('[data-telefono-vivo]');
-    if (!pantalla) return;
-    var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducido) return;
-
-    var estados = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-estado'));
-    var puntos = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-puntos span'));
-    var actual = 0;
-
-    function irA(idx) {
-      estados[actual].classList.remove('activo');
-      puntos[actual].classList.remove('activo');
-      actual = idx;
-      estados[actual].classList.add('activo');
-      puntos[actual].classList.add('activo');
-    }
-
-    setInterval(function () {
-      irA((actual + 1) % estados.length);
-    }, 3400);
-  })();
-</script>
+<script src="assets/js/inicio.js"></script>
+<script src="assets/js/escenas.js" defer></script>
 
 </body>
 </html>

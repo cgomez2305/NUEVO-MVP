@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://app.tuveci.co; frame-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Software para tiendas y minimarkets: pedidos por WhatsApp | Veci</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<script>(function(){try{var t=localStorage.getItem('veci-tema')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script src="assets/js/tema-inicial.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 <link rel="canonical" href="https://tuveci.co/tiendas.html">
@@ -23,6 +25,9 @@
 <link rel="preload" href="assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
+<script src="assets/js/veci-chat.js" defer></script>
+<script src="assets/js/calculadoras.js" defer></script>
+<script src="assets/js/escenas.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -46,7 +51,7 @@
     {"@type": "Question", "name": "¿Cómo publico el catálogo de mi tienda?", "acceptedAnswer": {"@type": "Answer", "text": "Subes una foto de tus productos o de tu lista de precios y la IA arma el catálogo por ti. Tú solo revisas y publicas."}},
     {"@type": "Question", "name": "¿Mis clientes piden directo por WhatsApp?", "acceptedAnswer": {"@type": "Answer", "text": "Sí. Arman el carrito en tu tienda de Veci y el pedido llega ordenado a tu WhatsApp, con productos, cantidades y total — nada de mensajes de voz sueltos."}},
     {"@type": "Question", "name": "¿Cómo cobro el pedido?", "acceptedAnswer": {"@type": "Answer", "text": "Por Bre-B en menos de 20 segundos, sin comisión de tarjeta, o en efectivo contraentrega si así lo prefieres."}},
-    {"@type": "Question", "name": "¿Cuánto cuesta para una tienda o minimarket?", "acceptedAnswer": {"@type": "Answer", "text": "Puedes empezar gratis con hasta 50 pedidos en línea al mes; las ventas de mostrador no cuentan en ese límite. El plan Barrio, con pedidos ilimitados y copiloto de recompra, cuesta $29.900 al mes."}}
+    {"@type": "Question", "name": "¿Cuánto cuesta para una tienda o minimarket?", "acceptedAnswer": {"@type": "Answer", "text": "Puedes empezar gratis con hasta 50 pedidos al mes. El plan Barrio, con pedidos ilimitados y copiloto de recompra, cuesta $29.900 al mes."}}
   ]
 }
 </script>
@@ -56,8 +61,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup-transparente.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup-transparente.png" alt="Veci" height="26">
+      <a href="index.html" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -68,7 +74,7 @@
           </button>
           <div class="mega-menu una-col">
             <div class="columna">
-              <a href="./#como-funciona" class="item">
+              <a href="index.html#como-funciona" class="item">
                 <span class="icono" style="background:var(--tinte-sello)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>
                 <span><strong>Cómo funciona</strong><span>De la foto a tu tienda publicada</span></span>
               </a>
@@ -87,9 +93,9 @@
             </div>
           </div>
         </div>
-        <a href="nosotros.html">Quiénes somos</a>
-        <a href="blog/">Blog</a>
-        <a href="demo.html" class="nav-chip">Ver demos →</a>
+        <a href="nosotros.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>Quiénes somos</a>
+        <a href="blog/index.html"><span class="nav-link-icono"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Blog</a>
+        <a href="demo.html" class="nav-chip"><span class="nav-link-icono nav-link-icono-sello"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5Z" fill="currentColor" stroke="none"/></svg></span>Ver demos →</a>
         <div class="nav-auth">
           <a href="https://app.tuveci.co/login" class="btn-login">Iniciar sesión</a>
           <a href="https://app.tuveci.co/registro" class="btn btn-sello btn-nav">Empezar gratis</a>
@@ -110,13 +116,14 @@
 
 <div class="wrap">
   <div class="demo-hero">
-    <span class="hero-badge" style="background:var(--tinte-mostaza);border-color:transparent;color:#B8860B"><span class="dot"></span> PARA TIENDAS Y MINIMARKETS</span>
+    <span class="hero-badge" style="background:var(--tinte-mostaza);border-color:transparent;color:var(--mostaza-texto)"><span class="dot"></span> PARA TIENDAS Y MINIMARKETS</span>
     <h1>Software para tiendas de barrio y minimarkets que quieren vender sin depender de una app</h1>
     <p>Publicas tu catálogo con una foto, tu cliente arma el pedido y te llega ordenado al WhatsApp. Cobras por Bre-B sin comisión, y el copiloto te dice a quién volver a escribirle.</p>
     <div class="hero-ctas" style="justify-content:center;margin-top:22px">
-      <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+      <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello">Crear mi tienda gratis →</a>
       <a href="demo.html#minimarket" class="btn btn-ghost-oscuro">Ver demo de minimarket →</a>
     </div>
+    <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
   </div>
 </div>
 
@@ -163,7 +170,7 @@
     <span class="eyebrow" style="color:var(--sello)">CÓMO FUNCIONA PARA TU TIENDA</span>
     <h2>De la foto a tu primer pedido</h2>
 
-    <div class="feature-grid reveal-fila" style="grid-template-columns:repeat(3,1fr)">
+    <div class="feature-grid reveal-fila">
       <div class="feature-card">
         <div class="icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg></div>
         <h3>Tomas una foto de tu lista de precios</h3>
@@ -175,30 +182,89 @@
         <p>Ve tu catálogo actualizado y hace el pedido directo por WhatsApp, ya ordenado con cantidades y total.</p>
       </div>
       <div class="feature-card">
-        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></div>
+        <div class="icono" style="background:var(--tinte-aji)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8452C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".6" fill="#E8452C"/></svg></div>
         <h3>Cobras por Bre-B y el copiloto fideliza</h3>
         <p>Pago en menos de 20 segundos, sin comisión. Cada mañana el copiloto te dice a quién volver a escribirle.</p>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:32px">
-      <a href="demo.html#minimarket" class="btn btn-ghost">Probar el catálogo de El Ahorro en vivo →</a>
+      <a href="demo.html#minimarket" class="btn btn-ghost-oscuro btn-contorno">Probar el catálogo de El Ahorro en vivo →</a>
     </div>
   </div>
 </section>
 
-<div class="cierre">
+<section class="reveal seccion-escena">
   <div class="wrap">
-    <h2>Publica tu catálogo hoy</h2>
-    <p>Empieza gratis, sin tarjeta de crédito, y sube de plan cuando tu tienda lo necesite.</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
-      <a href="precios.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Ver precios →</a>
+    <div class="escena-bloque escena" data-escena="mostrador">
+      <div class="escena-bloque-texto">
+        <h2>Así vendes en el mostrador</h2>
+        <p class="lead">Lo que vendes en el local y lo que vendes por WhatsApp, en la misma caja y el mismo inventario. El fiado deja de vivir en un cuaderno que se moja, y lo que le compras al distribuidor suma solo al inventario.</p>
+        <div class="escena-control"><ol class="escena-guion" aria-label="Pasos de la demostración"><li><button type="button" data-texto="Escaneas y se suma solo"><span class="escena-guion-num">1</span><span class="escena-guion-txt">Escaneas y se suma solo</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Lo de peso, en la báscula"><span class="escena-guion-num">2</span><span class="escena-guion-txt">Lo de peso, en la báscula</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Lo fías en un toque"><span class="escena-guion-num">3</span><span class="escena-guion-txt">Lo fías en un toque</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Queda en su cuaderno"><span class="escena-guion-num">4</span><span class="escena-guion-txt">Queda en su cuaderno</span><span class="escena-guion-barra"></span></button></li><li><button type="button" data-texto="Le recuerdas con respeto"><span class="escena-guion-num">5</span><span class="escena-guion-txt">Le recuerdas con respeto</span><span class="escena-guion-barra"></span></button></li></ol></div>
+      </div>
+      <div class="escena-bloque-tel">
+        <div class="telefono telefono-escena" data-barra="crema" aria-hidden="true"><div class="telefono-statusbar"><span>9:14</span><span class="iconos"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg></span></div><div class="telefono-pantalla" data-escena-reset><div class="ui"><section class="ui-vista ui-panel ui-marca" data-vista="mostrador" data-barra="crema" style="--m:#3F8F4E;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">EA</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><strong class="ui-h">Mostrador</strong><div class="ui-lector"><span class="ui-lector-campo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v14M7 5v14M10 5v14M14 5v14M17 5v14M20 5v14"/></svg><span class="ui-lector-txt"></span><span class="ui-lector-ph">Código o nombre</span></span><span class="ui-lector-btn">Agregar</span><span class="ui-sugerencia"><strong>Queso campesino</strong><small>$18.000/kg · por peso</small></span></div><div class="ui-comanda ui-venta"><div class="ui-comanda-cab"><span>Venta en curso</span><span class="ui-venta-cuenta">Vacía</span></div><div class="ui-venta-linea" data-linea="gaseosa"><div class="ui-linea"><span>Gaseosa 400 ml</span><span class="ui-guia"></span><span class="ui-venta-sub">$2.500</span></div><div class="ui-venta-det"><span>$2.500 c/u</span><span class="ui-venta-cant">×1</span></div></div><div class="ui-venta-linea" data-linea="queso"><div class="ui-linea"><span>Queso campesino</span><span class="ui-guia"></span><span class="ui-venta-sub">$9.000</span></div><div class="ui-venta-det"><span>$18.000/kg</span><span class="ui-venta-cant">500 g</span></div></div></div><div class="ui-visor"><span>Total</span><strong class="ui-visor-total">$0</strong></div><div class="ui-bascula"><strong>¿Cuánto pesa?</strong><small>Queso campesino · $18.000/kg</small><div class="ui-pesos"><span data-peso="125">125 g</span><span data-peso="250">250 g</span><span data-peso="500">500 g</span><span data-peso="1000">1 kg</span></div></div></div></section><section class="ui-vista ui-panel ui-marca" data-vista="cobrar" data-barra="crema" style="--m:#3F8F4E;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">EA</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><strong class="ui-h">Cobrar</strong><div class="ui-visor"><span>Total</span><strong class="ui-visor-total">$16.500</strong></div><div class="ui-teclas"><span class="activa" data-tecla="efectivo">Efectivo</span><span data-tecla="nequi">Nequi</span><span data-tecla="breb">Bre-B</span><span data-tecla="fiado">Fiado</span></div><div class="ui-fiar"><span class="ui-col-titulo">¿A quién le fías?</span><div class="ui-fiar-cliente" data-fiar="jairo"><span class="ui-av" style="--c:#8A5A3C">DJ</span><span class="ui-cliente-txt"><strong>Don Jairo</strong><small>Debe $23.000 · límite $100.000</small></span><span class="ui-fiar-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span></div><div class="ui-fiar-cliente" data-fiar="rosa"><span class="ui-av" style="--c:#E85A8B">RM</span><span class="ui-cliente-txt"><strong>Rosa Medina</strong><small>Debe $8.500 · límite $50.000</small></span><span class="ui-fiar-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span></div></div><span class="ui-btn-cobrar">Cobrar $16.500</span></div></section><section class="ui-vista ui-panel ui-marca" data-vista="cuaderno" data-barra="crema" style="--m:#3F8F4E;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">EA</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><span class="ui-volver-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Fiado</span><div class="ui-ficha-cab"><span class="ui-av ui-av-l" style="--c:#8A5A3C">DJ</span><span><strong class="ui-h">Don Jairo</strong><small class="ui-sub-panel">Cliente desde marzo</small></span></div><div class="ui-saldo"><small>Debe</small><strong class="ui-debe">$23.000</strong><div class="ui-limite-barra"><span class="ui-limite"></span></div><small>Límite $100.000</small></div><div class="ui-libreta"><div class="ui-renglon"><span class="ui-renglon-fecha">28 sep</span><span class="ui-renglon-concepto">Arroz y aceite</span><span class="ui-renglon-monto">+ $23.000</span><span class="ui-renglon-saldo">$23.000</span></div><div class="ui-renglon ui-renglon-nuevo"><span class="ui-renglon-fecha">Hoy</span><span class="ui-renglon-concepto"></span><span class="ui-renglon-monto">+ $16.500</span><span class="ui-renglon-saldo">$39.500</span></div></div><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Recordarle por WhatsApp</span></div></section><section class="ui-vista ui-panel ui-mensaje ui-marca" data-vista="recordar" data-barra="crema" style="--m:#3F8F4E;--m-sobre:#1B1A17"><div class="ui-panel-cab"><span class="ui-veci">veci</span><span class="ui-insignia ui-insignia-s">EA</span></div><div class="ui-cenefa"></div><div class="ui-panel-cuerpo"><span class="ui-volver-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Recordatorio para Don Jairo</span><div class="ui-wa-fondo"><div class="ui-burbuja-out"><span>Hola Don Jairo, le cuento que su cuenta en El Ahorro va en $39.500. Cuando pueda pasar, aquí lo esperamos. Si ya pagó, no tenga en cuenta este mensaje.</span></div></div><span class="ui-nota-baja">Solo de lunes a sábado en horario permitido y una vez por semana (Ley 2300)</span><span class="ui-btn-wa"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.9.53 3.68 1.44 5.2L2 22l4.93-1.4A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 13.6c-.22.62-1.3 1.2-1.8 1.24-.48.05-.94.22-3.16-.66-2.66-1.05-4.36-3.78-4.5-3.96-.13-.18-1.07-1.43-1.07-2.73 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.17 0 .38-.06.6.46.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.27.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.16.27.7 1.15 1.5 1.86 1.03.92 1.9 1.2 2.17 1.34.27.13.42.11.58-.07.16-.18.66-.77.84-1.04.18-.27.35-.22.6-.13.24.09 1.55.73 1.82.86.27.13.44.2.5.31.07.11.07.64-.15 1.26Z"/></svg>Abrir WhatsApp</span></div></section><section class="ui-vista ui-wa" data-vista="enviado" data-barra="wa"><div class="ui-wa-cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="ui-wa-av" style="background:#8A5A3C;color:#fff">DJ</span><span><strong>Don Jairo</strong><small>en línea</small></span></div><div class="ui-wa-cuerpo"><span class="ui-wa-fecha">Hoy</span><div class="ui-burbuja-out"><span>Hola Don Jairo, le cuento que su cuenta en El Ahorro va en $39.500. Cuando pueda pasar, aquí lo esperamos. Si ya pagó, no tenga en cuenta este mensaje.</span><span class="ui-hora">9:20 a. m. <svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 8l3.5 3.5L11 4.5"/><path d="M5.5 8l3.5 3.5L16 4.5"/></svg></span></div></div><div class="ui-wa-entrada"><span>Mensaje</span><span class="ui-wa-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span></div></section><span class="dedo"></span></div></div><div class="telefono-home-indicator"></div></div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<section id="faq">
+<section class="seccion-herramienta reveal">
+  <div class="wrap">
+    <div class="herramienta" data-calc="ahorro-apps">
+      <span class="herramienta-eyebrow">TU CUENTA, NO LA NUESTRA</span>
+      <h3>¿Cuánto le dejas a las apps este mes?</h3>
+      <p class="herramienta-intro">Mueve el control con lo que vendes al mes por Rappi, DiDi u otra app de domicilios.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-ventas">Ventas mensuales por apps</label>
+          <output for="calc-ventas" data-salida="ventas">$5.000.000</output>
+          <input type="range" class="calc-slider" id="calc-ventas" min="500000" max="30000000" step="500000" value="5000000" data-entrada="ventas">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila perdida"><span>Comisión de la app (25%–30%)</span><strong data-salida="comision">$1.250.000 – $1.500.000</strong></div>
+        <div class="recibo-fila"><span>Veci, plan Barrio</span><strong>$29.900 fijos</strong></div>
+        <div class="recibo-fila total"><span>Te quedarías al mes</span><strong data-salida="ahorro">$1.345.100</strong></div>
+      </div>
+      <p class="herramienta-nota">Con la comisión promedio de 27,5%; no incluye el costo de los domicilios. En un año: <span data-salida="anual">$16.141.200</span>.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello">Crear mi tienda gratis →</a>
+        <button type="button" class="btn-texto" data-abrir-chat="plan">¿Qué plan me sirve?</button>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="cierre" aria-labelledby="cierre-titulo">
+  <div class="wrap cierre-grid">
+    <div class="cierre-texto">
+      <h2 id="cierre-titulo">Publica tu catálogo <em>hoy</em>.</h2>
+      <p>Una foto de tu menú o tus productos, y en 10 minutos estás recibiendo pedidos por WhatsApp sin pagar comisión.</p>
+      <div class="cierre-acciones">
+        <a href="https://app.tuveci.co/registro?modo=pedidos" class="btn btn-sello cierre-btn">Crear mi tienda gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="cierre-alt" href="demo.html#minimarket">o prueba la tienda de ejemplo</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+    <div class="comanda" data-comanda>
+      <div class="comanda-papel">
+        <p class="comanda-cabeza"><span>Lo que pagas por empezar</span><span aria-hidden="true">N.º 0001</span></p>
+        <ul class="comanda-lineas">
+        <li><span>Tienda con tu propio enlace</span><b>$0</b></li>
+        <li><span>Catálogo armado con IA <small>(3 fotos al mes)</small></span><b>$0</b></li>
+        <li><span>Cobro por Bre-B, Nequi o efectivo</span><b>0% comisión</b></li>
+        <li><span>Hasta 50 pedidos al mes</span><b>$0</b></li>
+        </ul>
+        <p class="comanda-total"><span>Total para empezar</span><b>$0</b></p>
+        <span class="comanda-sello" aria-hidden="true">Gratis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="reveal">
   <div class="wrap-angosto">
     <h2>Preguntas frecuentes</h2>
     <details open>
@@ -222,75 +288,63 @@
     <details>
       <summary>¿Cuánto cuesta para una tienda o minimarket?</summary>
       <div class="faq-cuerpo"><div class="faq-inner">
-        <p>Puedes empezar gratis con hasta 50 pedidos en línea al mes; las ventas de mostrador no cuentan en ese límite. El plan Barrio, con pedidos ilimitados y copiloto de recompra, cuesta $29.900 al mes. <a href="precios.html" style="color:var(--sello)">Ver todos los planes →</a></p>
+        <p>Puedes empezar gratis con hasta 50 pedidos al mes. El plan Barrio, con pedidos ilimitados y copiloto de recompra, cuesta $29.900 al mes. <a href="precios.html" style="color:var(--sello)">Ver todos los planes →</a></p>
       </div></div>
     </details>
   </div>
 </section>
 
 <footer class="footer-grande">
+  <div class="footer-toldo" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-columnas">
       <div class="footer-marca">
-        <img src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="24">
-        <p>El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <a href="index.html" class="footer-logo"><img src="assets/img/logo-veci-blanco.png" alt="Veci, inicio" width="96" height="28"></a>
+        <p class="footer-promesa">El vecino que te ayuda a vender, no una app que te cobra por hacerlo.</p>
+        <div class="footer-ayuda">
+          <span class="footer-ayuda-titulo">¿Te quedó una duda?</span>
+          <button type="button" class="footer-ayuda-chat" data-abrir-chat>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            Pregúntale a Veci
+          </button>
+          <a class="footer-ayuda-correo" href="mailto:soporte@tuveci.co">soporte@tuveci.co</a>
+        </div>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" role="group" aria-label="Producto">
         <span class="footer-titulo">Producto</span>
-        <a href="./#como-funciona">Cómo funciona</a>
+        <a href="index.html#como-funciona">Cómo funciona</a>
         <a href="funciones.html">Funciones</a>
-        <a href="integraciones.html">Integraciones</a>
         <a href="precios.html">Precios</a>
         <a href="demo.html">Demos en vivo</a>
+        <a href="integraciones.html">Integraciones</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Por industria</span>
+      <div class="footer-col" role="group" aria-label="Para tu negocio">
+        <span class="footer-titulo">Para tu negocio</span>
+        <a href="tiendas.html">Tiendas y comida</a>
         <a href="peluquerias.html">Peluquerías y barberías</a>
-        <a href="entrenadores.html">Entrenadores personales</a>
-        <a href="tiendas.html">Tiendas y minimarkets</a>
-        <a href="odontologos.html">Consultorios odontológicos</a>
+        <a href="odontologos.html">Consultorios</a>
+        <a href="entrenadores.html">Entrenadores</a>
       </div>
-      <div class="footer-col">
-        <span class="footer-titulo">Recursos</span>
+      <div class="footer-col" role="group" aria-label="Veci">
+        <span class="footer-titulo">Veci</span>
         <a href="nosotros.html">Quiénes somos</a>
+        <a href="blog/index.html">Blog</a>
+        <a href="index.html#faq">Preguntas frecuentes</a>
         <a href="referidos.html">Referidos</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="terminos.html">Términos</a>
-        <a href="blog/">Blog</a>
-        <a href="https://app.tuveci.co/registro">Crear mi tienda</a>
       </div>
     </div>
     <div class="footer-abajo">
-      <p>Veci · hecho para negocios colombianos</p>
-      <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      <p>© 2026 Veci · Hecho en Colombia para negocios de barrio</p>
+      <div class="footer-legal">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="terminos.html">Términos</a>
+        <span class="estado"><span class="dot"></span> Disponible en Colombia</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>
-  var elementosReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal, .reveal-fila'));
-  var pendientes = elementosReveal.filter(function (el) { return !el.classList.contains('visto'); });
-  var revisando = false;
-  function revisarReveal() {
-    pendientes = pendientes.filter(function (el) {
-      var rect = el.getBoundingClientRect();
-      var enVista = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
-      if (enVista) el.classList.add('visto');
-      return !enVista;
-    });
-    revisando = false;
-  }
-  function pedirRevision() {
-    if (!revisando) { revisando = true; requestAnimationFrame(revisarReveal); }
-  }
-  revisarReveal();
-  window.addEventListener('scroll', pedirRevision, { passive: true });
-  window.addEventListener('resize', pedirRevision);
-  setTimeout(function () {
-    pendientes.forEach(function (el) { el.classList.add('visto'); });
-    pendientes = [];
-  }, 1500);
-</script>
+<script src="assets/js/reveal.js"></script>
 
 </body>
 </html>
