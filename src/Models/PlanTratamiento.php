@@ -90,7 +90,8 @@ class PlanTratamiento
     }
 
     private const SELECT = "SELECT p.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono,
-            (SELECT COALESCE(SUM(a.monto), 0) FROM plan_abonos a WHERE a.plan_id = p.id AND a.anulado = 0) AS pagado
+            (SELECT COALESCE(SUM(a.monto), 0) FROM plan_abonos a WHERE a.plan_id = p.id AND a.anulado = 0) AS pagado,
+            (SELECT u.nombre FROM usuarios u WHERE u.id = p.aprobado_por) AS aprobado_por_nombre
         FROM planes_tratamiento p JOIN clientes cl ON cl.id = p.cliente_id";
 
     public static function buscar(int $id, int $sedeId): ?array
@@ -165,17 +166,48 @@ class PlanTratamiento
     }
 
     /** El paciente responde desde su enlace (solo si sigue por aprobar y no venció). */
-    public static function responder(array $plan, bool $aprobar): bool
+    /**
+     * El paciente responde. Desde su enlace ($usuarioId null) o en el
+     * consultorio: ahí lo marca alguien del equipo y queda quién, para que
+     * la aprobación tenga constancia aunque el paciente no abra enlaces.
+     */
+    public static function responder(array $plan, bool $aprobar, ?int $usuarioId = null): bool
     {
         if ($plan['estado'] !== 'propuesto' || self::vencido($plan)) {
             return false;
         }
         $stmt = Database::conexion()->prepare(
-            "UPDATE planes_tratamiento SET estado = :e, respondido_en = NOW() WHERE id = :id AND estado = 'propuesto'"
+            "UPDATE planes_tratamiento SET estado = :e, respondido_en = NOW(), aprobado_canal = :canal, aprobado_por = :u
+             WHERE id = :id AND estado = 'propuesto'"
         );
-        $stmt->execute(['e' => $aprobar ? 'aprobado' : 'rechazado', 'id' => (int) $plan['id']]);
+        $stmt->execute([
+            'e' => $aprobar ? 'aprobado' : 'rechazado',
+            'canal' => $aprobar ? ($usuarioId !== null ? 'consultorio' : 'enlace') : null,
+            'u' => $aprobar ? $usuarioId : null,
+            'id' => (int) $plan['id'],
+        ]);
 
         return $stmt->rowCount() === 1;
+    }
+
+    /** ¿Se puede rehacer? Si ya no sirve como está: vencido sin aprobar, rechazado o cancelado. */
+    public static function rehacible(array $plan): bool
+    {
+        return in_array($plan['estado'], ['rechazado', 'cancelado'], true) || self::vencido($plan);
+    }
+
+    /**
+     * Después de crear el plan nuevo a partir de uno viejo: el nuevo apunta
+     * al viejo, y si el viejo seguía "propuesto" (vencido) se cancela, para
+     * que no queden dos propuestas vivas del mismo tratamiento.
+     */
+    public static function marcarRehecho(int $nuevoId, array $viejo): void
+    {
+        $pdo = Database::conexion();
+        $pdo->prepare('UPDATE planes_tratamiento SET rehecho_de = :v WHERE id = :n AND sede_id = :s')
+            ->execute(['v' => (int) $viejo['id'], 'n' => $nuevoId, 's' => (int) $viejo['sede_id']]);
+        $pdo->prepare("UPDATE planes_tratamiento SET estado = 'cancelado' WHERE id = :v AND sede_id = :s AND estado = 'propuesto'")
+            ->execute(['v' => (int) $viejo['id'], 's' => (int) $viejo['sede_id']]);
     }
 
     /**

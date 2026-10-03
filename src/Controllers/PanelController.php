@@ -363,9 +363,14 @@ class PanelController
      */
     private function partesPosiblesDeCombo(int $sedeId, ?int $productoId): array
     {
+        // Lo que va por peso no entra a combos (el combo tiene precio fijo y
+        // el peso no); si un combo viejo ya lo trae, se sigue mostrando.
+        $yaEnEste = $productoId !== null ? array_map('intval', array_column(Producto::componentesPorCombo($sedeId)[$productoId] ?? [], 'id')) : [];
+
         return array_values(array_filter(
             Producto::listarPorSede($sedeId),
             fn ($p) => (int) $p['id'] !== $productoId && $p['combo'] === []
+                && (!Producto::esPorPeso($p) || in_array((int) $p['id'], $yaEnEste, true))
         ));
     }
 

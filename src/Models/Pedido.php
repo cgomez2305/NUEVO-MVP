@@ -93,7 +93,9 @@ class Pedido
             $stmtDescontar = $pdo->prepare('UPDATE productos SET stock = stock - :cantidad WHERE id = :id');
             $pedidas = [];
             foreach ($items as $item) {
-                $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0) + (int) $item['cantidad'];
+                // Por peso (en línea) se descuenta lo pesado: gramos ÷ 1.000 kilos.
+                $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0)
+                    + (!empty($item['gramos']) ? (int) $item['gramos'] / Producto::GRAMOS_POR_KILO : (int) $item['cantidad']);
             }
             foreach (self::demandaDeUnidades($pdo, $pedidas) as $productoId => $unidades) {
                 $stmtStock->execute(['id' => $productoId, 'sede' => $sedeId]);
@@ -114,8 +116,8 @@ class Pedido
             // por_peso se copia: cancelar devuelve en la unidad en que se pidió.
             $stmtPeso = $pdo->prepare("SELECT vende_por = 'peso' FROM productos WHERE id = :id AND sede_id = :sede");
             $stmtItem = $pdo->prepare(
-                'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad, por_peso)
-                 VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad, :por_peso)'
+                'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad, por_peso, gramos)
+                 VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad, :por_peso, :gramos)'
             );
             foreach ($items as $item) {
                 $stmtPeso->execute(['id' => $item['producto_id'], 'sede' => $sedeId]);
@@ -125,7 +127,8 @@ class Pedido
                     'nombre'      => $item['nombre'],
                     'precio'      => $item['precio'],
                     'cantidad'    => $item['cantidad'],
-                    'por_peso'    => (int) $stmtPeso->fetchColumn() === 1 ? 1 : 0,
+                    'por_peso'    => (int) $stmtPeso->fetchColumn() === 1 || !empty($item['gramos']) ? 1 : 0,
+                    'gramos'      => !empty($item['gramos']) ? (int) $item['gramos'] : null,
                 ]);
             }
 
@@ -307,12 +310,14 @@ class Pedido
                 default => null,
             };
             if ($signo !== null) {
-                $stmtItems = $pdo->prepare('SELECT producto_id, cantidad, por_peso FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
+                $stmtItems = $pdo->prepare('SELECT producto_id, cantidad, por_peso, gramos FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
                 $stmtItems->execute(['id' => $id]);
                 $pedidas = [];
                 $porPeso = [];
                 foreach ($stmtItems->fetchAll() as $item) {
-                    $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0) + (int) $item['cantidad'];
+                    // Con gramos (pedido en libras) se devuelve lo pesado; sin, cantidad = kilos o unidades.
+                    $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0)
+                        + ($item['gramos'] !== null ? (int) $item['gramos'] / Producto::GRAMOS_POR_KILO : (int) $item['cantidad']);
                     $porPeso[(int) $item['producto_id']] = (int) $item['por_peso'] === 1;
                 }
                 $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
@@ -390,13 +395,21 @@ class Pedido
     }
 
     /** Suma de pedidos de hoy, sin contar los cancelados (no son venta real). */
+    /**
+     * Lo vendido hoy: pedidos sin cancelar más las ventas de mostrador sin
+     * anular (también las fiadas: se vendieron, aunque la plata llegue
+     * después). El mostrador no cuenta en el límite del plan Gratis, pero sí
+     * es venta del día.
+     */
     public static function ventasHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
-            "SELECT COALESCE(SUM(total), 0) AS total FROM pedidos
-             WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE() AND estado != 'cancelado'"
+            "SELECT (SELECT COALESCE(SUM(total), 0) FROM pedidos
+                     WHERE sede_id = :sede_id AND DATE(creado_en) = CURDATE() AND estado != 'cancelado')
+                  + (SELECT COALESCE(SUM(total), 0) FROM ventas
+                     WHERE sede_id = :sede_id2 AND DATE(creado_en) = CURDATE() AND anulada = 0) AS total"
         );
-        $stmt->execute(['sede_id' => $sedeId]);
+        $stmt->execute(['sede_id' => $sedeId, 'sede_id2' => $sedeId]);
         return (int) $stmt->fetch()['total'];
     }
 

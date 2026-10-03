@@ -274,11 +274,15 @@
     // Catálogo: cada "+" muestra cuántas unidades de su producto van en el
     // pedido; el que se acaba de tocar da un pequeño salto de confirmación.
     var cantidades = {};
-    (carrito.lineas || []).forEach(function (linea) { cantidades[String(linea.producto_id)] = linea.cantidad; });
+    var textos = {};
+    (carrito.lineas || []).forEach(function (linea) {
+      cantidades[String(linea.producto_id)] = linea.cantidad;
+      textos[String(linea.producto_id)] = linea.texto_corto || String(linea.cantidad); // por peso: "1½ lb"
+    });
     Array.prototype.forEach.call(document.querySelectorAll('[data-cuenta-producto]'), function (cuenta) {
       var id = cuenta.getAttribute('data-cuenta-producto');
       var unidades = cantidades[id] || 0;
-      cuenta.textContent = unidades;
+      cuenta.textContent = unidades > 0 ? textos[id] : '0';
       cuenta.hidden = unidades === 0;
       var botonProducto = cuenta.closest('.pq-agregar');
       if (botonProducto) botonProducto.classList.toggle('pq-agregar-lleva', unidades > 0);
@@ -330,7 +334,7 @@
     }
 
     var cantidadEl = document.getElementById('pq-cantidad-' + productoId);
-    if (cantidadEl) cantidadEl.textContent = lineaActual.cantidad;
+    if (cantidadEl) cantidadEl.textContent = lineaActual.texto || lineaActual.cantidad;
     var subtotalEl = document.getElementById('pq-subtotal-' + productoId);
     if (subtotalEl) subtotalEl.textContent = formatearPesos(lineaActual.subtotal);
     // Inventario: el "+" se apaga al llegar a las unidades que hay.

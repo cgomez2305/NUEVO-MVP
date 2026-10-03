@@ -2,7 +2,7 @@
 <div class="pq-pagina-cabeza">
   <div>
     <a class="pq-volver-panel" href="<?= e(base_url('/panel/planes')) ?>">← Planes</a>
-    <h1 class="pq-h1">Nuevo plan de tratamiento</h1>
+    <h1 class="pq-h1"><?= !empty($desde) ? 'Rehacer plan de tratamiento' : 'Nuevo plan de tratamiento' ?></h1>
   </div>
 </div>
 <p class="pq-lead pq-pagina-bajada-panel">Por fases, como se lo explicas al paciente. Cada fase con cuántas sesiones lleva y su valor; el total es la suma.</p>
@@ -15,7 +15,10 @@
   <?= csrf_campo() ?>
   <section class="pq-ficha-bloque">
     <h2 class="pq-seccion-titulo">Paciente</h2>
-    <?php if ($cita !== null): ?>
+    <?php if (!empty($desde)): ?>
+      <input type="hidden" name="desde_id" value="<?= (int) $desde['id'] ?>">
+      <p class="pq-plan-paciente"><strong><?= e($desde['cliente_nombre']) ?></strong> <span class="pq-ayuda">· a partir del plan #<?= (int) $desde['id'] ?> (<?= e(PlanTratamiento::vencido($desde) ? 'venció sin aprobar' : mb_strtolower(PlanTratamiento::ETIQUETAS[$desde['estado']] ?? $desde['estado'])) ?>). Ajusta lo que cambió; el anterior queda en el historial.</span></p>
+    <?php elseif ($cita !== null): ?>
       <input type="hidden" name="cita_id" value="<?= (int) $cita['id'] ?>">
       <p class="pq-plan-paciente"><strong><?= e($cita['cliente_nombre']) ?></strong> <span class="pq-ayuda">· desde su cita de <?= e($cita['nombre_servicio']) ?> del <?= e(fecha_corta((string) $cita['fecha_hora'])) ?></span></p>
     <?php else: ?>
@@ -37,16 +40,17 @@
     <h2 class="pq-seccion-titulo">El plan</h2>
     <div class="pq-campo">
       <label class="pq-label" for="plan-titulo">Nombre del tratamiento</label>
-      <input class="pq-input" id="plan-titulo" type="text" name="titulo" maxlength="120" placeholder="Ej.: Ortodoncia con brackets metálicos" required>
+      <input class="pq-input" id="plan-titulo" type="text" name="titulo" maxlength="120" placeholder="Ej.: Ortodoncia con brackets metálicos" required value="<?= e((string) ($desde['titulo'] ?? '')) ?>">
     </div>
     <?php // Renglones fijos (sin JS); los vacíos no se guardan. Una fase sin valor queda en $0 (controles incluidos). ?>
     <div class="pq-plan-fases-form">
       <?php for ($i = 0; $i < PlanTratamiento::MAX_FASES; $i++): ?>
+        <?php $previa = $fasesDesde[$i] ?? null; ?>
         <div class="pq-plan-fase-form">
           <span class="pq-plan-fase-numero" aria-hidden="true"><?= $i + 1 ?></span>
-          <input class="pq-input" type="text" name="fases[<?= $i ?>][nombre]" maxlength="120" placeholder="<?= ['Valoración y radiografías', 'Instalación de brackets', 'Controles mensuales', 'Retiro y retenedores'][$i] ?? 'Otra fase' ?>" aria-label="Fase <?= $i + 1 ?>">
-          <div class="pq-campo-sufijo" data-sufijo="ses."><input class="pq-input pq-mono" type="number" name="fases[<?= $i ?>][sesiones]" min="1" max="99" value="1" aria-label="Sesiones de la fase <?= $i + 1 ?>"></div>
-          <div class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="fases[<?= $i ?>][valor]" placeholder="Valor" data-precio-cop aria-label="Valor de la fase <?= $i + 1 ?>"></div>
+          <input class="pq-input" type="text" name="fases[<?= $i ?>][nombre]" value="<?= e((string) ($previa['nombre'] ?? '')) ?>" maxlength="120" placeholder="<?= ['Valoración y radiografías', 'Instalación de brackets', 'Controles mensuales', 'Retiro y retenedores'][$i] ?? 'Otra fase' ?>" aria-label="Fase <?= $i + 1 ?>">
+          <div class="pq-campo-sufijo" data-sufijo="ses."><input class="pq-input pq-mono" type="number" name="fases[<?= $i ?>][sesiones]" min="1" max="99" value="<?= (int) ($previa['sesiones'] ?? 1) ?>" aria-label="Sesiones de la fase <?= $i + 1 ?>"></div>
+          <div class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="fases[<?= $i ?>][valor]" value="<?= $previa !== null && (int) $previa['valor'] > 0 ? number_format((int) $previa['valor'], 0, ',', '.') : '' ?>" placeholder="Valor" data-precio-cop aria-label="Valor de la fase <?= $i + 1 ?>"></div>
         </div>
       <?php endfor; ?>
     </div>
@@ -62,7 +66,7 @@
     </div>
     <div class="pq-campo">
       <label class="pq-label" for="plan-nota">Nota para el paciente <span class="pq-ayuda">(opcional, nada clínico)</span></label>
-      <textarea class="pq-input" id="plan-nota" name="nota" rows="2" maxlength="500" placeholder="Ej.: puedes abonar mes a mes; el plan incluye los retenedores."></textarea>
+      <textarea class="pq-input" id="plan-nota" name="nota" rows="2" maxlength="500" placeholder="Ej.: puedes abonar mes a mes; el plan incluye los retenedores."><?= e((string) ($desde['nota'] ?? '')) ?></textarea>
     </div>
   </section>
   <button type="submit" class="pq-btn pq-btn-sello">Guardar plan</button>

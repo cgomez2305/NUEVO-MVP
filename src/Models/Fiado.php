@@ -286,16 +286,32 @@ class Fiado
     public static function resolverCliente(\PDO $pdo, int $negocioId, string $nombre, string $telefono, bool $autorizo, ?int $confirmadoId = null): array
     {
         $nombre = mb_substr(trim((string) preg_replace('/\s+/u', ' ', $nombre)), 0, 120);
+        $escrito = trim($telefono);
         $telefono = self::telefonoValido($telefono);
         if ($nombre === '') {
             throw new \DomainException('Escribe el nombre del cliente.');
         }
-        if ($telefono === null) {
-            throw new \DomainException('Escribe un WhatsApp de 10 dígitos que empiece por 3.');
+        if ($telefono === null && $escrito !== '') {
+            throw new \DomainException('Ese WhatsApp no se ve bien: 10 dígitos que empiecen por 3. Si el cliente no tiene, déjalo vacío.');
         }
-        $stmt = $pdo->prepare('SELECT id, nombre FROM clientes WHERE negocio_id = :n AND telefono = :t FOR UPDATE');
-        $stmt->execute(['n' => $negocioId, 't' => $telefono]);
-        $existente = $stmt->fetch();
+        if ($telefono === null) {
+            // Sin WhatsApp (se puede fiar igual; solo no hay a dónde mandarle
+            // el recordatorio). Se reconoce por el nombre completo exacto
+            // entre los que tampoco tienen: "Rosa" y "Rosa Pinzón" sin
+            // número que los distinga podrían ser dos personas.
+            $stmt = $pdo->prepare('SELECT id, nombre FROM clientes WHERE negocio_id = :n AND telefono IS NULL FOR UPDATE');
+            $stmt->execute(['n' => $negocioId]);
+            foreach ($stmt->fetchAll() as $sinTelefono) {
+                if ($confirmadoId === (int) $sinTelefono['id'] || self::nombreNormalizado($nombre) === self::nombreNormalizado((string) $sinTelefono['nombre'])) {
+                    return ['id' => (int) $sinTelefono['id'], 'nuevo' => false, 'nombre' => (string) $sinTelefono['nombre']];
+                }
+            }
+            $existente = false;
+        } else {
+            $stmt = $pdo->prepare('SELECT id, nombre FROM clientes WHERE negocio_id = :n AND telefono = :t FOR UPDATE');
+            $stmt->execute(['n' => $negocioId, 't' => $telefono]);
+            $existente = $stmt->fetch();
+        }
         if ($existente !== false) {
             if ($confirmadoId === (int) $existente['id'] || self::mismaPersona($nombre, (string) $existente['nombre'])) {
                 return ['id' => (int) $existente['id'], 'nuevo' => false, 'nombre' => (string) $existente['nombre']];
@@ -313,17 +329,20 @@ class Fiado
         return ['id' => (int) $pdo->lastInsertId(), 'nuevo' => true, 'nombre' => $nombre];
     }
 
+    /** Sin tildes, mayúsculas ni signos, con un solo espacio entre palabras. */
+    private static function nombreNormalizado(string $t): string
+    {
+        $t = mb_strtolower(trim($t));
+        $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+
+        return trim((string) preg_replace('/\s+/', ' ', (string) preg_replace('/[^a-z0-9 ]+/', '', $t)));
+    }
+
     /** "Rosa" y "Rosa Elvira Pinzón" son la misma; "Rosa" y "Carlos", no. Sin tildes ni mayúsculas. */
     public static function mismaPersona(string $a, string $b): bool
     {
-        $limpio = static function (string $t): string {
-            $t = mb_strtolower(trim($t));
-            $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
-
-            return (string) preg_replace('/[^a-z0-9 ]+/', '', $t);
-        };
-        $a = $limpio($a);
-        $b = $limpio($b);
+        $a = self::nombreNormalizado($a);
+        $b = self::nombreNormalizado($b);
         if ($a === '' || $b === '') {
             return false;
         }

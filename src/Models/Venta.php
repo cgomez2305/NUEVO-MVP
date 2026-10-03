@@ -495,4 +495,21 @@ class Venta
 
         return ['filas' => array_slice($conGanancia, 0, $limite), 'lineas' => $lineas];
     }
+
+    /**
+     * ¿Esta sede vende en el local? Vendió por el mostrador en los últimos
+     * 30 días, o tiene productos con código de barras o por peso (una
+     * tienda, no un restaurante que solo recibe pedidos). Decide si el
+     * Mostrador va en la barra de abajo del celular.
+     */
+    public static function usaMostrador(int $sedeId): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT EXISTS(SELECT 1 FROM ventas WHERE sede_id = :s1 AND creado_en >= NOW() - INTERVAL 30 DAY)
+                 OR EXISTS(SELECT 1 FROM productos WHERE sede_id = :s2 AND activo = 1 AND (codigo_barras IS NOT NULL OR vende_por = 'peso'))"
+        );
+        $stmt->execute(['s1' => $sedeId, 's2' => $sedeId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
 }

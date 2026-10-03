@@ -700,11 +700,11 @@ class TiendaController
                 $nueva = ($carrito[$productoId] ?? 0) + 1;
                 // Con inventario no se deja pedir más de lo que hay: el "+"
                 // se queda quieto y se dice por qué (sin JS, con un aviso).
-                // Por peso se pide por kilos y el stock va en gramos (ver Producto::unidadesDisponibles).
+                // Por peso se pide por medias libras y el stock va en gramos (ver Producto::unidadesDisponibles).
                 $hay = Producto::unidadesDisponibles($producto);
                 if ($hay !== null && $nueva > $hay) {
                     if (!$this->esPeticionAjax()) {
-                        flash_set('error', 'Solo quedan ' . $hay . (($producto['vende_por'] ?? '') === 'peso' ? ' kg' : '') . ' de ' . $producto['nombre'] . '.');
+                        flash_set('error', 'Solo quedan ' . Producto::cantidadEnLinea($producto, $hay) . ' de ' . $producto['nombre'] . '.');
                     }
                 } else {
                     $carrito[$productoId] = $nueva;
@@ -797,7 +797,10 @@ class TiendaController
         $lineas = array_map(fn ($linea) => [
             'producto_id' => (int) $linea['producto']['id'],
             'cantidad'    => $linea['cantidad'],
-            'subtotal'    => (int) $linea['producto']['precio'] * $linea['cantidad'],
+            // Lo que se muestra: "3", o por peso "1½ libras" (texto) / "1½ lb" (burbuja del catálogo).
+            'texto'       => Producto::cantidadEnLinea($linea['producto'], $linea['cantidad']),
+            'texto_corto' => Producto::cantidadEnLinea($linea['producto'], $linea['cantidad'], true),
+            'subtotal'    => Producto::precioEnLinea($linea['producto'], $linea['cantidad']),
             'tope'        => Producto::unidadesDisponibles($linea['producto']),
         ], $carrito['lineas']);
         // Las líneas de ajuste de la comanda (subtotal, cupón, domicilio) las
@@ -938,13 +941,28 @@ class TiendaController
             $ajustes['zona_domicilio'] = (string) $zona['nombre'];
         }
 
-        $items = array_map(fn ($linea) => [
-            'producto_id' => $linea['producto']['id'],
-            'nombre'      => $linea['producto']['nombre'],
-            'precio'      => (int) $linea['producto']['precio'],
-            'cantidad'    => $linea['cantidad'],
-            'combo'       => Producto::textoCombo($linea['producto']),
-        ], $carrito['lineas']);
+        // Por peso va como un renglón con su peso en gramos y el precio de ese
+        // peso (cantidad 1): precio × cantidad sigue siendo el subtotal en
+        // todas partes, y el inventario se descuenta en gramos.
+        $items = array_map(fn ($linea) => Producto::esPorPeso($linea['producto'])
+            ? [
+                'producto_id' => $linea['producto']['id'],
+                'nombre'      => $linea['producto']['nombre'],
+                'precio'      => Producto::precioEnLinea($linea['producto'], $linea['cantidad']),
+                'cantidad'    => 1,
+                'gramos'      => $linea['cantidad'] * Producto::GRAMOS_PASO_EN_LINEA,
+                'texto'       => Producto::cantidadEnLinea($linea['producto'], $linea['cantidad']),
+                'combo'       => '',
+            ]
+            : [
+                'producto_id' => $linea['producto']['id'],
+                'nombre'      => $linea['producto']['nombre'],
+                'precio'      => (int) $linea['producto']['precio'],
+                'cantidad'    => $linea['cantidad'],
+                'gramos'      => null,
+                'texto'       => (string) $linea['cantidad'],
+                'combo'       => Producto::textoCombo($linea['producto']),
+            ], $carrito['lineas']);
 
         $this->registrarTasaPublica('pedido', $negocio);
         try {
@@ -976,7 +994,8 @@ class TiendaController
 
         $resumenTexto = "Pedido nuevo de {$nombre}:\n";
         foreach ($items as $item) {
-            $resumenTexto .= "- {$item['cantidad']} x {$item['nombre']}" . ($item['combo'] !== '' ? " ({$item['combo']})" : '') . "\n";
+            $resumenTexto .= ($item['gramos'] !== null ? "- {$item['texto']} de {$item['nombre']}" : "- {$item['cantidad']} x {$item['nombre']}")
+                . ($item['combo'] !== '' ? " ({$item['combo']})" : '') . "\n";
         }
         if ((int) $pedido['descuento'] > 0) {
             $resumenTexto .= 'Descuento' . ($pedido['cupon_codigo'] ? " (cupón {$pedido['cupon_codigo']})" : '') . ': -' . pesos((int) $pedido['descuento']) . "\n";
@@ -1402,11 +1421,17 @@ class TiendaController
             $hay = Producto::unidadesDisponibles($producto);
             if ($hay !== null && $cantidad > $hay) {
                 $cantidad = $hay;
-                $recortados[] = $cantidad === 1 ? "solo queda 1 de {$producto['nombre']}" : "solo quedan {$cantidad} de {$producto['nombre']}";
+                $recortados[] = $cantidad === 1 && !Producto::esPorPeso($producto)
+                    ? "solo queda 1 de {$producto['nombre']}"
+                    : 'solo quedan ' . Producto::cantidadEnLinea($producto, $cantidad) . " de {$producto['nombre']}";
+                if ($cantidad < 1) {
+                    continue;
+                }
             }
             $lineas[] = ['producto' => $producto, 'cantidad' => $cantidad];
-            $cantidadTotal += $cantidad;
-            $total += (int) $producto['precio'] * $cantidad;
+            // Un producto por peso cuenta como uno ("1 libra de carne" es un producto, no dos medias).
+            $cantidadTotal += Producto::esPorPeso($producto) ? 1 : $cantidad;
+            $total += Producto::precioEnLinea($producto, $cantidad);
         }
 
         // Cupón aplicado en esta sesión: se revisa con el subtotal actual

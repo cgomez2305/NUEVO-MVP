@@ -236,6 +236,7 @@ $router->get('/panel/planes', [$salud, 'lista']);
 $router->get('/panel/planes/nuevo', [$salud, 'nuevo']);
 $router->post('/panel/planes', [$salud, 'crear']);
 $router->get('/panel/planes/{id}', [$salud, 'ver']);
+$router->post('/panel/planes/{id}/aprobar-consultorio', [$salud, 'aprobarEnConsultorio']);
 $router->post('/panel/planes/{id}/abonos', [$salud, 'abonar']);
 $router->post('/panel/planes/{id}/abonos/{abono}/anular', [$salud, 'anularAbono']);
 $router->post('/panel/planes/{id}/vincular', [$salud, 'vincular']);

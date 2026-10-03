@@ -38,11 +38,19 @@ class SaludController
         $negocio = $this->sedeDeSalud();
         // Desde una cita ("Armar plan"): el paciente ya viene elegido.
         $cita = isset($_GET['cita']) ? Cita::buscar((int) $_GET['cita'], (int) $negocio['id']) : null;
+        // Rehacer uno vencido, rechazado o cancelado: paciente y fases vienen
+        // del viejo, y se pueden ajustar antes de guardar.
+        $desde = isset($_GET['desde']) ? PlanTratamiento::buscar((int) $_GET['desde'], (int) $negocio['id']) : null;
+        if ($desde !== null && !PlanTratamiento::rehacible($desde)) {
+            $desde = null;
+        }
         ver('panel/plan_nuevo', [
             'titulo'  => 'Nuevo plan · Veci',
             'activo'  => 'planes',
             'negocio' => $negocio,
-            'cita'    => $cita,
+            'cita'    => $desde === null ? $cita : null,
+            'desde'   => $desde,
+            'fasesDesde' => $desde !== null ? PlanTratamiento::fases((int) $desde['id']) : [],
             'error'   => flash_obtener('error'),
         ], 'panel');
     }
@@ -54,9 +62,17 @@ class SaludController
             redirigir('/panel/planes/nuevo');
         }
         $citaId = (int) ($_POST['cita_id'] ?? 0);
-        $volver = '/panel/planes/nuevo' . ($citaId > 0 ? '?cita=' . $citaId : '');
+        $desdeId = (int) ($_POST['desde_id'] ?? 0);
+        $volver = '/panel/planes/nuevo' . ($desdeId > 0 ? '?desde=' . $desdeId : ($citaId > 0 ? '?cita=' . $citaId : ''));
         $cita = $citaId > 0 ? Cita::buscar($citaId, (int) $negocio['id']) : null;
-        if ($cita !== null) {
+        $desde = $desdeId > 0 ? PlanTratamiento::buscar($desdeId, (int) $negocio['id']) : null;
+        if ($desde !== null && !PlanTratamiento::rehacible($desde)) {
+            flash_set('error', 'Ese plan sigue vigente: no hace falta rehacerlo.');
+            redirigir('/panel/planes/' . $desdeId);
+        }
+        if ($desde !== null) {
+            $clienteId = (int) $desde['cliente_id'];
+        } elseif ($cita !== null) {
             $clienteId = (int) $cita['cliente_id'];
         } else {
             $nombre = trim((string) ($_POST['nombre'] ?? ''));
@@ -74,6 +90,9 @@ class SaludController
             redirigir($volver);
         }
         $id = PlanTratamiento::crear((int) $negocio['id'], $clienteId, $titulo, $fases, (int) ($_POST['validez_dias'] ?? 30), trim((string) ($_POST['nota'] ?? '')));
+        if ($desde !== null) {
+            PlanTratamiento::marcarRehecho($id, $desde);
+        }
         $plan = PlanTratamiento::buscar($id, (int) $negocio['id']);
         flash_set('ok', 'Plan por ' . pesos($total) . ' listo. Mándaselo para que lo apruebe.');
         flash_set('wa_plan', $this->enlaceWhatsapp($plan, PlanTratamiento::mensajePlan($plan, $negocio)));
@@ -97,6 +116,21 @@ class SaludController
             'ok'          => flash_obtener('ok'),
             'error'       => flash_obtener('error'),
         ], 'panel');
+    }
+
+    /** El paciente lo aprobó en persona (no abre enlaces): queda quién lo marcó y cuándo. */
+    public function aprobarEnConsultorio(array $parametros): void
+    {
+        [$negocio, $plan] = $this->planDelPost($parametros);
+        if (empty($_POST['confirmo'])) {
+            flash_set('error', 'Marca que el paciente lo aprobó en persona.');
+            redirigir('/panel/planes/' . $plan['id']);
+        }
+        $ok = PlanTratamiento::responder($plan, true, isset($negocio['usuario_id']) ? (int) $negocio['usuario_id'] : null);
+        flash_set($ok ? 'ok' : 'error', $ok
+            ? 'Plan aprobado en el consultorio. Ya puedes anotar abonos y agendar sus sesiones.'
+            : 'Este plan ya no se puede aprobar (venció o ya tenía respuesta). Puedes hacer uno nuevo a partir de él.');
+        redirigir('/panel/planes/' . $plan['id']);
     }
 
     public function abonar(array $parametros): void

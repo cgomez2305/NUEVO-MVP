@@ -292,3 +292,15 @@ llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
   abonado, saldo y barra), sello "Por aprobar / En tratamiento", Aprobar /
   Por ahora no, pasos de pago Bre-B sin referencia (no se concilia sola) y
   "Tus abonos".
+
+## Productos por peso en línea (libras)
+
+- En la carta, el precio grande es el del kilo (como el tablero de la
+  carnicería) y debajo va `.pq-plato-libra`: "La libra, $9.000 · se pide
+  de a media libra". Nadie tiene que hacer cuentas.
+- Cada "+" suma media libra (250 g). La burbuja del botón dice "1 lb",
+  "1½ lb", "1 kg"; el stepper del carrito dice "1½ libras" (`.pq-stepper-peso`,
+  más ancho para que no se corte). Un producto por peso cuenta como 1 en
+  "N productos".
+- Textos con `Producto::cantidadEnLinea()` / `librasLegibles()`; precio
+  con `Producto::precioEnLinea()` (redondeo a $50, igual que el mostrador).

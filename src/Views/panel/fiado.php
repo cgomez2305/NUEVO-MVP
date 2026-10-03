@@ -96,9 +96,9 @@ $form = $formAnterior ?? [];
       <input class="pq-input" id="fiado-nombre" type="text" name="nombre" maxlength="120" required value="<?= e((string) ($form['nombre'] ?? '')) ?>">
     </div>
     <div class="pq-campo">
-      <label class="pq-label" for="fiado-telefono">WhatsApp</label>
-      <input class="pq-input pq-mono" id="fiado-telefono" type="tel" inputmode="numeric" name="telefono" maxlength="20" required placeholder="300 123 4567" value="<?= e((string) ($form['telefono'] ?? '')) ?>">
-      <span class="pq-ayuda">Si ya es tu cliente (compró por la tienda), se usa su cuenta: no se duplica.</span>
+      <label class="pq-label" for="fiado-telefono">WhatsApp <span class="pq-ayuda">(opcional)</span></label>
+      <input class="pq-input pq-mono" id="fiado-telefono" type="tel" inputmode="numeric" name="telefono" maxlength="20" placeholder="300 123 4567" value="<?= e((string) ($form['telefono'] ?? '')) ?>">
+      <span class="pq-ayuda">Si ya es tu cliente (compró por la tienda), se usa su cuenta: no se duplica. Sin WhatsApp también se le fía; solo no le llegan recordatorios.</span>
     </div>
     <div class="pq-campo">
       <label class="pq-label" for="fiado-inicial">¿Ya te debía algo? <span class="pq-ayuda">(opcional, lo del cuaderno de papel)</span></label>

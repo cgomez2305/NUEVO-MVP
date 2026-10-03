@@ -33,28 +33,28 @@
               <div class="pq-comanda-fila">
                 <span class="pq-comanda-nombre"><?= e($producto['nombre']) ?></span>
                 <span class="pq-plato-guia" aria-hidden="true"></span>
-                <span class="pq-comanda-subtotal" id="pq-subtotal-<?= $id ?>"><?= pesos((int) $producto['precio'] * $linea['cantidad']) ?></span>
+                <span class="pq-comanda-subtotal" id="pq-subtotal-<?= $id ?>"><?= pesos(\App\Models\Producto::precioEnLinea($producto, $linea['cantidad'])) ?></span>
               </div>
               <?php if (!empty($producto['combo'])): ?>
                 <p class="pq-comanda-combo"><?= e(\App\Models\Producto::textoCombo($producto)) ?></p>
               <?php endif; ?>
               <div class="pq-comanda-controles">
-                <span class="pq-comanda-unitario"><?= pesos((int) $producto['precio']) ?> <?= ($producto['vende_por'] ?? '') === 'peso' ? 'el kilo' : 'c/u' ?></span>
+                <span class="pq-comanda-unitario"><?= pesos((int) $producto['precio']) ?> <?= ($producto['vende_por'] ?? '') === 'peso' ? 'el kilo · de a media libra' : 'c/u' ?></span>
                 <div class="pq-stepper">
                   <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/restar')) ?>" data-carrito-form="restar">
                     <?= csrf_campo() ?>
                     <input type="hidden" name="producto_id" value="<?= $id ?>">
-                    <button type="submit" class="pq-stepper-boton" aria-label="Quitar una unidad de <?= e($producto['nombre']) ?>">
+                    <button type="submit" class="pq-stepper-boton" aria-label="Quitar <?= \App\Models\Producto::esPorPeso($producto) ? 'media libra' : 'una unidad' ?> de <?= e($producto['nombre']) ?>">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
                     </button>
                   </form>
-                  <span class="pq-stepper-cantidad" id="pq-cantidad-<?= $id ?>"><?= $linea['cantidad'] ?></span>
+                  <span class="pq-stepper-cantidad<?= \App\Models\Producto::esPorPeso($producto) ? ' pq-stepper-peso' : '' ?>" id="pq-cantidad-<?= $id ?>"><?= e(\App\Models\Producto::cantidadEnLinea($producto, $linea['cantidad'])) ?></span>
                   <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/agregar')) ?>" data-carrito-form="agregar">
                     <?= csrf_campo() ?>
                     <input type="hidden" name="producto_id" value="<?= $id ?>">
                     <input type="hidden" name="volver" value="carrito">
                     <?php $hay = \App\Models\Producto::unidadesDisponibles($producto); $enTope = $hay !== null && $linea['cantidad'] >= $hay; ?>
-                    <button type="submit" class="pq-stepper-boton" aria-label="Agregar una unidad de <?= e($producto['nombre']) ?>"<?= $enTope ? ' disabled title="No hay más unidades"' : '' ?> data-tope="<?= $hay !== null ? $hay : '' ?>">
+                    <button type="submit" class="pq-stepper-boton" aria-label="Agregar <?= \App\Models\Producto::esPorPeso($producto) ? 'media libra' : 'una unidad' ?> de <?= e($producto['nombre']) ?>"<?= $enTope ? ' disabled title="No hay más unidades"' : '' ?> data-tope="<?= $hay !== null ? $hay : '' ?>">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                     </button>
                   </form>

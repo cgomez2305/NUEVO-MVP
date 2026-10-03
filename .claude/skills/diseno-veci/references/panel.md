@@ -404,3 +404,19 @@ clínica: nada de diagnósticos ni evoluciones.
 - **Caja**: "Abonos a planes" por método suma a Vendido; el efectivo va al
   cajón. **Comisiones**: una sesión del plan cuenta por valor de la fase ÷
   sesiones.
+
+## Barra del celular en tiendas
+
+Si la sede vende en el local (`Venta::usaMostrador`: ventas en 30 días o
+productos con código de barras o por peso), la barra de abajo es Panel ·
+Mostrador · Pedidos, y la tercera pestaña de siempre pasa a "Más". Un
+restaurante que solo recibe pedidos conserva su barra.
+
+## Plan de tratamiento: aprobación en el consultorio
+
+Bajo las cifras, separado por la línea punteada del tiquete
+(`.pq-plan-presencial`): casilla "El paciente revisó las fases y el total,
+y lo aprobó aquí en persona" + botón. Aprobado, la constancia va bajo el
+título (`.pq-plan-constancia`): por enlace o en el consultorio y quién lo
+marcó. Un plan vencido, rechazado o cancelado ofrece "Hacer uno nuevo a
+partir de este" (formulario prellenado); el nuevo enlaza al viejo.

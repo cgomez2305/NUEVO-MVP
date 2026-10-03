@@ -80,7 +80,9 @@ $conceptoDe = static function (array $mov): string {
         <div class="pq-wa-fondo">
           <p class="pq-burbuja-out pq-fiado-burbuja"><?= e($mensaje) ?></p>
         </div>
-        <?php if ($recordar['permitido']): ?>
+        <?php if (!$esDueno): ?>
+          <p class="pq-ayuda">El recordatorio de cobro lo envía el dueño del negocio.</p>
+        <?php elseif ($recordar['permitido']): ?>
           <form method="post" action="<?= e(base_url('/panel/fiado/' . (int) $cliente['id'] . '/recordatorio')) ?>">
             <?= csrf_campo() ?>
             <button type="submit" class="pq-btn pq-btn-whatsapp"><?= $iconoWhatsapp ?> Enviar recordatorio por WhatsApp</button>

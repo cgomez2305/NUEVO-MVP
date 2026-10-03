@@ -28,7 +28,15 @@ $tarjeta = static function (array $fase): string {
   </div>
   <span class="pq-chip <?= match ($estado) { 'aprobado' => 'pq-chip-curso', 'terminado' => 'pq-chip-caja', 'propuesto' => 'pq-chip-pendiente', default => 'pq-chip-cancelado' } ?>"><?= e($estado === 'vencido' ? 'Venció sin aprobar' : PlanTratamiento::ETIQUETAS[$estado]) ?></span>
 </div>
-<p class="pq-lead pq-pagina-bajada-panel"><?= e($plan['cliente_nombre']) ?> · creado el <?= e(fecha_larga(date('Y-m-d', strtotime((string) $plan['creado_en'])))) ?></p>
+<p class="pq-lead pq-pagina-bajada-panel"><?= e($plan['cliente_nombre']) ?> · creado el <?= e(fecha_larga(date('Y-m-d', strtotime((string) $plan['creado_en'])))) ?><?php if (!empty($plan['rehecho_de'])): ?> · <a href="<?= e(base_url('/panel/planes/' . (int) $plan['rehecho_de'])) ?>">rehecho del plan #<?= (int) $plan['rehecho_de'] ?></a><?php endif; ?></p>
+<?php if (in_array($plan['estado'], ['aprobado', 'terminado'], true) && !empty($plan['respondido_en'])): ?>
+  <?php // La constancia de la aprobación: por dónde y, si fue en persona, quién la marcó. ?>
+  <p class="pq-ayuda pq-plan-constancia">
+    <?= $plan['aprobado_canal'] === 'consultorio'
+        ? 'Aprobado en el consultorio el ' . e(fecha_corta((string) $plan['respondido_en'])) . (!empty($plan['aprobado_por_nombre']) ? ' · lo marcó ' . e($plan['aprobado_por_nombre']) : '')
+        : 'Aprobado por el paciente desde su enlace el ' . e(fecha_corta((string) $plan['respondido_en'])) ?>
+  </p>
+<?php endif; ?>
 
 <?php if (!empty($error)): ?>
   <div class="pq-alerta pq-pagina-aviso" role="alert"><?= e($error) ?></div>
@@ -51,8 +59,11 @@ $tarjeta = static function (array $fase): string {
     <span class="pq-plan-barra pq-plan-barra-grande" aria-hidden="true"><span style="width: <?= $pagadoPct ?>%"></span></span>
     <div class="pq-visita-acciones">
       <a class="pq-btn pq-btn-ghost pq-btn-chico" href="<?= e(url_publica('/plan/' . $plan['token'])) ?>" target="_blank" rel="noopener">Verlo como el paciente</a>
-      <?php if ($plan['estado'] === 'propuesto'): ?>
+      <?php if ($estado === 'propuesto'): ?>
         <a class="pq-btn pq-btn-ghost pq-btn-chico" href="<?= e('https://wa.me/57' . preg_replace('/\D+/', '', (string) $plan['cliente_telefono']) . '?text=' . rawurlencode(PlanTratamiento::mensajePlan($plan, $negocio))) ?>" target="_blank" rel="noopener">Mandarle el plan</a>
+      <?php endif; ?>
+      <?php if (PlanTratamiento::rehacible($plan)): ?>
+        <a class="pq-btn pq-btn-sello pq-btn-chico" href="<?= e(base_url('/panel/planes/nuevo?desde=' . $id)) ?>">Hacer uno nuevo a partir de este</a>
       <?php endif; ?>
       <?php if (PlanTratamiento::recibeAbonos($plan)): ?>
         <?php if ($recordar['permitido']): ?>
@@ -65,6 +76,14 @@ $tarjeta = static function (array $fase): string {
         <?php endif; ?>
       <?php endif; ?>
     </div>
+    <?php if ($estado === 'propuesto'): ?>
+      <?php // Para el paciente que no abre enlaces: lo aprueba en recepción y queda la constancia de quién lo marcó. ?>
+      <form method="post" action="<?= e(base_url($base . '/aprobar-consultorio')) ?>" class="pq-plan-presencial">
+        <?= csrf_campo() ?>
+        <label class="pq-reglas-opcion"><input type="checkbox" name="confirmo" value="1" required><span>El paciente revisó las fases y el total, y lo aprobó aquí en persona</span></label>
+        <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Aprobado en el consultorio</button>
+      </form>
+    <?php endif; ?>
   </section>
 
   <section class="pq-ficha-bloque" aria-labelledby="pq-fases-titulo">

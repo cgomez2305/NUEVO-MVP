@@ -24,7 +24,7 @@ $nombreNegocio = nombre_publico_sede($negocio);
       <?php foreach ($items as $item): ?>
         <div class="pq-comanda-linea">
           <div class="pq-comanda-fila">
-            <span class="pq-comanda-nombre"><span class="pq-comanda-cantidad"><?= (int) $item['cantidad'] ?>×</span> <?= e($item['nombre']) ?></span>
+            <span class="pq-comanda-nombre"><span class="pq-comanda-cantidad"><?= !empty($item['gramos']) ? e(\App\Models\Producto::librasLegibles((int) $item['gramos'])) : (int) $item['cantidad'] . '×' ?></span> <?= e($item['nombre']) ?></span>
             <span class="pq-plato-guia" aria-hidden="true"></span>
             <span class="pq-comanda-subtotal"><?= pesos((int) $item['precio'] * (int) $item['cantidad']) ?></span>
           </div>

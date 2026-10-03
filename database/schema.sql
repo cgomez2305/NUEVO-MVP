@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS clientes (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   negocio_id      INT UNSIGNED NOT NULL,
   nombre          VARCHAR(120) NOT NULL,
-  telefono        VARCHAR(20)  NOT NULL,
+  telefono        VARCHAR(20)  DEFAULT NULL, -- NULL: cliente del fiado sin WhatsApp
   autorizo_datos  TINYINT(1)   NOT NULL DEFAULT 0,
   autorizado_en   DATETIME     DEFAULT NULL,
   -- Opt-in SEPARADO del anterior: ese autoriza a guardar los datos para
@@ -250,6 +250,9 @@ CREATE TABLE IF NOT EXISTS pedido_items (
   cantidad          SMALLINT UNSIGNED NOT NULL DEFAULT 1,
   -- Si el producto iba por peso al pedirlo (1 = 1 kg): cancelar devuelve en esa unidad.
   por_peso          TINYINT(1)   NOT NULL DEFAULT 0,
+  -- Pedido en línea por medias libras: los gramos pedidos (cantidad = 1 y
+  -- precio_unitario = el precio de ese peso). NULL = por unidad o kilos.
+  gramos            INT UNSIGNED DEFAULT NULL,
   FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
   FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -995,10 +998,17 @@ CREATE TABLE IF NOT EXISTS planes_tratamiento (
   nota          VARCHAR(500) DEFAULT NULL,
   saldo_recordado_en DATETIME DEFAULT NULL,
   respondido_en DATETIME     DEFAULT NULL,
+  -- Por dónde se aprobó: el enlace del paciente o en el consultorio (y quién lo marcó).
+  aprobado_canal ENUM('enlace','consultorio') DEFAULT NULL,
+  aprobado_por  INT UNSIGNED DEFAULT NULL,
+  -- Plan del que nació (rehecho de uno vencido, rechazado o cancelado).
+  rehecho_de    INT UNSIGNED DEFAULT NULL,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uniq_plan_token (token),
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_planes_aprobado_por FOREIGN KEY (aprobado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  CONSTRAINT fk_planes_rehecho_de FOREIGN KEY (rehecho_de) REFERENCES planes_tratamiento(id) ON DELETE SET NULL,
   INDEX idx_planes_sede (sede_id, estado)
 ) ENGINE=InnoDB;
 
@@ -1062,4 +1072,7 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_16_visitas.sql'),
   ('2026-10-03_17_cotizaciones.sql'),
   ('2026-10-03_25_pedido_items_por_peso.sql'),
-  ('2026-10-03_18_salud.sql');
+  ('2026-10-03_18_salud.sql'),
+  ('2026-10-03_26_precios_asequibles.sql'),
+  ('2026-10-03_27_tienda_libras_fiado.sql'),
+  ('2026-10-03_28_planes_presencial.sql');

@@ -22,6 +22,17 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   Exportar CSV en todos los planes; IA Gratis 3/mes, Barrio y Pro sin
   límite; "pedidos y reservas en la misma cuenta" quitado del sitio (no
   existe). Migración 26.
+- Tiendas (migración 27): en línea lo que va por peso se pide por medias
+  libras (½ lb, 1 lb, 1½ lb… y "1 kilo"), precio redondeado a $50 como en
+  el mostrador; el renglón guarda los gramos. Combos sin productos por
+  peso. Fiado sin WhatsApp (teléfono opcional; sin recordatorio). El
+  recordatorio de cobro del fiado lo manda solo el dueño; el equipo anota
+  fiados y abonos. "Ventas hoy" suma el mostrador (no cuenta en el límite
+  de Gratis). Mostrador en la barra del celular si la sede vende en el
+  local (ventas en 30 días o productos con código/peso).
+- Salud (migración 28): "Aprobado en el consultorio" (queda quién y
+  cuándo) y "Hacer uno nuevo a partir de este" para planes vencidos,
+  rechazados o cancelados (rehecho_de; un vencido rehecho queda cancelado).
 - Cobro → Híbrido: manual verificado por Bre-B ahora, pasarela después.
 - Límite Gratis → por mes calendario (50 pedidos/citas, 3 análisis IA).
 - Plan pago vencido → degrada a Gratis automáticamente, nunca bloquea la tienda.
@@ -92,7 +103,7 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   cupo en la fase; cerrar el plan suelta las citas agendadas; un plan
   terminado con saldo sigue recibiendo abonos; recordatorio de saldo uno por
   semana por paciente; sin títulos de tratamiento en WhatsApp ni push).
-  Pendiente de decidir: aprobación presencial del plan y renovar uno vencido.
+  Aprobación presencial y rehacer planes: hechos (migración 28).
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`

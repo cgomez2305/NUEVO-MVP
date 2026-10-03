@@ -270,7 +270,7 @@ $iconoQuitar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
           <input class="pq-input" id="mostrador-cliente-nombre" type="text" name="cliente_nombre" maxlength="120" value="<?= e((string) ($form['cliente_nombre'] ?? '')) ?>">
         </div>
         <div class="pq-campo">
-          <label class="pq-label" for="mostrador-cliente-telefono">WhatsApp</label>
+          <label class="pq-label" for="mostrador-cliente-telefono">WhatsApp <span class="pq-ayuda">(opcional)</span></label>
           <input class="pq-input pq-mono" id="mostrador-cliente-telefono" type="tel" inputmode="numeric" name="cliente_telefono" maxlength="20" value="<?= e((string) ($form['cliente_telefono'] ?? '')) ?>" placeholder="300 123 4567">
         </div>
         <label class="pq-consentimiento pq-consentimiento-requerido">

@@ -1618,6 +1618,9 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-plato-nombre { margin: 0; flex: 0 1 auto; max-width: 100%; font: 600 15.5px/1.3 var(--fuente-texto); color: var(--tinta); overflow-wrap: break-word; text-wrap: pretty; }
 .pq-plato-guia { flex: 1; min-width: 14px; border-bottom: 2px dotted color-mix(in srgb, var(--tinta) 22%, transparent); transform: translateY(-4px); }
 .pq-plato-precio { flex-shrink: 0; font: 650 15px/1.3 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--tinta); }
+/* Por peso: el precio de la carta es el del kilo (como en el tablero de la
+   carnicería), y abajo la libra ya calculada, que es como se pide aquí. */
+.pq-plato-libra { display: block; margin-top: 2px; font-size: 13px; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
 .pq-plato-desc {
   margin: 4px 0 0;
   font-size: 13.5px;
@@ -2194,6 +2197,8 @@ button.pq-slot:has(.pq-slot-nota) { flex-direction: column; gap: 0; line-height:
 }
 .pq-stepper-boton:hover { background: var(--recibo); }
 .pq-stepper-cantidad { min-width: 20px; text-align: center; font-size: 13px; font-weight: 600; }
+/* "1½ libras" no cabe en 20px: el número de un producto por peso lleva su unidad. */
+.pq-stepper-peso { min-width: 64px; white-space: nowrap; }
 
 /* ---------- checkout público: secciones, teléfono, pago, CTA sticky ---------- */
 
@@ -5245,6 +5250,10 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-plan-debe { color: #8a5a00; }
 .pq-plan-cuenta .pq-visita-acciones { align-items: center; }
 .pq-plan-recordar-no { flex-basis: 100%; margin: 0; }
+/* Aprobar en el consultorio: separado del resto con la línea punteada del
+   tiquete, porque es una firma (deja constancia), no un botón más. */
+.pq-plan-presencial { display: grid; gap: var(--esp-2); justify-items: start; margin-top: var(--esp-4); padding-top: var(--esp-4); border-top: 1px dashed var(--borde); }
+.pq-plan-constancia { margin: calc(-1 * var(--esp-2)) 0 var(--esp-4); }
 .pq-plan-pago { font-weight: 600; color: #0f6b45; }
 
 .pq-plan-citas, .pq-plan-abonos { list-style: none; margin: var(--esp-3) 0; padding: 0; }

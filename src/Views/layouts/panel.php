@@ -132,11 +132,22 @@ if ($esDueno) {
 $tercerTabMovil = $esDueno
     ? ['copiloto', 'Copiloto', base_url('/panel/copiloto')]
     : ($tipoReservas ? ['servicios', 'Servicios', base_url('/panel/servicios')] : ['productos', 'Menú', base_url('/panel/productos')]);
-$navBottomPrincipal = [
-    ['panel', 'Panel', base_url('/panel')],
-    $tipoReservas ? ['citas', 'Agenda', base_url('/panel/citas')] : ['pedidos', 'Pedidos', base_url('/panel/pedidos')],
-    $tercerTabMovil,
-];
+// Una tienda que vende en el local abre el Mostrador cien veces al día: va
+// en la barra, al lado de Panel (donde cae el pulgar), y lo que era la
+// tercera pestaña pasa a "Más". Un restaurante que solo recibe pedidos no
+// lo usa y su barra queda igual (ver Venta::usaMostrador).
+$mostradorEnBarra = !$tipoReservas && \App\Models\Venta::usaMostrador((int) $negocio['id']);
+$navBottomPrincipal = $mostradorEnBarra
+    ? [
+        ['panel', 'Panel', base_url('/panel')],
+        ['mostrador', 'Mostrador', base_url('/panel/mostrador')],
+        ['pedidos', 'Pedidos', base_url('/panel/pedidos')],
+    ]
+    : [
+        ['panel', 'Panel', base_url('/panel')],
+        $tipoReservas ? ['citas', 'Agenda', base_url('/panel/citas')] : ['pedidos', 'Pedidos', base_url('/panel/pedidos')],
+        $tercerTabMovil,
+    ];
 $clavesBottomPrincipal = array_column($navBottomPrincipal, 0);
 $navMas = array_values(array_filter(
     array_merge($navOperacion, $navCrecimiento, $navConfiguracion, $navCuenta),

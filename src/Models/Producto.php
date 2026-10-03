@@ -129,8 +129,10 @@ class Producto
             foreach ($partes as $parte) {
                 $producto['precio_separado'] += (int) $parte['precio'] * (int) $parte['cantidad'];
                 if ($parte['stock'] !== null) {
-                    // Una parte por peso cuenta en kilos (su stock va en gramos).
-                    $alcanzan = min($alcanzan ?? PHP_INT_MAX, intdiv((int) self::unidadesDisponibles($parte), max(1, (int) $parte['cantidad'])));
+                    // Una parte por peso cuenta en kilos (su stock va en gramos);
+                    // ya no se agregan a combos nuevos, pero los viejos siguen.
+                    $disponibles = self::esPorPeso($parte) ? intdiv(max(0, (int) $parte['stock']), self::GRAMOS_POR_KILO) : (int) self::unidadesDisponibles($parte);
+                    $alcanzan = min($alcanzan ?? PHP_INT_MAX, intdiv($disponibles, max(1, (int) $parte['cantidad'])));
                 }
                 if ((int) $parte['agotado'] === 1 && (int) $producto['agotado'] === 0) {
                     $producto['agotado'] = 1;
@@ -161,9 +163,12 @@ class Producto
         $pdo = Database::conexion();
         $validos = [];
         $porCombo = self::componentesPorCombo($sedeId);
+        // Por peso no entra a un combo (precio fijo vs. peso variable), salvo
+        // que este combo ya lo trajera de antes.
+        $yaEnEste = array_map('intval', array_column($porCombo[$comboId] ?? [], 'id'));
         foreach (self::listarPorSede($sedeId) as $producto) {
             $id = (int) $producto['id'];
-            if ($id !== $comboId && !isset($porCombo[$id])) {
+            if ($id !== $comboId && !isset($porCombo[$id]) && (!self::esPorPeso($producto) || in_array($id, $yaEnEste, true))) {
                 $validos[$id] = true;
             }
         }
@@ -639,8 +644,21 @@ class Producto
     }
 
     /**
-     * Lo que se puede pedir en la tienda en línea: unidades, o kilos enteros
-     * si va por peso (el stock está en gramos: 2.500 g = 2 kg pedibles).
+     * En la tienda en línea lo que va por peso se pide por medias libras
+     * (250 g): en Colombia se pide "una libra de carne" o "media de queso",
+     * no "0,5 kg". En el carrito, la cantidad de un producto por peso es el
+     * número de medias libras.
+     */
+    public const GRAMOS_PASO_EN_LINEA = 250;
+
+    public static function esPorPeso(array $producto): bool
+    {
+        return ($producto['vende_por'] ?? 'unidad') === 'peso';
+    }
+
+    /**
+     * Lo que se puede pedir en la tienda en línea: unidades, o medias libras
+     * si va por peso (el stock está en gramos: 1.300 g = 5 medias libras).
      * null = no se lleva inventario.
      */
     public static function unidadesDisponibles(array $producto): ?int
@@ -650,7 +668,41 @@ class Producto
         }
         $stock = max(0, (int) $producto['stock']);
 
-        return ($producto['vende_por'] ?? 'unidad') === 'peso' ? intdiv($stock, self::GRAMOS_POR_KILO) : $stock;
+        return self::esPorPeso($producto) ? intdiv($stock, self::GRAMOS_PASO_EN_LINEA) : $stock;
+    }
+
+    /** Lo que cuesta $cantidad en línea: unidades × precio, o el peso al precio del kilo (redondeado a $50, como en el mostrador). */
+    public static function precioEnLinea(array $producto, int $cantidad): int
+    {
+        return self::esPorPeso($producto)
+            ? self::precioPorGramos((int) $producto['precio'], $cantidad * self::GRAMOS_PASO_EN_LINEA)
+            : (int) $producto['precio'] * $cantidad;
+    }
+
+    /** "3", o por peso "1 libra" / "1½ libras" / "1 kilo" ($corto: "1 lb" / "1 kg", para la burbuja del botón). */
+    public static function cantidadEnLinea(array $producto, int $cantidad, bool $corto = false): string
+    {
+        return self::esPorPeso($producto)
+            ? self::librasLegibles($cantidad * self::GRAMOS_PASO_EN_LINEA, $corto)
+            : (string) $cantidad;
+    }
+
+    /** 250 → "½ libra"; 500 → "1 libra"; 750 → "1½ libras"; 1000 → "1 kilo"; 2000 → "2 kilos". */
+    public static function librasLegibles(int $gramos, bool $corto = false): string
+    {
+        if ($gramos > 0 && $gramos % self::GRAMOS_POR_KILO === 0) {
+            $kilos = intdiv($gramos, self::GRAMOS_POR_KILO);
+
+            return $kilos . ($corto ? ' kg' : ($kilos === 1 ? ' kilo' : ' kilos'));
+        }
+        $medias = intdiv($gramos, 250);
+        $enteras = intdiv($medias, 2);
+        $numero = ($enteras > 0 ? (string) $enteras : '') . ($medias % 2 === 1 ? '½' : '');
+        if ($numero === '') {
+            return self::gramosLegibles($gramos);
+        }
+
+        return $numero . ($corto ? ' lb' : ($medias <= 2 ? ' libra' : ' libras'));
     }
 
     /** Pocas existencias: 5 unidades, o medio kilo si va por peso. */

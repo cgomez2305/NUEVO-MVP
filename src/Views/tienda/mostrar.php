@@ -15,7 +15,7 @@ $mostrarTitulos = count($porCategoria) > 1;
 // ese producto lo muestra, así el cliente ve lo que lleva sin abrir el carrito.
 $enCarrito = [];
 foreach ($carrito['lineas'] as $linea) {
-    $enCarrito[(int) $linea['producto']['id']] = (int) $linea['cantidad'];
+    $enCarrito[(int) $linea['producto']['id']] = \App\Models\Producto::cantidadEnLinea($linea['producto'], (int) $linea['cantidad'], true);
 }
 $contador = 0;
 
@@ -75,7 +75,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
             <?php
             $id = (int) $producto['id'];
             $agotado = (int) $producto['agotado'] === 1;
-            $cantidad = $enCarrito[$id] ?? 0;
+            $cantidad = $enCarrito[$id] ?? 0; // "3" o, por peso, "1½ lb"
             ?>
             <article class="pq-plato<?= $agotado ? ' pq-plato-agotado' : '' ?><?= !empty($producto['imagen']) ? ' pq-plato-con-foto' : '' ?>" id="producto-<?= $id ?>" style="--i: <?= $contador++ % 8 ?>">
               <div class="pq-plato-cuerpo">
@@ -84,6 +84,10 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
                   <span class="pq-plato-guia" aria-hidden="true"></span>
                   <span class="pq-plato-precio"><?= pesos((int) $producto['precio']) ?><?= ($producto['vende_por'] ?? '') === 'peso' ? ' el kilo' : '' ?></span>
                 </div>
+                <?php if (\App\Models\Producto::esPorPeso($producto)): ?>
+                  <?php // Se pide de a media libra; el precio de la libra se dice de una vez, así nadie hace cuentas. ?>
+                  <span class="pq-plato-libra">La libra, <?= pesos(\App\Models\Producto::precioPorGramos((int) $producto['precio'], 500)) ?> · se pide de a media libra</span>
+                <?php endif; ?>
                 <?php if (!empty($producto['combo'])): ?>
                   <?php // El combo dice qué trae y, si es verdad, cuánto se ahorra frente a pedirlo suelto. ?>
                   <p class="pq-plato-combo">
@@ -104,7 +108,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
                   <?php // Solo "por hoy" si de verdad vuelve mañana; un agotado indefinido no promete fecha. ?>
                   <span class="pq-plato-agotado-etiqueta"><?= ($producto['motivo_agotado'] ?? '') === 'hoy' ? 'Agotado por hoy' : 'Agotado' ?></span>
                 <?php elseif (($hay = \App\Models\Producto::unidadesDisponibles($producto)) !== null && $hay <= \App\Models\Producto::POCAS_UNIDADES): ?>
-                  <span class="pq-plato-quedan"><?= $hay === 1 ? 'Queda 1' : 'Quedan ' . $hay ?><?= ($producto['vende_por'] ?? '') === 'peso' ? ' kg' : '' ?></span>
+                  <span class="pq-plato-quedan"><?= $hay === 1 && !\App\Models\Producto::esPorPeso($producto) ? 'Queda 1' : 'Quedan ' . e(\App\Models\Producto::cantidadEnLinea($producto, $hay)) ?></span>
                 <?php endif; ?>
               </div>
 

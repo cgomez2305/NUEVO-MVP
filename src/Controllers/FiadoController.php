@@ -198,6 +198,9 @@ class FiadoController
     public function recordar(array $parametros): void
     {
         $negocio = $this->exigirPedidos();
+        // Cobrar es delicado (Ley 2300 y la relación con el cliente): lo
+        // decide el dueño. El equipo sí anota fiados y abonos.
+        Auth::exigirDueno($negocio);
         $negocioId = (int) $negocio['negocio_id'];
         $cliente = $this->cliente($negocioId, $parametros);
         $volver = '/panel/fiado/' . (int) $cliente['id'];
