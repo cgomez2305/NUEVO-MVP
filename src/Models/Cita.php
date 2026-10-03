@@ -368,7 +368,11 @@ class Cita
         return (int) $stmt->fetch()['total'];
     }
 
-    /** Suma de las citas de hoy, sin contar las canceladas (no son venta real). */
+    /**
+     * Suma de las citas de hoy, sin contar las canceladas (no son venta
+     * real), más los abonos de planes de tratamiento de hoy: las citas de un
+     * plan valen $0 y la plata entra por los abonos (consultorios).
+     */
     public static function ventasHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
@@ -376,7 +380,18 @@ class Cita
              WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND ' . self::sqlCuenta()
         );
         $stmt->execute(['sede_id' => $sedeId]);
-        return (int) $stmt->fetch()['total'];
+
+        return (int) $stmt->fetch()['total'] + self::abonosPlanesDesde($sedeId, date('Y-m-d 00:00:00'));
+    }
+
+    private static function abonosPlanesDesde(int $sedeId, string $desde): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COALESCE(SUM(monto), 0) FROM plan_abonos WHERE sede_id = :s AND anulado = 0 AND creado_en >= :desde'
+        );
+        $stmt->execute(['s' => $sedeId, 'desde' => $desde]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     /**
@@ -397,16 +412,17 @@ class Cita
                ON historico.cliente_id = c.cliente_id
              WHERE c.sede_id = :sede_id AND c.creado_en >= :desde AND ' . self::sqlCuenta('c')
         );
+        $desde = (new \DateTimeImmutable('-6 days midnight'))->format('Y-m-d H:i:s');
         $stmt->execute([
             'sede_id_h' => $sedeId,
             'sede_id'   => $sedeId,
-            'desde'     => (new \DateTimeImmutable('-6 days midnight'))->format('Y-m-d H:i:s'),
+            'desde'     => $desde,
         ]);
         $fila = $stmt->fetch();
 
         return [
             'pedidos'     => (int) $fila['citas'],
-            'ventas'      => (int) $fila['ventas'],
+            'ventas'      => (int) $fila['ventas'] + self::abonosPlanesDesde($sedeId, $desde),
             'recurrentes' => (int) $fila['recurrentes'],
         ];
     }

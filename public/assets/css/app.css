@@ -2125,6 +2125,8 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 
 /* Pasos de pago: misma numeración con la marca que las etapas. */
 .pq-pago { margin-top: var(--esp-6); padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
+/* El comprobante va al negocio por WhatsApp cuando la página no es un pedido ni una reserva (cotización, plan): el botón cierra los pasos, separado de la tarjeta. */
+.pq-pago-wa { margin-top: var(--esp-3); }
 .pq-pago-titulo { margin: 0 0 var(--esp-4); font: 700 17px/1.2 var(--fuente-titulo); color: var(--tinta); }
 .pq-pago-pasos { display: grid; gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
 .pq-pago-paso { display: flex; gap: var(--esp-3); align-items: flex-start; }

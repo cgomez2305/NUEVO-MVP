@@ -76,7 +76,7 @@ $validoHasta = date('Y-m-d', (strtotime((string) $plan['creado_en']) ?: time()) 
       <button type="submit" name="respuesta" value="rechazar" class="pq-btn pq-btn-ghost-oscuro pq-btn-ancho">Por ahora no</button>
       <p class="pq-ayuda">Aprobarlo no te cobra nada todavía: abonas en el consultorio o por transferencia, como acuerdes.</p>
     </form>
-  <?php elseif ($plan['estado'] === 'aprobado' && $saldo > 0 && !empty($negocio['llave_breb_valor'])): ?>
+  <?php elseif (PlanTratamiento::recibeAbonos($plan) && !empty($negocio['llave_breb_valor'])): ?>
     <?php
     $pagoTitulo = 'Si quieres abonar por transferencia';
     $pagoMetodo = 'Bre-B';
@@ -84,8 +84,10 @@ $validoHasta = date('Y-m-d', (strtotime((string) $plan['creado_en']) ?: time()) 
     $pagoReferencia = null; // el webhook de Bre-B solo concilia pedidos y citas: aquí el comprobante va por WhatsApp
     $pagoMonto = null;
     $pagoPara = 'reserva';
+    $pagoComprobante = 'Al consultorio, con el botón de abajo: así anotan tu abono.';
     require __DIR__ . '/_pasos_pago.php';
     ?>
+    <a class="pq-btn pq-btn-oscuro pq-btn-ancho pq-pago-wa" href="https://wa.me/57<?= e(preg_replace('/\D+/', '', (string) $negocio['whatsapp'])) ?>?text=<?= rawurlencode('Hola, te mando el comprobante de mi abono al plan de tratamiento #' . (int) $plan['id'] . '.') ?>" target="_blank" rel="noopener">Enviar el comprobante por WhatsApp</a>
   <?php endif; ?>
 
   <?php if ($abonos !== []): ?>

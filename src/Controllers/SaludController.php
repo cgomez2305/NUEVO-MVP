@@ -122,14 +122,16 @@ class SaludController
     {
         [, $plan] = $this->planDelPost($parametros);
         $ok = PlanTratamiento::vincularCita($plan, (int) ($_POST['fase_id'] ?? 0), (int) ($_POST['cita_id'] ?? 0));
-        flash_set($ok ? 'ok' : 'error', $ok ? 'La cita quedó en el plan: va por cuenta de los abonos.' : 'No se pudo: elige una cita del paciente y una fase del plan.');
+        flash_set($ok ? 'ok' : 'error', $ok ? 'La cita quedó en el plan: va por cuenta de los abonos.' : 'No se pudo: elige una cita del paciente sin atender y una fase con sesiones libres.');
         redirigir('/panel/planes/' . $plan['id'] . '#sesiones');
     }
 
     public function desvincular(array $parametros): void
     {
         [, $plan] = $this->planDelPost($parametros);
-        PlanTratamiento::desvincularCita($plan, (int) $parametros['cita']);
+        if (!PlanTratamiento::desvincularCita($plan, (int) $parametros['cita'])) {
+            flash_set('error', 'Esa cita ya se atendió: queda en el plan.');
+        }
         redirigir('/panel/planes/' . $plan['id'] . '#sesiones');
     }
 
@@ -140,6 +142,8 @@ class SaludController
         $estado = (string) ($_POST['estado'] ?? '');
         if (PlanTratamiento::cerrar((int) $plan['id'], (int) $negocio['id'], $estado)) {
             flash_set('ok', $estado === 'terminado' ? 'Plan terminado.' : 'Plan cancelado.');
+        } else {
+            flash_set('error', 'Solo se termina un plan aprobado.');
         }
         redirigir('/panel/planes/' . $plan['id']);
     }
@@ -153,7 +157,10 @@ class SaludController
             flash_set('error', (string) $puede['razon']);
             redirigir('/panel/planes/' . $plan['id']);
         }
-        PlanTratamiento::marcarSaldoRecordado((int) $plan['id'], (int) $negocio['id']);
+        if (!PlanTratamiento::marcarSaldoRecordado((int) $plan['id'], (int) $negocio['id'])) {
+            flash_set('error', 'Ya le recordaste esta semana: la ley permite un recordatorio de cobro por semana.');
+            redirigir('/panel/planes/' . $plan['id']);
+        }
         header('Location: ' . $this->enlaceWhatsapp($plan, PlanTratamiento::mensajeSaldo($plan, $negocio)));
         exit;
     }
@@ -198,7 +205,7 @@ class SaludController
         $aprobar = ($_POST['respuesta'] ?? '') === 'aprobar';
         if (PlanTratamiento::responder($plan, $aprobar)) {
             flash_set('ok', $aprobar ? 'Aprobaste tu plan. El consultorio ya puede agendar tus sesiones.' : 'Le avisamos al consultorio que por ahora no lo apruebas.');
-            WebPush::notificarSede((int) $plan['sede_id'], $aprobar ? 'Plan aprobado' : 'Plan no aprobado', $plan['cliente_nombre'] . ' · ' . $plan['titulo'], '/panel/planes/' . (int) $plan['id']);
+            WebPush::notificarSede((int) $plan['sede_id'], $aprobar ? 'Plan aprobado' : 'Plan no aprobado', $plan['cliente_nombre'] . ' respondió su plan de tratamiento', '/panel/planes/' . (int) $plan['id']);
         } else {
             flash_set('error', 'Este plan ya no se puede responder (venció o ya lo respondiste).');
         }

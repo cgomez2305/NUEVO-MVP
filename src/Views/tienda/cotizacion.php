@@ -92,8 +92,10 @@ $anticipo = (int) $cotizacion['anticipo'];
     $pagoReferencia = null; // el webhook de Bre-B solo concilia pedidos y citas: aquí el comprobante va por WhatsApp
     $pagoMonto = $anticipo;
     $pagoPara = 'reserva';
+    $pagoComprobante = 'Al negocio, con el botón de abajo: así marcan tu anticipo como recibido.';
     require __DIR__ . '/_pasos_pago.php';
     ?>
+    <a class="pq-btn pq-btn-oscuro pq-btn-ancho pq-pago-wa" href="https://wa.me/57<?= e(preg_replace('/\D+/', '', (string) $negocio['whatsapp'])) ?>?text=<?= rawurlencode('Hola, te mando el comprobante del anticipo de materiales de la cotización #' . (int) $cotizacion['id'] . '.') ?>" target="_blank" rel="noopener">Enviar el comprobante por WhatsApp</a>
   <?php elseif ($estado === 'aprobada' && $anticipo > 0 && $anticipoRecibido): ?>
     <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso">El negocio ya recibió tu anticipo para materiales.</div>
   <?php endif; ?>

@@ -54,7 +54,7 @@ $tarjeta = static function (array $fase): string {
       <?php if ($plan['estado'] === 'propuesto'): ?>
         <a class="pq-btn pq-btn-ghost pq-btn-chico" href="<?= e('https://wa.me/57' . preg_replace('/\D+/', '', (string) $plan['cliente_telefono']) . '?text=' . rawurlencode(PlanTratamiento::mensajePlan($plan, $negocio))) ?>" target="_blank" rel="noopener">Mandarle el plan</a>
       <?php endif; ?>
-      <?php if ($plan['estado'] === 'aprobado' && $saldo > 0): ?>
+      <?php if (PlanTratamiento::recibeAbonos($plan)): ?>
         <?php if ($recordar['permitido']): ?>
           <form method="post" action="<?= e(base_url($base . '/recordar')) ?>" target="_blank">
             <?= csrf_campo() ?>
@@ -154,7 +154,7 @@ $tarjeta = static function (array $fase): string {
         <?php endforeach; ?>
       </ul>
     <?php endif; ?>
-    <?php if ($plan['estado'] === 'aprobado' && $saldo > 0): ?>
+    <?php if (PlanTratamiento::recibeAbonos($plan)): ?>
       <form method="post" action="<?= e(base_url($base . '/abonos')) ?>" class="pq-plan-abonar">
         <?= csrf_campo() ?>
         <div class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="monto" placeholder="Valor" required data-precio-cop aria-label="Valor del abono"></div>
@@ -168,19 +168,21 @@ $tarjeta = static function (array $fase): string {
       </form>
     <?php elseif ($plan['estado'] === 'propuesto'): ?>
       <p class="pq-ayuda">Los abonos se anotan cuando el paciente apruebe el plan.</p>
-    <?php elseif ($plan['estado'] === 'aprobado'): ?>
+    <?php elseif (in_array($plan['estado'], ['aprobado', 'terminado'], true)): ?>
       <p class="pq-ayuda pq-plan-pago">Pagado completo.</p>
     <?php endif; ?>
   </section>
 
   <?php if ($esDueno && $abierto): ?>
     <section class="pq-ficha-bloque pq-ficha-acciones">
-      <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Marcar el plan como terminado?">
-        <?= csrf_campo() ?>
-        <input type="hidden" name="estado" value="terminado">
-        <button type="submit" class="pq-enlace-boton">Terminar el plan</button>
-      </form>
-      <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Cancelar este plan? Los abonos quedan registrados.">
+      <?php if ($plan['estado'] === 'aprobado'): ?>
+        <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Marcar el plan como terminado? Si queda saldo, lo sigues pudiendo abonar y recordar.">
+          <?= csrf_campo() ?>
+          <input type="hidden" name="estado" value="terminado">
+          <button type="submit" class="pq-enlace-boton">Terminar el plan</button>
+        </form>
+      <?php endif; ?>
+      <form method="post" action="<?= e(base_url($base . '/cerrar')) ?>" data-confirmar="¿Cancelar este plan? Los abonos quedan registrados y las citas que seguían agendadas vuelven a cobrarse aparte.">
         <?= csrf_campo() ?>
         <input type="hidden" name="estado" value="cancelado">
         <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Cancelar el plan</button>

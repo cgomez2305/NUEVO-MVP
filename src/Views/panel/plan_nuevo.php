@@ -39,12 +39,12 @@
       <label class="pq-label" for="plan-titulo">Nombre del tratamiento</label>
       <input class="pq-input" id="plan-titulo" type="text" name="titulo" maxlength="120" placeholder="Ej.: Ortodoncia con brackets metálicos" required>
     </div>
-    <?php // Renglones fijos (sin JS); los vacíos no se guardan. ?>
+    <?php // Renglones fijos (sin JS); los vacíos no se guardan. Una fase sin valor queda en $0 (controles incluidos). ?>
     <div class="pq-plan-fases-form">
-      <?php for ($i = 0; $i < 5; $i++): ?>
+      <?php for ($i = 0; $i < PlanTratamiento::MAX_FASES; $i++): ?>
         <div class="pq-plan-fase-form">
           <span class="pq-plan-fase-numero" aria-hidden="true"><?= $i + 1 ?></span>
-          <input class="pq-input" type="text" name="fases[<?= $i ?>][nombre]" maxlength="120" placeholder="<?= ['Valoración y radiografías', 'Instalación de brackets', 'Controles mensuales', 'Retiro y retenedores', 'Otra fase'][$i] ?>" aria-label="Fase <?= $i + 1 ?>">
+          <input class="pq-input" type="text" name="fases[<?= $i ?>][nombre]" maxlength="120" placeholder="<?= ['Valoración y radiografías', 'Instalación de brackets', 'Controles mensuales', 'Retiro y retenedores'][$i] ?? 'Otra fase' ?>" aria-label="Fase <?= $i + 1 ?>">
           <div class="pq-campo-sufijo" data-sufijo="ses."><input class="pq-input pq-mono" type="number" name="fases[<?= $i ?>][sesiones]" min="1" max="99" value="1" aria-label="Sesiones de la fase <?= $i + 1 ?>"></div>
           <div class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="fases[<?= $i ?>][valor]" placeholder="Valor" data-precio-cop aria-label="Valor de la fase <?= $i + 1 ?>"></div>
         </div>

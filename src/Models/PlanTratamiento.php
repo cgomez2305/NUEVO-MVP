@@ -50,7 +50,8 @@ class PlanTratamiento
             }
             $nombre = trim((string) ($fila['nombre'] ?? ''));
             $valor = dinero_desde_texto((string) ($fila['valor'] ?? ''));
-            if ($nombre === '' || $valor <= 0) {
+            // Con nombre basta: una fase en $0 es la de "controles incluidos".
+            if ($nombre === '') {
                 continue;
             }
             $fases[] = ['nombre' => mb_substr($nombre, 0, 120), 'sesiones' => max(1, min(99, (int) ($fila['sesiones'] ?? 1))), 'valor' => $valor];
@@ -177,18 +178,49 @@ class PlanTratamiento
         return $stmt->rowCount() === 1;
     }
 
-    /** Terminar o cancelar (decide el dueño). Un plan terminado o cancelado ya no recibe citas ni abonos. */
+    /**
+     * Terminar (solo un plan aprobado) o cancelar (decide el dueño). Ya no
+     * recibe citas; las que seguían agendadas en el plan salen de él y
+     * vuelven a valer su precio. Un plan terminado con saldo sigue
+     * recibiendo abonos (el tratamiento acabó, la deuda no).
+     */
     public static function cerrar(int $id, int $sedeId, string $estado): bool
     {
-        if (!in_array($estado, ['terminado', 'cancelado'], true)) {
+        $desde = match ($estado) {
+            'terminado' => "('aprobado')",
+            'cancelado' => "('propuesto', 'aprobado')",
+            default     => null,
+        };
+        if ($desde === null) {
             return false;
         }
-        $stmt = Database::conexion()->prepare(
-            "UPDATE planes_tratamiento SET estado = :e WHERE id = :id AND sede_id = :s AND estado IN ('propuesto', 'aprobado')"
-        );
-        $stmt->execute(['e' => $estado, 'id' => $id, 's' => $sedeId]);
+        $pdo = Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("UPDATE planes_tratamiento SET estado = :e WHERE id = :id AND sede_id = :s AND estado IN {$desde}");
+            $stmt->execute(['e' => $estado, 'id' => $id, 's' => $sedeId]);
+            if ($stmt->rowCount() !== 1) {
+                $pdo->rollBack();
 
-        return $stmt->rowCount() === 1;
+                return false;
+            }
+            $pdo->prepare(
+                "UPDATE citas SET plan_id = NULL, plan_fase_id = NULL, descuento = 0
+                 WHERE plan_id = :p AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso')"
+            )->execute(['p' => $id, 's' => $sedeId]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /** ¿Recibe abonos? Aprobado, o terminado con saldo pendiente. */
+    public static function recibeAbonos(array $plan): bool
+    {
+        return in_array($plan['estado'], ['aprobado', 'terminado'], true) && self::saldo($plan) > 0;
     }
 
     // ---------- Abonos ----------
@@ -221,10 +253,10 @@ class PlanTratamiento
             $stmt = $pdo->prepare('SELECT estado, total FROM planes_tratamiento WHERE id = :id AND sede_id = :s FOR UPDATE');
             $stmt->execute(['id' => $planId, 's' => $sedeId]);
             $plan = $stmt->fetch();
-            if ($plan === false || $plan['estado'] !== 'aprobado') {
+            if ($plan === false || !in_array($plan['estado'], ['aprobado', 'terminado'], true)) {
                 $pdo->rollBack();
 
-                return 'Solo se abona a un plan aprobado y en curso.';
+                return 'Solo se abona a un plan aprobado.';
             }
             $pagado = $pdo->prepare('SELECT COALESCE(SUM(monto), 0) FROM plan_abonos WHERE plan_id = :p AND anulado = 0');
             $pagado->execute(['p' => $planId]);
@@ -281,9 +313,10 @@ class PlanTratamiento
     // ---------- Citas del plan ----------
 
     /**
-     * Citas del paciente que se pueden vincular: sin plan, vivas o recién
-     * atendidas, sin cobro ya registrado, sin cupón ni bono (esas ya tienen
-     * su propia forma de pago).
+     * Citas del paciente que se pueden vincular: sin plan, todavía sin
+     * atender (una ya atendida pudo haberse cobrado en caja, y volverla $0
+     * borraría esa venta), sin cobro aparte, sin anticipo pedido o pagado y
+     * sin cupón ni bono (esas ya tienen su propia forma de pago).
      *
      * @return array<int, array<string, mixed>>
      */
@@ -292,9 +325,10 @@ class PlanTratamiento
         $stmt = Database::conexion()->prepare(
             "SELECT c.id, c.fecha_hora, c.nombre_servicio, c.estado FROM citas c
              WHERE c.sede_id = :s AND c.cliente_id = :cl AND c.plan_id IS NULL
-               AND c.estado IN ('pendiente', 'confirmada', 'en_curso', 'completada')
+               AND c.estado IN ('pendiente', 'confirmada', 'en_curso')
                AND c.precio_final IS NULL AND c.descuento = 0
-               AND c.fecha_hora >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+               AND NOT (c.anticipo_monto > 0 AND c.anticipo_estado IN ('pendiente', 'pagado'))
+               AND c.fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 DAY)
                AND NOT EXISTS (SELECT 1 FROM bono_usos b WHERE b.cita_id = c.id)
              ORDER BY c.fecha_hora"
         );
@@ -321,26 +355,34 @@ class PlanTratamiento
         if ($plan['estado'] !== 'aprobado') {
             return false;
         }
-        $fase = Database::conexion()->prepare('SELECT 1 FROM plan_fases WHERE id = :f AND plan_id = :p');
+        // La fase tiene cupo: atendidas + agendadas no pasan de sus sesiones
+        // (la comisión de cada una es valor ÷ sesiones).
+        $fase = Database::conexion()->prepare(
+            "SELECT f.sesiones - (SELECT COUNT(*) FROM citas c WHERE c.plan_fase_id = f.id AND c.estado IN ('pendiente', 'confirmada', 'en_curso', 'completada'))
+             FROM plan_fases f WHERE f.id = :f AND f.plan_id = :p"
+        );
         $fase->execute(['f' => $faseId, 'p' => (int) $plan['id']]);
-        if ($fase->fetchColumn() === false || !in_array($citaId, array_map('intval', array_column(self::citasVinculables($plan), 'id')), true)) {
+        $cupo = $fase->fetchColumn();
+        if ($cupo === false || (int) $cupo <= 0 || !in_array($citaId, array_map('intval', array_column(self::citasVinculables($plan), 'id')), true)) {
             return false;
         }
         $stmt = Database::conexion()->prepare(
-            'UPDATE citas SET plan_id = :p, plan_fase_id = :f, descuento = precio
-             WHERE id = :c AND sede_id = :s AND plan_id IS NULL AND precio_final IS NULL AND descuento = 0'
+            "UPDATE citas SET plan_id = :p, plan_fase_id = :f, descuento = precio
+             WHERE id = :c AND sede_id = :s AND plan_id IS NULL AND precio_final IS NULL AND descuento = 0
+               AND estado IN ('pendiente', 'confirmada', 'en_curso')"
         );
         $stmt->execute(['p' => (int) $plan['id'], 'f' => $faseId, 'c' => $citaId, 's' => (int) $plan['sede_id']]);
 
         return $stmt->rowCount() === 1;
     }
 
-    /** Sacarla del plan: vuelve a valer su precio (si todavía no se cobró nada aparte). */
+    /** Sacarla del plan: vuelve a valer su precio. Solo si no se ha atendido (atendida, ya la pagaron los abonos). */
     public static function desvincularCita(array $plan, int $citaId): bool
     {
         $stmt = Database::conexion()->prepare(
-            'UPDATE citas SET plan_id = NULL, plan_fase_id = NULL, descuento = 0
-             WHERE id = :c AND plan_id = :p AND sede_id = :s AND precio_final IS NULL'
+            "UPDATE citas SET plan_id = NULL, plan_fase_id = NULL, descuento = 0
+             WHERE id = :c AND plan_id = :p AND sede_id = :s AND precio_final IS NULL
+               AND estado IN ('pendiente', 'confirmada', 'en_curso')"
         );
         $stmt->execute(['c' => $citaId, 'p' => (int) $plan['id'], 's' => (int) $plan['sede_id']]);
 
@@ -366,7 +408,9 @@ class PlanTratamiento
     {
         $nombre = explode(' ', trim((string) $plan['cliente_nombre']))[0];
 
-        return "Hola {$nombre}, te compartimos tu plan de tratamiento de " . nombre_publico_sede($sede) . " ({$plan['titulo']}) por "
+        // Sin el título (p. ej. "Endodoncia molar 36"): es dato de salud y el
+        // mensaje queda en el chat; el detalle está detrás del enlace.
+        return "Hola {$nombre}, te compartimos tu plan de tratamiento de " . nombre_publico_sede($sede) . ' por '
             . pesos((int) $plan['total']) . '. Aquí ves las fases y lo apruebas: ' . url_publica('/plan/' . $plan['token']);
     }
 
@@ -378,10 +422,14 @@ class PlanTratamiento
      */
     public static function puedeRecordarSaldo(array $plan): array
     {
-        if ($plan['estado'] !== 'aprobado' || self::saldo($plan) <= 0) {
+        if (!self::recibeAbonos($plan)) {
             return ['permitido' => false, 'razon' => 'Este plan no tiene saldo pendiente.'];
         }
-        if (!empty($plan['saldo_recordado_en']) && strtotime((string) $plan['saldo_recordado_en']) > time() - 7 * 86400) {
+        // Uno por semana por PACIENTE, aunque tenga dos planes con saldo.
+        $ultimo = Database::conexion()->prepare('SELECT MAX(saldo_recordado_en) FROM planes_tratamiento WHERE sede_id = :s AND cliente_id = :c');
+        $ultimo->execute(['s' => (int) $plan['sede_id'], 'c' => (int) $plan['cliente_id']]);
+        $recordado = $ultimo->fetchColumn();
+        if (!empty($recordado) && strtotime((string) $recordado) > time() - 7 * 86400) {
             return ['permitido' => false, 'razon' => 'Ya le recordaste esta semana: la ley permite un recordatorio de cobro por semana.'];
         }
         $horario = HorarioCobro::evaluar();
@@ -389,17 +437,28 @@ class PlanTratamiento
         return ['permitido' => $horario['permitido'], 'razon' => $horario['razon']];
     }
 
-    public static function marcarSaldoRecordado(int $id, int $sedeId): void
+    /**
+     * Marca el recordatorio solo si nadie lo marcó esta semana para este
+     * paciente (un doble clic no manda dos). Devuelve si quedó marcado.
+     */
+    public static function marcarSaldoRecordado(int $id, int $sedeId): bool
     {
-        Database::conexion()->prepare('UPDATE planes_tratamiento SET saldo_recordado_en = NOW() WHERE id = :id AND sede_id = :s')
-            ->execute(['id' => $id, 's' => $sedeId]);
+        $stmt = Database::conexion()->prepare(
+            'UPDATE planes_tratamiento p SET p.saldo_recordado_en = NOW()
+             WHERE p.id = :id AND p.sede_id = :s
+               AND NOT EXISTS (SELECT 1 FROM (SELECT cliente_id, saldo_recordado_en FROM planes_tratamiento WHERE sede_id = :s2) o
+                               WHERE o.cliente_id = p.cliente_id AND o.saldo_recordado_en > NOW() - INTERVAL 7 DAY)'
+        );
+        $stmt->execute(['id' => $id, 's' => $sedeId, 's2' => $sedeId]);
+
+        return $stmt->rowCount() === 1;
     }
 
     public static function mensajeSaldo(array $plan, array $sede): string
     {
         $nombre = explode(' ', trim((string) $plan['cliente_nombre']))[0];
 
-        return "Hola {$nombre}, te escribimos de " . nombre_publico_sede($sede) . ". De tu plan ({$plan['titulo']}) llevas abonado "
+        return "Hola {$nombre}, te escribimos de " . nombre_publico_sede($sede) . ". De tu plan de tratamiento llevas abonado "
             . pesos((int) $plan['pagado']) . ' y quedan ' . pesos(self::saldo($plan)) . '. '
             . 'Aquí ves el detalle: ' . url_publica('/plan/' . $plan['token']);
     }

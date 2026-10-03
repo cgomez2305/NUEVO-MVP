@@ -201,8 +201,10 @@ class Imprevisto
         }
         $stmt = Database::conexion()->prepare(
             "UPDATE citas SET ajuste_precio = :p, ajuste_motivo = :m, ajuste_estado = 'pendiente', " . self::sqlAviso('ajuste') . "
-             WHERE id = :id AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso')"
+             WHERE id = :id AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso') AND plan_id IS NULL"
         );
+        // AND plan_id IS NULL: una cita de un plan de tratamiento se paga con
+        // abonos; un ajuste se sumaría a la caja por fuera del plan.
         $stmt->execute(['p' => $precio, 'm' => mb_substr($motivo, 0, 200), 'id' => $citaId, 's' => $sedeId]);
 
         return $stmt->rowCount() === 1;

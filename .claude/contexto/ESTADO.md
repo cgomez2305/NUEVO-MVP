@@ -83,7 +83,11 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   una sola vez, fotos borradas con el cliente); fase 5 (salud: rubro 'salud',
   motivo con permiso de datos sensibles, planes de tratamiento por fases con
   abonos, caja y comisiones; migración 18, demo en database/demo_salud.sql)
-  hecha.
+  hecha y revisada (solo se vinculan citas sin atender, sin anticipo y con
+  cupo en la fase; cerrar el plan suelta las citas agendadas; un plan
+  terminado con saldo sigue recibiendo abonos; recordatorio de saldo uno por
+  semana por paciente; sin títulos de tratamiento en WhatsApp ni push).
+  Pendiente de decidir: aprobación presencial del plan y renovar uno vencido.
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
