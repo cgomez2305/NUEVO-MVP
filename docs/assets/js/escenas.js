@@ -98,6 +98,41 @@
       { dur: 4500, a: [[0, 'ver', 'hora'], [1400, 'toca', '[data-hora="1030"]'], [1900, 'dedo-fuera'], [1900, 'clase', '[data-hora="1030"]', 'activa']] },
       { dur: 4500, a: [[0, 'ver', 'turno'], [2000, 'toca', '[data-vista="turno"] .ui-btn-wa'], [2500, 'dedo-fuera']] },
       { dur: 5500, a: [[0, 'ver', 'confirmada'], [800, 'clase', '[data-vista="confirmada"] .ui-sello', 'cae']] }
+    ],
+
+    // Prompt 6 — mostrador de la tienda: escáner, báscula y fiado
+    mostrador: [
+      { dur: 5500, a: [
+        [0, 'ver', 'mostrador'],
+        [700, 'escribe', '.ui-lector-txt', '7702004003508', 40], [1150, 'texto', '.ui-lector-txt', ''],
+        [1150, 'clase', '[data-linea="gaseosa"]', 'on'], [1150, 'clase', '[data-linea="gaseosa"]', 'brilla'], [1150, 'texto', '.ui-venta-cuenta', '1 producto'], [1150, 'cuenta', '.ui-visor-total', 0, 2500, 300],
+        [2500, 'escribe', '.ui-lector-txt', '7702004003508', 40], [2950, 'texto', '.ui-lector-txt', ''],
+        [2950, 'texto', '[data-linea="gaseosa"] .ui-venta-cant', '×2'], [2950, 'texto', '[data-linea="gaseosa"] .ui-venta-sub', '$5.000'], [2950, 'cuenta', '.ui-visor-total', 2500, 5000, 300],
+        [4000, 'escribe', '.ui-lector-txt', '7702004003508', 40], [4450, 'texto', '.ui-lector-txt', ''],
+        [4450, 'texto', '[data-linea="gaseosa"] .ui-venta-cant', '×3'], [4450, 'texto', '[data-linea="gaseosa"] .ui-venta-sub', '$7.500'], [4450, 'cuenta', '.ui-visor-total', 5000, 7500, 300]
+      ] },
+      { dur: 6000, a: [
+        [300, 'escribe', '.ui-lector-txt', 'queso', 8], [1000, 'clase', '.ui-sugerencia', 'on'],
+        [1600, 'toca', '.ui-sugerencia'], [2100, 'dedo-fuera'], [2100, 'quita', '.ui-sugerencia', 'on'], [2100, 'texto', '.ui-lector-txt', ''],
+        [2150, 'clase', '.ui-bascula', 'on'], [3300, 'toca', '[data-peso="500"]'], [3800, 'dedo-fuera'], [3800, 'clase', '[data-peso="500"]', 'activo'],
+        [4300, 'quita', '.ui-bascula', 'on'], [4500, 'clase', '[data-linea="queso"]', 'on'], [4500, 'clase', '[data-linea="queso"]', 'brilla'],
+        [4500, 'texto', '.ui-venta-cuenta', '2 productos'], [4500, 'cuenta', '.ui-visor-total', 7500, 16500, 450]
+      ] },
+      { dur: 5500, a: [
+        [0, 'ver', 'cobrar'], [900, 'toca', '[data-tecla="fiado"]'], [1400, 'dedo-fuera'],
+        [1400, 'clase', '[data-tecla="fiado"]', 'activa'], [1400, 'quita', '[data-tecla="efectivo"]', 'activa'], [1500, 'clase', '.ui-fiar', 'on'],
+        [2700, 'toca', '[data-fiar="jairo"]'], [3200, 'clase', '[data-fiar="jairo"]', 'activa'], [3200, 'texto', '.ui-btn-cobrar', 'Fiar $16.500 a Don Jairo'],
+        [4100, 'toca', '.ui-btn-cobrar'], [4600, 'dedo-fuera']
+      ] },
+      { dur: 5000, a: [
+        [0, 'ver', 'cuaderno'], [600, 'cuenta', '.ui-debe', 23000, 39500, 800], [600, 'clase', '.ui-limite', 'sube'],
+        [900, 'clase', '.ui-renglon-nuevo', 'on'], [1100, 'escribe', '.ui-renglon-nuevo .ui-renglon-concepto', 'Gaseosa ×3, queso', 16]
+      ] },
+      { dur: 6000, a: [
+        [0, 'ver', 'recordar'], [500, 'clase', '[data-vista="recordar"] .ui-nota-baja', 'on'],
+        [2400, 'toca', '[data-vista="recordar"] .ui-btn-wa'], [2900, 'dedo-fuera'], [2900, 'ver', 'enviado'],
+        [3600, 'clase', '[data-vista="enviado"] .ui-burbuja-out', 'leido']
+      ] }
     ]
   };
 
