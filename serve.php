@@ -12,7 +12,9 @@ $ruta = urldecode((string) (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? 
 $publico = realpath(__DIR__ . '/public');
 $archivo = realpath(__DIR__ . '/public' . $ruta);
 
-if ($ruta !== '/' && $archivo !== false && $publico !== false && str_starts_with($archivo, $publico . DIRECTORY_SEPARATOR) && is_file($archivo)) {
+// Nunca .php ni archivos ocultos (.user.ini, .htaccess) como texto.
+$servible = !preg_match('/\.php$|\/\./i', $ruta);
+if ($servible && $ruta !== '/' && $archivo !== false && $publico !== false && str_starts_with($archivo, $publico . DIRECTORY_SEPARATOR) && is_file($archivo)) {
     // Servido a mano (y no con "return false") para que esto funcione sin
     // importar si arrancaste el servidor con -t public o desde la raíz.
     $tipos = [

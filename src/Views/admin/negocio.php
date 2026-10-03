@@ -3,8 +3,8 @@ $color = color_seguro($negocio['color_marca'] ?? null);
 $inicial = mb_strtoupper(mb_substr((string) $negocio['nombre'], 0, 1));
 $suspendido = (int) $negocio['suspendido'] === 1;
 $diasCreado = dias_desde((string) $negocio['creado_en']);
-$pendientes = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] === null));
-$historial = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] !== null));
+$pendientes = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] === null && $p['cancelado_en'] === null));
+$historial = array_values(array_filter($pagosPlan, fn ($p) => $p['confirmado_en'] !== null || $p['cancelado_en'] !== null));
 $roles = ['dueno' => 'Dueño', 'colaborador' => 'Colaborador'];
 $whatsappLegible = fn (string $n) => strlen($n) === 10 ? substr($n, 0, 3) . ' ' . substr($n, 3, 3) . ' ' . substr($n, 6) : $n;
 ?>
@@ -88,7 +88,7 @@ $whatsappLegible = fn (string $n) => strlen($n) === 10 ? substr($n, 0, 3) . ' ' 
           <li>
             <span><?= ($pago['concepto'] ?? 'plan') === 'sede_extra' ? 'Sede extra' : e(ucfirst((string) $pago['plan_nombre'])) . ' · ' . ($pago['ciclo'] === 'anual' ? 'anual' : 'mensual') . ((int) ($pago['sedes_extra'] ?? 0) > 0 ? ' + ' . (int) $pago['sedes_extra'] . ' sede extra' : '') ?></span>
             <span class="pq-mono"><?= pesos((int) $pago['monto']) ?></span>
-            <span class="pq-ayuda">confirmado el <?= e(fecha_larga((string) $pago['confirmado_en'])) ?></span>
+            <span class="pq-ayuda"><?= $pago['confirmado_en'] !== null ? 'confirmado el ' . e(fecha_larga((string) $pago['confirmado_en'])) : 'cancelado el ' . e(fecha_larga((string) $pago['cancelado_en'])) . ' (sin cobro)' ?></span>
           </li>
         <?php endforeach; ?>
       </ul>

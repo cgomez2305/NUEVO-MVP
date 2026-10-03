@@ -239,7 +239,7 @@ class PanelController
             'pedido'  => $pedido,
             'items'   => Pedido::items((int) $pedido['id']),
             'siguientePaso' => Pedido::siguientePaso($pedido),
-            'premio'  => $this->premioPendiente($negocio, (int) $pedido['cliente_id']),
+            'premio'  => $this->premioPendiente($negocio, $pedido),
             'ok'      => flash_obtener('ok'),
             'error'   => flash_obtener('error'),
         ], 'panel');
@@ -251,10 +251,19 @@ class PanelController
      *
      * @return array{premio: string, meta: int}|null
      */
-    private function premioPendiente(array $negocio, int $clienteId): ?array
+    private function premioPendiente(array $negocio, array $pedido): ?array
     {
         $config = Fidelidad::config((int) $negocio['negocio_id']);
-        if ($config === null || Fidelidad::sellosDe((int) $negocio['negocio_id'], $config, $clienteId) < (int) $config['meta']) {
+        if ($config === null) {
+            return null;
+        }
+        // Los sellos son de pedidos ya entregados; este, si todavía no se
+        // entrega y suma, es el que completa la tarjeta al despacharlo.
+        $sellos = Fidelidad::sellosDe((int) $negocio['negocio_id'], $config, (int) $pedido['cliente_id']);
+        if (!in_array($pedido['estado'], ['entregado', 'cancelado'], true) && Fidelidad::cuenta($config, (int) $pedido['total'] - (int) $pedido['costo_domicilio'])) {
+            $sellos++;
+        }
+        if ($sellos < (int) $config['meta']) {
             return null;
         }
 
@@ -530,6 +539,7 @@ class PanelController
     public function eliminarProducto(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
         $volver = $this->destinoSeguro($_POST['volver'] ?? null);
 
         if (csrf_verificar()) {
@@ -757,7 +767,12 @@ class PanelController
         $negocio = Auth::exigirSesion();
 
         if (csrf_verificar()) {
-            Cita::marcarAnticipoPagado((int) $parametros['id'], (int) $negocio['id']);
+            $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
+            if ($cita !== null && Cita::marcarAnticipoPagado((int) $cita['id'], (int) $negocio['id'])) {
+                // Marcar un anticipo como pagado vale plata (si luego se cancela,
+                // vuelve como saldo a favor): queda quién lo hizo.
+                EventoSeguridad::registrar('anticipo_marcado', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], 'Cita #' . (int) $cita['id'] . ' de ' . explode(' ', trim((string) $cita['cliente_nombre']))[0] . ' · ' . pesos((int) $cita['anticipo_monto']));
+            }
             flash_set('ok', 'Anticipo marcado como pagado.');
         }
 
@@ -793,12 +808,14 @@ class PanelController
             if ($estado === 'no_asistio') {
                 (new AgendaController())->noVino($parametros);
             }
-            // Salir de "No vino" (fue un error) deshace el abono y la sesión devuelta.
+            // Salir de "No vino" o de "Cancelada" (fue un error) deshace el
+            // abono y vuelve a cobrar la sesión del bono: si no, reactivar
+            // una cita con bono la dejaba gratis y con la sesión devuelta.
             $antes = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
-            if ($antes !== null && $antes['estado'] === 'no_asistio' && in_array($estado, Cita::ESTADOS, true)) {
+            if ($antes !== null && in_array($antes['estado'], ['no_asistio', 'cancelada'], true) && $estado !== $antes['estado'] && in_array($estado, Cita::ESTADOS, true)) {
                 if (!Imprevisto::deshacerNoAsistio($antes)) {
-                    flash_set('error', 'No se puede cambiar: el cliente ya usó el cupón de su anticipo o la sesión de su bono.');
-                    redirigir('/panel/citas');
+                    flash_set('error', 'No se puede cambiar: el cliente ya usó el cupón de su anticipo o la sesión de su bono ya se gastó en otra cita.');
+                    redirigir(destino_agenda());
                 }
             }
             Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);

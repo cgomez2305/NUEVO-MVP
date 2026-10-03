@@ -572,6 +572,8 @@ CREATE TABLE IF NOT EXISTS pagos_plan (
   -- Transacción de la pasarela (Wompi) que pagó este plan, si fue así.
   transaccion_pasarela VARCHAR(64) DEFAULT NULL,
   confirmado_en  DATETIME     DEFAULT NULL,
+  -- Cancelada por el dueño o rechazada por un admin (no se borra: ver migración 37).
+  cancelado_en   DATETIME     DEFAULT NULL,
   creado_en      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   FOREIGN KEY (plan_id) REFERENCES planes(id),
@@ -1023,6 +1025,21 @@ CREATE TABLE IF NOT EXISTS codigos_barras (
   actualizado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- Catálogo compartido de códigos de barras por votos: cada negocio cuenta
+-- una vez por código y se sugiere el nombre que usan más negocios. Antes
+-- ganaba el último que guardaba: una sola cuenta podía cambiarle el nombre
+-- a un producto común (la gaseosa de siempre) para todas las tiendas.
+-- codigos_barras queda como respaldo de lo que ya se había aprendido.
+CREATE TABLE IF NOT EXISTS codigos_barras_votos (
+  codigo          VARCHAR(32)  NOT NULL,
+  negocio_id      INT UNSIGNED NOT NULL,
+  nombre          VARCHAR(120) NOT NULL,
+  actualizado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (codigo, negocio_id),
+  INDEX idx_codigos_votos_nombre (codigo, nombre),
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Fotos de visitas a domicilio (ver migrations/2026-10-03_16_visitas.sql), guardadas fuera de public/.
 CREATE TABLE IF NOT EXISTS cita_fotos (
   id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -1162,4 +1179,6 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_32_consentimientos.sql'),
   ('2026-10-03_33_recompra_dispositivo.sql'),
   ('2026-10-03_34_dispositivo_por_pedido.sql'),
-  ('2026-10-03_35_seguridad.sql');
+  ('2026-10-03_35_seguridad.sql'),
+  ('2026-10-03_36_codigos_votos.sql'),
+  ('2026-10-03_37_pagos_cancelados.sql');

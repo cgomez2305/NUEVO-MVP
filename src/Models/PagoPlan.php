@@ -50,7 +50,7 @@ class PagoPlan
         $stmt = Database::conexion()->prepare(
             'SELECT pp.*, p.nombre AS plan_nombre
              FROM pagos_plan pp JOIN planes p ON p.id = pp.plan_id
-             WHERE pp.negocio_id = :negocio_id AND pp.confirmado_en IS NULL
+             WHERE pp.negocio_id = :negocio_id AND pp.confirmado_en IS NULL AND pp.cancelado_en IS NULL
              ORDER BY pp.creado_en DESC LIMIT 1'
         );
         $stmt->execute(['negocio_id' => $negocioId]);
@@ -65,7 +65,7 @@ class PagoPlan
              FROM pagos_plan pp
              JOIN planes p ON p.id = pp.plan_id
              JOIN negocios n ON n.id = pp.negocio_id
-             WHERE pp.confirmado_en IS NULL
+             WHERE pp.confirmado_en IS NULL AND pp.cancelado_en IS NULL
              ORDER BY pp.creado_en ASC'
         );
         return $stmt->fetchAll();
@@ -138,7 +138,7 @@ class PagoPlan
             if ($pago['concepto'] === 'sede_extra') {
                 $pdo->prepare(
                     'UPDATE pagos_plan
-                        SET confirmado_por = :admin_id, confirmado_en = NOW(), periodo_inicio = CURDATE(),
+                        SET confirmado_por = :admin_id, confirmado_en = NOW(), cancelado_en = NULL, periodo_inicio = CURDATE(),
                             transaccion_pasarela = :transaccion,
                             metodo_pago = IF(:es_pasarela = 1, \'wompi\', metodo_pago)
                       WHERE id = :id AND confirmado_en IS NULL'
@@ -173,7 +173,7 @@ class PagoPlan
 
             $pdo->prepare(
                 'UPDATE pagos_plan
-                    SET confirmado_por = :admin_id, confirmado_en = NOW(),
+                    SET confirmado_por = :admin_id, confirmado_en = NOW(), cancelado_en = NULL,
                         periodo_inicio = :inicio, periodo_fin = :fin,
                         transaccion_pasarela = :transaccion,
                         metodo_pago = IF(:es_pasarela = 1, \'wompi\', metodo_pago)
@@ -213,16 +213,20 @@ class PagoPlan
     public static function cancelarPendienteDeNegocio(int $negocioId): bool
     {
         $stmt = Database::conexion()->prepare(
-            'DELETE FROM pagos_plan WHERE negocio_id = :negocio_id AND confirmado_en IS NULL'
+            'UPDATE pagos_plan SET cancelado_en = NOW() WHERE negocio_id = :negocio_id AND confirmado_en IS NULL AND cancelado_en IS NULL'
         );
         $stmt->execute(['negocio_id' => $negocioId]);
         return $stmt->rowCount() > 0;
     }
 
-    /** Descarta una solicitud pendiente que nunca se pagó (o se pagó mal), para que el dueño pueda pedir de nuevo. */
+    /**
+     * Descarta una solicitud pendiente que nunca se pagó (o se pagó mal),
+     * para que el dueño pueda pedir de nuevo. No se borra: si la pasarela la
+     * aprueba después, todavía se reconoce (ver aplicar()).
+     */
     public static function rechazar(int $id): bool
     {
-        $stmt = Database::conexion()->prepare('DELETE FROM pagos_plan WHERE id = :id AND confirmado_en IS NULL');
+        $stmt = Database::conexion()->prepare('UPDATE pagos_plan SET cancelado_en = NOW() WHERE id = :id AND confirmado_en IS NULL AND cancelado_en IS NULL');
         $stmt->execute(['id' => $id]);
         return $stmt->rowCount() === 1;
     }

@@ -24,7 +24,7 @@ class FiadoController
         if (ctype_digit((string) ($_GET['cliente'] ?? ''))) {
             redirigir('/panel/fiado/' . (int) $_GET['cliente']);
         }
-        $conSaldo = Fiado::clientesConSaldo($negocioId);
+        $conSaldo = Fiado::clientesConSaldo($negocioId, Fiado::filtroSedes($negocio));
         $clientes = array_values(array_filter($conSaldo, fn ($c) => (int) $c['saldo'] > 0));
 
         ver('panel/fiado', [
@@ -34,7 +34,7 @@ class FiadoController
             'clientes' => $clientes,
             // Saldo a favor (abonó y después se anuló una venta fiada): se ve, no se esconde.
             'aFavor'   => array_values(array_filter($conSaldo, fn ($c) => (int) $c['saldo'] < 0)),
-            'todos'    => Fiado::clientesParaElegir($negocioId),
+            'todos'    => Fiado::clientesParaElegir($negocioId, 300, Fiado::filtroSedes($negocio)),
             'total'    => array_sum(array_map(fn ($c) => (int) $c['saldo'], $clientes)),
             'formAnterior' => $this->sacarFormAnterior(),
             'ok'       => flash_obtener('ok'),
@@ -74,6 +74,10 @@ class FiadoController
         unset($_SESSION['fiado_form']);
         if ($cliente['nuevo']) {
             flash_set('ok', 'Cliente listo para fiarle.');
+        } elseif (!Fiado::clienteVisible($negocio, (int) $cliente['id'])) {
+            // Cliente de otra sede: no se le muestra su nombre ni su cuenta.
+            flash_set('error', 'Ese WhatsApp ya es de un cliente de otra sede del negocio. Pídele al dueño que lo revise.');
+            redirigir('/panel/fiado');
         } else {
             // El WhatsApp ya era de alguien: se muestra su cuenta, sin cargarle nada.
             flash_set('error', 'Ese WhatsApp ya es de «' . $cliente['nombre'] . '»: esta es su cuenta. No se le cargó nada ni se cambió su límite; si te debía algo más, cárgalo aquí.');
@@ -85,7 +89,7 @@ class FiadoController
     {
         $negocio = $this->exigirPedidos();
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         $saldo = Fiado::saldo($negocioId, (int) $cliente['id']);
         $pendientes = Fiado::pendientes($negocioId, (int) $cliente['id']);
 
@@ -109,7 +113,7 @@ class FiadoController
     {
         $negocio = $this->exigirPedidos();
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         $volver = '/panel/fiado/' . (int) $cliente['id'];
         if (!csrf_verificar()) {
             redirigir($volver);
@@ -135,7 +139,7 @@ class FiadoController
     {
         $negocio = $this->exigirPedidos();
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         $volver = '/panel/fiado/' . (int) $cliente['id'];
         if (!csrf_verificar()) {
             redirigir($volver);
@@ -160,7 +164,7 @@ class FiadoController
         $negocio = $this->exigirPedidos();
         Auth::exigirDueno($negocio);
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         $volver = '/panel/fiado/' . (int) $cliente['id'];
         if (!csrf_verificar()) {
             redirigir($volver);
@@ -181,7 +185,7 @@ class FiadoController
         $negocio = $this->exigirPedidos();
         Auth::exigirDueno($negocio);
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         if (csrf_verificar()) {
             $texto = trim((string) ($_POST['limite'] ?? ''));
             Fiado::establecerLimite($negocioId, (int) $cliente['id'], $texto === '' ? null : dinero_desde_texto($texto));
@@ -202,7 +206,7 @@ class FiadoController
         // decide el dueño. El equipo sí anota fiados y abonos.
         Auth::exigirDueno($negocio);
         $negocioId = (int) $negocio['negocio_id'];
-        $cliente = $this->cliente($negocioId, $parametros);
+        $cliente = $this->cliente($negocio, $parametros);
         $volver = '/panel/fiado/' . (int) $cliente['id'];
         if (!csrf_verificar()) {
             redirigir($volver);
@@ -232,11 +236,12 @@ class FiadoController
         return $negocio;
     }
 
-    /** El cliente de la URL, siempre de este negocio (un id ajeno no se ve). */
-    private function cliente(int $negocioId, array $parametros): array
+    /** El cliente de la URL, si es del negocio y (para un colaborador) de sus sedes. */
+    private function cliente(array $negocio, array $parametros): array
     {
-        $cliente = ctype_digit((string) ($parametros['cliente'] ?? '')) ? Cliente::buscar((int) $parametros['cliente'], $negocioId) : null;
-        if ($cliente === null) {
+        $id = ctype_digit((string) ($parametros['cliente'] ?? '')) ? (int) $parametros['cliente'] : 0;
+        $cliente = $id > 0 ? Cliente::buscar($id, (int) $negocio['negocio_id']) : null;
+        if ($cliente === null || !Fiado::clienteVisible($negocio, $id)) {
             flash_set('error', 'Ese cliente no existe en tu negocio.');
             redirigir('/panel/fiado');
         }

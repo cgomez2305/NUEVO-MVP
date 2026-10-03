@@ -19,9 +19,9 @@ $esGarantia = !empty($bono['garantia_de']);
     <?php elseif ($estado === 'vencido'): ?>
       <?= $esGarantia ? 'Esta garantía' : 'Este bono' ?> venció el <?= e(fecha_larga((string) $bono['vence_en'])) ?>. Escríbele al negocio si te quedó alguna pendiente.
     <?php elseif ($esGarantia): ?>
-      El retoque va sin costo<?= !empty($bono['vence_en']) ? ' hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Reserva con tu mismo WhatsApp y se aplica solo.
+      El retoque va sin costo<?= !empty($bono['vence_en']) ? ' hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Reserva desde el botón de abajo y se aplica sola.
     <?php else: ?>
-      <?= $quedan === 1 ? 'Te queda 1 sesión' : 'Te quedan ' . $quedan . ' sesiones' ?><?= !empty($bono['vence_en']) ? ', hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Se descuentan solas al reservar con tu WhatsApp.
+      <?= $quedan === 1 ? 'Te queda 1 sesión' : 'Te quedan ' . $quedan . ' sesiones' ?><?= !empty($bono['vence_en']) ? ', hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Reserva desde el botón de abajo (o desde el celular con el que ya reservaste) y cada cita usa una sola.
     <?php endif; ?>
   </p>
 

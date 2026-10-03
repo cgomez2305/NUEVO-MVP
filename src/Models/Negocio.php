@@ -85,7 +85,7 @@ class Negocio
                   (SELECT COUNT(*) FROM sedes s WHERE s.negocio_id = n.id) AS total_sedes,
                   (SELECT COUNT(*) FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1) AS sedes_publicadas,
                   (SELECT COUNT(*) FROM usuarios u WHERE u.negocio_id = n.id) AS total_usuarios,
-                  (SELECT COUNT(*) FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL) AS pagos_pendientes
+                  (SELECT COUNT(*) FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL AND pp.cancelado_en IS NULL) AS pagos_pendientes
                 FROM negocios n
                 JOIN planes p ON p.id = n.plan_id";
         $condiciones = [];
@@ -98,7 +98,7 @@ class Negocio
             $parametros['busqueda2'] = '%' . $busqueda . '%';
         }
         $condiciones[] = match ($filtro) {
-            'por_cobrar'   => 'EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL)',
+            'por_cobrar'   => 'EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL AND pp.cancelado_en IS NULL)',
             'pagan'        => "n.plan_id > 1 AND n.plan_estado = 'activo'",
             'sin_publicar' => 'NOT EXISTS (SELECT 1 FROM sedes s WHERE s.negocio_id = n.id AND s.publicada = 1)',
             'suspendidos'  => 'n.suspendido = 1',
@@ -126,7 +126,7 @@ class Negocio
                SUM(n.plan_id > 1 AND n.plan_estado = 'activo') AS pagan,
                SUM(n.creado_en >= NOW() - INTERVAL 7 DAY) AS nuevos_semana,
                SUM(n.suspendido = 1) AS suspendidos,
-               SUM(EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL)) AS por_cobrar
+               SUM(EXISTS (SELECT 1 FROM pagos_plan pp WHERE pp.negocio_id = n.id AND pp.confirmado_en IS NULL AND pp.cancelado_en IS NULL)) AS por_cobrar
              FROM negocios n"
         )->fetch();
 

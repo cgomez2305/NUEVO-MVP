@@ -36,6 +36,8 @@ class EventoSeguridad
         'sede_whatsapp'        => 'WhatsApp de una sede cambiado',
         'correo_cambiado'      => 'Correo de recuperación cambiado',
         'exportacion'          => 'Datos exportados a CSV',
+        'anticipo_marcado'     => 'Anticipo marcado como pagado a mano',
+        'bono_vendido'         => 'Bono de sesiones vendido',
         'negocio_suspendido'   => 'El equipo de Veci suspendió la cuenta',
         'negocio_reactivado'   => 'El equipo de Veci reactivó la cuenta',
         'pago_confirmado'      => 'El equipo de Veci confirmó un pago del plan',

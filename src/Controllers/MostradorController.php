@@ -50,7 +50,7 @@ class MostradorController
             'reemplazar'    => isset($_GET['reemplazar']),
             'ventaReciente' => $ventaReciente,
             'ventasHoy'     => Venta::delDia($sedeId, date('Y-m-d'), 30),
-            'clientes'      => Fiado::clientesParaElegir((int) $negocio['negocio_id']),
+            'clientes'      => Fiado::clientesParaElegir((int) $negocio['negocio_id'], 300, Fiado::filtroSedes($negocio)),
             'formAnterior'  => $this->sacarFormAnterior(),
             'codigoNuevo'   => $_SESSION['mostrador_codigo_nuevo'] ?? null,
             'ok'            => flash_obtener('ok'),
@@ -255,7 +255,7 @@ class MostradorController
                     'autorizo'   => isset($_POST['cliente_autorizo']),
                     'confirmado' => ctype_digit((string) ($_POST['cliente_confirmado'] ?? '')) ? (int) $_POST['cliente_confirmado'] : null,
                 ];
-            } elseif (ctype_digit($elegido) && Cliente::buscar((int) $elegido, $negocioId) !== null) {
+            } elseif (ctype_digit($elegido) && Cliente::buscar((int) $elegido, $negocioId) !== null && Fiado::clienteVisible($negocio, (int) $elegido)) {
                 $clienteId = (int) $elegido;
             }
         }

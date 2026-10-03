@@ -282,12 +282,21 @@ class Cita
      * comprobante por WhatsApp). El webhook de Bre-B hace lo mismo
      * automáticamente cuando hay un pago real conectado.
      */
-    public static function marcarAnticipoPagado(int $id, int $sedeId): void
+    public static function marcarAnticipoPagado(int $id, int $sedeId): bool
     {
         $stmt = Database::conexion()->prepare(
             "UPDATE citas SET anticipo_estado = 'pagado' WHERE id = :id AND sede_id = :sede_id AND anticipo_estado = 'pendiente'"
         );
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    /** Deshace una cita recién creada que no pudo completarse (p. ej. el bono se quedó sin sesiones en el último segundo). */
+    public static function eliminarRecienCreada(int $id, int $sedeId): void
+    {
+        Database::conexion()->prepare('DELETE FROM citas WHERE id = :id AND sede_id = :s AND creado_en >= :desde')
+            ->execute(['id' => $id, 's' => $sedeId, 'desde' => date('Y-m-d H:i:s', time() - 300)]);
     }
 
     /** $soloSiEstaEn: cambia solo si sigue en ese estado (ver Pedido::actualizarEstado). Devuelve si cambió. */

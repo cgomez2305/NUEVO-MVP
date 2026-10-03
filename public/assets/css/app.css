@@ -5479,6 +5479,6 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
   .pq-bitacora-fila { grid-template-columns: 10px 1fr; }
   .pq-bitacora-hora { grid-column: 2; padding-top: 0; }
 }
-.pq-confirmar-form { max-width: 420px; }
+.pq-identidad-form { max-width: 420px; }
 .pq-confirmar-acciones { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-5); }
 .pq-confirmar-acciones .pq-btn { width: auto; }

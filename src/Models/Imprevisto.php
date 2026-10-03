@@ -269,7 +269,10 @@ class Imprevisto
         if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true) || !empty($cita['imprevisto_motivo'])) {
             return null;
         }
-        Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'no_asistio');
+        // Solo quien de verdad la cambió sigue (dos clics a la vez no abonan dos veces).
+        if (!Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'no_asistio', (string) $cita['estado'])) {
+            return null;
+        }
         if (($sede['anticipo_no_asiste'] ?? 'se_pierde') !== 'se_abona') {
             return null;
         }
@@ -292,7 +295,11 @@ class Imprevisto
      */
     public static function cancelacionDelCliente(array $cita, array $sede): ?array
     {
-        Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'cancelada');
+        // Dos "Cancelar" a la vez (doble toque, dos pestañas): solo el que de
+        // verdad la canceló crea el saldo a favor; antes salían dos cupones.
+        if (!Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'cancelada', (string) $cita['estado'])) {
+            return null;
+        }
 
         return self::anticipoComoSaldo($cita, $sede);
     }
@@ -326,7 +333,7 @@ class Imprevisto
     }
 
     /**
-     * Deshace un "No vino" marcado por error: borra el cupón del abono (si
+     * Deshace un "No vino" (o una cancelación) marcado por error: borra el cupón del abono (si
      * el cliente todavía no lo usó) y vuelve a descontar la sesión del bono.
      * false si el cupón ya se usó: ese abono ya se lo tomó el cliente.
      */
@@ -342,20 +349,13 @@ class Imprevisto
                 return false;
             }
         }
-        if (!empty($cita['bono_devuelto_id'])) {
-            // La sesión devuelta pudo usarse en otra cita: volver a cobrarla
-            // dejaría el bono con más sesiones usadas que compradas.
-            $cupo = $pdo->prepare('SELECT b.sesiones_total - (SELECT COUNT(*) FROM bono_usos u WHERE u.bono_id = b.id) FROM bonos b WHERE b.id = :b');
-            $cupo->execute(['b' => (int) $cita['bono_devuelto_id']]);
-            if ((int) $cupo->fetchColumn() < 1) {
-                return false;
-            }
+        // La sesión devuelta pudo usarse en otra cita: si ya no queda, no se
+        // reactiva (dejaría el bono con más sesiones usadas que compradas).
+        if (!empty($cita['bono_devuelto_id']) && !Bono::usar((int) $cita['bono_devuelto_id'], (int) $cita['id'])) {
+            return false;
         }
         if (!empty($cita['cupon_abono_id'])) {
             $pdo->prepare('DELETE FROM cupones WHERE id = :c')->execute(['c' => (int) $cita['cupon_abono_id']]);
-        }
-        if (!empty($cita['bono_devuelto_id'])) {
-            Bono::usar((int) $cita['bono_devuelto_id'], (int) $cita['id']);
         }
         $pdo->prepare(
             "UPDATE citas SET cupon_abono_id = NULL, bono_devuelto_id = NULL,

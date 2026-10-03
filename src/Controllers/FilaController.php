@@ -84,7 +84,7 @@ class FilaController
             // celular que lo sacó. Si no, quien escribiera un número ajeno
             // vería el turno de otro y podría sacarlo de la fila.
             if (!in_array($turno['token'], $misTurnos, true)) {
-                flash_set('error', 'Ese WhatsApp ya está en la fila de hoy. Abre el enlace de tu turno o pregunta en el local.');
+                flash_set('error', 'No pudimos anotarte con ese WhatsApp. Si ya sacaste turno, abre su enlace; si no, pregunta en el local.');
                 redirigir($volver);
             }
             redirigir('/fila/' . $turno['token']);

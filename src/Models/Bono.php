@@ -143,16 +143,54 @@ class Bono
         return $stmt->fetch() ?: null;
     }
 
-    public static function usar(int $bonoId, int $citaId): void
+    /**
+     * Gasta una sesión del bono en esa cita, solo si todavía le queda: el
+     * bono se bloquea mientras se cuenta (FOR UPDATE), así dos reservas a la
+     * vez no pueden gastar la misma última sesión. true si quedó anotada.
+     */
+    public static function usar(int $bonoId, int $citaId): bool
     {
-        Database::conexion()->prepare('INSERT IGNORE INTO bono_usos (bono_id, cita_id) VALUES (:b, :c)')
-            ->execute(['b' => $bonoId, 'c' => $citaId]);
+        $pdo = Database::conexion();
+        $propia = !$pdo->inTransaction();
+        if ($propia) {
+            $pdo->beginTransaction();
+        }
+        try {
+            $bono = $pdo->prepare('SELECT sesiones_total FROM bonos WHERE id = :b FOR UPDATE');
+            $bono->execute(['b' => $bonoId]);
+            $total = $bono->fetchColumn();
+            $usadas = $pdo->prepare('SELECT COUNT(*) FROM bono_usos WHERE bono_id = :b');
+            $usadas->execute(['b' => $bonoId]);
+            $ok = false;
+            if ($total !== false && (int) $usadas->fetchColumn() < (int) $total) {
+                $insert = $pdo->prepare('INSERT IGNORE INTO bono_usos (bono_id, cita_id) VALUES (:b, :c)');
+                $insert->execute(['b' => $bonoId, 'c' => $citaId]);
+                $ok = $insert->rowCount() === 1;
+            }
+            if ($propia) {
+                $pdo->commit();
+            }
+
+            return $ok;
+        } catch (\Throwable $e) {
+            if ($propia) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
-    /** Cancelar la cita devuelve la sesión. */
+    /**
+     * Cancelar la cita devuelve la sesión, y anota a qué bono era (como "No
+     * vino"): si la cita se reactiva, la sesión se vuelve a cobrar en vez de
+     * quedar gratis (ver Imprevisto::deshacerDevolucion).
+     */
     public static function devolverPorCita(int $citaId): void
     {
-        Database::conexion()->prepare('DELETE FROM bono_usos WHERE cita_id = :c')->execute(['c' => $citaId]);
+        $pdo = Database::conexion();
+        $pdo->prepare('UPDATE citas c JOIN bono_usos u ON u.cita_id = c.id SET c.bono_devuelto_id = u.bono_id WHERE c.id = :c')
+            ->execute(['c' => $citaId]);
+        $pdo->prepare('DELETE FROM bono_usos WHERE cita_id = :c')->execute(['c' => $citaId]);
     }
 
     public static function usoDeCita(int $citaId): ?array

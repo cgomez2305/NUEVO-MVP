@@ -29,7 +29,10 @@ $llamado = $turno['estado'] === 'llamado';
           <?php if ($posicion['minutos'] !== null): ?>· unos <?= (int) $posicion['minutos'] ?> min de espera<?php endif; ?>
         </p>
       <?php endif; ?>
-      <span class="pq-ayuda"><?= e($turno['cliente_nombre']) ?><?= !empty($turno['servicio_nombre']) ? ' · ' . e($turno['servicio_nombre']) : '' ?><?= !empty($turno['empleado_nombre']) ? ' · con ' . e($turno['empleado_nombre']) : '' ?></span>
+      <?php // Sin el nombre guardado del cliente: quien escribió un WhatsApp ajeno no debe ver cómo se llama esa persona. ?>
+      <?php if (!empty($turno['servicio_nombre']) || !empty($turno['empleado_nombre'])): ?>
+        <span class="pq-ayuda"><?= e(ltrim((!empty($turno['servicio_nombre']) ? (string) $turno['servicio_nombre'] : '') . (!empty($turno['empleado_nombre']) ? ' · con ' . $turno['empleado_nombre'] : ''), ' ·')) ?></span>
+      <?php endif; ?>
     </section>
     <p class="pq-ayuda pq-cola-nota">Esta página se actualiza sola cada 30 segundos. No hace falta que estés pendiente: te avisamos por WhatsApp.</p>
     <form method="post" action="<?= e(base_url('/fila/' . $turno['token'] . '/salir')) ?>" class="pq-gestion-acciones" data-confirmar="¿Salir de la fila?">

@@ -59,6 +59,10 @@ class Fidelidad
      * Sellos disponibles por cliente (ganados − gastados en premios), solo
      * de quienes tienen al menos uno. Ordenados de más cerca al premio.
      *
+     * Solo cuentan pedidos ENTREGADOS y citas COMPLETADAS: antes contaba
+     * cualquier pedido no cancelado, y cualquiera podía hacer 10 pedidos
+     * falsos con el WhatsApp de otro (o el suyo) y reclamar el premio.
+     *
      * @return array<int, array{id: int, nombre: string, telefono: string, sellos: int, premios: int}>
      */
     public static function tarjetas(int $negocioId, array $config, ?int $clienteId = null): array
@@ -72,11 +76,11 @@ class Fidelidad
              JOIN (
                SELECT t.cliente_id, COUNT(*) AS ganados FROM (
                  SELECT pe.cliente_id FROM pedidos pe JOIN sedes s ON s.id = pe.sede_id
-                 WHERE s.negocio_id = :n1 AND pe.estado <> 'cancelado'
+                 WHERE s.negocio_id = :n1 AND pe.estado = 'entregado'
                    AND pe.total - pe.costo_domicilio >= :min1 AND pe.creado_en >= :desde1
                  UNION ALL
                  SELECT ci.cliente_id FROM citas ci JOIN sedes s ON s.id = ci.sede_id
-                 WHERE s.negocio_id = :n2 AND " . Cita::sqlCuenta('ci') . "
+                 WHERE s.negocio_id = :n2 AND ci.estado = 'completada'
                    AND " . Cita::sqlValor('ci') . " >= :min2 AND ci.creado_en >= :desde2
                ) t GROUP BY t.cliente_id
              ) x ON x.cliente_id = c.id

@@ -392,6 +392,8 @@ class CrecimientoController
         // El cliente autoriza sus datos en el local al comprar (lo pide quien vende).
         $clienteId = \App\Models\Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, false, 'panel', null, true);
         $bono = Bono::vender($paquete, $clienteId, (int) $negocio['usuario_id']);
+        // Vender un bono entrega sesiones: queda quién lo vendió y a quién.
+        \App\Models\EventoSeguridad::registrar('bono_vendido', (int) $negocio['negocio_id'], (int) $negocio['usuario_id'], (int) $paquete['sesiones'] . ' sesiones de ' . $paquete['servicio_nombre'] . ' para ' . explode(' ', $nombre)[0]);
         redirigir('/panel/paquetes?vendido=' . $bono['token']);
     }
 

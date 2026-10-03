@@ -208,13 +208,52 @@ class Cupon
         return (int) $stmt->fetchColumn();
     }
 
-    public static function registrarUso(int $cuponId, int $clienteId, int $descuento, ?int $pedidoId = null, ?int $citaId = null): void
+    /**
+     * Aparta un uso del cupón ANTES de crear el pedido o la cita, con el
+     * cupón bloqueado (FOR UPDATE) mientras se vuelven a contar sus usos:
+     * antes se revisaba y se anotaba por separado, y diez pedidos a la vez
+     * podían usar un cupón de "1 uso" diez veces. null si ya no alcanza.
+     * Luego asignarUso() lo liga al pedido/cita, o liberarUso() lo suelta.
+     */
+    public static function apartarUso(int $cuponId, int $clienteId, int $descuento): ?int
     {
-        $stmt = Database::conexion()->prepare(
-            'INSERT INTO cupon_usos (cupon_id, cliente_id, pedido_id, cita_id, descuento)
-             VALUES (:cupon, :cliente, :pedido, :cita, :descuento)'
-        );
-        $stmt->execute(['cupon' => $cuponId, 'cliente' => $clienteId, 'pedido' => $pedidoId, 'cita' => $citaId, 'descuento' => $descuento]);
+        $pdo = Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT usos_maximos, una_vez_por_cliente FROM cupones WHERE id = :c FOR UPDATE');
+            $stmt->execute(['c' => $cuponId]);
+            $cupon = $stmt->fetch();
+            $usos = $pdo->prepare('SELECT COUNT(*) FROM cupon_usos u WHERE u.cupon_id = :c AND ' . self::USO_VIGENTE);
+            $usos->execute(['c' => $cuponId]);
+            $agotado = $cupon === false
+                || ($cupon['usos_maximos'] !== null && (int) $usos->fetchColumn() >= (int) $cupon['usos_maximos'])
+                || ((int) $cupon['una_vez_por_cliente'] === 1 && self::usosDelCliente($cuponId, $clienteId) > 0);
+            $usoId = null;
+            if (!$agotado) {
+                $pdo->prepare('INSERT INTO cupon_usos (cupon_id, cliente_id, descuento) VALUES (:c, :cl, :d)')
+                    ->execute(['c' => $cuponId, 'cl' => $clienteId, 'd' => $descuento]);
+                $usoId = (int) $pdo->lastInsertId();
+            }
+            $pdo->commit();
+
+            return $usoId;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public static function asignarUso(int $usoId, ?int $pedidoId, ?int $citaId): void
+    {
+        Database::conexion()->prepare('UPDATE cupon_usos SET pedido_id = :p, cita_id = :c WHERE id = :id')
+            ->execute(['p' => $pedidoId, 'c' => $citaId, 'id' => $usoId]);
+    }
+
+    /** El pedido o la cita no se pudo crear: el uso apartado vuelve al cupón. */
+    public static function liberarUso(int $usoId): void
+    {
+        Database::conexion()->prepare('DELETE FROM cupon_usos WHERE id = :id AND pedido_id IS NULL AND cita_id IS NULL')
+            ->execute(['id' => $usoId]);
     }
 
     public static function alternarActivo(int $id, int $negocioId): void

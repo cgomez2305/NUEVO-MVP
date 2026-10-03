@@ -49,14 +49,14 @@ class Fiado
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function clientesConSaldo(int $negocioId): array
+    public static function clientesConSaldo(int $negocioId, string $filtro = ''): array
     {
         $pdo = Database::conexion();
         $stmt = $pdo->prepare(
             'SELECT c.id, c.nombre, c.telefono, c.fiado_limite, ' . self::saldoSql('m') . ' AS saldo,
                     (SELECT MAX(r.enviado_en) FROM fiado_recordatorios r WHERE r.cliente_id = c.id AND r.negocio_id = c.negocio_id) AS ultimo_recordatorio
              FROM clientes c JOIN fiado_movimientos m ON m.cliente_id = c.id AND m.negocio_id = c.negocio_id
-             WHERE c.negocio_id = :n
+             WHERE c.negocio_id = :n' . $filtro . '
              GROUP BY c.id, c.nombre, c.telefono, c.fiado_limite
              HAVING saldo <> 0'
         );
@@ -402,12 +402,43 @@ class Fiado
     }
 
     /**
+     * Para un colaborador, solo los clientes de SUS sedes: los que compraron,
+     * reservaron o fiaron en alguna de ellas, o los que todavía no tienen
+     * movimiento en ninguna (recién creados en el panel). Antes un
+     * colaborador de una sede veía nombre, teléfono y deuda de los clientes
+     * de todas las sedes del negocio. Fragmento SQL ('' para el dueño); los
+     * ids salen de la base y van como enteros.
+     */
+    public static function filtroSedes(array $contexto, string $alias = 'c'): string
+    {
+        if (($contexto['rol'] ?? '') === 'dueno') {
+            return '';
+        }
+        $ids = implode(',', array_map('intval', Usuario::sedeIdsAsignadas((int) $contexto['usuario_id']))) ?: '0';
+        $actividad = fn (string $en) => "EXISTS (SELECT 1 FROM ventas v WHERE v.cliente_id = {$alias}.id{$en})
+            OR EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = {$alias}.id" . str_replace('v.', 'p.', $en) . ")
+            OR EXISTS (SELECT 1 FROM citas ct WHERE ct.cliente_id = {$alias}.id" . str_replace('v.', 'ct.', $en) . ")
+            OR EXISTS (SELECT 1 FROM fiado_movimientos fm WHERE fm.cliente_id = {$alias}.id" . str_replace('v.', 'fm.', $en) . ')';
+
+        return ' AND ((' . $actividad(" AND v.sede_id IN ({$ids})") . ') OR NOT (' . $actividad('') . '))';
+    }
+
+    /** ¿Ese cliente lo puede ver este usuario? (ver filtroSedes) */
+    public static function clienteVisible(array $contexto, int $clienteId): bool
+    {
+        $stmt = Database::conexion()->prepare('SELECT 1 FROM clientes c WHERE c.id = :id AND c.negocio_id = :n' . self::filtroSedes($contexto));
+        $stmt->execute(['id' => $clienteId, 'n' => (int) $contexto['negocio_id']]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    /**
      * Clientes para elegir al fiar: primero los que ya tienen cuenta (con su
      * saldo y límite), luego el resto por nombre.
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function clientesParaElegir(int $negocioId, int $limite = 300): array
+    public static function clientesParaElegir(int $negocioId, int $limite = 300, string $filtro = ''): array
     {
         $limite = max(1, min(1000, $limite));
         $stmt = Database::conexion()->prepare(
@@ -415,7 +446,7 @@ class Fiado
                     (SELECT ' . self::saldoSql('m') . '
                        FROM fiado_movimientos m WHERE m.cliente_id = c.id AND m.negocio_id = c.negocio_id) AS saldo,
                     EXISTS(SELECT 1 FROM fiado_movimientos m2 WHERE m2.cliente_id = c.id) AS con_cuenta
-             FROM clientes c WHERE c.negocio_id = :n
+             FROM clientes c WHERE c.negocio_id = :n' . $filtro . '
              ORDER BY con_cuenta DESC, c.nombre ASC LIMIT ' . $limite
         );
         $stmt->execute(['n' => $negocioId]);

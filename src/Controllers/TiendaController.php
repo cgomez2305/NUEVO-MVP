@@ -516,7 +516,9 @@ class TiendaController
             ];
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, !empty($_POST['acepta_marketing']), 'reserva', $this->clienteDelDispositivo($negocio));
+        $clienteDelCelular = $this->clienteDelDispositivo($negocio);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, !empty($_POST['acepta_marketing']), 'reserva', $clienteDelCelular);
+        $esSuCelular = $clienteDelCelular === $clienteId;
         // El anticipo y el cupón son sobre el servicio, como se mostraron al
         // reservar: el transporte de la zona no entra en el porcentaje.
         $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal - $recargo] + $servicio);
@@ -524,7 +526,12 @@ class TiendaController
         // Bono de sesiones: si el cliente tiene uno vigente de este servicio,
         // la cita va por cuenta del bono (sin anticipo ni cupón). El bono
         // cubre el servicio; los adicionales se pagan aparte.
-        $bono = Bono::paraCita((int) $negocio['id'], $clienteId, (int) $servicio['id'], $fecha);
+        // Solo con prueba de que es el cliente: reserva desde su mismo celular
+        // o abrió el enlace de su bono (que solo le llegó a él). Antes bastaba
+        // escribir el WhatsApp de otra persona para gastarle sus sesiones.
+        $bono = $esSuCelular || isset($_SESSION['bono_cliente'][$clienteId])
+            ? Bono::paraCita((int) $negocio['id'], $clienteId, (int) $servicio['id'], $fecha)
+            : null;
         $codigoCupon = $bono === null ? Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? '')) : '';
         $cuponUsado = null;
         $descuentoCita = 0;
@@ -548,6 +555,17 @@ class TiendaController
         // sobre $80.000 con un cupón de $60.000): nunca se pide más que eso.
         $anticipo = max(0, min($anticipo, $precioTotal - $recargo - $descuentoCita));
 
+        $usoCupon = null;
+        if ($cuponUsado !== null && $descuentoCita > 0) {
+            $usoCupon = Cupon::apartarUso((int) $cuponUsado['id'], $clienteId, $descuentoCita);
+            if ($usoCupon === null) {
+                $st = \App\Database::conexion()->prepare('SELECT RELEASE_LOCK(:k)');
+                $st->execute(['k' => $candado]);
+                flash_set('error', 'Cupón ' . $cuponUsado['codigo'] . ': se acaba de agotar. Reserva sin él o usa otro.');
+                redirigir($volverConTurno);
+            }
+        }
+
         $this->registrarTasaPublica('cita', $negocio);
         $citaId = Cita::crear(
             (int) $negocio['id'],
@@ -565,6 +583,15 @@ class TiendaController
             $condiciones['precio_tipo'],
             $condiciones['precio_max'] !== null ? $condiciones['precio_max'] + $precioAdicionales + $recargo : null,
         );
+        // La sesión se toma con el bono bloqueado: dos reservas a la vez (o
+        // en días distintos) no pueden gastar la misma última sesión.
+        if ($bono !== null && !Bono::usar((int) $bono['id'], $citaId)) {
+            Cita::eliminarRecienCreada($citaId, (int) $negocio['id']);
+            $st = \App\Database::conexion()->prepare('SELECT RELEASE_LOCK(:k)');
+            $st->execute(['k' => $candado]);
+            flash_set('error', 'Tu bono ya no tiene sesiones disponibles. Revisa el enlace de tu bono o reserva sin él.');
+            redirigir($volverConTurno);
+        }
         $st = \App\Database::conexion()->prepare('SELECT RELEASE_LOCK(:k)');
         $st->execute(['k' => $candado]);
         $st->fetchColumn();
@@ -582,14 +609,10 @@ class TiendaController
             Visita::subirFotos($citaId, 'fotos', 'cliente');
         }
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
-        if ($cuponUsado !== null && $descuentoCita > 0) {
-            Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $descuentoCita, null, $citaId);
+        if ($usoCupon !== null) {
+            Cupon::asignarUso($usoCupon, null, $citaId);
         }
-        $usoBono = null;
-        if ($bono !== null) {
-            Bono::usar((int) $bono['id'], $citaId);
-            $usoBono = Bono::usoDeCita($citaId);
-        }
+        $usoBono = $bono !== null ? Bono::usoDeCita($citaId) : null;
 
         WebPush::notificarSede(
             (int) $negocio['id'],
@@ -611,7 +634,7 @@ class TiendaController
             . ($descuentoCita > 0 && $cuponUsado !== null ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
             . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '')
             . ($usoBono !== null ? "\nCon bono: sesión {$usoBono['usadas']} de {$usoBono['sesiones_total']}" : '');
-        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, $precioTotal - $descuentoCita);
+        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, $precioTotal - $descuentoCita, $esSuCelular);
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
         }
@@ -952,7 +975,9 @@ class TiendaController
             }
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing, 'pedido', $this->clienteDelDispositivo($negocio));
+        $clienteDelCelular = $this->clienteDelDispositivo($negocio);
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing, 'pedido', $clienteDelCelular);
+        $esSuCelular = $clienteDelCelular === $clienteId;
 
         // El cupón se revisa otra vez, ahora con el cliente: si es personal
         // de otro número o ya lo usó, se le devuelve al carrito explicando.
@@ -996,18 +1021,36 @@ class TiendaController
                 'combo'       => Producto::textoCombo($linea['producto']),
             ], $carrito['lineas']);
 
+        // El uso del cupón se aparta antes de crear el pedido (con el cupón
+        // bloqueado): dos pedidos a la vez no pueden pasar de su límite.
+        $usoCupon = null;
+        if ($cuponUsado !== null && $ajustes['descuento'] > 0) {
+            $usoCupon = Cupon::apartarUso((int) $cuponUsado['id'], $clienteId, $ajustes['descuento']);
+            if ($usoCupon === null) {
+                unset($_SESSION['cupon'][(int) $negocio['id']]);
+                flash_set('error', 'El cupón ' . $cuponUsado['codigo'] . ' se acaba de agotar. Lo quitamos: revisa el total y vuelve a enviar.');
+                redirigir('/t/' . $negocio['slug'] . '/carrito');
+            }
+        }
+
         $this->registrarTasaPublica('pedido', $negocio);
         try {
             $pedidoId = Pedido::crear((int) $negocio['id'], $clienteId, $metodoPago, $items, $tipoEntrega, $direccion, $mesa, $notas, $ajustes);
-        } catch (\DomainException $e) {
+        } catch (\Throwable $e) {
+            if ($usoCupon !== null) {
+                Cupon::liberarUso($usoCupon);
+            }
+            if (!$e instanceof \DomainException) {
+                throw $e;
+            }
             // Inventario: alguien se llevó las últimas unidades mientras
             // este cliente llenaba el formulario.
             flash_set('error', $e->getMessage());
             redirigir($volverAlCarrito);
         }
         $pedido = Pedido::buscar($pedidoId, (int) $negocio['id']);
-        if ($cuponUsado !== null && $ajustes['descuento'] > 0) {
-            Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $ajustes['descuento'], $pedidoId);
+        if ($usoCupon !== null) {
+            Cupon::asignarUso($usoCupon, $pedidoId, null);
         }
         unset($_SESSION['cupon'][(int) $negocio['id']]);
 
@@ -1051,7 +1094,7 @@ class TiendaController
         if ($notas !== '') {
             $resumenTexto .= "\nNota: {$notas}";
         }
-        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $pedido['total']);
+        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $pedido['total'], $esSuCelular);
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
         }
@@ -1129,6 +1172,9 @@ class TiendaController
             abortar404();
         }
         $sede = Sede::buscarPorId((int) $bono['sede_id']);
+        // Abrir este enlace (que solo le llegó al cliente) es la prueba para
+        // que la reserva desde este navegador use su bono (ver crearCita).
+        $_SESSION['bono_cliente'] = array_slice(($_SESSION['bono_cliente'] ?? []) + [(int) $bono['cliente_id'] => true], -20, null, true);
 
         ver('tienda/bono', [
             'titulo'  => (!empty($bono['garantia_de']) ? 'Tu garantía · ' : 'Tu bono · ') . nombre_publico_sede($sede),
@@ -1722,19 +1768,28 @@ class TiendaController
      *
      * @return array{sellos: int, meta: int, premio: string, nuevo: bool, texto: string}|null
      */
-    private function tarjetaDeSellos(array $negocio, int $clienteId, int $monto): ?array
+    private function tarjetaDeSellos(array $negocio, int $clienteId, int $monto, bool $esSuCelular): ?array
     {
         $config = Fidelidad::activa((int) $negocio['negocio_id']);
         if ($config === null) {
             return null;
         }
         $sellos = Fidelidad::sellosDe((int) $negocio['negocio_id'], $config, $clienteId);
+        // Quien escribió el número de otra persona no ve (ni le manda al
+        // negocio) cuántos sellos tiene ella: solo su mismo celular, o un
+        // cliente que todavía no tiene ninguno (no hay nada que revelar).
+        if ($sellos > 0 && !$esSuCelular) {
+            return null;
+        }
+        // Lo que va a tener con esta compra (los sellos se ganan al entregar).
+        $nuevo = Fidelidad::cuenta($config, $monto);
+        $sellos += $nuevo ? 1 : 0;
 
         return [
             'sellos' => $sellos,
             'meta'   => (int) $config['meta'],
             'premio' => (string) $config['premio'],
-            'nuevo'  => Fidelidad::cuenta($config, $monto),
+            'nuevo'  => $nuevo,
             'texto'  => Fidelidad::textoProgreso($config, $sellos),
         ];
     }

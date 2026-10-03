@@ -150,12 +150,14 @@
                       <button type="submit">Se acabó por hoy</button>
                     </form>
                   <?php endif; ?>
+                  <?php if ($negocio['rol'] === 'dueno'): // Borrar del catálogo es del dueño, como borrar un servicio. ?>
                   <hr>
                   <form method="post" action="<?= e(base_url('/panel/productos/' . $producto['id'] . '/eliminar')) ?>" data-confirmar="¿Eliminar «<?= e($producto['nombre']) ?>» de tu catálogo? No se puede deshacer.">
                     <?= csrf_campo() ?>
                     <input type="hidden" name="volver" value="<?= e(base_url('/panel/productos')) ?>">
                     <button type="submit" class="pq-peligro">Eliminar</button>
                   </form>
+                  <?php endif; ?>
                 </div>
               </details>
             </div>

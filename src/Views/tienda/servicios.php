@@ -133,7 +133,7 @@
           </li>
         <?php endforeach; ?>
       </ul>
-      <p class="pq-ayuda pq-paquetes-nota">Lo pagas en el local y luego, al reservar con tu WhatsApp, cada cita usa una sesión sola.</p>
+      <p class="pq-ayuda pq-paquetes-nota">Lo pagas en el local y te llega un enlace: reservando desde ahí, cada cita usa una sesión sola.</p>
     </section>
   <?php endif; ?>
   <?php require __DIR__ . '/_resenas.php'; ?>

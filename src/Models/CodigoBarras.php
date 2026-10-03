@@ -49,30 +49,45 @@ class CodigoBarras
     }
 
     /**
-     * Una tienda le puso este nombre a este código: se anota (o se
-     * actualiza con el nombre más reciente) y se cuenta una vez más.
+     * Este negocio le puso este nombre a este código: es su voto (uno por
+     * negocio, el último nombre que usó).
      */
-    public static function registrar(string $codigo, string $nombre): void
+    public static function registrar(string $codigo, string $nombre, int $sedeId): void
     {
         $nombre = trim($nombre);
         if ($nombre === '' || !self::esCompartible($codigo)) {
             return;
         }
         Database::conexion()->prepare(
-            'INSERT INTO codigos_barras (codigo, nombre, veces_usado, actualizado_en) VALUES (:c, :n, 1, NOW())
-             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), veces_usado = veces_usado + 1, actualizado_en = NOW()'
-        )->execute(['c' => $codigo, 'n' => mb_substr($nombre, 0, 120)]);
+            'INSERT INTO codigos_barras_votos (codigo, negocio_id, nombre, actualizado_en)
+             SELECT :c, negocio_id, :n, NOW() FROM sedes WHERE id = :s
+             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), actualizado_en = NOW()'
+        )->execute(['c' => $codigo, 'n' => mb_substr($nombre, 0, 120), 's' => $sedeId]);
     }
 
-    /** Cómo lo llaman otras tiendas, o null si nadie lo ha usado. */
+    /**
+     * Cómo lo llaman otras tiendas: el nombre que usan más negocios (en
+     * empate, el más antiguo), o null si nadie lo ha usado. Una sola cuenta
+     * no puede imponerle un nombre a un código que otras ya nombraron.
+     */
     public static function sugerencia(string $codigo): ?string
     {
         if (!self::esCompartible($codigo)) {
             return null;
         }
-        $stmt = Database::conexion()->prepare('SELECT nombre FROM codigos_barras WHERE codigo = :c');
+        $pdo = Database::conexion();
+        $stmt = $pdo->prepare(
+            'SELECT nombre FROM codigos_barras_votos WHERE codigo = :c
+             GROUP BY nombre ORDER BY COUNT(*) DESC, MIN(actualizado_en) ASC LIMIT 1'
+        );
         $stmt->execute(['c' => $codigo]);
         $nombre = $stmt->fetchColumn();
+        if ($nombre === false) {
+            // Lo aprendido antes de los votos.
+            $stmt = $pdo->prepare('SELECT nombre FROM codigos_barras WHERE codigo = :c');
+            $stmt->execute(['c' => $codigo]);
+            $nombre = $stmt->fetchColumn();
+        }
 
         return $nombre !== false ? (string) $nombre : null;
     }

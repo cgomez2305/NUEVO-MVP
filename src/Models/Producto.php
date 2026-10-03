@@ -562,7 +562,7 @@ class Producto
         }
 
         if ($codigo !== null && $codigo !== $actual['codigo_barras']) {
-            CodigoBarras::registrar($codigo, (string) $actual['nombre']);
+            CodigoBarras::registrar($codigo, (string) $actual['nombre'], $sedeId);
         }
 
         return $aviso;

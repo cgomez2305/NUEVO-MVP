@@ -166,7 +166,7 @@ class AgendaController
         $nombre = explode(' ', trim((string) $cita['cliente_nombre']))[0];
         $texto = "Hola {$nombre}, en " . nombre_publico_sede($negocio) . " te damos el retoque de tu {$cita['nombre_servicio']} sin costo"
             . (!empty($bono['vence_en']) ? ' hasta el ' . fecha_larga((string) $bono['vence_en']) : '')
-            . '. Aquí la ves y reservas con tu mismo WhatsApp: ' . url_publica('/bono/' . $bono['token']);
+            . '. Reserva desde este enlace y va sin costo: ' . url_publica('/bono/' . $bono['token']);
         header('Location: https://wa.me/57' . preg_replace('/\D+/', '', (string) $cita['cliente_telefono']) . '?text=' . rawurlencode($texto));
         exit;
     }

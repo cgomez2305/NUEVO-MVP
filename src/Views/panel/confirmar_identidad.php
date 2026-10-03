@@ -31,7 +31,7 @@
   <?php if (!empty($error)): ?>
     <div class="pq-alerta pq-pagina-aviso" role="alert"><?= e($error) ?></div>
   <?php endif; ?>
-  <form method="post" action="<?= e(base_url('/panel/confirmar')) ?>" class="pq-card pq-form-panel pq-confirmar-form">
+  <form method="post" action="<?= e(base_url('/panel/confirmar')) ?>" class="pq-card pq-form-panel pq-identidad-form">
     <?= csrf_campo() ?>
     <?php if ($descarga !== null): ?>
       <input type="hidden" name="descargar" value="<?= e($descarga['clave']) ?>">

@@ -47,7 +47,7 @@ function config(string $clave, mixed $default = null): mixed
  */
 function base_url(string $ruta = ''): string
 {
-    return '/' . ltrim($ruta, '/');
+    return '/' . ltrim($ruta, '/\\');
 }
 
 /**
@@ -63,8 +63,11 @@ function url_publica(string $ruta = ''): string
 
 function redirigir(string $ruta): never
 {
-    // Un salto de línea en la ruta partiría la cabecera: nunca llega.
-    $ruta = str_replace(["\r", "\n", "\0"], '', $ruta);
+    // Un salto de línea en la ruta partiría la cabecera: nunca llega. Y
+    // solo rutas de este sitio: "/\otro.com" o "//otro.com" los navegadores
+    // los leen como otro dominio, así que las barras invertidas se cambian
+    // y base_url() deja una sola barra al inicio.
+    $ruta = str_replace(["\r", "\n", "\0", '\\'], ['', '', '', '/'], $ruta);
     header('Location: ' . base_url($ruta));
     exit;
 }
