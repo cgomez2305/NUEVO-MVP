@@ -5482,3 +5482,4 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-identidad-form { max-width: 420px; }
 .pq-confirmar-acciones { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-5); }
 .pq-confirmar-acciones .pq-btn { width: auto; }
+.pq-bitacora-veces { display: inline-block; margin-left: var(--esp-1); padding: 0 7px; border-radius: 999px; background: var(--tinte-sello); color: var(--sello); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; vertical-align: 1px; }

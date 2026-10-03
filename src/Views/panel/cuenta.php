@@ -56,6 +56,22 @@
 // bitácora es la forma de darse cuenta a tiempo si algo no lo hizo uno.
 $alerta = ['login_nuevo', 'cuenta_frenada', 'cobro_cambiado', 'correo_cambiado', 'reset_generado', 'reset_solicitado', 'password_restablecida', 'exportacion', 'colaborador_creado', 'sede_whatsapp', 'negocio_suspendido'];
 $esteCelular = \App\Models\DispositivoConfianza::deEsteNavegador((int) $negocio['usuario_id']);
+// Los 5 más recientes; el resto se cuenta (una lista de 20 celulares no se lee).
+$masDispositivos = max(0, count($dispositivos) - 5);
+$dispositivos = array_slice($dispositivos, 0, 5);
+// Eventos iguales seguidos (mismo tipo, persona, celular y detalle) van en
+// una sola línea con "×N": diez inicios de sesión no son diez alarmas.
+$agrupados = [];
+foreach ($eventos as $evento) {
+    $clave = $evento['tipo'] . '|' . $evento['usuario_id'] . '|' . $evento['admin_id'] . '|' . $evento['descripcion'] . '|' . $evento['detalle'] . '|' . $evento['ip'];
+    $ultimo = array_key_last($agrupados);
+    if ($ultimo !== null && $agrupados[$ultimo]['clave'] === $clave) {
+        $agrupados[$ultimo]['veces']++;
+        $agrupados[$ultimo]['desde'] = $evento['creado_en'];
+        continue;
+    }
+    $agrupados[] = $evento + ['clave' => $clave, 'veces' => 1, 'desde' => $evento['creado_en']];
+}
 ?>
 <section class="pq-seguridad" aria-labelledby="pq-titulo-seguridad">
   <h2 class="pq-seccion-titulo" id="pq-titulo-seguridad">Seguridad</h2>
@@ -73,6 +89,9 @@ $esteCelular = \App\Models\DispositivoConfianza::deEsteNavegador((int) $negocio[
           </li>
         <?php endforeach; ?>
       </ul>
+      <?php if ($masDispositivos > 0): ?>
+        <p class="pq-ayuda">Y <?= $masDispositivos ?> más, usados antes.</p>
+      <?php endif; ?>
     <?php endif; ?>
     <p class="pq-ayuda">Si perdiste un celular o dejaste la sesión abierta en un computador ajeno, ciérrala desde aquí.</p>
     <form method="post" action="<?= e(base_url('/panel/cuenta/cerrar-sesiones')) ?>" data-confirmar="¿Cerrar tu sesión en todos los demás celulares y computadores? Este se queda abierto.">
@@ -86,11 +105,11 @@ $esteCelular = \App\Models\DispositivoConfianza::deEsteNavegador((int) $negocio[
     <p class="pq-ayuda">Aquí vas a ver cada inicio de sesión y los cambios importantes de tu cuenta.</p>
   <?php else: ?>
     <ol class="pq-bitacora">
-      <?php foreach ($eventos as $evento): $tipo = (string) $evento['tipo']; ?>
+      <?php foreach ($agrupados as $evento): $tipo = (string) $evento['tipo']; ?>
         <li class="pq-bitacora-fila<?= in_array($tipo, $alerta, true) ? ' pq-bitacora-alerta' : '' ?>">
           <span class="pq-bitacora-punto" aria-hidden="true"></span>
           <div class="pq-bitacora-texto">
-            <span class="pq-bitacora-titulo"><?= e(\App\Models\EventoSeguridad::TIPOS[$tipo] ?? $tipo) ?><?= $evento['detalle'] !== '' ? ' · ' . e($evento['detalle']) : '' ?></span>
+            <span class="pq-bitacora-titulo"><?= e(\App\Models\EventoSeguridad::TIPOS[$tipo] ?? $tipo) ?><?= $evento['detalle'] !== '' ? ' · ' . e($evento['detalle']) : '' ?><?php if ($evento['veces'] > 1): ?> <span class="pq-bitacora-veces">×<?= (int) $evento['veces'] ?></span><?php endif; ?></span>
             <span class="pq-ayuda">
               <?= $evento['admin_id'] !== null ? 'Equipo de Veci' : e($evento['usuario_nombre'] ?? 'Usuario eliminado') ?>
               <?= $evento['descripcion'] !== '' ? ' · ' . e($evento['descripcion']) : '' ?>
