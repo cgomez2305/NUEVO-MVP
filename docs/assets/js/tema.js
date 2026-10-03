@@ -125,6 +125,17 @@
         if (item) item.classList.toggle('abierto');
       });
     });
+
+    // Spotlight que sigue el cursor en las tarjetas: centralizado aquí (antes
+    // vivía solo en index.html) para que cualquier página con estas clases
+    // tenga la misma micro-interacción, no solo la portada.
+    document.querySelectorAll('.feature-card, .dolor-card, .plan, .industria-col, .integra-item, .verificable-item, .articulo-card, .demo-teaser-card').forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+      });
+    });
   });
 })();
 

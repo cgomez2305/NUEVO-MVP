@@ -977,15 +977,6 @@ Total — $27.500</span>
     actualizarScroll();
   })();
 
-  // ---- Spotlight que sigue el cursor en las tarjetas ----
-  document.querySelectorAll('.feature-card, .dolor-card, .plan, .industria-col').forEach(function (card) {
-    card.addEventListener('mousemove', function (e) {
-      var rect = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
-      card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
-    });
-  });
-
   // ---- Frase con revelado de palabras por scroll ----
   (function () {
     var frase = document.querySelector('[data-scroll-frase]');
