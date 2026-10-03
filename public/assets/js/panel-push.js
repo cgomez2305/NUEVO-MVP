@@ -7,6 +7,10 @@
 
   var boton = document.getElementById('push-boton');
   if (!boton) return;
+  // La sección viene oculta: solo tiene sentido mostrarla si el navegador
+  // de verdad puede recibir notificaciones (chequeado arriba).
+  var seccion = document.getElementById('push-seccion');
+  if (seccion) seccion.hidden = false;
   var estado = document.getElementById('push-estado');
 
   function mostrar(texto, deshabilitado) {

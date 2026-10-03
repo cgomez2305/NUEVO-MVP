@@ -70,6 +70,49 @@ class Servicio
             'id'           => $id,
             'sede_id'   => $sedeId,
         ]);
+        // Si el precio nuevo quedó igual o por encima del "hasta" de un
+        // rango (p. ej. desde el onboarding, que no pregunta el tipo), deja
+        // de ser rango: "desde" es lo único honesto que queda.
+        Database::conexion()->prepare(
+            "UPDATE servicios SET precio_tipo = 'desde', precio_max = NULL
+             WHERE id = :id AND sede_id = :s AND precio_tipo = 'rango' AND precio_max <= precio"
+        )->execute(['id' => $id, 's' => $sedeId]);
+    }
+
+    /**
+     * Tipo de precio: 'fijo', 'desde' o 'rango' (de precio a precio_max).
+     * Un rango sin máximo mayor al precio no es rango: queda como 'desde'.
+     * Devuelve el tipo que quedó guardado.
+     */
+    public static function guardarTipoPrecio(int $id, int $sedeId, string $tipo, int $precioMax): string
+    {
+        $servicio = self::buscar($id, $sedeId);
+        if ($servicio === null) {
+            return 'fijo';
+        }
+        $tipo = in_array($tipo, ['fijo', 'desde', 'rango'], true) ? $tipo : 'fijo';
+        if ($tipo === 'rango' && $precioMax <= (int) $servicio['precio']) {
+            $tipo = 'desde';
+        }
+        Database::conexion()->prepare('UPDATE servicios SET precio_tipo = :t, precio_max = :m WHERE id = :id AND sede_id = :s')
+            ->execute(['t' => $tipo, 'm' => $tipo === 'rango' ? $precioMax : null, 'id' => $id, 's' => $sedeId]);
+
+        return $tipo;
+    }
+
+    /** Cada cuántos meses se puede repetir un servicio (0 = no se repite). */
+    public const REPETIR_MESES = [0, 1, 2, 3, 4, 6, 12];
+
+    public static function guardarRepetir(int $id, int $sedeId, int $meses): void
+    {
+        Database::conexion()->prepare('UPDATE servicios SET repetir_cada_meses = :m WHERE id = :id AND sede_id = :s')
+            ->execute(['m' => in_array($meses, self::REPETIR_MESES, true) && $meses > 0 ? $meses : null, 'id' => $id, 's' => $sedeId]);
+    }
+
+    public static function actualizarDuracion(int $id, int $sedeId, int $duracionMin): void
+    {
+        Database::conexion()->prepare('UPDATE servicios SET duracion_min = :d WHERE id = :id AND sede_id = :s')
+            ->execute(['d' => max(5, min(600, $duracionMin)), 'id' => $id, 's' => $sedeId]);
     }
 
     public static function eliminar(int $id, int $sedeId): void
@@ -118,6 +161,21 @@ class Servicio
         };
     }
 
+    /**
+     * Cuántos servicios de la sede no tienen precio todavía: la lectura con IA
+     * los deja en 0 cuando el precio no se veía en la foto, y así no se
+     * puede abrir (se venderían gratis).
+     */
+    public static function contarSinPrecio(int $sedeId): int
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT COUNT(*) AS total FROM servicios WHERE sede_id = :sede_id AND precio = 0'
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
     public static function contarPorSede(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
@@ -126,5 +184,16 @@ class Servicio
         $stmt->execute(['sede_id' => $sedeId]);
 
         return (int) $stmt->fetch()['total'];
+    }
+
+    /** true si al menos un servicio de la sede pide anticipo. Usado en el onboarding para saber si el paso de cobros es urgente o puede configurarse después. */
+    public static function tieneAnticipoActivo(int $sedeId): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT COUNT(*) AS total FROM servicios WHERE sede_id = :sede_id AND deposito_tipo != 'ninguno'"
+        );
+        $stmt->execute(['sede_id' => $sedeId]);
+
+        return (int) $stmt->fetch()['total'] > 0;
     }
 }

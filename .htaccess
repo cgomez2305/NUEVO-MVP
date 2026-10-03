@@ -6,8 +6,8 @@
 # porque Apache nunca sube por encima del docroot del subdominio.
 
 RewriteEngine On
-RewriteCond %{REQUEST_URI} ^/(config|src|database)(/|$) [OR]
-RewriteCond %{REQUEST_URI} ^/(\.git|composer\.(json|lock)|serve\.php)(/|$)
+RewriteCond %{REQUEST_URI} ^/(config|src|database|bin|storage|tests|capturas-diseno)(/|$) [OR]
+RewriteCond %{REQUEST_URI} ^/(\.git|\.claude|\.github|composer\.(json|lock)|serve\.php)(/|$)
 RewriteRule ^ - [F]
 
 <IfModule mod_authz_core.c>

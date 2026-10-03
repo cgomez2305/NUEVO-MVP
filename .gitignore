@@ -8,5 +8,19 @@
 /public/uploads/productos/*
 !/public/uploads/productos/.gitkeep
 !/public/uploads/productos/.htaccess
+/public/uploads/equipo/*
+!/public/uploads/equipo/.gitkeep
+!/public/uploads/equipo/.htaccess
 .DS_Store
 *.log
+
+# Capturas de revisión de diseño (se generan con .claude/skills/diseno-veci/scripts/capturas.js)
+/capturas-diseno/
+
+# Worktrees de subagentes (copias aisladas del repo)
+/.claude/worktrees/
+/storage/visitas/*
+!/storage/visitas/.gitkeep
+
+# Clave de hash_identidad() (si no está en config): nunca al repo.
+/storage/.clave_hash

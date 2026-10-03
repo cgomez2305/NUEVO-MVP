@@ -50,13 +50,16 @@
       if (boton.dataset.copiando === '1') return; // ya está mostrando el check
       boton.dataset.copiando = '1';
       boton.dataset.iconoOriginal = boton.innerHTML;
+      // Se guarda la etiqueta propia de cada botón ("Copiar la llave",
+      // "Copiar la referencia"...) en vez de pisarla siempre con "enlace".
+      var etiquetaOriginal = boton.getAttribute('aria-label') || 'Copiar';
       boton.innerHTML = ICONO_CHECK;
       boton.classList.add('pq-copiado');
-      boton.setAttribute('aria-label', 'Enlace copiado');
+      boton.setAttribute('aria-label', 'Copiado');
       window.setTimeout(function () {
         boton.innerHTML = boton.dataset.iconoOriginal || ICONO_COPIAR;
         boton.classList.remove('pq-copiado');
-        boton.setAttribute('aria-label', 'Copiar enlace');
+        boton.setAttribute('aria-label', etiquetaOriginal);
         delete boton.dataset.copiando;
       }, 1700);
     });
@@ -69,10 +72,14 @@
   // ---------------------------------------------------------------------
   document.addEventListener('submit', function (evento) {
     if (evento.defaultPrevented) return;
-    var boton = evento.target.querySelector('button[type="submit"]');
-    if (!boton || boton.disabled) return;
+    // El botón que envió (o el primero activo): un formulario puede empezar
+    // con un botón apagado que solo bloquea el Enter (formulario de producto).
+    var boton = evento.submitter || evento.target.querySelector('button[type="submit"]:not([disabled])');
+    if (!boton || boton.disabled || boton.tagName !== 'BUTTON') return;
     boton.classList.add('pq-btn-cargando');
-    boton.disabled = true;
+    // Se apaga justo después de que el navegador arma los datos: apagado
+    // antes, su name/value (p. ej. accion=guardar o gramos=500) no viajaría.
+    window.setTimeout(function () { boton.disabled = true; }, 0);
   });
 
   // ---------------------------------------------------------------------
@@ -100,15 +107,100 @@
       var partes = campo.getAttribute('data-mostrar-si').split('=');
       var nombre = partes[0];
       var valorEsperado = partes[1];
-      var elegido = document.querySelector('[name="' + nombre + '"]:checked') || document.querySelector('[name="' + nombre + '"]');
+      // Se busca dentro del mismo formulario: una lista de servicios tiene
+      // un formulario por fila con los mismos nombres de campo.
+      var ambito = campo.closest('form') || document;
+      var elegido = ambito.querySelector('[name="' + nombre + '"]:checked') || ambito.querySelector('[name="' + nombre + '"]');
       var mostrar = !!elegido && elegido.value === valorEsperado;
       campo.style.display = mostrar ? '' : 'none';
-      var entrada = campo.querySelector('[data-requerido-si-visible]');
-      if (entrada) entrada.required = mostrar;
+      // Todos, no solo el primero: el bloque del domicilio tiene la zona
+      // (radios) y la dirección, y los dos son obligatorios mientras se vea.
+      campo.querySelectorAll('[data-requerido-si-visible]').forEach(function (entrada) {
+        entrada.required = mostrar;
+      });
     });
   }
   document.addEventListener('change', actualizarCamposCondicionales);
   document.addEventListener('DOMContentLoaded', actualizarCamposCondicionales);
+
+  // ---------------------------------------------------------------------
+  // Cierre de caja: mientras se escribe lo contado, dice si cuadra, si
+  // sobra o si falta (base + efectivo vendido vs. lo que hay en la caja).
+  // ---------------------------------------------------------------------
+  function actualizarCuadreCaja() {
+    var form = document.querySelector('[data-caja-form]');
+    if (!form) return;
+    var numero = function (campo) { return parseInt(((campo && campo.value) || '').replace(/\D+/g, ''), 10) || 0; };
+    var esperado = numero(form.querySelector('[data-caja-base]')) + numero(form.querySelector('[data-caja-servicios]')) + (parseInt(form.getAttribute('data-efectivo-vendido'), 10) || 0);
+    form.querySelector('[data-caja-esperado]').textContent = formatearPesos(esperado);
+    var contadoCampo = form.querySelector('[data-caja-contado]');
+    var resultado = form.querySelector('[data-caja-resultado]');
+    if (!contadoCampo.value.trim()) { resultado.hidden = true; return; }
+    var diferencia = numero(contadoCampo) - esperado;
+    resultado.hidden = false;
+    resultado.className = 'pq-chip ' + (diferencia === 0 ? 'pq-chip-caja' : (diferencia > 0 ? 'pq-chip-pendiente' : 'pq-chip-cancelado'));
+    resultado.textContent = diferencia === 0 ? 'Cuadra' : (diferencia > 0 ? 'Sobran ' + formatearPesos(diferencia) : 'Faltan ' + formatearPesos(-diferencia));
+  }
+  document.addEventListener('input', function (evento) {
+    if (evento.target.matches && evento.target.matches('[data-caja-base], [data-caja-contado], [data-caja-servicios]')) actualizarCuadreCaja();
+  });
+  document.addEventListener('DOMContentLoaded', actualizarCuadreCaja);
+
+  // ---------------------------------------------------------------------
+  // Armar combo (formulario de producto): suma en vivo lo que costarían
+  // las partes por separado y cuánto ahorra el cliente con el precio del
+  // combo; si el combo sale igual o más caro, lo dice.
+  // ---------------------------------------------------------------------
+  function actualizarResumenCombo() {
+    var partes = document.querySelector('[data-combo-partes]');
+    var resumen = document.querySelector('[data-combo-resumen]');
+    if (!partes || !resumen) return;
+    var separado = 0;
+    partes.querySelectorAll('[data-precio-unidad]').forEach(function (campo) {
+      separado += (parseInt(campo.value, 10) || 0) * (parseInt(campo.getAttribute('data-precio-unidad'), 10) || 0);
+    });
+    var precio = parseInt(((document.getElementById('precio') || {}).value || '').replace(/\D+/g, ''), 10) || 0;
+    resumen.hidden = separado === 0;
+    resumen.querySelector('[data-combo-separado]').textContent = formatearPesos(separado);
+    var ahorro = resumen.querySelector('[data-combo-ahorro]');
+    if (precio > 0 && separado > precio) ahorro.textContent = '· tu cliente ahorra ' + formatearPesos(separado - precio);
+    else if (precio > 0 && separado > 0) ahorro.textContent = '· ojo: el combo no sale más barato que por separado';
+    else ahorro.textContent = '';
+  }
+  document.addEventListener('input', function (evento) {
+    if (evento.target.matches && (evento.target.matches('[data-precio-unidad]') || evento.target.id === 'precio')) actualizarResumenCombo();
+  });
+
+  // ---------------------------------------------------------------------
+  // Domicilio por zona en el carrito: al elegir zona (y mientras la entrega
+  // sea a domicilio) aparece la línea "Domicilio · zona" y se suma al
+  // total y a la barra pegajosa. data-total-base es el total sin domicilio
+  // que manda el servidor; el servidor vuelve a calcular todo al pedir.
+  // ---------------------------------------------------------------------
+  function actualizarDomicilio() {
+    var total = document.getElementById('pq-carrito-total');
+    var linea = document.getElementById('pq-comanda-domicilio');
+    if (!total || !linea) return;
+    var base = parseInt(total.getAttribute('data-total-base'), 10) || 0;
+    var entrega = document.querySelector('[name="tipo_entrega"]:checked');
+    var zona = document.querySelector('[name="zona_id"]:checked');
+    var aplica = !!zona && (!entrega || entrega.value === 'domicilio');
+    var costo = aplica ? (parseInt(zona.getAttribute('data-costo'), 10) || 0) : 0;
+    linea.hidden = !aplica;
+    if (aplica) {
+      linea.querySelector('[data-zona-nombre]').textContent = zona.getAttribute('data-nombre');
+      linea.querySelector('[data-zona-costo]').textContent = costo === 0 ? 'Gratis' : formatearPesos(costo);
+    }
+    var nota = document.querySelector('[data-nota-zona]');
+    if (nota) nota.hidden = aplica;
+    total.textContent = formatearPesos(base + costo);
+    var sticky = document.getElementById('pq-checkout-sticky-total');
+    if (sticky) sticky.textContent = formatearPesos(base + costo);
+  }
+  document.addEventListener('change', function (evento) {
+    if (evento.target.name === 'zona_id' || evento.target.name === 'tipo_entrega') actualizarDomicilio();
+  });
+  document.addEventListener('DOMContentLoaded', actualizarDomicilio);
 
   // ---------------------------------------------------------------------
   // Precio con puntos de miles mientras se escribe (input data-precio). Es
@@ -162,15 +254,44 @@
     if (barra) {
       if (carrito.cantidad > 0) {
         var resumen = document.getElementById('pq-barra-carrito-resumen');
+        var totalBarra = document.getElementById('pq-barra-carrito-total');
+        var cuentaBarra = document.getElementById('pq-barra-carrito-cuenta');
         if (resumen) {
-          resumen.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto · ' : ' productos · ') + formatearPesos(carrito.total);
+          // Con el total en su propio elemento, el resumen solo lleva la cantidad.
+          resumen.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos')
+            + (totalBarra ? '' : ' · ' + formatearPesos(carrito.total));
         }
+        if (totalBarra) totalBarra.textContent = formatearPesos(carrito.total);
+        if (cuentaBarra) cuentaBarra.textContent = carrito.cantidad;
         barra.classList.remove('pq-barra-carrito-oculta');
         barra.classList.add('pq-barra-carrito-pulso');
-        window.setTimeout(function () { barra.classList.remove('pq-barra-carrito-pulso'); }, 220);
+        window.setTimeout(function () { barra.classList.remove('pq-barra-carrito-pulso'); }, 360);
       } else {
         barra.classList.add('pq-barra-carrito-oculta');
       }
+    }
+
+    // Catálogo: cada "+" muestra cuántas unidades de su producto van en el
+    // pedido; el que se acaba de tocar da un pequeño salto de confirmación.
+    var cantidades = {};
+    var textos = {};
+    (carrito.lineas || []).forEach(function (linea) {
+      cantidades[String(linea.producto_id)] = linea.cantidad;
+      textos[String(linea.producto_id)] = linea.texto_corto || String(linea.cantidad); // por peso: "1½ lb"
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cuenta-producto]'), function (cuenta) {
+      var id = cuenta.getAttribute('data-cuenta-producto');
+      var unidades = cantidades[id] || 0;
+      cuenta.textContent = unidades > 0 ? textos[id] : '0';
+      cuenta.hidden = unidades === 0;
+      var botonProducto = cuenta.closest('.pq-agregar');
+      if (botonProducto) botonProducto.classList.toggle('pq-agregar-lleva', unidades > 0);
+    });
+    var botonTocado = productoId ? document.querySelector('[data-agregar-producto="' + productoId + '"]') : null;
+    if (botonTocado && tipo === 'agregar') {
+      botonTocado.classList.remove('pq-agregar-pop');
+      void botonTocado.offsetWidth; // reinicia la animación si se toca varias veces seguidas
+      botonTocado.classList.add('pq-agregar-pop');
     }
 
     // Nada más que hacer fuera de la página del carrito (p. ej. el "+" del
@@ -186,8 +307,14 @@
     }
 
     total.textContent = formatearPesos(carrito.total);
+    total.setAttribute('data-total-base', carrito.total);
+    var ajustes = document.getElementById('pq-comanda-ajustes');
+    if (ajustes && typeof carrito.ajustes_html === 'string') ajustes.innerHTML = carrito.ajustes_html;
+    var cuentaComanda = document.getElementById('pq-comanda-cuenta');
+    if (cuentaComanda) cuentaComanda.textContent = carrito.cantidad + (carrito.cantidad === 1 ? ' producto' : ' productos');
     var stickyTotal = document.getElementById('pq-checkout-sticky-total');
     if (stickyTotal) stickyTotal.textContent = formatearPesos(carrito.total);
+    actualizarDomicilio();
 
     if (tipo === 'quitar') {
       if (fila) fila.remove();
@@ -207,9 +334,15 @@
     }
 
     var cantidadEl = document.getElementById('pq-cantidad-' + productoId);
-    if (cantidadEl) cantidadEl.textContent = lineaActual.cantidad;
+    if (cantidadEl) cantidadEl.textContent = lineaActual.texto || lineaActual.cantidad;
     var subtotalEl = document.getElementById('pq-subtotal-' + productoId);
     if (subtotalEl) subtotalEl.textContent = formatearPesos(lineaActual.subtotal);
+    // Inventario: el "+" se apaga al llegar a las unidades que hay.
+    var mas = fila ? fila.querySelector('[data-carrito-form="agregar"] button') : null;
+    if (mas && lineaActual.tope !== null && lineaActual.tope !== undefined) {
+      mas.disabled = lineaActual.cantidad >= lineaActual.tope;
+      if (mas.disabled) mas.title = 'No hay más unidades'; else mas.removeAttribute('title');
+    }
   }
 
   document.addEventListener('submit', function (evento) {
@@ -219,7 +352,7 @@
 
     evento.preventDefault();
     var tipo = form.getAttribute('data-carrito-form');
-    var fila = form.closest('.pq-fila-carrito');
+    var fila = form.closest('[data-fila-producto]');
     var campoProducto = form.querySelector('[name="producto_id"]');
     var productoId = campoProducto ? campoProducto.value : null;
     // El listener de "enviando…" de arriba ya deshabilitó este botón; como
@@ -260,7 +393,7 @@
   // esa fila en vez de en su propia línea); para el consentimiento, la
   // tarjeta completa del checkbox.
   function contenedorDe(campo) {
-    return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo;
+    return campo.closest('.pq-input-telefono') || campo.closest('.pq-consentimiento') || campo.closest('.pq-zonas') || campo;
   }
 
   function limpiarErrorCampo(campo) {
@@ -428,8 +561,14 @@
       regla('mesa', '#mesa', function (f) {
         return tipoEntregaDe(f) === 'mesa' ? errorRequerido(f, '#mesa', 'Escribe tu número de mesa.') : null;
       }),
+      {
+        id: 'zona_id', selector: '[name="zona_id"]', enLabel: true,
+        obtenerError: function (f) {
+          return tipoEntregaDe(f) === 'domicilio' && !f.querySelector('[name="zona_id"]:checked') ? 'Elige a qué zona te llevamos el domicilio.' : null;
+        },
+      },
       reglaConsentimiento('Debes aceptar el uso de datos para procesar el pedido.'),
-    ], { revalidarConCambioDe: ['tipo_entrega'] });
+    ], { revalidarConCambioDe: ['tipo_entrega', 'zona_id'] });
   });
 
   // ---------------------------------------------------------------------
@@ -440,11 +579,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     var formReserva = document.getElementById('pq-form-reserva');
     if (formReserva) {
-      activarValidacionFormulario(formReserva, [
+      var reglasReserva = [
         regla('nombre', '#nombre', errorNombre),
         regla('telefono', '#telefono', errorTelefono),
-        reglaConsentimiento('Debes aceptar el uso de datos para continuar.'),
-      ]);
+      ];
+      // Visita a domicilio: dirección, zona y qué pasa (solo si el form los trae).
+      if (formReserva.querySelector('#direccion')) {
+        reglasReserva.push(regla('direccion', '#direccion', function (f) { return errorRequerido(f, '#direccion', 'Escribe la dirección de la visita.'); }));
+        reglasReserva.push(regla('problema', '#problema', function (f) { return errorRequerido(f, '#problema', 'Cuéntanos qué pasa para llevar lo necesario.'); }));
+      }
+      if (formReserva.querySelector('#zona_id')) {
+        reglasReserva.push(regla('zona_id', '#zona_id', function (f) { return errorRequerido(f, '#zona_id', 'Elige tu barrio o zona.'); }));
+      }
+      reglasReserva.push(reglaConsentimiento('Debes aceptar el uso de datos para continuar.'));
+      activarValidacionFormulario(formReserva, reglasReserva);
     }
 
     var formListaEspera = document.getElementById('pq-form-lista-espera');
@@ -466,7 +614,7 @@
   // a mano, no se pierde información, solo el centrado automático.
   // ---------------------------------------------------------------------
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.pq-dias-scroll .pq-chip-caja').forEach(function (chip) {
+    document.querySelectorAll('.pq-dias-scroll .pq-dia-activo').forEach(function (chip) {
       if (typeof chip.scrollIntoView === 'function') {
         chip.scrollIntoView({ inline: 'center', block: 'nearest' });
       }
@@ -489,4 +637,339 @@
       });
     });
   });
+
+  // Feedback de "cargando" al cambiar de fecha en reservar.php: la
+  // navegación real es una recarga completa de página (no hay nada que
+  // esperar de verdad), pero atenuar el bloque de disponibilidad en el
+  // instante del toque evita que el chip se sienta "muerto" mientras
+  // carga la página siguiente. Sin JS esto simplemente no se aplica — la
+  // navegación nativa funciona exactamente igual.
+  document.addEventListener('DOMContentLoaded', function () {
+    var disponibilidad = document.getElementById('disponibilidad');
+    if (!disponibilidad) {
+      return;
+    }
+    document.querySelectorAll('.pq-dias-scroll a, .pq-calendario-grid a').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        disponibilidad.classList.add('pq-disponibilidad-cargando');
+      });
+    });
+  });
+
+  // Mostrar/ocultar contraseña (login y registro): sin JS el campo se
+  // queda en type="password", que es el estado seguro por defecto.
+  var ICONO_OJO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var ICONO_OJO_TACHADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A11 11 0 0 1 12 19c-7 0-11-7-11-7a20.6 20.6 0 0 1 4.2-5.2M9.9 4.2A9.4 9.4 0 0 1 12 4c7 0 11 7 11 7a20.6 20.6 0 0 1-2.6 3.6"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M1 1l22 22"/></svg>';
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest('[data-mostrar-contrasena]');
+    if (!boton) return;
+    var campo = document.querySelector(boton.getAttribute('data-mostrar-contrasena'));
+    if (!campo) return;
+    var visible = campo.type === 'text';
+    campo.type = visible ? 'password' : 'text';
+    boton.innerHTML = visible ? ICONO_OJO : ICONO_OJO_TACHADO;
+    boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  });
+
+  // "Copiar horario del lunes" (horario.php del onboarding): copia el
+  // horario y el estado abierto/cerrado del lunes solo a los días que
+  // la persona marcó en el desplegable (sábado/domingo vienen
+  // destildados por defecto porque muchos negocios trabajan distinto
+  // esos días). Sin JS el botón no hace nada — cada día se sigue
+  // pudiendo editar a mano, que es el camino que ya existía.
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest('[data-aplicar-horario-semana]');
+    if (!boton) return;
+    var abiertoLunes = document.querySelector('input[data-dia="1"]');
+    var inicioLunes = document.querySelector('input[data-inicio-dia="1"]');
+    var finLunes = document.querySelector('input[data-fin-dia="1"]');
+    if (!abiertoLunes || !inicioLunes || !finLunes) return;
+    document.querySelectorAll('[data-copiar-dia]:checked').forEach(function (casilla) {
+      var dia = casilla.getAttribute('data-copiar-dia');
+      var abierto = document.querySelector('input[data-dia="' + dia + '"]');
+      var inicio = document.querySelector('input[data-inicio-dia="' + dia + '"]');
+      var fin = document.querySelector('input[data-fin-dia="' + dia + '"]');
+      if (abierto) abierto.checked = abiertoLunes.checked;
+      if (inicio) inicio.value = inicioLunes.value;
+      if (fin) fin.value = finLunes.value;
+      // La pausa del almuerzo viaja con el horario.
+      ['pausa-dia', 'pausa-inicio-dia', 'pausa-fin-dia'].forEach(function (clave) {
+        var origen = document.querySelector('input[data-' + clave + '="1"]');
+        var destino = document.querySelector('input[data-' + clave + '="' + dia + '"]');
+        if (!origen || !destino) return;
+        if (origen.type === 'checkbox') destino.checked = origen.checked; else destino.value = origen.value;
+      });
+    });
+    var detalle = boton.closest('details');
+    if (detalle) detalle.removeAttribute('open');
+  });
+
+  // Requisito de largo de contraseña en vivo (registro.php): el
+  // atributo minlength del navegador ya bloquea el envío, esto solo
+  // confirma visualmente cuando ya se cumplió, sin esperar al submit.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-requisito-largo]').forEach(function (ayuda) {
+      var campo = document.querySelector(ayuda.getAttribute('data-requisito-largo'));
+      var minimo = parseInt(ayuda.getAttribute('data-largo-minimo'), 10) || 0;
+      var textoBase = ayuda.textContent;
+      if (!campo) return;
+      campo.addEventListener('input', function () {
+        var cumple = campo.value.length >= minimo;
+        ayuda.textContent = cumple ? '✓ ' + textoBase : textoBase;
+        ayuda.style.color = cumple ? 'var(--caja)' : '';
+      });
+    });
+  });
+
+  // Separador de miles en campos de precio (servicios/productos del
+  // onboarding): el valor real que se envía son solo dígitos — el punto
+  // es puramente visual mientras se escribe. Sin JS el campo se queda
+  // como texto plano sin separador, pero sigue enviando un número
+  // válido (el backend ya hace (int) de todas formas).
+  function pqSoloDigitos(valor) { return (valor || '').replace(/\D+/g, ''); }
+  function pqConSeparadorMiles(digitos) { return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  document.addEventListener('input', function (evento) {
+    var campo = evento.target.closest('[data-precio-cop]');
+    if (!campo) return;
+    var posDesdeFinal = campo.value.length - (campo.selectionStart || 0);
+    var digitos = pqSoloDigitos(campo.value);
+    campo.value = digitos === '' ? '' : pqConSeparadorMiles(digitos);
+    var nuevaPos = Math.max(0, campo.value.length - posDesdeFinal);
+    campo.setSelectionRange(nuevaPos, nuevaPos);
+  });
+
+  document.addEventListener('submit', function (evento) {
+    document.querySelectorAll('[data-precio-cop]').forEach(function (campo) {
+      if (campo.form === evento.target) campo.value = pqSoloDigitos(campo.value);
+    });
+  });
+
+  // Tipo de dato esperado en "Valor de la llave" (pago.php del
+  // onboarding) según el tipo de llave elegido: solo ayuda al teclado
+  // y a la validación del navegador, nunca bloquea el envío sin JS.
+  document.addEventListener('change', function (evento) {
+    var radio = evento.target.closest('[data-llave-tipo-input]');
+    if (!radio) return;
+    var campo = document.querySelector('[data-llave-valor-input]');
+    if (!campo) return;
+    if (radio.value === 'correo') {
+      campo.type = 'email';
+      campo.inputMode = 'email';
+    } else if (radio.value === 'cedula') {
+      campo.type = 'text';
+      campo.inputMode = 'numeric';
+    } else {
+      campo.type = 'tel';
+      campo.inputMode = 'numeric';
+    }
+  });
+
+  // Previsualización del uploader de foto.php (onboarding): sin JS el
+  // input nativo sigue funcionando (required lo valida), esto solo
+  // añade la miniatura + nombre/tamaño y deshabilita el botón hasta
+  // que haya un archivo elegido.
+  document.addEventListener('DOMContentLoaded', function () {
+    var input = document.querySelector('[data-input-foto]');
+    if (!input) return;
+    var dropzone = document.querySelector('[data-dropzone-foto]');
+    var previa = document.querySelector('[data-previa-foto]');
+    var previaImg = document.querySelector('[data-previa-foto-img]');
+    var previaNombre = document.querySelector('[data-previa-foto-nombre]');
+    var previaTamano = document.querySelector('[data-previa-foto-tamano]');
+    var boton = document.querySelector('[data-boton-foto]');
+    var cambiar = document.querySelector('[data-previa-foto-cambiar]');
+
+    if (boton) boton.disabled = true;
+
+    // "0.0 MB" para una foto de 300 KB no dice nada: KB por debajo de 1 MB.
+    function tamano(bytes) {
+      return bytes < 1024 * 1024
+        ? Math.max(1, Math.round(bytes / 1024)) + ' KB'
+        : (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
+    }
+
+    // La foto del celular (3–6 MB, 4000 px) se achica aquí antes de subir:
+    // con 4G lento sube en segundos y no choca con el límite de subida del
+    // servidor. createImageBitmap respeta la orientación EXIF, así que la
+    // foto llega derecha. Si el navegador no puede (o sale más pesada), se
+    // sube la original y el servidor la reduce igual.
+    function achicar(archivo) {
+      var LADO = 2000;
+      if (!window.createImageBitmap || !window.DataTransfer || archivo.size < 900 * 1024) {
+        return Promise.resolve(archivo);
+      }
+      return createImageBitmap(archivo, { imageOrientation: 'from-image' }).then(function (bitmap) {
+        var escala = Math.min(1, LADO / Math.max(bitmap.width, bitmap.height));
+        var lienzo = document.createElement('canvas');
+        lienzo.width = Math.round(bitmap.width * escala);
+        lienzo.height = Math.round(bitmap.height * escala);
+        var ctx = lienzo.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+        ctx.drawImage(bitmap, 0, 0, lienzo.width, lienzo.height);
+        return new Promise(function (resolver) {
+          lienzo.toBlob(function (blob) {
+            if (!blob || blob.size >= archivo.size) { resolver(archivo); return; }
+            resolver(new File([blob], archivo.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.85);
+        });
+      }).catch(function () { return archivo; });
+    }
+
+    input.addEventListener('change', function () {
+      var archivo = input.files && input.files[0];
+      if (!archivo) return;
+      if (dropzone) dropzone.hidden = true;
+      if (previa) previa.hidden = false;
+      if (previaNombre) previaNombre.textContent = archivo.name;
+      if (previaTamano) previaTamano.textContent = tamano(archivo.size);
+      if (previaImg) previaImg.src = URL.createObjectURL(archivo);
+      var textoBoton = boton ? boton.textContent : '';
+      if (boton) { boton.disabled = true; boton.textContent = 'Preparando la foto…'; }
+
+      achicar(archivo).then(function (final) {
+        if (final !== archivo) {
+          try {
+            var lista = new DataTransfer();
+            lista.items.add(final);
+            input.files = lista.files;
+            if (previaTamano) previaTamano.textContent = tamano(archivo.size) + ' → ' + tamano(final.size);
+          } catch (e) { /* se sube la original */ }
+        }
+        if (boton) { boton.disabled = false; boton.textContent = textoBoton; }
+      });
+    });
+
+    if (cambiar) {
+      cambiar.addEventListener('click', function () {
+        input.value = '';
+        if (boton) boton.disabled = true;
+        if (previa) previa.hidden = true;
+        if (dropzone) dropzone.hidden = false;
+        input.click();
+      });
+    }
+  });
 })();
+
+/*
+  Guardia de cambios sin guardar (revisión del catálogo en el onboarding):
+  la lista entera se guarda con un solo botón, pero cada fila tiene su menú
+  ⋮ (agotado, quitar) y hay un "agregar" aparte, que recargan la página.
+  Si el dueño ya corrigió algo y usa uno de esos, se le pregunta antes de
+  perder lo escrito. Sin JS no hay guardia, pero tampoco nada se rompe.
+*/
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var zona = document.querySelector('[data-guardia-cambios]');
+    if (!zona) return;
+    var idPrincipal = zona.getAttribute('data-guardia-cambios');
+    var sucio = false;
+    zona.addEventListener('input', function (evento) {
+      if (evento.target.getAttribute && evento.target.getAttribute('form') === idPrincipal) sucio = true;
+    });
+    var aviso = 'Cambiaste cosas en la lista y todavía no las guardas. Si sigues, se pierden. ¿Seguir de todas formas?';
+    zona.addEventListener('submit', function (evento) {
+      if (!sucio || evento.target.id === idPrincipal || evento.defaultPrevented) return;
+      if (!window.confirm(aviso)) {
+        evento.preventDefault();
+        evento.stopImmediatePropagation();
+      }
+    }, true);
+    // Lo mismo con los enlaces que salen de la pantalla ("Atrás", "otra
+    // foto"), que están fuera de la lista y antes se llevaban lo escrito.
+    document.addEventListener('click', function (evento) {
+      var enlace = evento.target.closest && evento.target.closest('a[href]');
+      if (!sucio || !enlace || enlace.target === '_blank' || enlace.getAttribute('href').charAt(0) === '#') return;
+      if (!window.confirm(aviso)) evento.preventDefault();
+    });
+  });
+})();
+
+/*
+  Onboarding:
+  - Vista previa del toldo: al elegir un color de la paleta se le cambia
+    --marca (y la letra encima, --marca-sobre) a la tienda de muestra.
+  - Formularios con data-enviando="Texto…": al enviarse, el botón se
+    desactiva y muestra ese texto (leer la foto con IA tarda unos segundos;
+    sin esto parecía que no pasaba nada y se tocaba otra vez).
+*/
+(function () {
+  'use strict';
+  document.addEventListener('change', function (evento) {
+    var radio = evento.target.closest && evento.target.closest('[data-color-marca]');
+    if (!radio) return;
+    var vista = document.querySelector('[data-vista-marca]');
+    if (!vista) return;
+    vista.style.setProperty('--marca', radio.value);
+    vista.style.setProperty('--marca-sobre', radio.getAttribute('data-sobre') || '#1B1A17');
+  });
+
+  document.addEventListener('submit', function (evento) {
+    var formulario = evento.target;
+    if (evento.defaultPrevented || !formulario.hasAttribute || !formulario.hasAttribute('data-enviando')) return;
+    var botones = document.querySelectorAll('button[type="submit"][form="' + formulario.id + '"]');
+    var boton = formulario.querySelector('button[type="submit"]') || (formulario.id && botones[0]);
+    formulario.classList.add('pq-enviando');
+    if (boton) {
+      boton.disabled = true;
+      boton.setAttribute('aria-busy', 'true');
+      boton.textContent = formulario.getAttribute('data-enviando');
+    }
+  });
+})();
+
+/*
+  Consignación del panel interno (admin/_consignacion.php): mientras se
+  escribe lo que llegó a la cuenta Bre-B de Veci, se compara con lo que
+  debía llegar. Igual → sello "Coincide" y se habilita confirmar; distinto
+  → se dice cuánto falta o sobra. El servidor hace la misma verificación,
+  así que sin JS el botón queda activo y nada se activa con otro monto.
+*/
+(function () {
+  'use strict';
+  function pesos(n) { return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  function revisar(form) {
+    var esperado = parseInt(form.getAttribute('data-consignacion'), 10) || 0;
+    var campo = form.querySelector('[data-monto-recibido]');
+    var sello = form.querySelector('[data-sello-coincide]');
+    var diferencia = form.querySelector('[data-monto-diferencia]');
+    var boton = form.querySelector('[data-confirmar-pago]');
+    var escrito = parseInt((campo.value || '').replace(/\D+/g, ''), 10) || 0;
+    var coincide = escrito === esperado;
+    if (sello) sello.hidden = !coincide;
+    if (boton) boton.disabled = !coincide;
+    if (diferencia) {
+      diferencia.textContent = escrito === 0 || coincide ? ''
+        : (escrito < esperado ? 'Faltan ' + pesos(esperado - escrito) : 'Sobran ' + pesos(escrito - esperado)) + ': así no se puede activar el plan.';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('form[data-consignacion]').forEach(revisar);
+  });
+  document.addEventListener('input', function (evento) {
+    var form = evento.target.closest && evento.target.closest('form[data-consignacion]');
+    if (form) revisar(form);
+  });
+})();
+
+// ---------------------------------------------------------------------
+// Fotos: si las elegidas pesan más de lo que el servidor recibe en un
+// envío (data-max-total-mb), se avisa antes de enviar. Sin esto PHP
+// descarta el formulario entero y el usuario pierde lo que escribió.
+// ---------------------------------------------------------------------
+document.addEventListener('change', function (evento) {
+  var campo = evento.target;
+  if (!campo.matches || !campo.matches('input[type=file][data-max-total-mb]')) return;
+  var maximo = parseFloat(campo.getAttribute('data-max-total-mb')) * 1024 * 1024;
+  var total = 0;
+  Array.prototype.forEach.call(campo.files || [], function (archivo) { total += archivo.size; });
+  campo.setCustomValidity(total > maximo
+    ? 'Estas fotos pesan ' + (total / 1048576).toFixed(1) + ' MB y se pueden enviar hasta ' + campo.getAttribute('data-max-total-mb') + ' MB juntas. Elige menos fotos.'
+    : '');
+  if (total > maximo && campo.reportValidity) campo.reportValidity();
+});

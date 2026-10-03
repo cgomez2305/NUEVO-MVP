@@ -41,4 +41,25 @@ class Admin
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
     }
+
+    /** Activa (o cambia) el segundo factor. null lo desactiva. */
+    public static function guardarTotp(int $id, ?string $secreto): void
+    {
+        Database::conexion()->prepare('UPDATE admins SET totp_secreto = :s, totp_ultimo_paso = NULL WHERE id = :id')
+            ->execute(['s' => $secreto, 'id' => $id]);
+    }
+
+    /**
+     * Marca el código como usado solo si nadie usó ese paso o uno posterior
+     * (dos peticiones con el mismo código a la vez: solo una pasa).
+     */
+    public static function consumirPasoTotp(int $id, int $paso): bool
+    {
+        $stmt = Database::conexion()->prepare(
+            'UPDATE admins SET totp_ultimo_paso = :p WHERE id = :id AND (totp_ultimo_paso IS NULL OR totp_ultimo_paso < :p2)'
+        );
+        $stmt->execute(['p' => $paso, 'p2' => $paso, 'id' => $id]);
+
+        return $stmt->rowCount() === 1;
+    }
 }

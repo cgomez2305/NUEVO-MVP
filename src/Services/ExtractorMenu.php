@@ -6,109 +6,214 @@ namespace App\Services;
 
 /**
  * "La IA arma tu tienda": lee de una foto el catálogo del negocio.
- * Para negocios de tipo 'pedidos' lee productos y precios (extraer);
- * para negocios de tipo 'reservas' lee servicios, precio y duración
- * aproximada (extraerServicios).
+ * Para negocios de tipo 'pedidos' lee productos, precios, categoría y
+ * descripción; para 'reservas' lee servicios, precio y duración.
  *
- * Sin ANTHROPIC_API_KEY configurada (config/config.php → anthropic_api_key),
- * o si la llamada falla por cualquier razón, devuelve un catálogo de ejemplo:
- * así el flujo completo (foto → catálogo → Bre-B → publicar) funciona de
- * punta a punta sin depender de una API externa ni de una llave pagada.
+ * Devuelve siempre un resultado con su estado, para que el onboarding le
+ * diga al dueño la verdad sobre lo que pasó:
+ *   - 'ok'        la IA leyó la foto y encontró ítems.
+ *   - 'vacio'     la IA leyó la foto pero no encontró nada con precio
+ *                 (no era un menú, salió borrosa o muy de lejos).
+ *   - 'fallo'     no se pudo hablar con la API (red, error, rechazo).
+ *   - 'sin_llave' no hay ANTHROPIC_API_KEY configurada (instalación de
+ *                 prueba): no se llama a nada.
+ * Antes cualquier falla caía en silencio a un catálogo de ejemplo
+ * ("Bandeja paisa", "Corte de cabello"…) que el dueño podía creer que la
+ * IA había leído de su foto.
+ *
+ * El límite mensual del plan Gratis lo hace cumplir OnboardingController
+ * antes de llamar aquí: este servicio no sabe nada de planes.
  */
 class ExtractorMenu
 {
-    /** @return array<int, array{nombre:string, precio:int, categoria:string}> */
+    private const MODELO = 'claude-opus-5-5';
+    private const MAX_ITEMS = 80;
+    /** La API rechaza imágenes de más de 5 MB; se deja margen por el base64. */
+    private const MAX_BYTES_IMAGEN = 3_500_000;
+
+    /** @return array{estado:string, items:array<int, array{nombre:string, precio:int, categoria:string, descripcion:?string}>} */
     public static function extraer(string $rutaAbsolutaImagen): array
     {
-        $apiKey = config('anthropic_api_key');
+        $prompt = 'Esta es la foto del menú o carta de un negocio de barrio en Colombia '
+            . '(restaurante, panadería, tienda, cafetería…). Extrae cada producto que se venda '
+            . "con su precio.\n\n"
+            . "- nombre: como aparece en el menú, con mayúscula inicial normal (no todo en mayúsculas).\n"
+            . "- precio: en pesos colombianos, número entero. Si el menú abrevia los miles "
+            . "(\"12\", \"12k\", \"12.\" o \"$12\" para doce mil), conviértelo a 12000. Si un producto "
+            . "tiene varios tamaños o precios, crea un ítem por cada uno (\"Jugo de mora en agua\", "
+            . "\"Jugo de mora en leche\"). Si no se ve el precio, usa 0.\n"
+            . "- categoria: el nombre de la sección del menú donde está (\"Desayunos\", \"Jugos\", "
+            . "\"Corrientazo\"…), corto. Si el menú no tiene secciones, agrupa en categorías obvias.\n"
+            . "- descripcion: lo que el menú dice que trae (\"con queso y mantequilla\"), o cadena vacía.\n\n"
+            . 'No inventes productos que no estén en la foto. Si la foto no es un menú o no se lee, '
+            . 'devuelve la lista vacía.';
 
-        if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
-            $prompt = 'Lee esta foto de un menú de un negocio colombiano. Responde SOLO con '
-                . 'un JSON (sin texto adicional, sin bloque de código) con una lista de '
-                . 'productos: [{"nombre":"...", "precio": 12000, "categoria":"Comidas|Bebidas|General"}]. '
-                . 'El precio va en pesos colombianos, como número entero sin puntos ni símbolo.';
-            $texto = self::preguntarClaude($rutaAbsolutaImagen, $apiKey, $prompt);
-            $real = self::parsearProductos($texto);
-            if ($real !== null) {
-                return $real;
-            }
+        $esquema = self::esquemaLista([
+            'nombre'      => ['type' => 'string'],
+            'precio'      => ['type' => 'integer'],
+            'categoria'   => ['type' => 'string'],
+            'descripcion' => ['type' => 'string'],
+        ]);
+
+        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema);
+        if ($lectura['estado'] !== 'ok') {
+            return $lectura;
         }
 
-        return self::catalogoDeEjemplo();
+        $items = [];
+        foreach ($lectura['items'] as $item) {
+            $nombre = self::textoLimpio($item['nombre'] ?? '', 120);
+            if ($nombre === '') {
+                continue;
+            }
+            $categoria = self::textoLimpio($item['categoria'] ?? '', 60);
+            $descripcion = self::textoLimpio($item['descripcion'] ?? '', 160);
+            $items[] = [
+                'nombre'      => $nombre,
+                'precio'      => self::precioLimpio($item['precio'] ?? 0),
+                'categoria'   => $categoria !== '' ? $categoria : 'General',
+                'descripcion' => $descripcion !== '' ? $descripcion : null,
+            ];
+        }
+
+        return self::resultado($items);
     }
 
-    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}> */
+    /** @return array{estado:string, items:array<int, array{nombre:string, precio:int, duracion_min:int}>} */
     public static function extraerServicios(string $rutaAbsolutaImagen): array
     {
-        $apiKey = config('anthropic_api_key');
+        $prompt = 'Esta es la foto de la lista de servicios y precios de un negocio de barrio en '
+            . 'Colombia (peluquería, barbería, spa, uñas, taller, consultorio…). Extrae cada '
+            . "servicio con su precio.\n\n"
+            . "- nombre: como aparece en la lista, con mayúscula inicial normal.\n"
+            . "- precio: en pesos colombianos, número entero. Si la lista abrevia los miles "
+            . "(\"20\", \"20k\" o \"$20\" para veinte mil), conviértelo a 20000. Si dice \"desde\", "
+            . "usa ese precio. Si no se ve el precio, usa 0.\n"
+            . "- duracion_min: la duración en minutos si está escrita; si no, la duración típica "
+            . "de ese servicio en un salón de barrio, en múltiplos de 5.\n\n"
+            . 'No inventes servicios que no estén en la foto. Si la foto no es una lista de '
+            . 'servicios o no se lee, devuelve la lista vacía.';
 
-        if (is_string($apiKey) && $apiKey !== '' && function_exists('curl_init')) {
-            $prompt = 'Lee esta foto de la lista de servicios y precios de un negocio colombiano '
-                . '(por ejemplo una peluquería, un spa, un taller o un consultorio). Responde SOLO '
-                . 'con un JSON (sin texto adicional, sin bloque de código) con una lista de '
-                . 'servicios: [{"nombre":"...", "precio": 25000, "duracion_min": 45}]. El precio va '
-                . 'en pesos colombianos, como número entero sin puntos ni símbolo. Si no ves la '
-                . 'duración escrita, estima una duración típica razonable para ese servicio en minutos.';
-            $texto = self::preguntarClaude($rutaAbsolutaImagen, $apiKey, $prompt);
-            $real = self::parsearServicios($texto);
-            if ($real !== null) {
-                return $real;
+        $esquema = self::esquemaLista([
+            'nombre'       => ['type' => 'string'],
+            'precio'       => ['type' => 'integer'],
+            'duracion_min' => ['type' => 'integer'],
+        ]);
+
+        $lectura = self::leer($rutaAbsolutaImagen, $prompt, $esquema);
+        if ($lectura['estado'] !== 'ok') {
+            return $lectura;
+        }
+
+        $items = [];
+        foreach ($lectura['items'] as $item) {
+            $nombre = self::textoLimpio($item['nombre'] ?? '', 120);
+            if ($nombre === '') {
+                continue;
             }
+            // Entre 5 minutos y 8 horas, redondeado a 5: es la grilla con la
+            // que la agenda calcula cupos.
+            $duracion = (int) round(((int) ($item['duracion_min'] ?? 30)) / 5) * 5;
+            $items[] = [
+                'nombre'       => $nombre,
+                'precio'       => self::precioLimpio($item['precio'] ?? 0),
+                'duracion_min' => max(5, min(480, $duracion)),
+            ];
         }
 
-        return self::catalogoServiciosDeEjemplo();
+        return self::resultado($items);
     }
 
-    /** @return array<int, array{nombre:string, precio:int, categoria:string}> */
-    private static function catalogoDeEjemplo(): array
+    /**
+     * Catálogo de muestra para instalaciones sin llave de Anthropic (modo de
+     * prueba): deja recorrer el alta completa. El onboarding lo presenta
+     * como ejemplo, nunca como algo leído de la foto.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function catalogoDeEjemplo(string $tipoNegocio): array
     {
+        if ($tipoNegocio === 'reservas') {
+            return [
+                ['nombre' => 'Corte de cabello', 'precio' => 20000, 'duracion_min' => 30],
+                ['nombre' => 'Manicure',         'precio' => 18000, 'duracion_min' => 45],
+                ['nombre' => 'Peinado',          'precio' => 35000, 'duracion_min' => 60],
+                ['nombre' => 'Tinte y color',    'precio' => 70000, 'duracion_min' => 90],
+            ];
+        }
+
         return [
-            ['nombre' => 'Bandeja paisa',   'precio' => 28000, 'categoria' => 'Comidas'],
-            ['nombre' => 'Arepa con queso', 'precio' => 6000,  'categoria' => 'Comidas'],
-            ['nombre' => 'Jugo natural',    'precio' => 5000,  'categoria' => 'Bebidas'],
-            ['nombre' => 'Café tinto',      'precio' => 2500,  'categoria' => 'Bebidas'],
+            ['nombre' => 'Bandeja paisa',   'precio' => 28000, 'categoria' => 'Comidas', 'descripcion' => null],
+            ['nombre' => 'Arepa con queso', 'precio' => 6000,  'categoria' => 'Comidas', 'descripcion' => null],
+            ['nombre' => 'Jugo natural',    'precio' => 5000,  'categoria' => 'Bebidas', 'descripcion' => null],
+            ['nombre' => 'Café tinto',      'precio' => 2500,  'categoria' => 'Bebidas', 'descripcion' => null],
         ];
     }
 
-    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}> */
-    private static function catalogoServiciosDeEjemplo(): array
+    /** @param array<string, array<string, string>> $campos */
+    private static function esquemaLista(array $campos): array
     {
         return [
-            ['nombre' => 'Corte de cabello',      'precio' => 20000, 'duracion_min' => 30],
-            ['nombre' => 'Manicure',               'precio' => 18000, 'duracion_min' => 45],
-            ['nombre' => 'Peinado',                'precio' => 35000, 'duracion_min' => 60],
-            ['nombre' => 'Tinte y color',           'precio' => 70000, 'duracion_min' => 90],
+            'type'                 => 'object',
+            'properties'           => [
+                'items' => [
+                    'type'  => 'array',
+                    'items' => [
+                        'type'                 => 'object',
+                        'properties'           => $campos,
+                        'required'             => array_keys($campos),
+                        'additionalProperties' => false,
+                    ],
+                ],
+            ],
+            'required'             => ['items'],
+            'additionalProperties' => false,
         ];
     }
 
-    /** Llama a la API de Claude con la imagen y el prompt dados; devuelve el texto de la respuesta o null. */
-    private static function preguntarClaude(string $ruta, string $apiKey, string $prompt): ?string
+    /**
+     * Llama a la API de Claude con la imagen y devuelve los ítems crudos.
+     *
+     * - Salida estructurada (output_config.format): la respuesta es JSON
+     *   válido con el esquema pedido, sin bloques ```json que limpiar.
+     * - fallbacks "default": si el modelo declina la petición, la API la
+     *   repite en el modelo de respaldo recomendado en vez de devolver el
+     *   rechazo. Un rechazo que igual llegue se trata como 'fallo'.
+     * - El modelo piensa antes de responder, así que el primer bloque de la
+     *   respuesta puede no ser texto: se busca el bloque de tipo "text".
+     *
+     * @return array{estado:string, items:array<int, mixed>}
+     */
+    private static function leer(string $ruta, string $prompt, array $esquema): array
     {
-        $datosImagen = @file_get_contents($ruta);
-        if ($datosImagen === false) {
-            return null;
+        $apiKey = config('anthropic_api_key');
+        if (!is_string($apiKey) || $apiKey === '') {
+            return ['estado' => 'sin_llave', 'items' => []];
+        }
+        if (!function_exists('curl_init')) {
+            return ['estado' => 'fallo', 'items' => []];
         }
 
-        $mime = mime_content_type($ruta) ?: 'image/jpeg';
-        $base64 = base64_encode($datosImagen);
+        $imagen = self::imagenParaApi($ruta);
+        if ($imagen === null) {
+            return ['estado' => 'fallo', 'items' => []];
+        }
 
         $cuerpo = json_encode([
-            'model'      => 'claude-sonnet-5',
-            'max_tokens' => 1024,
-            'messages'   => [[
+            'model'         => self::MODELO,
+            'max_tokens'    => 16000,
+            'fallbacks'     => 'default',
+            'output_config' => ['format' => ['type' => 'json_schema', 'schema' => $esquema]],
+            'messages'      => [[
                 'role'    => 'user',
                 'content' => [
-                    [
-                        'type'   => 'image',
-                        'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $base64],
-                    ],
+                    ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $imagen['mime'], 'data' => $imagen['base64']]],
                     ['type' => 'text', 'text' => $prompt],
                 ],
             ]],
         ], JSON_UNESCAPED_UNICODE);
-
         if ($cuerpo === false) {
-            return null;
+            return ['estado' => 'fallo', 'items' => []];
         }
 
         $ch = curl_init('https://api.anthropic.com/v1/messages');
@@ -119,81 +224,103 @@ class ExtractorMenu
                 'content-type: application/json',
                 'x-api-key: ' . $apiKey,
                 'anthropic-version: 2023-06-01',
+                'anthropic-beta: server-side-fallback-2026-07-01',
             ],
-            CURLOPT_POSTFIELDS => $cuerpo,
-            CURLOPT_TIMEOUT    => 30,
+            CURLOPT_POSTFIELDS     => $cuerpo,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            // Leer una carta larga pensando puede tomar más de medio minuto.
+            CURLOPT_TIMEOUT        => 110,
         ]);
         $respuesta = curl_exec($ch);
+        $codigo = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         $huboError = curl_errno($ch) !== 0;
         curl_close($ch);
 
-        if ($huboError || !is_string($respuesta)) {
-            return null;
+        if ($huboError || !is_string($respuesta) || $codigo !== 200) {
+            error_log('ExtractorMenu: la API respondió ' . $codigo . ($huboError ? ' (error de red)' : ''));
+            return ['estado' => 'fallo', 'items' => []];
         }
 
         $json = json_decode($respuesta, true);
-        $texto = $json['content'][0]['text'] ?? null;
-
-        return is_string($texto) ? $texto : null;
-    }
-
-    /** @return array<int, array{nombre:string, precio:int, categoria:string}>|null */
-    private static function parsearProductos(?string $texto): ?array
-    {
-        $items = self::decodificarJson($texto);
-        if ($items === null) {
-            return null;
+        if (!is_array($json) || ($json['stop_reason'] ?? null) === 'refusal') {
+            return ['estado' => 'fallo', 'items' => []];
         }
 
-        $resultado = [];
-        foreach ($items as $item) {
-            if (!is_array($item) || !isset($item['nombre'], $item['precio'])) {
-                continue;
+        $texto = null;
+        foreach ($json['content'] ?? [] as $bloque) {
+            if (is_array($bloque) && ($bloque['type'] ?? null) === 'text' && is_string($bloque['text'] ?? null)) {
+                $texto = $bloque['text'];
+                break;
             }
-            $resultado[] = [
-                'nombre'    => (string) $item['nombre'],
-                'precio'    => (int) $item['precio'],
-                'categoria' => (string) ($item['categoria'] ?? 'General'),
-            ];
+        }
+        $datos = is_string($texto) ? json_decode($texto, true) : null;
+        if (!is_array($datos) || !is_array($datos['items'] ?? null)) {
+            // Respuesta cortada (stop_reason max_tokens) o inesperada.
+            return ['estado' => 'fallo', 'items' => []];
         }
 
-        return $resultado === [] ? null : $resultado;
+        return ['estado' => 'ok', 'items' => array_values(array_filter($datos['items'], 'is_array'))];
     }
 
-    /** @return array<int, array{nombre:string, precio:int, duracion_min:int}>|null */
-    private static function parsearServicios(?string $texto): ?array
+    /**
+     * La foto ya llega normalizada desde el onboarding (Imagen::normalizar),
+     * pero una subida antigua o una instalación sin GD puede traer el
+     * original del celular: si pesa de más, se reduce en memoria.
+     *
+     * @return array{mime:string, base64:string}|null
+     */
+    private static function imagenParaApi(string $ruta): ?array
     {
-        $items = self::decodificarJson($texto);
-        if ($items === null) {
+        if (!is_file($ruta)) {
+            return null;
+        }
+        $mime = mime_content_type($ruta) ?: '';
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
             return null;
         }
 
-        $resultado = [];
-        foreach ($items as $item) {
-            if (!is_array($item) || !isset($item['nombre'], $item['precio'])) {
-                continue;
+        if (filesize($ruta) > self::MAX_BYTES_IMAGEN) {
+            $temporal = tempnam(sys_get_temp_dir(), 'veci-menu');
+            if ($temporal === false || !Imagen::normalizar($ruta, $temporal, 2000, 82)) {
+                return null;
             }
-            $resultado[] = [
-                'nombre'       => (string) $item['nombre'],
-                'precio'       => (int) $item['precio'],
-                'duracion_min' => (int) ($item['duracion_min'] ?? 30),
-            ];
+            $datos = file_get_contents($temporal);
+            @unlink($temporal);
+            $mime = 'image/jpeg';
+        } else {
+            $datos = file_get_contents($ruta);
         }
 
-        return $resultado === [] ? null : $resultado;
+        return $datos === false ? null : ['mime' => $mime, 'base64' => base64_encode($datos)];
     }
 
-    /** @return array<int, mixed>|null */
-    private static function decodificarJson(?string $texto): ?array
+    /** @param array<int, array<string, mixed>> $items */
+    private static function resultado(array $items): array
     {
-        if ($texto === null) {
-            return null;
+        $items = array_slice($items, 0, self::MAX_ITEMS);
+
+        return ['estado' => $items === [] ? 'vacio' : 'ok', 'items' => $items];
+    }
+
+    private static function textoLimpio(mixed $valor, int $largo): string
+    {
+        $texto = is_scalar($valor) ? (string) $valor : '';
+        $texto = trim(preg_replace('/\s+/u', ' ', $texto) ?? '');
+
+        return mb_substr($texto, 0, $largo);
+    }
+
+    /**
+     * Un precio por debajo de 100 pesos no existe en un menú colombiano: si
+     * pese a la instrucción llega "12" por "12.000", se lleva a miles.
+     */
+    private static function precioLimpio(mixed $valor): int
+    {
+        $precio = is_int($valor) ? $valor : dinero_desde_texto(is_scalar($valor) ? (string) $valor : '');
+        if ($precio > 0 && $precio < 100) {
+            $precio *= 1000;
         }
 
-        // El modelo a veces envuelve el JSON en ```json ... ``` pese a la instrucción.
-        $limpio = preg_replace('/^```(json)?|```$/m', '', $texto);
-        $datos = json_decode(trim($limpio ?? $texto), true);
-
-        return is_array($datos) ? $datos : null;
+        return max(0, min(99_999_999, $precio));
     }
 }

@@ -1,90 +1,141 @@
-<div class="pq-tienda-header">
-  <div class="pq-tienda-logo" style="background: <?= e($negocio['color_marca']) ?>">
-    <?= e($negocio['inicial'] ?? mb_strtoupper(mb_substr($negocio['negocio_nombre'], 0, 1))) ?>
-  </div>
-  <div>
-    <h1 class="pq-tienda-nombre"><?= e(nombre_publico_sede($negocio)) ?></h1>
-    <?php if (!empty($negocio['descripcion'])): ?>
-      <span class="pq-tienda-desc"><?= e($negocio['descripcion']) ?></span>
-    <?php endif; ?>
-    <?php if ($abiertoAhora !== null): ?>
-      <span class="pq-estado-abierto <?= $abiertoAhora['abierto'] ? 'pq-estado-abierto-si' : 'pq-estado-abierto-no' ?>">
-        <span class="pq-estado-abierto-punto"></span>
-        <?php if ($abiertoAhora['abierto']): ?>
-          Abierto ahora · hasta las <?= e(hora_legible($abiertoAhora['hasta'])) ?>
-        <?php elseif ($proximaApertura !== null): ?>
-          Cerrado ahora · abre <?= e($proximaApertura['dia']) ?> a las <?= e($proximaApertura['hora']) ?>
-        <?php else: ?>
-          Cerrado ahora
-        <?php endif; ?>
-      </span>
-    <?php endif; ?>
-  </div>
-</div>
+<?php require __DIR__ . '/_cabecera.php'; ?>
 
-<div class="pq-content-tienda">
-  <?php if ($servicios === []): ?>
-    <p class="pq-ayuda" style="margin-top: 24px">Este negocio todavía no tiene servicios publicados.</p>
-  <?php else: ?>
-    <div class="pq-stack" style="gap: 10px; margin-top: 8px">
-      <?php foreach ($servicios as $servicio): ?>
-        <?php $agotado = (int) $servicio['agotado'] === 1; ?>
-        <?php $urlReservar = base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']); ?>
-        <?php $hayDatoHoy = array_key_exists($servicio['id'], $disponibilidadHoy); ?>
-        <?php $cupoHoy = $hayDatoHoy ? $disponibilidadHoy[$servicio['id']] : null; ?>
-        <?php if ($agotado): ?>
-          <div class="pq-fila-carrito" style="align-items: center; opacity: .55">
-        <?php else: ?>
-          <a href="<?= e($urlReservar) ?>" class="pq-fila-carrito pq-fila-servicio" style="align-items: center">
-        <?php endif; ?>
-          <div class="pq-fila-carrito-icono" style="background: <?= e($servicio['color']) ?>"></div>
-          <div class="pq-stack" style="flex-grow: 1; gap: 2px">
-            <span style="font-size: 14px; font-weight: 600"><?= e($servicio['nombre']) ?></span>
-            <span class="pq-mono" style="font-size: 12px; color: var(--gris-texto)"><?= (int) $servicio['duracion_min'] ?> min · <?= pesos((int) $servicio['precio']) ?></span>
-            <?php if ($hayDatoHoy && !$agotado): ?>
-              <span class="pq-mono" style="font-size: 11px; color: <?= $cupoHoy !== null ? 'var(--sello)' : 'var(--gris-texto)' ?>">
-                <?= $cupoHoy !== null ? 'Próximo cupo: hoy ' . e(hora_legible($cupoHoy)) : 'Sin cupos hoy' ?>
-              </span>
-            <?php endif; ?>
-          </div>
-          <?php if ($agotado): ?>
-            <span class="pq-chip pq-chip-cancelado">No disponible</span>
-          <?php else: ?>
-            <span class="pq-btn pq-btn-oscuro pq-btn-chico" style="pointer-events: none"><?= $hayDatoHoy && $cupoHoy === null ? 'Ver horarios' : 'Reservar' ?></span>
-          <?php endif; ?>
-        <?= $agotado ? '</div>' : '</a>' ?>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
-
-  <?php if ($horario !== []): ?>
-    <div style="margin-top: 28px">
-      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">HORARIO DE ATENCIÓN</span>
-      <div style="margin-top: 8px; border-top: 1px solid var(--recibo)">
-        <?php foreach ($horario as $linea): ?>
-          <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--recibo)">
-            <span><?= e($linea['dia']) ?></span>
-            <span class="pq-mono" style="<?= $linea['rango'] === 'Cerrado' ? 'color: var(--gris-texto)' : '' ?>"><?= e($linea['rango']) ?></span>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  <?php endif; ?>
-
-  <?php if (!empty($negocio['direccion'])): ?>
-    <div style="margin-top: 28px">
-      <span class="pq-mono" style="font-size: 11px; color: var(--gris-texto)">DÓNDE ESTAMOS</span>
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--recibo)">
-        <span style="font-size: 14px"><?= e($negocio['direccion']) ?></span>
-        <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($negocio['direccion']) ?>" target="_blank" rel="noopener" class="pq-mono" style="font-size: 12px; white-space: nowrap; color: var(--tinta)">Ver ubicación ›</a>
-      </div>
-    </div>
-  <?php endif; ?>
-
-  <?php if (!empty($negocio['whatsapp'])): ?>
-    <a href="https://wa.me/57<?= e(preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '') ?>" target="_blank" rel="noopener" class="pq-btn pq-btn-ghost-oscuro pq-btn-chico" style="margin-top: 20px; width: 100%">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.4 1.2-2 1.3-.5.1-1.2.2-3.6-.8-3-1.3-5-4.4-5.1-4.6-.2-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.4 0 .6-.6 1.2-1.2 1.1-.7 1.9.9 1.6 1.9 2.2 3.4 3 .3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.6.8 1.9.9.3.2.5.2.6.4.1.2.1.9-.1 1.5Z"/></svg>
-      WhatsApp · Hacer una pregunta
+<main class="pq-content-tienda pq-vitrina">
+  <?php if (!empty($filaAbierta)): ?>
+    <?php // Para quien pasa por la puerta sin cita: la fila se hace desde el celular. ?>
+    <a class="pq-cola-aviso" href="<?= e(base_url('/t/' . $negocio['slug'] . '/fila')) ?>">
+      <span class="pq-cola-aviso-punto" aria-hidden="true"></span>
+      <span><strong>¿Sin cita?</strong> Haz la fila desde aquí y te avisamos por WhatsApp.</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </a>
   <?php endif; ?>
-</div>
+  <?php if ($servicios === []): ?>
+    <div class="pq-vacio-tienda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <p><strong>La agenda está en preparación.</strong><br>Mientras tanto, puedes escribirle al negocio por WhatsApp.</p>
+    </div>
+  <?php else: ?>
+    <?php if (!empty($ultimoServicio)): ?>
+      <?php
+      // El cliente ya conocido en este celular reserva lo de siempre, con la
+      // misma persona si sigue en el equipo: dos toques en vez de buscarlo.
+      $urlRepetir = base_url('/t/' . $negocio['slug'] . '/reservar/' . (int) $ultimoServicio['servicio']['id'])
+          . ($ultimoServicio['empleado'] !== null ? '?empleado=' . (int) $ultimoServicio['empleado']['id'] : '');
+      ?>
+      <section class="pq-repetir" aria-labelledby="pq-repetir-titulo">
+        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo"><?= $ultimoServicio['nombre'] !== null ? 'Hola, ' . e($ultimoServicio['nombre']) . '. ' : '' ?>¿Reservas lo de siempre?</h2>
+        <p class="pq-repetir-servicio">
+          <?= e($ultimoServicio['servicio']['nombre']) ?><?= $ultimoServicio['empleado'] !== null ? ' con ' . e($ultimoServicio['empleado']['nombre']) : '' ?>
+        </p>
+        <div class="pq-repetir-acciones">
+          <a href="<?= e($urlRepetir) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reservar de nuevo</a>
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/olvidarme')) ?>">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-repetir-olvidar"><?= $ultimoServicio['nombre'] !== null ? 'No soy ' . e($ultimoServicio['nombre']) : 'Olvidar este celular' ?></button>
+          </form>
+        </div>
+      </section>
+    <?php endif; ?>
+    <section class="pq-carta" aria-labelledby="titulo-servicios">
+      <h2 class="pq-carta-titulo" id="titulo-servicios">Reserva tu turno</h2>
+      <?php
+      // Un solo aviso arriba cuando hoy ya no queda ningún turno, en vez de
+      // repetir "sin cupos" en cada servicio (ruido que no ayuda a elegir).
+      $sinTurnosHoy = $disponibilidadHoy !== [] && array_filter($disponibilidadHoy, fn ($cupo) => $cupo !== null) === [];
+      ?>
+      <?php if ($sinTurnosHoy): ?>
+        <p class="pq-carta-nota">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Hoy ya no quedan turnos. Elige un servicio para ver los próximos días.
+        </p>
+      <?php endif; ?>
+      <div class="pq-carta-lista">
+        <?php $contador = 0; foreach ($servicios as $servicio): ?>
+          <?php
+          $agotado = (int) $servicio['agotado'] === 1;
+          $cupoHoy = $disponibilidadHoy[$servicio['id']] ?? null;
+          $etiquetaTag = $agotado ? 'div' : 'a';
+          ?>
+          <<?= $etiquetaTag ?> class="pq-servicio<?= $agotado ? ' pq-servicio-agotado' : '' ?>" style="--i: <?= $contador++ % 8 ?>"<?php if (!$agotado): ?> href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id'])) ?>"<?php endif; ?>>
+            <span class="pq-servicio-cuerpo">
+              <span class="pq-servicio-nombre"><?= e($servicio['nombre']) ?></span>
+              <span class="pq-servicio-meta">
+                <span><?= (int) $servicio['duracion_min'] ?> min</span>
+                <span aria-hidden="true">·</span>
+                <span class="pq-servicio-precio"><?= e(precio_texto($servicio)) ?></span>
+              </span>
+            </span>
+
+            <?php if ($agotado): ?>
+              <span class="pq-cupo pq-cupo-no">No disponible</span>
+            <?php elseif ($cupoHoy !== null): ?>
+              <span class="pq-cupo pq-cupo-hoy"><span class="pq-cupo-sub">Hoy</span><?= e(hora_legible($cupoHoy)) ?></span>
+            <?php endif; ?>
+
+            <?php if (!$agotado): ?>
+              <svg class="pq-servicio-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            <?php endif; ?>
+          </<?= $etiquetaTag ?>>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <?php
+  // El equipo, solo si hay alguien que mostrar con cara o especialidad: una
+  // lista de nombres sueltos no le dice nada al cliente.
+  $equipoVisible = array_values(array_filter($equipo ?? [], fn ($e) => !empty($e['foto']) || !empty($e['especialidad'])));
+  ?>
+  <?php if ($equipoVisible !== []): ?>
+    <section class="pq-carta pq-equipo-tienda" aria-labelledby="titulo-equipo">
+      <h2 class="pq-carta-titulo" id="titulo-equipo">Nuestro equipo</h2>
+      <ul class="pq-equipo-tienda-lista">
+        <?php foreach ($equipoVisible as $persona): ?>
+          <li>
+            <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/equipo/' . (int) $persona['id'])) ?>" class="pq-equipo-tienda-ficha">
+              <?php if (!empty($persona['foto'])): ?>
+                <img src="<?= e(base_url($persona['foto'])) ?>" alt="" width="72" height="72" loading="lazy">
+              <?php else: ?>
+                <span class="pq-equipo-tienda-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $persona['nombre'], 0, 1))) ?></span>
+              <?php endif; ?>
+              <span class="pq-equipo-tienda-nombre"><?= e($persona['nombre']) ?></span>
+              <?php if (!empty($persona['especialidad'])): ?><span class="pq-equipo-tienda-esp"><?= e($persona['especialidad']) ?></span><?php endif; ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </section>
+  <?php endif; ?>
+
+  <?php if (!empty($paquetes)): ?>
+    <?php
+    // Paquetes: el ahorro solo si es real; se piden por WhatsApp (se pagan
+    // en el local) y después cada reserva con ese número usa una sesión.
+    $whatsappPaquetes = preg_replace('/\D+/', '', (string) ($negocio['whatsapp'] ?? '')) ?? '';
+    ?>
+    <section class="pq-carta pq-paquetes" aria-labelledby="titulo-paquetes">
+      <h2 class="pq-carta-titulo" id="titulo-paquetes">Paquetes</h2>
+      <ul class="pq-paquetes-lista">
+        <?php foreach ($paquetes as $paquete): ?>
+          <?php
+          $ahorro = (int) $paquete['precio_suelto'] - (int) $paquete['precio'];
+          $mensaje = 'Hola, quiero el paquete de ' . (int) $paquete['sesiones'] . ' ' . mb_strtolower((string) $paquete['servicio_nombre']) . ' por ' . pesos((int) $paquete['precio']) . '.';
+          ?>
+          <li class="pq-paquete">
+            <span class="pq-paquete-cuantas" aria-hidden="true"><?= (int) $paquete['sesiones'] ?><small>×</small></span>
+            <span class="pq-paquete-texto">
+              <strong><?= (int) $paquete['sesiones'] ?> <?= e(mb_strtolower((string) $paquete['servicio_nombre'])) ?></strong>
+              <span class="pq-ayuda"><?= pesos((int) $paquete['precio']) ?><?= $ahorro > 0 ? ' · ahorras ' . pesos($ahorro) : '' ?><?= $paquete['vigencia_dias'] !== null ? ' · se usan en ' . (int) $paquete['vigencia_dias'] . ' días' : '' ?></span>
+            </span>
+            <?php if ($whatsappPaquetes !== ''): ?>
+              <a class="pq-paquete-pedir" href="https://wa.me/57<?= e($whatsappPaquetes) ?>?text=<?= rawurlencode($mensaje) ?>" target="_blank" rel="noopener">Lo quiero</a>
+            <?php endif; ?>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <p class="pq-ayuda pq-paquetes-nota">Lo pagas en el local y te llega un enlace: reservando desde ahí, cada cita usa una sesión sola.</p>
+    </section>
+  <?php endif; ?>
+  <?php require __DIR__ . '/_resenas.php'; ?>
+  <?php require __DIR__ . '/_informacion.php'; ?>
+</main>

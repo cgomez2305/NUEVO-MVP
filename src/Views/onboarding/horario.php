@@ -1,43 +1,32 @@
 <?php
-$dias = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
-$porDefecto = ['08:00', '18:00'];
+$pasoActual = 3;
+$volverUrl = '/panel/onboarding/productos';
+require __DIR__ . '/_pasos.php';
 ?>
-<div class="pq-topbar" style="border-bottom: none">
-  <a href="<?= e(base_url('/panel/onboarding/productos')) ?>" class="pq-mono" style="font-size: 12px; color: var(--gris-suave); text-decoration: none">‹ Atrás</a>
-  <span class="pq-chip">PASO 3 DE 4</span>
-</div>
+<main class="pq-onb-cuerpo">
+  <h1 class="pq-h1">¿Cuándo atiendes?</h1>
+  <p class="pq-lead pq-onb-bajada">Con esto Veci calcula qué horas puede reservar tu cliente. Lo cambias cuando quieras desde el panel.</p>
 
-<div class="pq-content">
-  <h1 class="pq-h1" style="font-size: 28px">Tu horario de atención</h1>
-  <p class="pq-lead">Con esto calculamos qué horas puede reservar tu cliente. Puedes cambiarlo después desde el panel.</p>
+  <?php if (!empty($error)): ?>
+    <div class="pq-alerta pq-onb-aviso" role="alert"><?= e($error) ?></div>
+  <?php endif; ?>
 
-  <form method="post" action="<?= e(base_url('/panel/onboarding/horario')) ?>" style="margin-top: 20px">
+  <form method="post" action="<?= e(base_url('/panel/onboarding/horario')) ?>" class="pq-onb-form" data-enviando="Guardando…">
     <?= csrf_campo() ?>
+    <?php $sugerirSiVacio = true; require __DIR__ . '/../panel/_semana.php'; ?>
 
-    <div class="pq-stack" style="gap: 10px">
-      <?php foreach ($dias as $num => $nombre): ?>
-        <?php $abierto = isset($horario[(string) $num]); $rango = $horario[(string) $num] ?? $porDefecto; ?>
-        <div class="pq-card-borde" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-          <label style="display: flex; align-items: center; gap: 8px; width: 110px; font-size: 13px; font-weight: 600">
-            <input type="checkbox" name="abierto_<?= $num ?>" value="1" <?= $abierto ? 'checked' : '' ?>>
-            <?= e($nombre) ?>
-          </label>
-          <input class="pq-input pq-mono" style="width: 110px" type="time" name="inicio_<?= $num ?>" value="<?= e($rango[0]) ?>">
-          <span class="pq-ayuda">a</span>
-          <input class="pq-input pq-mono" style="width: 110px" type="time" name="fin_<?= $num ?>" value="<?= e($rango[1]) ?>">
-        </div>
-      <?php endforeach; ?>
-    </div>
-
-    <div class="pq-campo" style="margin-top: 16px">
-      <label class="pq-label" for="intervalo">Cada cuánto abres un turno</label>
+    <div class="pq-campo pq-horario-intervalo">
+      <label class="pq-label" for="intervalo">¿Cada cuánto puede empezar una cita?</label>
       <select class="pq-select" id="intervalo" name="intervalo">
         <?php foreach ([15, 20, 30, 45, 60] as $min): ?>
           <option value="<?= $min ?>" <?= (int) ($negocio['intervalo_citas_min'] ?? 30) === $min ? 'selected' : '' ?>><?= $min ?> minutos</option>
         <?php endforeach; ?>
       </select>
+      <p class="pq-ayuda">Con 30 minutos, el cliente ve 9:00, 9:30, 10:00… La duración de cada servicio va aparte.</p>
     </div>
 
-    <button type="submit" class="pq-btn pq-btn-sello" style="margin-top: 20px">Guardar horario →</button>
+    <div class="pq-onb-pie">
+      <button type="submit" class="pq-btn pq-btn-sello">Guardar y continuar →</button>
+    </div>
   </form>
-</div>
+</main>

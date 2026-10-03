@@ -16,6 +16,12 @@ return [
         // Sin barra al final. Se usa para armar el enlace público de cada tienda.
         'url'    => 'http://localhost:8000',
         'nombre' => 'Veci',
+        // Clave para las huellas (HMAC) de WhatsApp y cédula/NIT con que las
+        // ofertas reconocen a quien ya tuvo un negocio. Si la dejas en null,
+        // se crea sola en storage/.clave_hash. Inclúyela en tus respaldos:
+        // si se pierde, Veci "olvida" quién ya usó una oferta.
+        // Genera una con: php -r "echo bin2hex(random_bytes(32));"
+        'clave_hash' => null,
     ],
 
     // Opcional. Si defines una llave aquí, la pantalla "La IA arma tu tienda"
@@ -40,6 +46,17 @@ return [
     // Ver src/Controllers/WebhookController.php.
     'breb_webhook_secret' => null,
 
+    // Opcional. Wompi (Web Checkout) para que los negocios paguen su plan con
+    // tarjeta, PSE o Nequi y se active solo. Las llaves están en el panel de
+    // Wompi → Desarrolladores. Con llave pub_test_ usa el sandbox. Configura
+    // la URL de eventos de Wompi a https://TU-DOMINIO/webhooks/wompi.
+    // Sin estas llaves, el plan se paga por Bre-B y lo confirma un admin.
+    'wompi' => [
+        'llave_publica'      => null, // pub_test_... o pub_prod_...
+        'secreto_integridad' => null, // test_integrity_... / prod_integrity_...
+        'secreto_eventos'    => null, // test_events_... / prod_events_...
+    ],
+
     // Opcional. Llaves VAPID para las notificaciones push de la PWA (avisa
     // al dueño de un pedido/cita nueva aunque tenga el panel cerrado). Se
     // generan UNA vez con: php bin/generar_claves_vapid.php
@@ -49,6 +66,16 @@ return [
         'public_key'  => null,
         'private_key' => null,
         'subject'     => 'mailto:soporte@tuveci.co',
+    ],
+
+    // Llave Bre-B de VECI (no la del negocio) para el cobro manual
+    // verificado de los planes Barrio/Pro: un dueño que pide subir de plan
+    // ve esta llave en /panel/plan, transfiere ahí, y un admin confirma el
+    // pago desde /admin (ver database/migrations/…_planes_suscripciones.sql
+    // y src/Models/PagoPlan.php). Sin esto configurado, /panel/plan igual
+    // deja pedir el cambio, solo que no muestra a dónde transferir.
+    'cobro_planes' => [
+        'llave_breb' => null, // p.ej. '3001234567' (celular) o un correo
     ],
 
     // Opcional. Credenciales SMTP para enviar el correo de "recuperar mi

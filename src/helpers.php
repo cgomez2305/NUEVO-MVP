@@ -47,7 +47,7 @@ function config(string $clave, mixed $default = null): mixed
  */
 function base_url(string $ruta = ''): string
 {
-    return '/' . ltrim($ruta, '/');
+    return '/' . ltrim($ruta, '/\\');
 }
 
 /**
@@ -63,6 +63,11 @@ function url_publica(string $ruta = ''): string
 
 function redirigir(string $ruta): never
 {
+    // Un salto de línea en la ruta partiría la cabecera: nunca llega. Y
+    // solo rutas de este sitio: "/\otro.com" o "//otro.com" los navegadores
+    // los leen como otro dominio, así que las barras invertidas se cambian
+    // y base_url() deja una sola barra al inicio.
+    $ruta = str_replace(["\r", "\n", "\0", '\\'], ['', '', '', '/'], $ruta);
     header('Location: ' . base_url($ruta));
     exit;
 }
@@ -83,6 +88,28 @@ function e(?string $texto): string
 function pesos(int $valor): string
 {
     return '$' . number_format($valor, 0, ',', '.');
+}
+
+/**
+ * Precio de un servicio o de una cita según su tipo: "$20.000",
+ * "Desde $20.000" o "$20.000 – $35.000". Sirve para filas de servicios y de
+ * citas (las dos tienen precio, precio_tipo y precio_max).
+ */
+function precio_texto(array $fila): string
+{
+    $precio = (int) ($fila['precio'] ?? 0);
+
+    return match ((string) ($fila['precio_tipo'] ?? 'fijo')) {
+        'desde' => 'Desde ' . pesos($precio),
+        'rango' => pesos($precio) . ' – ' . pesos((int) ($fila['precio_max'] ?? $precio)),
+        default => pesos($precio),
+    };
+}
+
+/** ¿El precio todavía no es exacto? (se confirma al ver el trabajo) */
+function precio_es_estimado(array $fila): bool
+{
+    return in_array((string) ($fila['precio_tipo'] ?? 'fijo'), ['desde', 'rango'], true);
 }
 
 /**
@@ -122,6 +149,148 @@ function csrf_verificar(): bool
 {
     $enviado = $_POST['_csrf'] ?? '';
     return is_string($enviado) && hash_equals($_SESSION['_csrf'] ?? '', $enviado);
+}
+
+/**
+ * La IP real de quien hace la petición, para limitar abuso (ver
+ * LimiteTasa::excedido). Lee solo REMOTE_ADDR, nunca cabeceras como
+ * X-Forwarded-For: esas las puede mandar cualquiera y, sin un proxy
+ * confiable configurado delante (no es el caso de este hosting compartido
+ * típico), confiar en ellas dejaría falsificar la IP y saltarse el límite.
+ */
+/**
+ * La IP del visitante. En IPv6 se usa el bloque /64 (lo que tiene una sola
+ * casa o celular): con la dirección completa, quien tiene IPv6 cambia de
+ * dirección a voluntad y se salta todos los límites de intentos.
+ */
+function ip_cliente(): string
+{
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    if (str_contains($ip, ':')) {
+        $binaria = @inet_pton($ip);
+        if ($binaria !== false && strlen($binaria) === 16) {
+            return (string) inet_ntop(substr($binaria, 0, 8) . str_repeat("\0", 8)) . '/64';
+        }
+    }
+
+    return $ip;
+}
+
+/**
+ * La IP para mostrar en la bitácora de seguridad, sin el último bloque
+ * (190.25.10.0): alcanza para reconocer "desde mi casa" o "desde otro
+ * lado" sin guardar la dirección exacta de nadie.
+ */
+function ip_recortada(): string
+{
+    $ip = ip_cliente();
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return preg_replace('/\.\d+$/', '.0', $ip) ?? $ip;
+    }
+
+    return $ip; // IPv6 ya llega como su /64
+}
+
+/**
+ * Por qué una contraseña es demasiado fácil de adivinar, o null si sirve.
+ * Lo primero que prueba quien ataca una cuenta: el mismo número de
+ * WhatsApp, 12345678, "contraseña", el nombre del negocio. Exigir
+ * símbolos raros no ayuda (se anotan en un papel); esto sí.
+ *
+ * @param array<int, string> $datosPropios WhatsApp, nombre del negocio... que no deben ser la contraseña
+ */
+function password_debil(string $password, array $datosPropios = []): ?string
+{
+    if (strlen($password) < 8) {
+        return 'La contraseña debe tener al menos 8 caracteres.';
+    }
+    $simple = mb_strtolower(preg_replace('/[\s._-]+/', '', $password) ?? $password);
+    $comunes = [
+        '12345678', '123456789', '1234567890', '87654321', '11111111', '00000000', '12341234', '11223344',
+        'password', 'password1', 'contrasena', 'contraseña', 'qwertyui', 'qwerty123', 'asdfghjk', 'abcd1234',
+        'abc12345', 'iloveyou', 'teamo123', 'colombia', 'colombia1', 'bogota123', 'medellin', 'veci1234',
+        'veci12345', 'tuveci', 'admin123', 'administrador', 'negocio1', 'mitienda', 'tienda123',
+    ];
+    if (in_array($simple, $comunes, true) || preg_match('/^(.)\1+$/u', $simple)) {
+        return 'Esa contraseña es de las primeras que prueba cualquiera. Usa una frase que solo tú sepas, como "arepas-de-la-abuela-1987".';
+    }
+    if (str_contains('01234567890 98765432109876543210 abcdefghijklmnopqrstuvwxyz', $simple)) {
+        return 'Una secuencia (1234…, abcd…) se adivina en segundos. Usa una frase que solo tú sepas.';
+    }
+    foreach ($datosPropios as $dato) {
+        $dato = mb_strtolower(preg_replace('/[\s._-]+/', '', (string) $dato) ?? '');
+        if (mb_strlen($dato) >= 4 && (str_contains($simple, $dato) || str_contains($dato, $simple))) {
+            return 'No uses tu número de WhatsApp ni el nombre de tu negocio en la contraseña: es lo primero que se prueba.';
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Huella de un dato personal que hay que reconocer sin guardarlo: HMAC-SHA256
+ * con una clave del servidor. Una cédula tiene pocos millones de valores
+ * posibles; con un SHA-256 simple bastaría probarlos todos. La clave sale de
+ * config('app.clave_hash') o, si no está, de storage/.clave_hash (se crea
+ * sola la primera vez). Perder la clave es perder la memoria de quién ya
+ * usó una oferta: va en el respaldo del servidor.
+ */
+function hash_identidad(string $tipo, string $valor): string
+{
+    static $clave = null;
+    if ($clave === null) {
+        $clave = (string) config('app.clave_hash', '');
+        if ($clave === '') {
+            $archivo = __DIR__ . '/../storage/.clave_hash';
+            if (!is_file($archivo)) {
+                @file_put_contents($archivo, bin2hex(random_bytes(32)), LOCK_EX);
+                @chmod($archivo, 0600);
+            }
+            $clave = trim((string) @file_get_contents($archivo));
+            if ($clave === '') {
+                throw new RuntimeException('No hay clave para hash_identidad (config app.clave_hash o storage/.clave_hash).');
+            }
+        }
+    }
+
+    return hash_hmac('sha256', $tipo . '|' . $valor, $clave);
+}
+
+/** "ca***@gmail.com": para la bitácora, sin dejar el correo completo a la vista. */
+function correo_enmascarado(string $correo): string
+{
+    [$usuario, $dominio] = array_pad(explode('@', $correo, 2), 2, '');
+
+    return mb_substr($usuario, 0, 2) . '***@' . $dominio;
+}
+
+/** "Chrome en Android", "Safari en iPhone": para que el dueño reconozca sus propios celulares. */
+function descripcion_navegador(): string
+{
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $sistema = match (true) {
+        str_contains($ua, 'iPhone') => 'iPhone',
+        str_contains($ua, 'iPad') => 'iPad',
+        str_contains($ua, 'Android') => 'Android',
+        str_contains($ua, 'Windows') => 'Windows',
+        str_contains($ua, 'Mac OS') => 'Mac',
+        str_contains($ua, 'Linux') => 'Linux',
+        default => '',
+    };
+    $navegador = match (true) {
+        str_contains($ua, 'Edg/') => 'Edge',
+        str_contains($ua, 'OPR/') || str_contains($ua, 'Opera') => 'Opera',
+        str_contains($ua, 'SamsungBrowser') => 'Samsung Internet',
+        str_contains($ua, 'Firefox/') || str_contains($ua, 'FxiOS') => 'Firefox',
+        str_contains($ua, 'Chrome/') || str_contains($ua, 'CriOS') => 'Chrome',
+        str_contains($ua, 'Safari/') => 'Safari',
+        default => '',
+    };
+    if ($navegador === '' && $sistema === '') {
+        return 'Navegador desconocido';
+    }
+
+    return trim($navegador . ($navegador !== '' && $sistema !== '' ? ' en ' : '') . $sistema);
 }
 
 function flash_set(string $clave, string $mensaje): void
@@ -180,7 +349,8 @@ function chip_estado(string $estado): string
 {
     return match ($estado) {
         'pagado', 'entregado', 'completada', 'confirmada' => 'pq-chip-caja',
-        'cancelado', 'cancelada' => 'pq-chip-cancelado',
+        'cancelado', 'cancelada', 'no_asistio' => 'pq-chip-cancelado',
+        'en_curso' => 'pq-chip-curso',
         default => 'pq-chip-pendiente',
     };
 }
@@ -207,7 +377,11 @@ function etiqueta_estado_pedido(string $estado): string
  */
 function dinero_desde_texto(string $texto): int
 {
-    return (int) preg_replace('/\D+/', '', $texto);
+    // Tope de $99.999.999: un número más largo (un dedazo, un pegado raro)
+    // desbordaba la columna INT y tumbaba la página a mitad de una acción.
+    $digitos = (string) preg_replace('/\D+/', '', $texto);
+
+    return strlen($digitos) > 8 ? 99_999_999 : (int) $digitos;
 }
 
 /** Minutos transcurridos desde una fecha DATETIME hasta ahora. */
@@ -219,6 +393,9 @@ function minutos_desde(string $fechaHora): int
 /** "5 min esperando" / "2 horas esperando": para pedidos y citas sin resolver. */
 function texto_espera(int $minutos): string
 {
+    if ($minutos < 1) {
+        return 'recién llegó';
+    }
     if ($minutos < 60) {
         return $minutos . ' min esperando';
     }
@@ -264,32 +441,46 @@ function nombre_publico_sede(array $sede): string
 }
 
 /**
- * Si la sede está abierta en este preciso momento, según su horario crudo
- * (día ISO 1=lunes..7=domingo => [inicio, fin], igual que Sede::horario()
- * — no el ya agrupado de horario_resumen()). Null si el negocio no tiene
+ * Si la sede está abierta en este preciso momento, según su horario
+ * (Sede::horario(): día ISO 1=lunes..7=domingo => franjas [inicio, fin]).
+ * "pausa" es true si hoy ya abrió y vuelve a abrir más tarde (el almuerzo):
+ * la tienda dice "En pausa · vuelve a las 2 p. m." en vez de un "Cerrado"
+ * que hace pensar que ya no atienden hoy. Null si el negocio no tiene
  * horario configurado: en ese caso no hay nada honesto que mostrar.
  *
- * @param array<string, array{0:string,1:string}> $horario
- * @return array{abierto: bool, desde: ?string, hasta: ?string}|null
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
+ * @return array{abierto: bool, desde: ?string, hasta: ?string, pausa: bool, vuelve: ?string}|null
  */
 function negocio_abierto_ahora(array $horario): ?array
 {
     if ($horario === []) {
         return null;
     }
-    $diaHoy = (string) date('N');
-    if (!isset($horario[$diaHoy])) {
-        return ['abierto' => false, 'desde' => null, 'hasta' => null];
-    }
-    [$inicio, $fin] = $horario[$diaHoy];
+    $franjas = $horario[(string) date('N')] ?? [];
     $ahora = date('H:i');
-    return ['abierto' => $ahora >= $inicio && $ahora < $fin, 'desde' => $inicio, 'hasta' => $fin];
+    foreach ($franjas as $i => [$inicio, $fin]) {
+        if ($ahora >= $inicio && $ahora < $fin) {
+            return ['abierto' => true, 'desde' => $inicio, 'hasta' => $fin, 'pausa' => false, 'vuelve' => null];
+        }
+        if ($i > 0 && $ahora < $inicio && $ahora >= $franjas[$i - 1][1]) {
+            return ['abierto' => false, 'desde' => null, 'hasta' => null, 'pausa' => true, 'vuelve' => $inicio];
+        }
+    }
+
+    return ['abierto' => false, 'desde' => null, 'hasta' => null, 'pausa' => false, 'vuelve' => null];
 }
 
-/** "18:00" → "6:00 p. m." (sin minutos si son :00 → "6 p. m."). */
+/**
+ * "18:00" → "6 p. m."; "9:30" → "9:30 a. m.". El mediodía exacto se
+ * escribe "12 m.", como se dice en Colombia (y como sale en los letreros
+ * de "Cerrado de 12 m. a 2 p. m.").
+ */
 function hora_legible(string $hora): string
 {
     $ts = strtotime($hora) ?: 0;
+    if (date('H:i', $ts) === '12:00') {
+        return '12 m.';
+    }
     $minutos = date('i', $ts);
     $meridiano = date('a', $ts) === 'am' ? 'a. m.' : 'p. m.';
     return date('g', $ts) . ($minutos !== '00' ? ':' . $minutos : '') . ' ' . $meridiano;
@@ -297,12 +488,12 @@ function hora_legible(string $hora): string
 
 /**
  * Cuándo vuelve a abrir, para completar "Cerrado ahora" con algo útil
- * ("Abre mañana a las 9:00 a. m.") en vez de dejar al cliente adivinando.
- * Solo tiene sentido llamarla cuando ya se sabe que el negocio está
- * cerrado ahora mismo (ver negocio_abierto_ahora()). Null si no hay
- * horario configurado o si no abre ningún día de la semana siguiente.
+ * ("Abre mañana a las 9 a. m.", o "hoy a las 2 p. m." después del
+ * almuerzo) en vez de dejar al cliente adivinando. Solo tiene sentido
+ * llamarla cuando ya se sabe que está cerrado ahora mismo. Null si no hay
+ * horario o si no abre ningún día de la semana siguiente.
  *
- * @param array<string, array{0:string,1:string}> $horario
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
  * @return array{dia: string, hora: string}|null
  */
 function negocio_proxima_apertura(array $horario): ?array
@@ -316,34 +507,32 @@ function negocio_proxima_apertura(array $horario): ?array
 
     for ($offset = 0; $offset <= 7; $offset++) {
         $diaIso = (($diaHoyIso - 1 + $offset) % 7) + 1;
-        $rango = $horario[(string) $diaIso] ?? null;
-        if ($rango === null) {
-            continue;
+        foreach ($horario[(string) $diaIso] ?? [] as [$inicio]) {
+            if ($offset === 0 && $ahora >= $inicio) {
+                continue; // esa franja de hoy ya empezó (o pasó)
+            }
+            $etiqueta = $offset === 0 ? 'hoy' : ($offset === 1 ? 'mañana' : $diasNombre[$diaIso - 1]);
+            return ['dia' => $etiqueta, 'hora' => hora_legible($inicio)];
         }
-        if ($offset === 0 && $ahora >= $rango[1]) {
-            continue; // hoy ya cerró; sigue buscando el próximo día
-        }
-        $etiqueta = $offset === 0 ? 'hoy' : ($offset === 1 ? 'mañana' : $diasNombre[$diaIso - 1]);
-        return ['dia' => $etiqueta, 'hora' => hora_legible($rango[0])];
     }
 
     return null;
 }
 
 /**
- * Agrupa Sede::horario() (día 1=lunes..7=domingo => [inicio, fin]) en líneas
- * legibles, uniendo días consecutivos con el mismo horario en un solo rango
- * (día "Lun-Vie", rango "8:00 a. m. - 6:00 p. m."). Los días sin abrir
- * aparecen como "Cerrado" (agrupados igual que los abiertos) en vez de
- * desaparecer — un negocio que no trabaja domingo necesita poder decirlo,
- * no solo omitir el día y dejar que el cliente adivine. Única excepción:
- * si el negocio no tiene NINGÚN horario configurado todavía, devuelve []
- * en vez de un "Lun-Dom: Cerrado" que daría a entender que cerró para
- * siempre. Devuelve {dia, rango} en vez de un string ya armado para que la
- * vista no tenga que volver a separar nombre de horas.
+ * Agrupa Sede::horario() en líneas legibles, uniendo días consecutivos con
+ * el mismo horario (y la misma pausa) en un solo rango ("Lun-Vie"). Los
+ * días sin abrir aparecen como "Cerrado" en vez de desaparecer — un
+ * negocio que no trabaja domingo necesita poder decirlo. Única excepción:
+ * sin NINGÚN horario configurado devuelve [] en vez de un "Lun-Dom:
+ * Cerrado" que daría a entender que cerró para siempre.
  *
- * @param array<string, array{0:string,1:string}> $horario
- * @return array<int, array{dia: string, rango: string}>
+ * Cada línea trae "franjas" (una por tramo: "8 a. m. – 12 m.", "2 – 6 p. m.")
+ * para que la vista las ponga una debajo de otra, y "rango" con todo junto
+ * para quien necesite una sola cadena. "hoy" marca la línea de hoy.
+ *
+ * @param array<string, array<int, array{0:string,1:string}>> $horario
+ * @return array<int, array{dia: string, rango: string, franjas: array<int, string>, hoy: bool}>
  */
 function horario_resumen(array $horario): array
 {
@@ -357,22 +546,273 @@ function horario_resumen(array $horario): array
 
     $lineas = [];
     $inicioGrupo = 1;
-    $rangoActual = $SIN_INICIAR;
+    $actual = $SIN_INICIAR;
 
     for ($dia = 1; $dia <= 8; $dia++) {
-        $rango = $dia <= 7 ? ($horario[(string) $dia] ?? null) : $FIN;
-        $cambia = $rango !== $rangoActual;
+        $franjas = $dia <= 7 ? ($horario[(string) $dia] ?? null) : $FIN;
+        $cambia = $franjas !== $actual;
 
-        if ($cambia && $rangoActual !== $SIN_INICIAR) {
+        if ($cambia && $actual !== $SIN_INICIAR) {
             $nombre = $inicioGrupo === $dia - 1 ? $dias[$inicioGrupo - 1] : $dias[$inicioGrupo - 1] . '-' . $dias[$dia - 2];
-            $rangoTexto = $rangoActual === null ? 'Cerrado' : hora_legible($rangoActual[0]) . ' - ' . hora_legible($rangoActual[1]);
-            $lineas[] = ['dia' => $nombre, 'rango' => $rangoTexto];
+            $textos = $actual === null ? ['Cerrado'] : array_map('franja_legible', $actual);
+            $hoyIso = (int) date('N');
+            $lineas[] = [
+                'dia'     => $nombre,
+                'rango'   => implode(' y ', $textos),
+                'franjas' => $textos,
+                'hoy'     => $hoyIso >= $inicioGrupo && $hoyIso <= $dia - 1,
+            ];
         }
         if ($cambia) {
             $inicioGrupo = $dia;
         }
-        $rangoActual = $rango;
+        $actual = $franjas;
     }
 
     return $lineas;
 }
+
+/**
+ * ["14:00","18:00"] → "2 – 6 p. m." (el meridiano una vez si es el mismo);
+ * ["08:00","12:00"] → "8 a. m. – 12 m.".
+ *
+ * @param array{0:string,1:string} $franja
+ */
+function franja_legible(array $franja): string
+{
+    $inicio = hora_legible($franja[0]);
+    $fin = hora_legible($franja[1]);
+    foreach ([' a. m.', ' p. m.'] as $meridiano) {
+        if (str_ends_with($inicio, $meridiano) && str_ends_with($fin, $meridiano)) {
+            $inicio = substr($inicio, 0, -strlen($meridiano));
+        }
+    }
+
+    return $inicio . ' – ' . $fin;
+}
+
+/**
+ * Color de texto legible sobre un fondo de color de marca: tinta oscura o
+ * papel claro según la luminancia relativa (WCAG). El negocio elige su
+ * color libremente (amarillo, azul, rosado...) y la letra encima tiene que
+ * seguir leyéndose — una "S" negra sobre azul oscuro no se lee.
+ */
+function color_texto_sobre(string $hex): string
+{
+    $hex = ltrim(trim($hex), '#');
+    if (strlen($hex) === 3) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if (!preg_match('/^[0-9a-f]{6}$/i', $hex)) {
+        return '#1B1A17';
+    }
+    $canal = static function (string $par): float {
+        $c = hexdec($par) / 255;
+        return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+    };
+    $luminancia = 0.2126 * $canal(substr($hex, 0, 2)) + 0.7152 * $canal(substr($hex, 2, 2)) + 0.0722 * $canal(substr($hex, 4, 2));
+
+    // Contraste contra tinta (#1B1A17, L≈0.011) vs. contra papel (#FFFDF8, L≈0.98):
+    // gana el que dé más contraste.
+    $contraTinta = ($luminancia + 0.05) / (0.011 + 0.05);
+    $contraPapel = (0.98 + 0.05) / ($luminancia + 0.05);
+    return $contraTinta >= $contraPapel ? '#1B1A17' : '#FFFDF8';
+}
+
+/** Un color hex válido (#RRGGBB) o el de respaldo: evita que un dato raro rompa el CSS inline. */
+function color_seguro(?string $hex, string $respaldo = '#F2B632'): string
+{
+    return is_string($hex) && preg_match('/^#[0-9a-f]{6}$/i', trim($hex)) ? trim($hex) : $respaldo;
+}
+
+/**
+ * "09:30" → "9:30 a. m.", siempre con minutos. A diferencia de hora_legible()
+ * (que omite ":00" en textos sueltos como "abre a las 9 a. m."), aquí se usa
+ * donde conviven horas en punto y con minutos en la misma grilla — mostrar
+ * siempre los minutos evita mezclar "9 a. m." con "9:30 a. m.".
+ */
+function hora_completa(string $hora): string
+{
+    $ts = strtotime($hora) ?: 0;
+    return date('g:i', $ts) . ' ' . (date('a', $ts) === 'am' ? 'a. m.' : 'p. m.');
+}
+
+/**
+ * Una fecha como hojita de almanaque (día de la semana, número grande, mes)
+ * para los selectores de día de la tienda: reservar y reprogramar usan
+ * exactamente el mismo marcado. $href ya debe venir armado (sin escapar).
+ */
+function hoja_almanaque(string $fecha, string $fechaActiva, string $href): string
+{
+    $dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    $ts = strtotime($fecha) ?: 0;
+    $esHoy = $fecha === date('Y-m-d');
+    $activo = $fecha === $fechaActiva;
+
+    return '<a href="' . e($href) . '" class="pq-dia' . ($activo ? ' pq-dia-activo' : '') . '"'
+        . ($activo ? ' aria-current="date"' : '')
+        . ' aria-label="' . e(($esHoy ? 'Hoy, ' : '') . fecha_larga($fecha)) . '">'
+        . '<span class="pq-dia-semana">' . ($esHoy ? 'hoy' : $dias[(int) date('w', $ts)]) . '</span>'
+        . '<span class="pq-dia-numero">' . (int) date('j', $ts) . '</span>'
+        . '<span class="pq-dia-mes">' . $meses[(int) date('n', $ts) - 1] . '</span>'
+        . '</a>';
+}
+
+/**
+ * Colores de toldo que el dueño puede elegir para su tienda (Negocio::
+ * actualizarColor solo acepta estos). Una paleta cerrada, con nombres de
+ * barrio, en vez de un selector libre: todos funcionan como rayas del toldo
+ * y con color_texto_sobre() siempre dan una letra legible encima.
+ *
+ * @return array<string, string> hex => nombre
+ */
+function paleta_marca(): array
+{
+    return [
+        '#E8452C' => 'Ají',
+        '#F28C28' => 'Mango',
+        '#F2B632' => 'Mostaza',
+        '#3F8F4E' => 'Hoja de plátano',
+        '#1F9AA6' => 'Turquesa',
+        '#3B4CCA' => 'Añil',
+        '#7A4FB5' => 'Mora',
+        '#E85A8B' => 'Guayaba',
+        '#8A5A3C' => 'Café',
+    ];
+}
+
+/** 0 → "hoy", 1 → "ayer", 5 → "hace 5 días" (nunca "hace 1 días"). */
+function hace_dias(int $dias): string
+{
+    return match (true) {
+        $dias <= 0 => 'hoy',
+        $dias === 1 => 'ayer',
+        default => "hace {$dias} días",
+    };
+}
+
+/** 'breb' → "Bre-B", 'nequi' → "Nequi"... Nunca mostrar el código crudo ("BREB") al cliente ni al dueño. */
+function metodo_pago_legible(string $metodo): string
+{
+    return match ($metodo) {
+        'breb'     => 'Bre-B',
+        'nequi'    => 'Nequi',
+        'efectivo' => 'Efectivo',
+        default    => ucfirst($metodo),
+    };
+}
+
+/**
+ * Valida y normaliza una llave Bre-B según su tipo; null si no sirve.
+ * Una llave mal escrita no se nota hasta que un cliente intenta pagar y
+ * la transferencia rebota, así que se revisa al guardarla:
+ *   - celular: 10 dígitos que empiezan por 3 (acepta "+57", espacios, guiones).
+ *   - cedula:  5 a 10 dígitos (acepta puntos).
+ *   - correo:  un correo válido, en minúsculas.
+ */
+/**
+ * Celular colombiano de 10 dígitos que empieza por 3, aceptando "+57",
+ * espacios y guiones: "+57 300 123 4567" → "3001234567". null si no lo es.
+ * Así una misma persona no puede tener dos cuentas ("57300…" y "300…") ni
+ * quedar un número que no abre WhatsApp.
+ */
+function whatsapp_normalizado(string $texto): ?string
+{
+    $digitos = (string) preg_replace('/\D+/', '', $texto);
+    if (strlen($digitos) === 12 && str_starts_with($digitos, '57')) {
+        $digitos = substr($digitos, 2);
+    }
+
+    return preg_match('/^3\d{9}$/', $digitos) === 1 ? $digitos : null;
+}
+
+function llave_breb_normalizada(string $tipo, string $valor): ?string
+{
+    $valor = trim($valor);
+
+    if ($tipo === 'correo') {
+        $correo = mb_strtolower($valor);
+        return mb_strlen($correo) <= 120 && filter_var($correo, FILTER_VALIDATE_EMAIL) !== false ? $correo : null;
+    }
+
+    $digitos = preg_replace('/\D+/', '', $valor) ?? '';
+    if ($tipo === 'celular') {
+        if (strlen($digitos) === 12 && str_starts_with($digitos, '57')) {
+            $digitos = substr($digitos, 2);
+        }
+        return preg_match('/^3\d{9}$/', $digitos) === 1 ? $digitos : null;
+    }
+    if ($tipo === 'cedula') {
+        return preg_match('/^\d{5,10}$/', $digitos) === 1 ? $digitos : null;
+    }
+
+    return null;
+}
+
+/**
+ * "El almuerzo del martes y jueves no cabía…": aviso cuando una pausa del
+ * formulario de la semana no se pudo aplicar (ver Sede::horarioDesdePost).
+ *
+ * @param array<int, string> $dias
+ */
+function aviso_pausas_invalidas(array $dias): ?string
+{
+    if ($dias === []) {
+        return null;
+    }
+    $lista = count($dias) === 1 ? $dias[0] : implode(', ', array_slice($dias, 0, -1)) . ' y ' . end($dias);
+
+    return 'La pausa del ' . $lista . ' no quedaba dentro del horario de ese día (tiene que empezar después de abrir y terminar antes de cerrar), así que ese día quedó corrido. Revísala.';
+}
+
+/**
+ * Días de calendario entre una fecha y hoy (ayer a las 11 p. m. es "ayer"
+ * aunque no hayan pasado 24 horas). Para usar con hace_dias().
+ */
+function dias_desde(string $fecha): int
+{
+    $dia = strtotime(date('Y-m-d', strtotime($fecha) ?: time()));
+
+    return max(0, (int) round((strtotime(date('Y-m-d')) - $dia) / 86400));
+}
+
+/**
+ * A dónde volver después de una acción sobre una cita: la agenda, o la
+ * hoja de la visita si la acción se hizo desde ahí (solo esa ruta: nada de
+ * redirigir a lo que mande el formulario).
+ */
+function destino_agenda(): string
+{
+    $volver = (string) ($_POST['volver'] ?? '');
+
+    return preg_match('#^/panel/visitas/\d+$#', $volver) ? $volver : '/panel/citas';
+}
+
+/**
+ * ¿El POST llegó vacío porque superó post_max_size? (PHP descarta todo el
+ * cuerpo y el formulario parece no haber enviado nada, ni el CSRF.)
+ */
+function post_demasiado_grande(): bool
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $_POST !== [] || $_FILES !== []) {
+        return false;
+    }
+    $limite = trim((string) ini_get('post_max_size'));
+    $bytes = (int) $limite * match (strtoupper(substr($limite, -1))) { 'G' => 1073741824, 'M' => 1048576, 'K' => 1024, default => 1 };
+
+    return $bytes > 0 && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $bytes;
+}
+
+/**
+ * "tu cita de Corte de cabello", o solo "tu cita" en negocios de salud: el
+ * nombre de un procedimiento ("Endodoncia") es un dato de salud y en un
+ * WhatsApp queda en el chat y en la vista previa de la pantalla bloqueada.
+ */
+function cita_en_mensaje(string $servicio, array $sede): string
+{
+    $esSalud = ($sede['tipo_negocio'] ?? '') === 'reservas' && ($sede['rubro'] ?? 'general') === 'salud';
+
+    return $esSalud || trim($servicio) === '' ? 'tu cita' : 'tu cita de ' . $servicio;
+}
+

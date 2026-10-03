@@ -6,7 +6,11 @@ namespace App\Controllers;
 
 use App\AdminAuth;
 use App\Database;
+use App\Models\EventoSeguridad;
+use App\Models\LimiteTasa;
 use App\Models\Negocio;
+use App\Models\PagoPlan;
+use App\Models\Plan;
 use App\Models\Sede;
 use App\Models\Usuario;
 
@@ -41,8 +45,21 @@ class AdminController
         $correo = trim((string) ($_POST['correo'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
 
-        if (!AdminAuth::intentarLogin($correo, $password)) {
-            flash_set('error', 'Correo o contraseña incorrectos.');
+        $ip = ip_cliente();
+        if (LimiteTasa::excedido('login_admin', $ip, 10, 15 * 60)) {
+            flash_set('error', 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
+            redirigir('/admin/login');
+        }
+
+        if (!AdminAuth::intentarLogin($correo, $password, (string) ($_POST['codigo'] ?? ''))) {
+            if (AdminAuth::$motivoFallo === null) {
+                LimiteTasa::registrar('login_admin', $ip);
+            }
+            flash_set('error', match (AdminAuth::$motivoFallo) {
+                'frenado' => 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.',
+                'sin_2fa' => 'Esta cuenta todavía no tiene segundo factor. Actívalo en el servidor con: php bin/admin_2fa.php ' . $correo,
+                default   => 'Correo, contraseña o código incorrectos.',
+            });
             redirigir('/admin/login');
         }
 
@@ -60,13 +77,23 @@ class AdminController
     public function dashboard(array $parametros): void
     {
         $admin = AdminAuth::exigirSesion();
-        $busqueda = trim((string) ($_GET['q'] ?? ''));
+        $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 80);
+        $filtro = (string) ($_GET['filtro'] ?? 'todos');
+        if (!array_key_exists($filtro, Negocio::FILTROS_ADMIN)) {
+            $filtro = 'todos';
+        }
 
         ver('admin/dashboard', [
-            'titulo'   => 'Negocios · Panel interno · Veci',
-            'admin'    => $admin,
-            'negocios' => Negocio::listarTodos($busqueda),
-            'busqueda' => $busqueda,
+            'titulo'          => 'Negocios · Panel interno · Veci',
+            'admin'           => $admin,
+            'negocios'        => Negocio::listarTodos($busqueda, $filtro),
+            'busqueda'        => $busqueda,
+            'filtro'          => $filtro,
+            'resumen'         => Negocio::resumenAdmin(),
+            'pagosPendientes' => PagoPlan::listarPendientes(),
+            'actividadEquipo' => EventoSeguridad::recientesDeAdmins(15),
+            'ok'              => flash_obtener('ok'),
+            'error'           => flash_obtener('error'),
         ], 'admin');
     }
 
@@ -86,6 +113,8 @@ class AdminController
             'titulo'       => $negocio['nombre'] . ' · Panel interno · Veci',
             'admin'        => $admin,
             'negocio'      => $negocio,
+            'plan'         => Plan::buscarPorId((int) $negocio['plan_id']),
+            'pagosPlan'    => PagoPlan::listarPorNegocio($stmtNegocioId),
             'sedes'        => Sede::listarPorNegocio($stmtNegocioId),
             'usuarios'     => $this->usuariosDelNegocio($stmtNegocioId),
             'ok'           => flash_obtener('ok'),
@@ -95,12 +124,66 @@ class AdminController
         ], 'admin');
     }
 
-    public function suspender(array $parametros): void
+    /** Confirma un cobro manual pendiente: activa/extiende el plan pago del negocio (ver PagoPlan::confirmar). */
+    public function confirmarPago(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
+        $pago = PagoPlan::buscarPorId((int) $parametros['id']);
+
+        if ($pago === null) {
+            redirigir('/admin');
+        }
 
         if (csrf_verificar()) {
+            // El admin escribe el monto que vio llegar en su Bre-B, en vez
+            // de un clic a ciegas: si no coincide exacto con lo esperado, no
+            // se activa nada (transferencia parcial, plan equivocado, typo).
+            $montoRecibido = dinero_desde_texto((string) ($_POST['monto_recibido'] ?? ''));
+
+            if ($pago['confirmado_en'] !== null) {
+                flash_set('error', 'Ese pago ya estaba confirmado.');
+            } elseif ($montoRecibido !== (int) $pago['monto']) {
+                flash_set('error', 'El monto recibido (' . pesos($montoRecibido) . ') no coincide con el esperado (' . pesos((int) $pago['monto']) . '). No se activó el plan.');
+            } elseif (!PagoPlan::confirmar((int) $pago['id'], (int) $admin['id'])) {
+                flash_set('error', 'Ese pago ya estaba confirmado.');
+            } else {
+                EventoSeguridad::registrar('pago_confirmado', (int) $pago['negocio_id'], null, 'Pago #' . (int) $pago['id'] . ' por ' . pesos((int) $pago['monto']), (int) $admin['id']);
+                flash_set('ok', 'Pago confirmado: el plan de ' . $this->nombreNegocio((int) $pago['negocio_id']) . ' ya quedó activo.');
+            }
+        }
+
+        redirigir($this->volver((int) $pago['negocio_id']));
+    }
+
+    /** Descarta una solicitud de cambio de plan que nunca se pagó, para que el dueño pueda volver a pedir. */
+    public function rechazarPago(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $pago = PagoPlan::buscarPorId((int) $parametros['id']);
+
+        if ($pago === null) {
+            redirigir('/admin');
+        }
+
+        if (csrf_verificar()) {
+            if (PagoPlan::rechazar((int) $pago['id'])) {
+                EventoSeguridad::registrar('pago_rechazado', (int) $pago['negocio_id'], null, 'Pago #' . (int) $pago['id'], (int) $admin['id']);
+                flash_set('ok', 'Solicitud descartada.');
+            } else {
+                flash_set('error', 'Ese pago ya estaba confirmado; no se puede descartar.');
+            }
+        }
+
+        redirigir($this->volver((int) $pago['negocio_id']));
+    }
+
+    public function suspender(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+
+        if (csrf_verificar() && Negocio::buscarPorId((int) $parametros['id']) !== null) {
             Negocio::suspender((int) $parametros['id']);
+            EventoSeguridad::registrar('negocio_suspendido', (int) $parametros['id'], null, '', (int) $admin['id']);
             flash_set('ok', 'Cuenta suspendida. Nadie de ese negocio puede entrar ni su tienda pública responde.');
         }
 
@@ -109,10 +192,11 @@ class AdminController
 
     public function reactivar(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
 
-        if (csrf_verificar()) {
+        if (csrf_verificar() && Negocio::buscarPorId((int) $parametros['id']) !== null) {
             Negocio::reactivar((int) $parametros['id']);
+            EventoSeguridad::registrar('negocio_reactivado', (int) $parametros['id'], null, '', (int) $admin['id']);
             flash_set('ok', 'Cuenta reactivada.');
         }
 
@@ -122,7 +206,7 @@ class AdminController
     /** Genera un enlace de recuperación de contraseña para un usuario y lo muestra una sola vez, para que el admin lo copie y lo mande por WhatsApp. */
     public function generarReset(array $parametros): void
     {
-        AdminAuth::exigirSesion();
+        $admin = AdminAuth::exigirSesion();
         $usuario = Usuario::buscarPorId((int) $parametros['usuario']);
 
         if ($usuario === null) {
@@ -131,11 +215,80 @@ class AdminController
 
         if (csrf_verificar()) {
             $token = Usuario::generarTokenReset((int) $usuario['id']);
+            // Queda en la bitácora del negocio: el dueño ve que soporte generó
+            // un enlace para entrar a su cuenta (y para quién).
+            EventoSeguridad::registrar('reset_generado', (int) $usuario['negocio_id'], (int) $usuario['id'], 'Para ' . $usuario['nombre'], (int) $admin['id']);
             flash_set('reset_enlace', url_publica('/reset-password/' . $token));
             flash_set('reset_usuario', $usuario['nombre'] . ' (' . $usuario['whatsapp'] . ')');
         }
 
         redirigir('/admin/negocios/' . (int) $usuario['negocio_id']);
+    }
+
+    /** Códigos de oferta de los planes de Veci: cupo, fecha de fin y registro de canjes. */
+    public function ofertas(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+
+        ver('admin/ofertas', [
+            'titulo'  => 'Ofertas · Panel interno · Veci',
+            'admin'   => $admin,
+            'ofertas' => \App\Models\OfertaPlan::listar(),
+            'canjes'  => \App\Models\OfertaPlan::canjes(),
+            'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
+        ], 'admin');
+    }
+
+    public function guardarOferta(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $id = isset($parametros['id']) ? (int) $parametros['id'] : null;
+        $actual = $id !== null ? \App\Models\OfertaPlan::buscar($id) : null;
+        if ($id !== null && $actual === null) {
+            redirigir('/admin/ofertas');
+        }
+
+        $codigo = $actual['codigo'] ?? \App\Models\OfertaPlan::normalizarCodigo((string) ($_POST['codigo'] ?? ''));
+        $porcentaje = (int) ($_POST['porcentaje'] ?? 0);
+        $vence = trim((string) ($_POST['vence_en'] ?? ''));
+        $cupo = trim((string) ($_POST['cupo_total'] ?? ''));
+        if ($codigo === '' || $porcentaje < 1 || $porcentaje > 100
+            || ($vence !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $vence))
+            || ($cupo !== '' && (!ctype_digit($cupo) || (int) $cupo < 1))) {
+            flash_set('error', 'Revisa la oferta: código de 3 a 20 letras o números, porcentaje de 1 a 100, fecha AAAA-MM-DD y cupo mayor que cero (o vacíos).');
+            redirigir('/admin/ofertas');
+        }
+        if ($id === null && \App\Models\OfertaPlan::buscarPorCodigo($codigo) !== null) {
+            flash_set('error', 'Ya existe una oferta con el código ' . $codigo . '.');
+            redirigir('/admin/ofertas');
+        }
+        \App\Models\OfertaPlan::guardar([
+            'codigo'      => $codigo,
+            'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+            'porcentaje'  => $porcentaje,
+            'vence_en'    => $vence !== '' ? $vence : null,
+            'cupo_total'  => $cupo !== '' ? (int) $cupo : null,
+            'activa'      => isset($_POST['activa']),
+        ], $id);
+        EventoSeguridad::registrar('oferta_guardada', null, null, $codigo . ' · ' . $porcentaje . '%' . ($cupo !== '' ? ' · cupo ' . $cupo : '') . ($vence !== '' ? ' · hasta ' . $vence : '') . (isset($_POST['activa']) ? '' : ' · pausada'), (int) $admin['id']);
+        flash_set('ok', 'Oferta ' . $codigo . ' guardada.');
+        redirigir('/admin/ofertas');
+    }
+
+    /**
+     * Los pagos se confirman desde la lista (/admin) o desde la ficha del
+     * negocio: se vuelve a donde se hizo, para no perder el hilo cuando hay
+     * varios por confirmar.
+     */
+    private function volver(int $negocioId): string
+    {
+        return ($_POST['volver'] ?? '') === '/admin' ? '/admin' : '/admin/negocios/' . $negocioId;
+    }
+
+    private function nombreNegocio(int $negocioId): string
+    {
+        return (string) (Negocio::buscarPorId($negocioId)['nombre'] ?? 'el negocio');
     }
 
     /** @return array<int, array<string, mixed>> */

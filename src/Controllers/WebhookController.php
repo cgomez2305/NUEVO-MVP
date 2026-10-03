@@ -28,6 +28,42 @@ use App\Models\Pedido;
  */
 class WebhookController
 {
+    /**
+     * Eventos de Wompi (pago de planes). Solo cuenta un evento con checksum
+     * válido (secreto de eventos); la transacción se aplica con las mismas
+     * reglas que el regreso del checkout (ver Wompi::procesarTransaccion).
+     * Responde 200 a todo evento válido para que Wompi no lo reintente.
+     */
+    public function wompi(): void
+    {
+        header('Content-Type: application/json');
+        $evento = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($evento) || !\App\Services\Wompi::eventoValido($evento)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'firma inválida']);
+            exit;
+        }
+        $resultado = 'ignorado';
+        if (($evento['event'] ?? '') === 'transaction.updated' && is_array($evento['data']['transaction'] ?? null)) {
+            $transaccion = $evento['data']['transaction'];
+            // La referencia y la moneda no van firmadas: se toman de la API
+            // usando el id (que sí va firmado, así que la transacción es de
+            // Veci). Si la API no responde, se usa el evento tal cual.
+            $consultada = \App\Services\Wompi::consultarTransaccion((string) ($transaccion['id'] ?? ''));
+            if ($consultada !== null) {
+                if ((string) ($consultada['id'] ?? '') !== (string) ($transaccion['id'] ?? '')) {
+                    http_response_code(409);
+                    echo json_encode(['error' => 'transacción no coincide']);
+                    exit;
+                }
+                $transaccion = $consultada;
+            }
+            $resultado = \App\Services\Wompi::procesarTransaccion($transaccion);
+        }
+        echo json_encode(['resultado' => $resultado]);
+        exit;
+    }
+
     public function breb(): void
     {
         $secreto = config('breb_webhook_secret');
@@ -61,6 +97,7 @@ class WebhookController
         $aprobado = in_array($estado, ['aprobado', 'approved', 'completado', 'completed'], true);
         $tipo = $m[1];
         $id = (int) $m[2];
+        $monto = is_array($datos) && is_numeric($datos['monto'] ?? null) ? (int) $datos['monto'] : 0;
 
         if (!$aprobado) {
             http_response_code(200);
@@ -68,43 +105,56 @@ class WebhookController
             exit;
         }
 
-        if ($tipo === 'P') {
-            $this->confirmarPedido($id);
-        } else {
-            $this->confirmarCita($id);
-        }
+        $marcado = $tipo === 'P' ? $this->confirmarPedido($id, $monto) : $this->confirmarCita($id, $monto);
 
         http_response_code(200);
-        echo json_encode(['ok' => true]);
+        echo json_encode($marcado ? ['ok' => true] : ['ok' => true, 'nota' => 'no se marcó: no existe, ya estaba procesado o el monto no alcanza']);
         exit;
     }
 
-    private function confirmarPedido(int $pedidoId): void
+    /**
+     * Solo marca pagado si el monto transferido cubre el total: una firma
+     * válida prueba que la notificación viene del proveedor, no que el
+     * cliente pagó completo — sin esto, una transferencia de $1.000 con la
+     * referencia correcta dejaría pagado un pedido de $35.000.
+     */
+    private function confirmarPedido(int $pedidoId, int $monto): bool
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT sede_id, estado FROM pedidos WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado, total FROM pedidos WHERE id = :id');
         $stmt->execute(['id' => $pedidoId]);
         $pedido = $stmt->fetch();
 
-        if ($pedido === false || $pedido['estado'] !== 'pendiente') {
-            return; // no existe, o ya se procesó antes (idempotencia).
+        if ($pedido === false || $pedido['estado'] !== 'pendiente' || $monto < (int) $pedido['total']) {
+            return false; // no existe, ya se procesó (idempotencia) o pago incompleto.
         }
 
-        Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado');
+        // Solo si sigue pendiente ya con el pedido bloqueado: si el dueño lo
+        // canceló un instante antes, el pago no lo revive.
+        return Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado', 'pendiente');
     }
 
-    private function confirmarCita(int $citaId): void
+    /** Igual que confirmarPedido: el monto tiene que cubrir el anticipo pedido (o el precio, si la cita no pide anticipo). */
+    private function confirmarCita(int $citaId, int $monto): bool
     {
         $pdo = \App\Database::conexion();
-        $stmt = $pdo->prepare('SELECT sede_id, estado FROM citas WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT sede_id, estado, precio, anticipo_monto FROM citas WHERE id = :id');
         $stmt->execute(['id' => $citaId]);
         $cita = $stmt->fetch();
 
         if ($cita === false || $cita['estado'] !== 'pendiente') {
-            return;
+            return false;
         }
 
-        Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada');
+        $requerido = (int) $cita['anticipo_monto'] > 0 ? (int) $cita['anticipo_monto'] : (int) $cita['precio'];
+        if ($monto < $requerido) {
+            return false;
+        }
+
+        if (!Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada', 'pendiente')) {
+            return false;
+        }
         Cita::marcarAnticipoPagado($citaId, (int) $cita['sede_id']);
+        return true;
     }
 }

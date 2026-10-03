@@ -368,12 +368,15 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 .hero-glow.centro{top:38%;left:38%;width:34vw;max-width:420px;height:34vw;max-height:420px;background:var(--mostaza);opacity:.09;animation-delay:-1.8s;animation-duration:10s}
 @keyframes glowPulso{0%,100%{opacity:.16;transform:scale(1)}50%{opacity:.26;transform:scale(1.12)}}
 .eyebrow{font-family:var(--fuente-texto);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--sello)}
-.hero h1{font-family:var(--fuente-titulo);font-weight:700;letter-spacing:-.02em;font-size:clamp(38px,4.3vw + 1.3rem,80px);line-height:1.02;margin:12px 0 16px;max-width:920px;color:var(--texto)}
+.hero h1{font-family:var(--fuente-titulo);font-weight:700;letter-spacing:-.02em;font-size:clamp(38px,5.3vw,76px);line-height:1.02;margin:12px 0 16px;max-width:920px;color:var(--texto)}
+@media (max-width:900px){.hero h1{text-wrap:balance}}
 .hero h1 em{font-style:normal;color:var(--sello)}
-.hero h1 em,.hero h1 em .palabra{
+.hero h1 em .palabra{
   text-decoration-line:underline;text-decoration-color:var(--sello);
-  text-decoration-thickness:3px;text-underline-offset:8px;
+  text-decoration-thickness:3px;text-underline-offset:.24em;text-decoration-skip-ink:none;
 }
+.hero h1 .sin-corte{white-space:nowrap}
+.hero h1 .punto{color:var(--texto)}
 .hero p{font-size:17px;color:var(--texto-suave);max-width:560px;line-height:1.55;margin:0 0 26px}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:0;align-items:center}
 .hero-ctas .btn{padding:17px 30px;font-size:16px}
@@ -508,7 +511,7 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 
 @keyframes pulso{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes entrada{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes palabraEntra{from{opacity:0;transform:translateY(16px) rotateX(-25deg)}to{opacity:1;transform:translateY(0) rotateX(0)}}
+@keyframes palabraEntra{from{opacity:0;transform:translateY(16px) rotateX(-25deg)}to{opacity:1;transform:none}}
 .hero-badge{animation:entrada .6s ease both}
 .hero h1{perspective:400px}
 .hero h1 .palabra{display:inline-block;opacity:0;animation:palabraEntra .6s cubic-bezier(.2,.8,.2,1) both}

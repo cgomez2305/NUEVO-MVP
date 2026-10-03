@@ -1,33 +1,142 @@
-<span class="pq-eyebrow">Panel interno</span>
-<h1 class="pq-h1" style="font-size: 28px">Todos los negocios</h1>
-<p class="pq-lead">Busca por nombre del negocio o WhatsApp de cualquiera de sus usuarios.</p>
+<?php
+$filtros = \App\Models\Negocio::FILTROS_ADMIN;
+$conteos = $resumen['conteos'];
+$hayPendientes = $pagosPendientes !== [];
+$enlaceFiltro = fn (string $clave) => base_url('/admin') . '?' . http_build_query(array_filter(['filtro' => $clave === 'todos' ? null : $clave, 'q' => $busqueda !== '' ? $busqueda : null]));
+$vacio = [
+    'todos'        => $busqueda !== '' ? 'Ningún negocio coincide con «' . $busqueda . '».' : 'Todavía no se ha registrado ningún negocio.',
+    'por_cobrar'   => 'No hay pagos de plan esperando confirmación.',
+    'pagan'        => 'Ningún negocio tiene un plan pago activo.',
+    'sin_publicar' => 'Todos los negocios ya abrieron su tienda.',
+    'suspendidos'  => 'No hay cuentas suspendidas.',
+];
+?>
+<div class="pq-pagina-cabeza">
+  <div>
+    <span class="pq-eyebrow">Panel interno</span>
+    <h1 class="pq-h1">Negocios</h1>
+  </div>
+</div>
 
-<form method="get" action="<?= e(base_url('/admin')) ?>" style="margin-top: 16px; display: flex; gap: 8px">
-  <input class="pq-input" type="text" name="q" value="<?= e($busqueda) ?>" placeholder="Doña María, 3001234567...">
-  <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Buscar</button>
-</form>
+<?php if (!empty($ok)): ?>
+  <div class="pq-alerta pq-alerta-ok" role="status"><?= e($ok) ?></div>
+<?php endif; ?>
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
 
-<div class="pq-stack" style="gap: 10px; margin-top: 20px">
-  <?php foreach ($negocios as $negocio): ?>
-    <a href="<?= e(base_url('/admin/negocios/' . $negocio['id'])) ?>" class="pq-card-borde" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; gap: 12px">
-      <div class="pq-stack" style="gap: 2px">
-        <span style="font-size: 14px; font-weight: 600; color: var(--carbon)">
-          <?= e($negocio['nombre']) ?>
-          <?php if ((int) $negocio['suspendido'] === 1): ?>
-            <span class="pq-chip pq-chip-cancelado" style="font-size: 11px; padding: 2px 8px; margin-left: 4px">Suspendido</span>
-          <?php endif; ?>
-        </span>
-        <span class="pq-ayuda">
-          <?= $negocio['tipo_negocio'] === 'reservas' ? 'Servicios con cita' : 'Productos con carrito' ?>
-          · <?= (int) $negocio['total_sedes'] ?> sede<?= (int) $negocio['total_sedes'] === 1 ? '' : 's' ?>
-          · <?= (int) $negocio['total_usuarios'] ?> usuario<?= (int) $negocio['total_usuarios'] === 1 ? '' : 's' ?>
-        </span>
-      </div>
-      <span class="pq-ayuda pq-mono"><?= e(date('d/m/Y', strtotime((string) $negocio['creado_en']))) ?></span>
-    </a>
-  <?php endforeach; ?>
+<div class="pq-caja-dia" role="group" aria-label="Resumen de negocios">
+  <div class="pq-caja-casilla">
+    <span class="pq-caja-valor"><?= (int) $resumen['total'] ?></span>
+    <span class="pq-caja-etiqueta">Negocios</span>
+  </div>
+  <div class="pq-caja-casilla">
+    <span class="pq-caja-valor"><?= (int) $resumen['abiertos'] ?></span>
+    <span class="pq-caja-etiqueta">Con tienda abierta</span>
+  </div>
+  <div class="pq-caja-casilla">
+    <span class="pq-caja-valor"><?= (int) $resumen['pagan'] ?></span>
+    <span class="pq-caja-etiqueta">Pagan plan</span>
+  </div>
+  <div class="pq-caja-casilla">
+    <span class="pq-caja-valor"><?= (int) $resumen['nuevos_semana'] ?></span>
+    <span class="pq-caja-etiqueta">Nuevos en 7 días</span>
+  </div>
+</div>
+
+<?php if ($hayPendientes): ?>
+  <section class="pq-admin-seccion" aria-labelledby="pq-titulo-por-confirmar">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-por-confirmar">Por confirmar <span class="pq-admin-cuenta"><?= count($pagosPendientes) ?></span></h2>
+    <p class="pq-ayuda">Mira la cuenta Bre-B de Veci y escribe lo que llegó: el plan se activa solo si coincide.</p>
+    <div class="pq-consignaciones">
+      <?php foreach ($pagosPendientes as $pago): ?>
+        <?php $mostrarNegocio = true; $volver = '/admin'; require __DIR__ . '/_consignacion.php'; ?>
+      <?php endforeach; ?>
+    </div>
+  </section>
+<?php endif; ?>
+
+<section class="pq-admin-seccion" aria-labelledby="pq-titulo-lista">
+  <h2 class="pq-sr-solo" id="pq-titulo-lista">Lista de negocios</h2>
+  <form method="get" action="<?= e(base_url('/admin')) ?>" class="pq-admin-buscar" role="search">
+    <?php if ($filtro !== 'todos'): ?><input type="hidden" name="filtro" value="<?= e($filtro) ?>"><?php endif; ?>
+    <label class="pq-sr-solo" for="q">Buscar negocio</label>
+    <input class="pq-input" type="search" id="q" name="q" value="<?= e($busqueda) ?>" placeholder="Nombre o WhatsApp (3001234567)" maxlength="80">
+    <button type="submit" class="pq-btn pq-btn-ghost">Buscar</button>
+  </form>
+
+  <nav class="pq-segmentos" aria-label="Filtrar negocios">
+    <?php foreach ($filtros as $clave => $texto): ?>
+      <a href="<?= e($enlaceFiltro($clave)) ?>" class="pq-segmento<?= $filtro === $clave ? ' pq-segmento-activo' : '' ?>"<?= $filtro === $clave ? ' aria-current="page"' : '' ?>>
+        <?= e($texto) ?> <span class="pq-segmento-cuenta"><?= (int) $conteos[$clave] ?></span>
+      </a>
+    <?php endforeach; ?>
+  </nav>
 
   <?php if ($negocios === []): ?>
-    <p class="pq-ayuda">No hay negocios que coincidan con esa búsqueda.</p>
+    <div class="pq-vacio-panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h18l-1.5-5h-15Z"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>
+      <p><?= e($vacio[$filtro]) ?></p>
+    </div>
+  <?php else: ?>
+    <ul class="pq-admin-lista">
+      <?php foreach ($negocios as $fila): ?>
+        <?php
+        $color = color_seguro($fila['color_marca'] ?? null);
+        $inicial = mb_strtoupper(mb_substr((string) $fila['nombre'], 0, 1));
+        $diasCreado = dias_desde((string) $fila['creado_en']);
+        $publicadas = (int) $fila['sedes_publicadas'];
+        $totalSedes = (int) $fila['total_sedes'];
+        ?>
+        <li>
+          <a href="<?= e(base_url('/admin/negocios/' . (int) $fila['id'])) ?>" class="pq-admin-negocio<?= (int) $fila['suspendido'] === 1 ? ' pq-admin-negocio-suspendido' : '' ?>">
+            <span class="pq-letrero-insignia pq-letrero-insignia-chica pq-admin-insignia" style="--marca: <?= e($color) ?>; --marca-sobre: <?= e(color_texto_sobre($color)) ?>" aria-hidden="true"><?= e($inicial) ?></span>
+            <span class="pq-admin-negocio-texto">
+              <span class="pq-admin-negocio-nombre"><?= e($fila['nombre']) ?></span>
+              <span class="pq-ayuda">
+                <?= $fila['tipo_negocio'] === 'reservas' ? 'Reservas' : 'Pedidos' ?>
+                · Plan <?= e(ucfirst((string) $fila['plan_nombre'])) ?>
+                · <?= $publicadas ?>/<?= $totalSedes ?> sede<?= $totalSedes === 1 ? '' : 's' ?> abierta<?= $publicadas === 1 ? '' : 's' ?>
+              </span>
+            </span>
+            <span class="pq-admin-negocio-lado">
+              <?php if ((int) $fila['suspendido'] === 1): ?>
+                <span class="pq-chip pq-chip-cancelado">Suspendido</span>
+              <?php elseif ((int) $fila['pagos_pendientes'] > 0): ?>
+                <span class="pq-chip pq-chip-pendiente">Pago por confirmar</span>
+              <?php elseif ($publicadas === 0): ?>
+                <span class="pq-chip">Sin abrir</span>
+              <?php endif; ?>
+              <span class="pq-ayuda">Se unió <?= e(hace_dias($diasCreado)) ?></span>
+            </span>
+          </a>
+        </li>
+      <?php endforeach; ?>
+    </ul>
   <?php endif; ?>
-</div>
+</section>
+
+<?php
+// Quién del equipo hizo qué: confirmar pagos, suspender cuentas y generar
+// enlaces de recuperación son poderes grandes, y quedan a la vista de todos
+// los admins (y en la bitácora del negocio afectado).
+?>
+<section class="pq-seguridad" aria-labelledby="pq-titulo-equipo">
+  <h2 class="pq-seccion-titulo" id="pq-titulo-equipo">Actividad del equipo</h2>
+  <?php if ($actividadEquipo === []): ?>
+    <p class="pq-ayuda">Todavía no hay actividad registrada.</p>
+  <?php else: ?>
+    <ol class="pq-bitacora">
+      <?php foreach ($actividadEquipo as $evento): $tipo = (string) $evento['tipo']; ?>
+        <li class="pq-bitacora-fila<?= in_array($tipo, ['reset_generado', 'negocio_suspendido', 'pago_confirmado'], true) ? ' pq-bitacora-alerta' : '' ?>">
+          <span class="pq-bitacora-punto" aria-hidden="true"></span>
+          <div class="pq-bitacora-texto">
+            <span class="pq-bitacora-titulo"><?= e(\App\Models\EventoSeguridad::TIPOS[$tipo] ?? $tipo) ?><?= $evento['negocio_nombre'] !== null ? ' · ' . e($evento['negocio_nombre']) : '' ?></span>
+            <span class="pq-ayuda"><?= e($evento['admin_nombre']) ?><?= $evento['detalle'] !== '' ? ' · ' . e($evento['detalle']) : '' ?> · <?= e($evento['descripcion']) ?><?= $evento['ip'] !== '' ? ' · IP ' . e($evento['ip']) : '' ?></span>
+          </div>
+          <time class="pq-bitacora-hora pq-mono" datetime="<?= e(date('c', strtotime((string) $evento['creado_en']))) ?>"><?= e(fecha_corta((string) $evento['creado_en'], ' ')) ?></time>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+  <?php endif; ?>
+</section>

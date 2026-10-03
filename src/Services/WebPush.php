@@ -61,6 +61,11 @@ class WebPush
         $origen = (string) parse_url($suscripcion['endpoint'], PHP_URL_SCHEME) . '://' . parse_url($suscripcion['endpoint'], PHP_URL_HOST);
         $jwt = self::firmarVapid($origen, $vapidSubject, $vapidPrivate);
 
+        // Solo a servicios de push reales, solo https y sin esperar mucho:
+        // esto corre dentro del pedido o la reserva de un cliente.
+        if (!\App\Models\PushSubscripcion::endpointValido((string) $suscripcion['endpoint'])) {
+            return ['ok' => false, 'http_code' => 0, 'expirada' => true];
+        }
         $ch = curl_init($suscripcion['endpoint']);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -72,7 +77,11 @@ class WebPush
                 'TTL: 86400',
                 'Authorization: vapid t=' . $jwt . ', k=' . $vapidPublic,
             ],
-            CURLOPT_TIMEOUT => 10,
+            CURLOPT_TIMEOUT => 4,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
+            CURLOPT_FOLLOWLOCATION => false,
         ]);
         curl_exec($ch);
         $codigo = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

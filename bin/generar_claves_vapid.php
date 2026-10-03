@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Solo consola: si el hosting llegara a exponer bin/ por web, nadie puede
+// dispararlo desde un navegador (crear admins, mandar recordatorios...).
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 /**
  * Genera un par de llaves VAPID nuevo para las notificaciones push. Se
  * corre UNA sola vez por instalación (no por negocio: todos los negocios
