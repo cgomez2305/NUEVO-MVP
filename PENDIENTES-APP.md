@@ -3,7 +3,7 @@
 Origen: revisión del sitio (`docs/`, rama `work/marketing-web`) contra `PRODUCT.md` del 2026-10-03.
 Al terminar cada punto, actualizar `PRODUCT.md` → "Capabilities and Constraints" y subirlo a la rama de la app.
 
-## 1. Leer y guardar los parámetros del registro (prioridad alta)
+## 1. Leer y guardar los parámetros del registro — HECHO (commit 9380efa)
 
 El sitio ya envía estos parámetros a `/registro`; hoy la app los ignora.
 
@@ -12,7 +12,7 @@ El sitio ya envía estos parámetros a `/registro`; hoy la app los ignora.
 - `modo` (`pedidos`, `reservas`): dejar marcada esa opción en el formulario de registro.
 - Seguridad: aceptar solo valores de una lista blanca; cualquier otro valor se ignora.
 
-## 2. Códigos de oferta para los planes de Veci
+## 2. Códigos de oferta para los planes de Veci — HECHO (commit 9380efa)
 
 Necesario para que el sitio vuelva a mostrar la oferta `VECICHAT30` (30% del primer mes de Barrio o Pro, pago mensual). Hoy no existe. Modelo: los `cupones` de negocio que ya existen (uso con fila bloqueada, límite por IP).
 
@@ -25,6 +25,11 @@ Necesario para que el sitio vuelva a mostrar la oferta `VECICHAT30` (30% del pri
 - Máximo 5 intentos por hora por IP y por cuenta.
 - Pago por Bre-B confirmado a mano: el admin debe ver el monto esperado ya con el descuento.
 - Registro de canjes: código, fecha, plan, y si pagó el segundo mes.
+
+## Pendientes nuevos (después de la revisión del 2026-10-03)
+
+- Reporte de atribución en el panel interno: cuántos negocios por `utm_source`, `utm_campaign` y `utm_content`, y cuántos de ellos pagaron. Hoy solo se puede consultar la tabla `negocio_origen` a mano.
+- Verificar por OTP el WhatsApp del titular antes de aplicar una oferta (la regla actual usa hash de WhatsApp y documento).
 
 ## 3. Más adelante: "Sube tu foto sin cuenta"
 

@@ -8,15 +8,16 @@
   var REGISTRO = 'https://app.tuveci.co/registro';
   var SOPORTE = 'soporte@tuveci.co';
 
-  // La app es quien valida el código (un uso por negocio nuevo, vigencia,
-  // cupo total). Lo de aquí es solo fricción: quien borre su navegador ve la
-  // oferta otra vez, pero el backend no debe aceptarla dos veces.
+  // La app valida el código al pagar (OfertaPlan.php: un uso por negocio nuevo,
+  // cupo y fecha de fin desde /admin/ofertas). Aquí solo hay fricción para no
+  // regalarla a quien no está interesado. Sin cuenta regresiva: el servidor no
+  // tiene una, así que el sitio no la inventa.
   var OFERTA = {
-    activa: false, // la app aún no valida códigos de plan (PRODUCT.md); no encender antes
+    activa: true,
     codigo: 'VECICHAT30',
     titulo: '30% de descuento en tu primer mes',
-    detalle: 'Aplica al plan Barrio o Pro, pago mensual. Solo para negocios nuevos, un uso por negocio.',
-    horasVigencia: 72,
+    detalle: 'Barrio queda en $20.930 y Pro en $48.930 el primer mes, con pago mensual. Solo para negocios nuevos, un uso por negocio.',
+    horasVigencia: 24 * 365 * 5,
     minMensajes: 3,
     minPuntos: 5,
     minSegundos: 40
@@ -461,10 +462,9 @@
     });
     codigo.appendChild(copiar);
     cuerpo.appendChild(codigo);
-    var vence = new Date(finOferta);
     cuerpo.appendChild(el('span', 'vchat-oferta-vence', vigente
-      ? 'Vence el ' + vence.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) + ' a las ' + vence.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })
-      : 'Esta oferta ya venció'));
+      ? 'Cupo limitado. Al registrarte, el código queda listo en "Tu plan"; ahí lo aplicas con tu cédula o NIT.'
+      : 'Esta oferta ya no está disponible.'));
     if (vigente) {
       var cta = el('a', 'vchat-link vchat-link-cta', 'Activar mi descuento →');
       cta.href = enlaceRegistro(true);
@@ -537,7 +537,7 @@
     if (!OFERTA.activa) {
       responder({ de: 'bot', r: ['Hoy no tenemos promociones activas, pero el plan Gratis no vence y pagando anual te ahorras 2 meses.'], chips: [C.gratis, C.precios] });
     } else if (o && Date.now() >= o.vence) {
-      responder({ de: 'bot', r: ['La oferta del chat ya venció en este navegador y es de un solo uso. Igual puedes empezar con el plan Gratis, que no vence, o pagar anual y ahorrarte 2 meses.'], chips: [C.gratis, C.precios] });
+      responder({ de: 'bot', r: ['Esa oferta ya no está disponible. Igual puedes empezar con el plan Gratis, que no vence, o pagar anual y ahorrarte 2 meses.'], chips: [C.gratis, C.precios] });
     } else if (o || cumpleCompuertas()) {
       mostrarOferta();
     } else {
