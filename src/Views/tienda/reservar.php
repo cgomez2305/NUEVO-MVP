@@ -4,7 +4,12 @@
 $diasLargo = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 $diasPlural = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
 $mesesLargo = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-$sufijoEmpleado = $empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '';
+// Lo elegido viaja en la URL (sin JS ni sesión): profesional y adicionales.
+$idsAdicionales = implode(',', array_map(fn ($a) => (int) $a['id'], $adicionalesElegidos));
+$sufijoAdicionales = $idsAdicionales !== '' ? '&ad=' . $idsAdicionales : '';
+$sufijoEmpleado = ($empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '') . $sufijoAdicionales;
+$urlReservar = base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']);
+$precioMostrado = ['precio' => $condiciones['precio'] + $precioAdicionales, 'precio_tipo' => $condiciones['precio_tipo'], 'precio_max' => $condiciones['precio_max'] !== null ? $condiciones['precio_max'] + $precioAdicionales : null];
 $fechaEsHoy = $fecha === date('Y-m-d');
 $horaCompleta = 'hora_completa';
 $mesActual = ucfirst($mesesLargo[(int) date('n', strtotime($fecha)) - 1]) . ' ' . date('Y', strtotime($fecha));
@@ -28,11 +33,11 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
   <p class="pq-pagina-meta">
     <span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      <?= (int) $servicio['duracion_min'] ?> min
+      <?= (int) $duracionTotal ?> min
     </span>
-    <span class="pq-pagina-meta-precio"><?= e(precio_texto($servicio)) ?></span>
+    <span class="pq-pagina-meta-precio"><?= e(precio_texto($precioMostrado)) ?></span>
   </p>
-  <?php if (precio_es_estimado($servicio)): ?>
+  <?php if (precio_es_estimado($precioMostrado)): ?>
     <p class="pq-ayuda pq-precio-estimado-nota">El valor final se confirma al ver el trabajo. Si cambia, te lo mandamos para que lo apruebes antes de seguir.</p>
   <?php endif; ?>
   <?php if ($anticipo > 0): ?>
@@ -45,16 +50,58 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
     <div class="pq-alerta"><?= e($error) ?></div>
   <?php endif; ?>
 
+  <?php if (!empty($sinProfesional)): ?>
+    <div class="pq-alerta pq-alerta-aviso">Por ahora nadie del equipo tiene este servicio en su agenda. Escríbele al negocio por WhatsApp para agendarlo.</div>
+  <?php endif; ?>
+
   <?php if (!empty($empleados)): ?>
     <section class="pq-reserva-bloque">
       <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span>¿Con quién?</h2>
+      <?php // Cada profesional con su cara y lo que mejor hace: así se elige en una barbería de verdad. ?>
       <div class="pq-opciones-persona">
         <?php foreach ($empleados as $emp): ?>
-          <?php $activo = $empleadoElegido !== null && (int) $empleadoElegido['id'] === (int) $emp['id']; ?>
-          <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha . '&empleado=' . (int) $emp['id']) ?>"
-             class="pq-persona<?= $activo ? ' pq-persona-activa' : '' ?>"<?= $activo ? ' aria-current="true"' : '' ?>>
-            <span class="pq-persona-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $emp['nombre'], 0, 1))) ?></span>
-            <?= e($emp['nombre']) ?>
+          <?php
+          $activo = $empleadoElegido !== null && (int) $empleadoElegido['id'] === (int) $emp['id'];
+          $condicionesEmp = \App\Models\Empleado::condiciones($emp, $servicio);
+          ?>
+          <a href="<?= e($urlReservar . '?fecha=' . $fecha . '&empleado=' . (int) $emp['id'] . $sufijoAdicionales) ?>"
+             class="pq-persona<?= !empty($emp['foto']) || !empty($emp['especialidad']) ? ' pq-persona-ficha' : '' ?><?= $activo ? ' pq-persona-activa' : '' ?>"<?= $activo ? ' aria-current="true"' : '' ?>>
+            <?php if (!empty($emp['foto'])): ?>
+              <img class="pq-persona-foto" src="<?= e(base_url($emp['foto'])) ?>" alt="" width="44" height="44" loading="lazy">
+            <?php else: ?>
+              <span class="pq-persona-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $emp['nombre'], 0, 1))) ?></span>
+            <?php endif; ?>
+            <span class="pq-persona-texto">
+              <span class="pq-persona-nombre"><?= e($emp['nombre']) ?></span>
+              <?php if (!empty($emp['especialidad'])): ?><span class="pq-persona-especialidad"><?= e($emp['especialidad']) ?></span><?php endif; ?>
+              <?php if ($condicionesEmp['precio'] !== (int) $servicio['precio']): ?><span class="pq-persona-precio"><?= e(precio_texto($condicionesEmp)) ?></span><?php endif; ?>
+            </span>
+          </a>
+        <?php endforeach; ?>
+      </div>
+      <?php if ($empleadoElegido !== null): ?>
+        <a class="pq-persona-perfil" href="<?= e(base_url('/t/' . $negocio['slug'] . '/equipo/' . (int) $empleadoElegido['id'])) ?>">Ver trabajos de <?= e(explode(' ', trim((string) $empleadoElegido['nombre']))[0]) ?> →</a>
+      <?php endif; ?>
+    </section>
+  <?php endif; ?>
+
+  <?php if (!empty($adicionalesDisponibles)): ?>
+    <section class="pq-reserva-bloque">
+      <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span>¿Le sumas algo?</h2>
+      <?php // Cada adicional es un enlace que lo agrega o lo quita: funciona sin JS y los cupos se recalculan con el tiempo total. ?>
+      <div class="pq-adicionales">
+        <?php foreach ($adicionalesDisponibles as $adicional): ?>
+          <?php
+          $idsActuales = array_map(fn ($a) => (int) $a['id'], $adicionalesElegidos);
+          $marcado = in_array((int) $adicional['id'], $idsActuales, true);
+          $idsNuevos = $marcado ? array_diff($idsActuales, [(int) $adicional['id']]) : array_merge($idsActuales, [(int) $adicional['id']]);
+          $href = $urlReservar . '?fecha=' . $fecha . ($empleadoElegido !== null ? '&empleado=' . (int) $empleadoElegido['id'] : '') . ($idsNuevos !== [] ? '&ad=' . implode(',', $idsNuevos) : '');
+          ?>
+          <a href="<?= e($href) ?>" class="pq-adicional<?= $marcado ? ' pq-adicional-activo' : '' ?>">
+            <span class="pq-adicional-marca" aria-hidden="true"><?= $marcado ? '✓' : '+' ?></span>
+            <span class="pq-sr-solo"><?= $marcado ? 'Incluido, toca para quitar:' : 'Sumar:' ?></span>
+            <span class="pq-adicional-nombre"><?= e($adicional['nombre']) ?></span>
+            <span class="pq-adicional-extra">+<?= pesos((int) $adicional['precio']) ?><?= (int) $adicional['duracion_min'] > 0 ? ' · ' . (int) $adicional['duracion_min'] . ' min' : '' ?></span>
           </a>
         <?php endforeach; ?>
       </div>
@@ -97,7 +144,7 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
       <div class="pq-disponibilidad-error">
         <span class="pq-disponibilidad-error-titulo">No pudimos cargar la disponibilidad</span>
         <p class="pq-ayuda">Puede ser algo pasajero. Intenta de nuevo o escribe directo por WhatsApp.</p>
-        <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $fecha) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reintentar</a>
+        <a href="<?= e($urlReservar . '?fecha=' . $fecha . $sufijoEmpleado) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reintentar</a>
       </div>
     <?php elseif (!empty($faltaElegirEmpleado)): ?>
       <p class="pq-ayuda pq-reserva-nota">Elige con quién quieres agendar para ver los horarios.</p>
@@ -233,7 +280,8 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
       <div class="pq-turno">
         <span class="pq-turno-hora"><?= e($horaCompleta($horaElegida)) ?></span>
         <span class="pq-turno-fecha"><?= e(ucfirst($fechaEsHoy ? 'hoy, ' . fecha_larga($fecha) : fecha_larga($fecha))) ?></span>
-        <span class="pq-turno-servicio"><?= e($servicio['nombre']) ?><?= $empleadoElegido !== null ? ' · con ' . e($empleadoElegido['nombre']) : '' ?></span>
+        <span class="pq-turno-servicio"><?= e($servicio['nombre']) ?><?= $adicionalesElegidos !== [] ? ' + ' . e(implode(' + ', array_column($adicionalesElegidos, 'nombre'))) : '' ?><?= $empleadoElegido !== null ? ' · con ' . e($empleadoElegido['nombre']) : '' ?></span>
+        <span class="pq-turno-total"><?= e(precio_texto($precioMostrado)) ?> · <?= (int) $duracionTotal ?> min</span>
       </div>
       <?php if ($anticipo > 0): ?>
         <p class="pq-turno-anticipo">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>
@@ -253,6 +301,9 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
         <input type="hidden" name="hora" value="<?= e($horaElegida) ?>">
         <?php if ($empleadoElegido !== null): ?>
           <input type="hidden" name="empleado_id" value="<?= (int) $empleadoElegido['id'] ?>">
+        <?php endif; ?>
+        <?php if ($idsAdicionales !== ''): ?>
+          <input type="hidden" name="adicionales" value="<?= e($idsAdicionales) ?>">
         <?php endif; ?>
 
         <div class="pq-campo">

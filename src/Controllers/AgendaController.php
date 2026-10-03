@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Cita;
+use App\Models\Empleado;
 use App\Models\Imprevisto;
 use App\Models\Servicio;
 
@@ -46,7 +47,7 @@ class AgendaController
             flash_set('ok', 'Listo: vas al día.');
             redirigir('/panel/citas');
         }
-        $afectadas = Imprevisto::avisarRetraso((int) $negocio['id'], $minutos);
+        $afectadas = Imprevisto::avisarRetraso((int) $negocio['id'], $minutos, $this->empleadoDelPost($negocio));
         if ($afectadas === 0) {
             flash_set('ok', 'No quedan citas por atender hoy: nadie a quien avisar.');
             redirigir('/panel/citas');
@@ -70,9 +71,13 @@ class AgendaController
             flash_set('error', 'Elige el día (hoy o después) y el motivo.');
             redirigir('/panel/citas');
         }
-        $afectadas = Imprevisto::reprogramarDia((int) $negocio['id'], $fecha, $motivo, isset($_POST['bloquear']));
+        // Cerrar un día para reservas es decisión del dueño (como en "Días no
+        // disponibles"); un colaborador sí puede pedir que se muevan las citas.
+        $empleadoId = $this->empleadoDelPost($negocio);
+        $bloquear = isset($_POST['bloquear']) && $negocio['rol'] === 'dueno' && $empleadoId === null;
+        $afectadas = Imprevisto::reprogramarDia((int) $negocio['id'], $fecha, $motivo, $bloquear, $empleadoId);
         $automaticos = $afectadas > 0 ? Imprevisto::mandarAutomaticos($negocio) : 0;
-        $bloqueo = isset($_POST['bloquear']) ? ' El día quedó cerrado para reservas.' : '';
+        $bloqueo = $bloquear ? ' El día quedó cerrado para reservas.' : '';
         flash_set('ok', match (true) {
             $afectadas === 0 => 'Ese día no tenía citas por mover.' . $bloqueo,
             $automaticos > 0 => "Les avisamos a {$automaticos} cliente" . ($automaticos === 1 ? '' : 's') . ' para que elijan otra hora.' . $bloqueo,
@@ -104,9 +109,18 @@ class AgendaController
         if ($cita === null || !csrf_verificar()) {
             redirigir('/panel/citas');
         }
+        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true) || !empty($cita['imprevisto_motivo'])) {
+            flash_set('error', !empty($cita['imprevisto_motivo'])
+                ? 'Esa cita la pediste mover tú: no se puede marcar «No vino».'
+                : 'Solo se marca «No vino» en una cita pendiente o confirmada.');
+            redirigir('/panel/citas');
+        }
         $cupon = Imprevisto::noAsistio($cita, $negocio);
+        if ($cupon !== null) {
+            Imprevisto::mandarAutomaticos($negocio);
+        }
         flash_set('ok', $cupon !== null
-            ? "Marcada como «No vino». Su anticipo quedó como cupón {$cupon['codigo']} por " . pesos((int) $cupon['valor']) . ' para su próxima cita.'
+            ? "Marcada como «No vino». Su anticipo quedó como cupón {$cupon['codigo']} por " . pesos((int) $cupon['valor']) . ': avísale abajo.'
             : 'Marcada como «No vino».');
         redirigir('/panel/citas');
     }
@@ -134,6 +148,8 @@ class AgendaController
     public function garantia(array $parametros): void
     {
         $negocio = Auth::exigirSesion();
+        // Regalar un servicio es plata del negocio: lo decide el dueño (como los cupones).
+        Auth::exigirDueno($negocio);
         $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
         if ($cita === null || !csrf_verificar()) {
             redirigir('/panel/citas');
@@ -168,6 +184,14 @@ class AgendaController
         Imprevisto::marcarAvisado((int) $cita['id'], (int) $negocio['id']);
         header('Location: ' . Imprevisto::enlace($cita, $texto));
         exit;
+    }
+
+    /** El profesional elegido en "Voy retrasado" / "Se me complicó el día" (null = todo el negocio). */
+    private function empleadoDelPost(array $negocio): ?int
+    {
+        $empleadoId = (int) ($_POST['empleado_id'] ?? 0);
+
+        return $empleadoId > 0 && Empleado::buscar($empleadoId, (int) $negocio['id']) !== null ? $empleadoId : null;
     }
 
     /** Usa la duración medida de verdad como la duración del servicio. */

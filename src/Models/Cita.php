@@ -284,14 +284,17 @@ class Cita
     }
 
     /**
-     * Termina la cita con lo que de verdad se cobró. Sin valor (o con
-     * precio fijo y sin ajuste), queda el precio de la reserva.
+     * Termina la cita con lo que de verdad pagó el cliente ($cobrado, neto:
+     * ya con el cupón o el bono descontados, que es lo que el dueño ve
+     * entrar). Se guarda como precio_final = cobrado + descuento, para que
+     * el valor de la cita (precio_final − descuento) sea exactamente lo
+     * cobrado. Sin valor, queda el precio de la reserva.
      */
     public static function terminar(int $id, int $sedeId, ?int $cobrado): void
     {
         self::actualizarEstado($id, $sedeId, 'completada');
         if ($cobrado !== null) {
-            Database::conexion()->prepare('UPDATE citas SET precio_final = :p WHERE id = :id AND sede_id = :s')
+            Database::conexion()->prepare('UPDATE citas SET precio_final = :p + descuento WHERE id = :id AND sede_id = :s')
                 ->execute(['p' => max(0, $cobrado), 'id' => $id, 's' => $sedeId]);
         }
     }

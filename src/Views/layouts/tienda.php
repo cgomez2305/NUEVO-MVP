@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <?php require __DIR__ . '/_head.php'; ?>
+<?php if (!empty($refrescarCada)): // p. ej. el turno de la fila: se actualiza solo, sin JS ?>
+<meta http-equiv="refresh" content="<?= (int) $refrescarCada ?>">
+<?php endif; ?>
 </head>
 <?php
 // El color del negocio manda en su tienda: se expone como variable CSS

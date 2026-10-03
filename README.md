@@ -144,7 +144,7 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    confirma que la extensión `pdo_mysql` esté activada (casi siempre lo
    está por defecto).
 
-7. **Da permisos de escritura** a `public/uploads/menus/` y
+7. **Da permisos de escritura** a `public/uploads/menus/`, `public/uploads/productos/`, `public/uploads/equipo/` y
    `public/uploads/logos/` (clic derecho → Permissions → 755, o 775 si
    tu hosting lo exige) para que las fotos de menú se puedan guardar.
 

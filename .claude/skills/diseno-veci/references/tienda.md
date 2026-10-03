@@ -247,3 +247,22 @@ llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
   la nota "El valor final se confirma al ver el trabajo".
 - El tiquete muestra el precio por tipo, "Valor estimado" mientras no haya
   cobro, y "Valor aprobado/final" cuando lo hay.
+
+## Equipo, adicionales y fila (belleza)
+- **¿Con quién?** en reservar: con foto o especialidad la persona pasa de
+  chip a ficha (`.pq-persona-ficha`: foto 44 px, nombre, especialidad y su
+  precio si difiere). Solo aparecen quienes hacen ese servicio; "Ver trabajos
+  de Ana →" lleva a su página.
+- **¿Le sumas algo?**: adicionales como etiquetas punteadas con "+"; elegidas
+  quedan sólidas con "✓" (`.pq-adicional-activo`). Son enlaces (`?ad=1,2`):
+  funcionan sin JS y los cupos se recalculan con la duración total.
+- **Nuestro equipo** en la tienda: retratos redondos con aro de papel en
+  fila deslizable; solo quien tiene foto o especialidad (honestidad visual).
+- **Página del profesional** (`/t/{slug}/equipo/{id}`): carné con la foto
+  girada −2°, especialidad en color de marca, trabajos en rejilla 3×, y sus
+  servicios con sus precios.
+- **Fila virtual** (`/t/{slug}/fila`, `/fila/{token}`): aviso "¿Sin cita?"
+  con un punto verde que late (único bucle: estado en vivo). La ficha de
+  turno es la de la panadería (`.pq-cola-ficha`): cartón con muescas a los
+  lados, franja de marca arriba y el número enorme; "Acércate" cuando el
+  negocio lo llama. Se refresca sola cada 30 s (meta refresh, sin JS).

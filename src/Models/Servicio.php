@@ -70,6 +70,13 @@ class Servicio
             'id'           => $id,
             'sede_id'   => $sedeId,
         ]);
+        // Si el precio nuevo quedó igual o por encima del "hasta" de un
+        // rango (p. ej. desde el onboarding, que no pregunta el tipo), deja
+        // de ser rango: "desde" es lo único honesto que queda.
+        Database::conexion()->prepare(
+            "UPDATE servicios SET precio_tipo = 'desde', precio_max = NULL
+             WHERE id = :id AND sede_id = :s AND precio_tipo = 'rango' AND precio_max <= precio"
+        )->execute(['id' => $id, 's' => $sedeId]);
     }
 
     /**

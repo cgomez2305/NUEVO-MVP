@@ -328,3 +328,33 @@ Lógica en `App\Models\Imprevisto` y `AgendaController`; migración
 - Servicios: **Reglas de tu agenda** (colchón, tolerancia, anticipo si no
   llega) y la nota de **duración real** (≥ 5 citas medidas, diferencia ≥ 5 min)
   con "Usar N min".
+- Revisión de la fase 1 (migración 15): "No vino" guarda `cupon_abono_id` /
+  `bono_devuelto_id` y se puede deshacer al volver a otro estado; el anticipo
+  que se queda el negocio (regla "se pierde") entra al cierre de caja.
+  "Cobrado" es lo neto que pagó el cliente (`precio_final = cobrado + descuento`).
+  Retraso y día complicado se pueden marcar por persona del equipo.
+
+## Equipo, fila y comisiones (belleza, migración 14)
+
+Lógica en `EquipoController`, `FilaController`, `Empleado`, `Adicional`,
+`TurnoFila`, `Comision`; fotos con `App\Services\Subida` en
+`public/uploads/equipo/` (sin EXIF, `.htaccess` sin PHP).
+- **Equipo** (`/panel/empleados`, solo dueño): filas con foto o inicial y lo
+  que falta en una pastilla mostaza (`.pq-equipo-falta`: "sin foto"). La ficha
+  (`/panel/empleados/{id}`, `.pq-ficha-panel` de bloques `.pq-ficha-bloque`):
+  perfil público (foto, especialidad, frase, comisión %), trabajos (máx. 9,
+  rejilla con "×"), **qué servicios hace** (checkbox + su precio y duración;
+  todo vacío = hace todos al precio normal), horario propio (intersección con
+  el del negocio), pausar / quitar en un bloque punteado al final.
+- **Adicionales** (`/panel/servicios#adicionales`, solo dueño): suman precio y
+  minutos al turno; para un servicio o para todos; pausar / quitar.
+- **Fila de hoy** (`/panel/fila`, todos): estado con luz que late solo si está
+  abierta (abrir/cerrar: dueño), enlace para la puerta y un rollo de fichas
+  numeradas (`.pq-cola-turno`, el número en un talón punteado a la izquierda;
+  llamado = azul sello). "Llamarlo por WhatsApp" abre wa.me; "Atendido" crea
+  una cita completada (precio de la persona si no se escribe lo cobrado) que
+  entra a la caja y a las comisiones.
+- **Comisiones** (`/panel/comisiones`, dueño): segmentos de período, una fila
+  por persona (citas, vendido, %, comisión) y, al tocar el monto, la
+  **liquidación imprimible** como comanda (`.pq-comision-tiquete`). Se calcula
+  sobre lo cobrado de citas completadas; Veci no paga, solo calcula.

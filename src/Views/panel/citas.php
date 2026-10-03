@@ -39,6 +39,15 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
     <form method="post" action="<?= e(base_url('/panel/agenda/retraso')) ?>" class="pq-imprevisto-menu-panel">
       <?= csrf_campo() ?>
       <p class="pq-ayuda">Avisamos a los clientes que faltan hoy y cada uno elige si espera o cambia la hora.</p>
+      <?php if (!empty($equipo)): ?>
+        <div class="pq-campo">
+          <label class="pq-label" for="retraso-quien">¿Quién va retrasado?</label>
+          <select class="pq-select" id="retraso-quien" name="empleado_id">
+            <option value="0">Todo el negocio</option>
+            <?php foreach ($equipo as $persona): ?><option value="<?= (int) $persona['id'] ?>"><?= e($persona['nombre']) ?></option><?php endforeach; ?>
+          </select>
+        </div>
+      <?php endif; ?>
       <fieldset class="pq-imprevisto-minutos">
         <legend class="pq-label">¿Cuánto más o menos?</legend>
         <?php foreach (\App\Models\Imprevisto::MINUTOS_RETRASO as $i => $minutos): ?>
@@ -67,7 +76,18 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
           </select>
         </div>
       </div>
-      <label class="pq-imprevisto-check"><input type="checkbox" name="bloquear" value="1" checked> Cerrar ese día para nuevas reservas</label>
+      <?php if (!empty($equipo)): ?>
+        <div class="pq-campo">
+          <label class="pq-label" for="imprevisto-quien">¿De quién son las citas?</label>
+          <select class="pq-select" id="imprevisto-quien" name="empleado_id">
+            <option value="0">De todo el negocio</option>
+            <?php foreach ($equipo as $persona): ?><option value="<?= (int) $persona['id'] ?>"><?= e($persona['nombre']) ?></option><?php endforeach; ?>
+          </select>
+        </div>
+      <?php endif; ?>
+      <?php if ($negocio['rol'] === 'dueno'): ?>
+        <label class="pq-imprevisto-check"><input type="checkbox" name="bloquear" value="1" checked> Cerrar ese día para nuevas reservas <span class="pq-ayuda">(solo si es de todo el negocio)</span></label>
+      <?php endif; ?>
       <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Pedir que muevan su cita</button>
     </form>
   </details>
@@ -84,6 +104,7 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
             'retraso'     => 'Retraso de ~' . (int) $fila['retraso_negocio_min'] . ' min',
             'reprogramar' => 'Mover su cita: ' . ($etiquetasMotivo[(string) $fila['imprevisto_motivo']] ?? 'imprevisto'),
             'ajuste'      => 'Nuevo valor: ' . pesos((int) $fila['ajuste_precio']),
+            'abono'       => 'Anticipo abonado: cupón ' . ($fila['cupon_abono_codigo'] ?? ''),
             default       => '',
         };
         ?>
@@ -237,14 +258,15 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
                   // Terminar pregunta lo cobrado solo si el precio no era exacto
                   // o hubo un ajuste; con precio fijo, un toque basta.
                   $preguntarCobrado = precio_es_estimado($cita) || $cita['ajuste_estado'] !== null;
-                  $cobradoSugerido = $cita['precio_final'] !== null ? (int) $cita['precio_final'] : (int) $cita['precio'];
+                  // Neto: lo que el cliente pagó, ya con cupón o bono descontados (ver Cita::terminar).
+                  $cobradoSugerido = \App\Models\Cita::valor($cita);
                   ?>
                   <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/terminar')) ?>" class="pq-terminar-form">
                     <?= csrf_campo() ?>
                     <?php if ($preguntarCobrado): ?>
                       <label class="pq-terminar-cobrado">
                         <span class="pq-ayuda">Cobrado</span>
-                        <span class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="cobrado" value="<?= number_format($cobradoSugerido, 0, ',', '.') ?>" data-precio-cop required aria-label="Lo que le cobraste a <?= e($cita['cliente_nombre']) ?>"></span>
+                        <span class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="cobrado" value="<?= number_format($cobradoSugerido, 0, ',', '.') ?>" data-precio-cop required aria-label="Lo que te pagó <?= e($cita['cliente_nombre']) ?>, ya con descuentos"></span>
                       </label>
                     <?php endif; ?>
                     <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguientePasoCita['texto']) ?> →</button>
@@ -257,7 +279,7 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
                   </form>
                 <?php endif; ?>
                 <?php // "No vino" aparece solo cuando ya pasó la tolerancia: antes sería apresurado. ?>
-                <?php if (in_array($cita['estado'], ['pendiente', 'confirmada'], true) && time() > $tsCita + ((int) $negocio['tolerancia_min'] + (int) $cita['retraso_cliente_min']) * 60): ?>
+                <?php if (\App\Models\Imprevisto::puedeMarcarNoVino($cita, $negocio)): ?>
                   <form method="post" action="<?= e(base_url('/panel/citas/' . $cita['id'] . '/no-vino')) ?>" data-confirmar="¿Marcar que <?= e($cita['cliente_nombre']) ?> no vino?<?= (int) $cita['anticipo_monto'] > 0 && $cita['anticipo_estado'] === 'pagado' ? ($negocio['anticipo_no_asiste'] === 'se_abona' ? ' Su anticipo queda como cupón para su próxima cita.' : ' Su anticipo no se devuelve (es tu regla).') : '' ?>">
                     <?= csrf_campo() ?>
                     <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">No vino</button>
@@ -320,7 +342,7 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
           </span>
           <?php if (!empty($fila['garantia_token'])): ?>
             <span class="pq-chip pq-chip-caja">Garantía dada</span>
-          <?php elseif (!empty($fila['servicio_id'])): ?>
+          <?php elseif (!empty($fila['servicio_id']) && $negocio['rol'] === 'dueno'): ?>
             <form method="post" action="<?= e(base_url('/panel/citas/' . $fila['id'] . '/garantia')) ?>" target="_blank" class="pq-garantia-form">
               <?= csrf_campo() ?>
               <select class="pq-select" name="dias" aria-label="Días para usar la garantía de <?= e($fila['cliente_nombre']) ?>">

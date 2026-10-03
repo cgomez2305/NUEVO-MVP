@@ -37,6 +37,49 @@ class Imprevisto
     /** Mínimo de citas medidas (Empezar → Terminar) antes de sugerir una duración. */
     public const MUESTRA_MINIMA = 5;
 
+    /**
+     * Una cita guarda un solo aviso pendiente. Si llega otro, gana el más
+     * importante (un abono o un nuevo valor por aprobar no se pierden porque
+     * después el negocio avise un retraso); el de menos peso igual se ve en
+     * la página de la cita cuando el cliente abre el enlace.
+     */
+    private static function sqlAviso(string $nuevo): string
+    {
+        $orden = ['retraso' => 1, 'reprogramar' => 2, 'ajuste' => 3, 'abono' => 4][$nuevo];
+
+        return "aviso_imprevisto = IF(aviso_imprevisto IS NULL OR FIELD(aviso_imprevisto, 'retraso', 'reprogramar', 'ajuste', 'abono') <= {$orden}, '{$nuevo}', aviso_imprevisto)";
+    }
+
+    /**
+     * ¿El cliente todavía puede cancelar o mover su cita desde su enlace?
+     * Solo si está pendiente o confirmada y no pasó la hora (más la
+     * tolerancia y los retrasos avisados): quien no llegó no puede borrar su
+     * falta moviéndola después. Una cita que el NEGOCIO pidió mover sí se
+     * puede reprogramar siempre.
+     */
+    public static function clientePuedeGestionar(array $cita, array $sede): bool
+    {
+        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+            return false;
+        }
+        if (!empty($cita['imprevisto_motivo'])) {
+            return true;
+        }
+        $limite = (strtotime((string) $cita['fecha_hora']) ?: 0)
+            + ((int) ($sede['tolerancia_min'] ?? 15) + (int) $cita['retraso_cliente_min'] + (int) $cita['retraso_negocio_min']) * 60;
+
+        return time() <= $limite;
+    }
+
+    /** ¿Ya se puede marcar "No vino"? Pasada la hora más la tolerancia y los retrasos avisados, y si el negocio no pidió moverla. */
+    public static function puedeMarcarNoVino(array $cita, array $sede): bool
+    {
+        return in_array($cita['estado'], ['pendiente', 'confirmada'], true)
+            && empty($cita['imprevisto_motivo'])
+            && time() > (strtotime((string) $cita['fecha_hora']) ?: 0)
+                + ((int) ($sede['tolerancia_min'] ?? 15) + (int) $cita['retraso_cliente_min'] + (int) $cita['retraso_negocio_min']) * 60;
+    }
+
     // ---------- Reglas de la agenda ----------
 
     public static function guardarReglas(int $sedeId, int $colchon, int $tolerancia, string $anticipoNoAsiste): void
@@ -58,17 +101,19 @@ class Imprevisto
      * que ya pasaron de su hora sin empezar son justamente las retrasadas)
      * y deja su aviso pendiente. Devuelve cuántas quedaron avisadas.
      */
-    public static function avisarRetraso(int $sedeId, int $minutos): int
+    public static function avisarRetraso(int $sedeId, int $minutos, ?int $empleadoId = null): int
     {
         if (!in_array($minutos, self::MINUTOS_RETRASO, true)) {
             return 0;
         }
+        // Con equipo, el retraso puede ser de una sola persona: solo sus citas.
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET retraso_negocio_min = :m, cliente_espera = 0, aviso_imprevisto = 'retraso'
+            "UPDATE citas SET retraso_negocio_min = :m, cliente_espera = 0, " . self::sqlAviso('retraso') . "
              WHERE sede_id = :s AND estado IN ('pendiente', 'confirmada') AND imprevisto_motivo IS NULL
                AND DATE(fecha_hora) = CURDATE() AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 2 HOUR)"
+            . ($empleadoId !== null ? ' AND empleado_id = :e' : '')
         );
-        $stmt->execute(['m' => $minutos, 's' => $sedeId]);
+        $stmt->execute(['m' => $minutos, 's' => $sedeId] + ($empleadoId !== null ? ['e' => $empleadoId] : []));
 
         return $stmt->rowCount();
     }
@@ -103,20 +148,23 @@ class Imprevisto
      * desde su enlace (la cita no se cancela: si pagó anticipo, sigue
      * valiendo). Con $bloquear, el día deja de recibir reservas.
      */
-    public static function reprogramarDia(int $sedeId, string $fecha, string $motivo, bool $bloquear): int
+    public static function reprogramarDia(int $sedeId, string $fecha, string $motivo, bool $bloquear, ?int $empleadoId = null): int
     {
         if (!isset(self::MOTIVOS_DIA[$motivo]) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < date('Y-m-d')) {
             return 0;
         }
-        if ($bloquear) {
+        // Cerrar el día es para todo el negocio: si el imprevisto es de una
+        // sola persona del equipo, solo se mueven sus citas.
+        if ($bloquear && $empleadoId === null) {
             FechaBloqueada::crear($sedeId, $fecha, ucfirst(self::MOTIVOS_DIA[$motivo]));
         }
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET imprevisto_motivo = :m, aviso_imprevisto = 'reprogramar', retraso_negocio_min = 0
+            "UPDATE citas SET imprevisto_motivo = :m, " . self::sqlAviso('reprogramar') . ", retraso_negocio_min = 0
              WHERE sede_id = :s AND DATE(fecha_hora) = :f AND fecha_hora >= NOW()
                AND estado IN ('pendiente', 'confirmada')"
+            . ($empleadoId !== null ? ' AND empleado_id = :e' : '')
         );
-        $stmt->execute(['m' => $motivo, 's' => $sedeId, 'f' => $fecha]);
+        $stmt->execute(['m' => $motivo, 's' => $sedeId, 'f' => $fecha] + ($empleadoId !== null ? ['e' => $empleadoId] : []));
 
         return $stmt->rowCount();
     }
@@ -131,7 +179,7 @@ class Imprevisto
             return false;
         }
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET ajuste_precio = :p, ajuste_motivo = :m, ajuste_estado = 'pendiente', aviso_imprevisto = 'ajuste'
+            "UPDATE citas SET ajuste_precio = :p, ajuste_motivo = :m, ajuste_estado = 'pendiente', " . self::sqlAviso('ajuste') . "
              WHERE id = :id AND sede_id = :s AND estado IN ('pendiente', 'confirmada', 'en_curso')"
         );
         $stmt->execute(['p' => $precio, 'm' => mb_substr($motivo, 0, 200), 'id' => $citaId, 's' => $sedeId]);
@@ -188,14 +236,22 @@ class Imprevisto
      */
     public static function noAsistio(array $cita, array $sede): ?array
     {
-        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true) || !empty($cita['imprevisto_motivo'])) {
             return null;
         }
         Cita::actualizarEstado((int) $cita['id'], (int) $sede['id'], 'no_asistio');
         if (($sede['anticipo_no_asiste'] ?? 'se_pierde') !== 'se_abona') {
             return null;
         }
-        Bono::devolverPorCita((int) $cita['id']);
+        $pdo = Database::conexion();
+        // La sesión del bono vuelve (y se anota a qué bono, para poder deshacerlo).
+        $uso = $pdo->prepare('SELECT bono_id FROM bono_usos WHERE cita_id = :c');
+        $uso->execute(['c' => (int) $cita['id']]);
+        $bonoId = $uso->fetchColumn();
+        if ($bonoId !== false) {
+            Bono::devolverPorCita((int) $cita['id']);
+            $pdo->prepare('UPDATE citas SET bono_devuelto_id = :b WHERE id = :id')->execute(['b' => (int) $bonoId, 'id' => (int) $cita['id']]);
+        }
         if ($cita['anticipo_estado'] !== 'pagado' || (int) $cita['anticipo_monto'] <= 0) {
             return null;
         }
@@ -213,8 +269,39 @@ class Imprevisto
             'una_vez_por_cliente' => 1,
             'cliente_id'          => (int) $cita['cliente_id'],
         ]);
+        // El cliente se entera: queda un aviso con su código (gana a cualquier otro).
+        $pdo->prepare('UPDATE citas SET cupon_abono_id = :c, ' . self::sqlAviso('abono') . ' WHERE id = :id')
+            ->execute(['c' => $cuponId, 'id' => (int) $cita['id']]);
 
         return Cupon::buscar($cuponId, $negocioId);
+    }
+
+    /**
+     * Deshace un "No vino" marcado por error: borra el cupón del abono (si
+     * el cliente todavía no lo usó) y vuelve a descontar la sesión del bono.
+     * false si el cupón ya se usó: ese abono ya se lo tomó el cliente.
+     */
+    public static function deshacerNoAsistio(array $cita): bool
+    {
+        $pdo = Database::conexion();
+        if (!empty($cita['cupon_abono_id'])) {
+            $usos = $pdo->prepare('SELECT COUNT(*) FROM cupon_usos WHERE cupon_id = :c');
+            $usos->execute(['c' => (int) $cita['cupon_abono_id']]);
+            if ((int) $usos->fetchColumn() > 0) {
+                return false;
+            }
+            $pdo->prepare('DELETE FROM cupones WHERE id = :c')->execute(['c' => (int) $cita['cupon_abono_id']]);
+        }
+        if (!empty($cita['bono_devuelto_id'])) {
+            Bono::usar((int) $cita['bono_devuelto_id'], (int) $cita['id']);
+        }
+        $pdo->prepare(
+            "UPDATE citas SET cupon_abono_id = NULL, bono_devuelto_id = NULL,
+                    aviso_imprevisto = IF(aviso_imprevisto = 'abono', NULL, aviso_imprevisto)
+             WHERE id = :id"
+        )->execute(['id' => (int) $cita['id']]);
+
+        return true;
     }
 
     // ---------- Garantía o retoque ----------
@@ -291,9 +378,13 @@ class Imprevisto
     public static function porAvisar(int $sedeId): array
     {
         $stmt = Database::conexion()->prepare(
-            "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
+            "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, cu.codigo AS cupon_abono_codigo,
+                    cu.valor AS cupon_abono_valor, cu.vence_en AS cupon_abono_vence
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
-             WHERE c.sede_id = :s AND c.aviso_imprevisto IS NOT NULL AND c.estado IN ('pendiente', 'confirmada', 'en_curso')
+             LEFT JOIN cupones cu ON cu.id = c.cupon_abono_id
+             WHERE c.sede_id = :s AND c.aviso_imprevisto IS NOT NULL
+               AND (c.estado IN ('pendiente', 'confirmada', 'en_curso') OR (c.estado = 'no_asistio' AND c.aviso_imprevisto = 'abono'))
+               AND (c.aviso_imprevisto <> 'retraso' OR DATE(c.fecha_hora) = CURDATE())
              ORDER BY c.fecha_hora"
         );
         $stmt->execute(['s' => $sedeId]);
@@ -316,6 +407,10 @@ class Imprevisto
             'reprogramar' => "Hola {$nombre}, te escribimos de {$negocio}: tuvimos " . (self::MOTIVOS_DIA[(string) $cita['imprevisto_motivo']] ?? 'un imprevisto')
                 . ' y no vamos a poder atenderte el ' . fecha_larga(date('Y-m-d', $ts)) . " a las {$hora}. Perdón por el cambio. "
                 . 'Elige otra hora aquí, sin costo' . ($cita['anticipo_estado'] === 'pagado' ? ' (tu anticipo sigue valiendo)' : '') . ": {$enlace}",
+            'abono' => "Hola {$nombre}, te escribimos de {$negocio}: como no pudiste venir a tu cita, tu anticipo de " . pesos((int) $cita['cupon_abono_valor'])
+                . " quedó abonado. Usa el código {$cita['cupon_abono_codigo']} en tu próxima reserva"
+                . (!empty($cita['cupon_abono_vence']) ? ' (vale hasta el ' . fecha_larga((string) $cita['cupon_abono_vence']) . ')' : '')
+                . ': ' . url_publica('/t/' . ($sede['slug'] ?? '')),
             'ajuste' => "Hola {$nombre}, te escribimos de {$negocio} sobre tu {$cita['nombre_servicio']}: "
                 . "{$cita['ajuste_motivo']}. El valor quedaría en " . pesos((int) $cita['ajuste_precio']) . '. '
                 . "Apruébalo (o no) aquí antes de que sigamos: {$enlace}",

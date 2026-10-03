@@ -7,7 +7,7 @@ no son exactos, pasan imprevistos". Orden acordado: imprevistos primero
 La fase 4 (tiendas) la construye un subagente en un worktree aislado
 (migraciones 20-29, base `veci_tiendas`, puerto 8010) y se fusiona revisada.
 
-Migraciones reservadas: 13-19 fases 1-3 y 5 (repo principal), 20-29 fase 4.
+Migraciones: 13 imprevistos, 14 profesionales, 15 ajustes de "no vino", 16-17 visitas, 18 salud (repo principal); 20-29 fase 4 (subagente).
 
 ## Fase 1 · Imprevistos (todas las líneas con citas) — migración 13
 - Precio `fijo` / `desde` / `rango` por servicio (copiado en la cita) y
@@ -36,7 +36,7 @@ Profesional con foto, especialidad y portafolio; servicios por profesional
 (precio/duración propios); horario por profesional; adicionales al reservar;
 fila virtual para clientes sin cita; liquidación de comisiones.
 
-## Fase 3 · Visitas (técnicos a domicilio) — migraciones 15-16
+## Fase 3 · Visitas (técnicos a domicilio) — migraciones 16-17
 Tercer `tipo_negocio = 'visitas'`: solicitud con fotos y dirección, franja
 horaria, visita de diagnóstico, cotización aprobable, anticipo de materiales,
 "voy en camino", evidencia antes/después, garantía, mantenimiento recurrente,
@@ -47,7 +47,7 @@ Mostrador con escáner (lector o cámara), código de barras/costo/peso en
 productos, compras a proveedor, catálogo compartido de códigos, margen real,
 fiado con recordatorio que respeta la Ley 2300 de 2023, cierre de caja.
 
-## Fase 5 · Salud — migración 17
+## Fase 5 · Salud — migración 18
 Plan de tratamiento por fases con presupuesto aprobable y abonos; controles
 recurrentes; autorización de datos sensibles. Sin historia clínica.
 

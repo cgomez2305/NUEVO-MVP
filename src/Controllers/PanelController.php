@@ -547,6 +547,7 @@ class PanelController
             'negocio'   => $negocio,
             'servicios' => Servicio::listarPorSede((int) $negocio['id']),
             'duraciones' => Imprevisto::duracionesReales((int) $negocio['id']),
+            'adicionales' => \App\Models\Adicional::listar((int) $negocio['id']),
             'volver'    => '/panel/servicios',
             'ok'        => flash_obtener('ok'),
         ], 'panel');
@@ -595,10 +596,7 @@ class PanelController
             Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
             if (isset($_POST['precio_tipo'])) {
                 $tipoGuardado = Servicio::guardarTipoPrecio((int) $parametros['id'], (int) $negocio['id'], (string) $_POST['precio_tipo'], dinero_desde_texto((string) ($_POST['precio_max'] ?? '')));
-                if ($tipoGuardado !== $_POST['precio_tipo'] && $volver === '/panel/servicios') {
-                    flash_set('ok', 'Guardado como «Desde»: para un rango, el valor «hasta» tiene que ser mayor al precio.');
-                    redirigir($volver);
-                }
+                $rangoInvalido = $tipoGuardado !== $_POST['precio_tipo'];
             }
 
             // El panel guarda servicio y anticipo con un solo botón. El anticipo
@@ -613,7 +611,9 @@ class PanelController
                 );
             }
             if ($volver === '/panel/servicios') {
-                flash_set('ok', 'Servicio actualizado.'); // el onboarding no muestra avisos
+                flash_set('ok', !empty($rangoInvalido)
+                    ? 'Guardado como «Desde»: para un rango, el valor «hasta» tiene que ser mayor al precio.'
+                    : 'Servicio actualizado.'); // el onboarding no muestra avisos
             }
         }
 
@@ -684,6 +684,7 @@ class PanelController
             'porAvisar'   => Imprevisto::porAvisar((int) $negocio['id']),
             'retrasoHoy'  => Imprevisto::retrasoDeHoy((int) $negocio['id']),
             'atendidas'   => Cita::completadasRecientes((int) $negocio['id']),
+            'equipo'      => Empleado::listarPorSede((int) $negocio['id'], true),
             'ok'          => flash_obtener('ok'),
             'error'       => flash_obtener('error'),
         ], 'panel');
@@ -698,6 +699,14 @@ class PanelController
             // "No vino" aplica la regla del anticipo (ver Imprevisto::noAsistio).
             if ($estado === 'no_asistio') {
                 (new AgendaController())->noVino($parametros);
+            }
+            // Salir de "No vino" (fue un error) deshace el abono y la sesión devuelta.
+            $antes = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
+            if ($antes !== null && $antes['estado'] === 'no_asistio' && in_array($estado, Cita::ESTADOS, true)) {
+                if (!Imprevisto::deshacerNoAsistio($antes)) {
+                    flash_set('ok', 'No se puede cambiar: el cliente ya usó el cupón de su anticipo.');
+                    redirigir('/panel/citas');
+                }
             }
             Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
             $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
@@ -728,7 +737,7 @@ class PanelController
         $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
-        $this->escribirFilaCsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
+        $this->escribirFilaCsv($salida, ['ID', 'Fecha y hora', 'Cliente', 'Teléfono', 'Servicio', 'Empleado', 'Precio reservado', 'Descuento', 'Valor (cobrado)', 'Duración (min)', 'Estado', 'Anticipo', 'Estado anticipo']);
         foreach ($citas as $cita) {
             $this->escribirFilaCsv($salida, [
                 $cita['id'],
@@ -738,8 +747,10 @@ class PanelController
                 $cita['nombre_servicio'],
                 $cita['empleado_nombre'] ?? '',
                 $cita['precio'],
+                $cita['descuento'],
+                in_array($cita['estado'], Cita::ESTADOS_SIN_VENTA, true) ? 0 : Cita::valor($cita),
                 $cita['duracion_min'],
-                $cita['estado'],
+                Cita::ETIQUETAS[$cita['estado']] ?? $cita['estado'],
                 $cita['anticipo_monto'],
                 $cita['anticipo_estado'],
             ]);
@@ -806,46 +817,6 @@ class PanelController
         }
 
         redirigir('/panel/horario');
-    }
-
-    public function empleados(array $parametros): void
-    {
-        $negocio = Auth::exigirSesion();
-        Auth::exigirDueno($negocio);
-
-        ver('panel/empleados', [
-            'titulo'    => 'Empleados · Veci',
-            'activo'    => 'empleados',
-            'negocio'   => $negocio,
-            'empleados' => Empleado::listarPorSede((int) $negocio['id']),
-        ], 'panel');
-    }
-
-    public function crearEmpleado(array $parametros): void
-    {
-        $negocio = Auth::exigirSesion();
-        Auth::exigirDueno($negocio);
-
-        if (csrf_verificar()) {
-            $nombre = trim((string) ($_POST['nombre'] ?? ''));
-            if ($nombre !== '') {
-                Empleado::crear((int) $negocio['id'], $nombre);
-            }
-        }
-
-        redirigir('/panel/empleados');
-    }
-
-    public function eliminarEmpleado(array $parametros): void
-    {
-        $negocio = Auth::exigirSesion();
-        Auth::exigirDueno($negocio);
-
-        if (csrf_verificar()) {
-            Empleado::eliminar((int) $parametros['id'], (int) $negocio['id']);
-        }
-
-        redirigir('/panel/empleados');
     }
 
     public function fechasBloqueadas(array $parametros): void

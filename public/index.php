@@ -9,6 +9,8 @@ use App\Controllers\AgendaController;
 use App\Controllers\AuthController;
 use App\Controllers\CajaController;
 use App\Controllers\CrecimientoController;
+use App\Controllers\EquipoController;
+use App\Controllers\FilaController;
 use App\Controllers\HomeController;
 use App\Controllers\OnboardingController;
 use App\Controllers\PanelController;
@@ -28,6 +30,8 @@ $tienda = new TiendaController();
 $webhook = new WebhookController();
 $admin = new AdminController();
 $agenda = new AgendaController();
+$equipo = new EquipoController();
+$fila = new FilaController();
 
 // --- Público ---------------------------------------------------------
 $router->get('/', [$home, 'index']);
@@ -76,9 +80,27 @@ $router->post('/panel/servicios/{id}/actualizar', [$panel, 'actualizarServicio']
 $router->post('/panel/servicios/{id}/eliminar', [$panel, 'eliminarServicio']);
 $router->post('/panel/servicios/{id}/agotado', [$panel, 'alternarAgotadoServicio']);
 $router->post('/panel/servicios/{id}/deposito', [$panel, 'actualizarDepositoServicio']);
-$router->get('/panel/empleados', [$panel, 'empleados']);
-$router->post('/panel/empleados', [$panel, 'crearEmpleado']);
-$router->post('/panel/empleados/{id}/eliminar', [$panel, 'eliminarEmpleado']);
+// Equipo: perfil de cada profesional, sus servicios, horario y trabajos (EquipoController)
+$router->get('/panel/empleados', [$equipo, 'lista']);
+$router->post('/panel/empleados', [$equipo, 'crear']);
+$router->get('/panel/empleados/{id}', [$equipo, 'editar']);
+$router->post('/panel/empleados/{id}/perfil', [$equipo, 'guardarPerfil']);
+$router->post('/panel/empleados/{id}/servicios', [$equipo, 'guardarServicios']);
+$router->post('/panel/empleados/{id}/horario', [$equipo, 'guardarHorario']);
+$router->post('/panel/empleados/{id}/fotos', [$equipo, 'subirFotos']);
+$router->post('/panel/empleados/{id}/fotos/{foto}/eliminar', [$equipo, 'eliminarFoto']);
+$router->post('/panel/empleados/{id}/alternar', [$equipo, 'alternar']);
+$router->post('/panel/empleados/{id}/eliminar', [$equipo, 'eliminar']);
+$router->post('/panel/adicionales', [$equipo, 'crearAdicional']);
+$router->post('/panel/adicionales/{id}/alternar', [$equipo, 'alternarAdicional']);
+$router->post('/panel/adicionales/{id}/eliminar', [$equipo, 'eliminarAdicional']);
+$router->get('/panel/comisiones', [$equipo, 'comisiones']);
+// Fila virtual para clientes sin cita (FilaController)
+$router->get('/panel/fila', [$fila, 'panel']);
+$router->post('/panel/fila/abrir', [$fila, 'abrirCerrar']);
+$router->post('/panel/fila/{id}/llamar', [$fila, 'llamar']);
+$router->post('/panel/fila/{id}/atender', [$fila, 'atender']);
+$router->post('/panel/fila/{id}/se-fue', [$fila, 'seFue']);
 $router->get('/panel/citas', [$panel, 'citas']);
 $router->post('/panel/citas/{id}/estado', [$panel, 'cambiarEstadoCita']);
 $router->post('/panel/lista-espera/{id}/contactado', [$panel, 'marcarContactadoListaEspera']);
@@ -169,6 +191,11 @@ $router->post('/t/{slug}/pedido', [$tienda, 'crearPedido']);
 
 // --- Tienda pública del cliente, negocios de tipo reservas --------------
 $router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
+$router->get('/t/{slug}/equipo/{empleado}', [$tienda, 'profesional']);
+$router->get('/t/{slug}/fila', [$fila, 'formulario']);
+$router->post('/t/{slug}/fila', [$fila, 'anotarse']);
+$router->get('/fila/{token}', [$fila, 'estado']);
+$router->post('/fila/{token}/salir', [$fila, 'salir']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);
 $router->post('/t/{slug}/lista-espera', [$tienda, 'unirseListaEspera']);
 $router->post('/t/{slug}/lista-espera/salir', [$tienda, 'salirListaEspera']);

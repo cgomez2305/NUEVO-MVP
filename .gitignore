@@ -8,6 +8,9 @@
 /public/uploads/productos/*
 !/public/uploads/productos/.gitkeep
 !/public/uploads/productos/.htaccess
+/public/uploads/equipo/*
+!/public/uploads/equipo/.gitkeep
+!/public/uploads/equipo/.htaccess
 .DS_Store
 *.log
 

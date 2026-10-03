@@ -4688,3 +4688,161 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-reglas-agenda-form .pq-btn { justify-self: start; }
 .pq-reglas-opcion { display: flex; align-items: flex-start; gap: var(--esp-2); min-height: 32px; font-size: 14px; line-height: 1.4; }
 .pq-reglas-opcion input { margin-top: 3px; }
+
+/* ---------- Belleza (tienda): equipo, adicionales, fila virtual ---------- */
+/* Con foto o especialidad, la persona deja de ser un chip y pasa a ser una
+   ficha: en un salón se elige a quién, no un nombre suelto. */
+.pq-persona-ficha { border-radius: var(--radio-m); padding: 6px var(--esp-4) 6px 6px; min-height: 56px; }
+.pq-persona-foto { width: 44px; height: 44px; flex: none; border-radius: 50%; object-fit: cover; background: var(--papel-hondo); }
+.pq-persona-ficha .pq-persona-inicial { width: 44px; height: 44px; font-size: 16px; }
+.pq-persona-texto { display: flex; flex-direction: column; gap: 1px; min-width: 0; text-align: left; }
+.pq-persona-nombre { font-weight: 600; line-height: 1.2; }
+.pq-persona-especialidad { font-size: 12.5px; font-weight: 500; line-height: 1.3; color: var(--texto-tenue); }
+.pq-persona-precio { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--marca-texto); }
+.pq-persona-activa .pq-persona-foto { box-shadow: 0 0 0 2px var(--marca-suave), 0 0 0 4px var(--marca); }
+.pq-persona-perfil { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--esp-1); font-size: 14px; font-weight: 600; color: var(--marca-texto); text-decoration: none; }
+.pq-persona-perfil:hover { text-decoration: underline; }
+
+/* Adicionales: etiquetas que se pegan al turno. "+" para sumar, "✓" cuando ya va. */
+.pq-adicionales { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.pq-adicional {
+  display: inline-flex; align-items: center; gap: var(--esp-2);
+  min-height: 44px; padding: 6px var(--esp-4) 6px 6px;
+  border: 1.5px dashed var(--linea-tienda); border-radius: 999px; background: #FFFDF8;
+  color: var(--tinta); text-decoration: none; font-size: 14px;
+  transition: border-color var(--rapido) ease, background var(--rapido) ease;
+}
+.pq-adicional:hover { border-color: var(--marca-texto); }
+.pq-adicional:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-adicional-marca { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--papel-hondo); font-weight: 700; font-size: 15px; }
+.pq-adicional-nombre { font-weight: 600; }
+.pq-adicional-extra { font-size: 13px; color: var(--texto-tenue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-adicional-activo { border-style: solid; border-color: var(--marca-texto); background: var(--marca-suave); }
+.pq-adicional-activo .pq-adicional-marca { background: var(--marca); color: var(--marca-sobre); }
+.pq-adicional-activo .pq-adicional-extra { color: var(--texto-calido); }
+.pq-turno-total { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--tinta); }
+
+/* "Nuestro equipo": retratos en fila, como las fotos enmarcadas junto al espejo. */
+.pq-equipo-tienda-lista { list-style: none; margin: 0; padding: 4px 2px 8px; display: flex; gap: var(--esp-4); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.pq-equipo-tienda-lista::-webkit-scrollbar { display: none; }
+.pq-equipo-tienda-lista li { flex: none; scroll-snap-align: start; }
+.pq-equipo-tienda-ficha { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 96px; padding: var(--esp-2) 0; color: var(--tinta); text-decoration: none; text-align: center; border-radius: var(--radio-m); }
+.pq-equipo-tienda-ficha:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-equipo-tienda-ficha img, .pq-equipo-tienda-inicial { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #FFFDF8, 0 0 0 4px var(--linea-tienda); transition: box-shadow var(--rapido) ease; }
+.pq-equipo-tienda-ficha:hover img, .pq-equipo-tienda-ficha:hover .pq-equipo-tienda-inicial { box-shadow: 0 0 0 3px #FFFDF8, 0 0 0 5px var(--marca); }
+.pq-equipo-tienda-inicial { display: grid; place-items: center; background: var(--marca-suave); color: var(--marca-texto); font: 700 26px/1 var(--fuente-titulo); }
+.pq-equipo-tienda-nombre { margin-top: 4px; font-size: 14px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.pq-equipo-tienda-esp { font-size: 12px; line-height: 1.3; color: var(--texto-tenue); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Página del profesional: un carné del barrio. */
+.pq-profesional-ficha { display: flex; align-items: center; gap: var(--esp-4); margin-bottom: var(--esp-4); }
+.pq-profesional-ficha .pq-pagina-titulo { margin: 0; }
+.pq-profesional-ficha p { margin: 2px 0 0; }
+.pq-profesional-foto, .pq-profesional-inicial { width: 96px; height: 96px; flex: none; border-radius: var(--radio-l); object-fit: cover; transform: rotate(-2deg); box-shadow: 0 0 0 4px #FFFDF8, 0 6px 16px -6px rgba(27, 26, 23, .35); }
+.pq-profesional-inicial { display: grid; place-items: center; background: var(--marca); color: var(--marca-sobre); font: 700 40px/1 var(--fuente-titulo); }
+.pq-profesional-especialidad { font-size: 15px; font-weight: 600; color: var(--marca-texto); }
+.pq-profesional-bio { margin: 0 0 var(--esp-6); font-size: 15.5px; line-height: 1.55; color: var(--texto-calido); }
+.pq-profesional-trabajos { list-style: none; margin: 0 0 var(--esp-8); padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.pq-profesional-trabajos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radio-s); background: var(--papel-hondo); }
+@media (min-width: 640px) { .pq-profesional-foto, .pq-profesional-inicial { width: 120px; height: 120px; } .pq-profesional-trabajos { gap: var(--esp-2); } }
+@media (prefers-reduced-motion: reduce) { .pq-profesional-foto, .pq-profesional-inicial { transform: none; } }
+
+/* Aviso de fila abierta en la tienda: el punto vivo es el único bucle permitido (estado en vivo). */
+.pq-cola-aviso { display: flex; align-items: center; gap: var(--esp-3); min-height: 52px; margin: var(--esp-4) 0; padding: var(--esp-2) var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8; color: var(--tinta); font-size: 14.5px; line-height: 1.4; text-decoration: none; }
+.pq-cola-aviso:hover { border-color: var(--marca-texto); }
+.pq-cola-aviso:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.pq-cola-aviso svg { width: 18px; height: 18px; flex: none; margin-left: auto; color: var(--texto-tenue); }
+.pq-cola-aviso-punto, .pq-cola-estado-luz { position: relative; width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--caja); }
+.pq-cola-aviso-punto::after, .pq-cola-estado-abierta .pq-cola-estado-luz::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit; animation: pq-cola-latido 1.8s ease-out infinite; }
+@keyframes pq-cola-latido { from { transform: scale(1); opacity: .6; } to { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pq-cola-aviso-punto::after, .pq-cola-estado-abierta .pq-cola-estado-luz::after { animation: none; } }
+
+.pq-cola-form { margin-top: var(--esp-4); }
+
+/* La ficha de turno, como la de la panadería: cartón con muescas a los lados y el número enorme. */
+.pq-cola-ficha {
+  position: relative; display: grid; justify-items: center; gap: var(--esp-1);
+  margin: var(--esp-4) 0; padding: var(--esp-6) var(--esp-4) var(--esp-5);
+  border-radius: var(--radio-m); background: #FFFDF8; text-align: center;
+  border: 1px solid var(--linea-tienda);
+  -webkit-mask: radial-gradient(circle 10px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle 10px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+.pq-cola-ficha::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; border-radius: var(--radio-m) var(--radio-m) 0 0; background: var(--marca); }
+.pq-cola-ficha p { margin: 0; font-size: 15px; color: var(--texto-calido); }
+.pq-cola-ficha .pq-ayuda { margin-top: var(--esp-2); }
+.pq-cola-ficha-etiqueta { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--texto-tenue); }
+.pq-cola-ficha-numero { font: 800 clamp(56px, 18vw, 84px)/1 var(--fuente-titulo); font-variant-numeric: tabular-nums; letter-spacing: -.03em; color: var(--tinta); }
+.pq-cola-ficha-llamado { background: var(--marca-suave); border-color: var(--marca-texto); }
+.pq-cola-ficha-llamado .pq-cola-ficha-numero { font-size: clamp(40px, 12vw, 56px); color: var(--marca-texto); }
+.pq-cola-nota { text-align: center; }
+
+/* ---------- Belleza (panel): equipo, fila, adicionales, comisiones ---------- */
+.pq-equipo-fila-enlace { color: var(--carbon); text-decoration: none; transition: border-color var(--rapido) ease; }
+.pq-equipo-fila-enlace:hover { border-color: var(--borde); }
+.pq-equipo-fila-enlace:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-equipo-fila-enlace { padding-top: var(--esp-2); padding-bottom: var(--esp-2); }
+.pq-equipo-fila-pausa { opacity: .62; }
+.pq-equipo-foto { width: 40px; height: 40px; flex: none; border-radius: 50%; object-fit: cover; }
+.pq-equipo-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pq-equipo-texto .pq-ayuda { margin: 0; }
+/* Lo que le falta a la ficha, dicho bajito pero visible: así el dueño la completa. */
+.pq-equipo-falta { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #FDF1DA; color: #8a5a00; font-size: 12px; font-weight: 600; }
+
+.pq-ficha-panel { display: grid; gap: var(--esp-5); max-width: 720px; margin-top: var(--esp-4); }
+.pq-ficha-bloque { padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; }
+.pq-ficha-bloque > .pq-seccion-titulo { margin-top: 0; }
+.pq-ficha-bloque > .pq-ayuda { margin-top: 0; }
+.pq-ficha-foto { display: flex; align-items: flex-start; gap: var(--esp-4); }
+.pq-ficha-foto img, .pq-ficha-foto-vacia { width: 88px; height: 88px; flex: none; border-radius: var(--radio-m); object-fit: cover; }
+.pq-ficha-foto-vacia { display: grid; place-items: center; background: var(--marca); color: var(--marca-sobre); font: 400 40px/1 var(--fuente-titulo); }
+.pq-ficha-foto .pq-campo { flex: 1; min-width: 0; }
+.pq-ficha-enlace { margin: var(--esp-3) 0 0; overflow-wrap: anywhere; }
+.pq-ficha-trabajos { list-style: none; margin: var(--esp-3) 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--esp-2); }
+.pq-ficha-trabajos li { position: relative; }
+.pq-ficha-trabajos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radio-s); background: var(--recibo); }
+.pq-ficha-trabajos form { position: absolute; top: 4px; right: 4px; }
+.pq-ficha-trabajo-quitar { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(32, 33, 36, .72); color: #FFFFFF; font-size: 18px; line-height: 1; cursor: pointer; }
+.pq-ficha-trabajo-quitar:hover { background: #a3361f; }
+.pq-ficha-trabajo-quitar:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-ficha-subir { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); }
+.pq-ficha-subir .pq-input { flex: 1 1 220px; }
+.pq-ficha-servicios { display: grid; gap: 0; }
+.pq-ficha-servicio { display: grid; gap: var(--esp-2); padding: var(--esp-3) 0; border-bottom: 1px dashed var(--recibo); }
+.pq-ficha-servicio-propio { display: grid; grid-template-columns: 1fr 110px; gap: var(--esp-2); padding-left: 24px; }
+.pq-ficha-servicios > .pq-btn { justify-self: start; margin-top: var(--esp-3); }
+.pq-ficha-acciones { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--esp-3); background: transparent; border-style: dashed; }
+@media (min-width: 720px) {
+  .pq-ficha-servicio { grid-template-columns: 1fr 260px; align-items: center; }
+  .pq-ficha-servicio-propio { padding-left: 0; }
+}
+
+/* Fila en el panel: un rollo de fichas numeradas, la llamada se marca con el azul del sello. */
+.pq-cola-estado { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3); max-width: 720px; margin-top: var(--esp-4); padding: var(--esp-3) var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; }
+.pq-cola-estado > span:nth-child(2) { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; }
+.pq-cola-estado .pq-ayuda { margin: 0; }
+.pq-cola-estado .pq-cola-estado-luz { background: var(--gris-suave); }
+.pq-cola-estado-abierta .pq-cola-estado-luz { background: var(--caja); }
+.pq-cola-enlace { max-width: 720px; overflow-wrap: anywhere; }
+.pq-cola-lista { list-style: none; margin: var(--esp-4) 0 0; padding: 0; display: grid; gap: var(--esp-2); max-width: 720px; }
+.pq-cola-turno { display: flex; align-items: stretch; border: 1px solid var(--recibo); border-radius: var(--radio-m); background: #FFFFFF; overflow: hidden; }
+.pq-cola-numero { flex: none; width: 52px; display: grid; place-items: center; border-right: 1.5px dashed var(--recibo); background: var(--tiquete); font: 400 30px/1 var(--fuente-titulo); font-variant-numeric: tabular-nums; color: var(--carbon); }
+.pq-cola-turno-llamado { border-color: var(--sello); }
+.pq-cola-turno-llamado .pq-cola-numero { background: var(--tinte-sello); color: var(--sello); }
+.pq-cola-cuerpo { flex: 1; min-width: 0; display: grid; gap: 4px; padding: var(--esp-3); }
+.pq-cola-cuerpo .pq-ayuda { margin: 0; }
+.pq-cola-cuerpo .pq-agenda-acciones { margin-top: var(--esp-2); }
+
+.pq-adicionales-panel { margin-top: var(--esp-6); max-width: 720px; scroll-margin-top: var(--esp-6); }
+.pq-adicionales-panel .pq-admin-filas { margin-top: var(--esp-3); }
+.pq-adicional-pausado .pq-admin-fila-texto { opacity: .6; }
+.pq-adicional-acciones { display: flex; align-items: center; gap: var(--esp-3); flex: none; }
+.pq-adicional-nuevo { margin-top: var(--esp-3); }
+
+.pq-comision-lista { max-width: 720px; margin-top: var(--esp-4); }
+.pq-comision-monto { flex: none; font: 600 16px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--sello); text-decoration: none; padding: var(--esp-2); border-radius: var(--radio-s); }
+.pq-comision-monto:hover { background: var(--tinte-sello); }
+.pq-comision-monto:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-comision-total { max-width: 720px; margin: var(--esp-3) 0 0; text-align: right; font-size: 15px; }
+.pq-comision-tiquete { max-width: 520px; margin-top: var(--esp-6); scroll-margin-top: var(--esp-6); }
+.pq-comision-tiquete + .pq-btn { margin-top: var(--esp-3); }

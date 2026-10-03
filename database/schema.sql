@@ -130,6 +130,8 @@ CREATE TABLE IF NOT EXISTS sedes (
   colchon_min         TINYINT UNSIGNED NOT NULL DEFAULT 0,
   tolerancia_min      TINYINT UNSIGNED NOT NULL DEFAULT 15,
   anticipo_no_asiste  ENUM('se_pierde','se_abona') NOT NULL DEFAULT 'se_pierde',
+  -- Fila virtual para clientes sin cita: el dueño la abre y la cierra.
+  fila_abierta        TINYINT(1)   NOT NULL DEFAULT 0,
   -- Si el checkout público ofrece "Comer aquí" como forma de entrega. Por
   -- defecto activo (no cambia el comportamiento de sedes ya creadas); un
   -- negocio sin consumo en el local (tienda, panadería solo para llevar...)
@@ -281,6 +283,14 @@ CREATE TABLE IF NOT EXISTS empleados (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   sede_id     INT UNSIGNED NOT NULL,
   nombre      VARCHAR(120) NOT NULL,
+  -- Lo que el cliente ve para elegir a "su" profesional.
+  foto        VARCHAR(255) DEFAULT NULL,
+  especialidad VARCHAR(80) DEFAULT NULL,
+  bio         VARCHAR(240) DEFAULT NULL,
+  -- % de comisión (NULL = no trabaja por comisión) y horario propio (mismo
+  -- JSON que sedes.horario_atencion; NULL = el de la sede).
+  comision_pct TINYINT UNSIGNED DEFAULT NULL,
+  horario_atencion TEXT DEFAULT NULL,
   activo      TINYINT(1)   NOT NULL DEFAULT 1,
   orden       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -345,6 +355,10 @@ CREATE TABLE IF NOT EXISTS citas (
   ajuste_precio       INT UNSIGNED DEFAULT NULL,
   ajuste_motivo       VARCHAR(200) DEFAULT NULL,
   ajuste_estado       ENUM('pendiente','aprobado','rechazado') DEFAULT NULL,
+  -- "No vino" con regla "se abona": el cupón que recibió el cliente y el
+  -- bono al que volvió la sesión (para mostrarlo y para poder deshacerlo).
+  cupon_abono_id      INT UNSIGNED DEFAULT NULL,
+  bono_devuelto_id    INT UNSIGNED DEFAULT NULL,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
@@ -665,6 +679,83 @@ CREATE TABLE IF NOT EXISTS referidos (
   FOREIGN KEY (referido_id) REFERENCES negocios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Profesionales, adicionales y fila virtual (ver migrations/2026-10-03_14_profesionales.sql).
+CREATE TABLE IF NOT EXISTS empleado_fotos (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  empleado_id INT UNSIGNED NOT NULL,
+  ruta        VARCHAR(255) NOT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE,
+  INDEX idx_empleado_fotos (empleado_id)
+) ENGINE=InnoDB;
+
+-- Qué servicios hace cada profesional, con precio y duración propios si
+-- difieren (NULL = los del servicio). Un profesional SIN filas aquí hace
+-- todos los servicios al precio normal.
+CREATE TABLE IF NOT EXISTS empleado_servicios (
+  empleado_id  INT UNSIGNED NOT NULL,
+  servicio_id  INT UNSIGNED NOT NULL,
+  precio       INT UNSIGNED DEFAULT NULL,
+  duracion_min SMALLINT UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (empleado_id, servicio_id),
+  FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Adicionales que se suman al reservar (barba, cejas, mascarilla): precio y
+-- minutos extra. servicio_id NULL = se ofrece con todos los servicios.
+CREATE TABLE IF NOT EXISTS adicionales (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id      INT UNSIGNED NOT NULL,
+  servicio_id  INT UNSIGNED DEFAULT NULL,
+  nombre       VARCHAR(80)  NOT NULL,
+  precio       INT UNSIGNED NOT NULL,
+  duracion_min SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  activo       TINYINT(1)   NOT NULL DEFAULT 1,
+  creado_en    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE CASCADE,
+  INDEX idx_adicionales_sede (sede_id)
+) ENGINE=InnoDB;
+
+-- Lo que se sumó a cada cita (copiado: si el adicional cambia o se borra, la
+-- cita guarda lo que se reservó). citas.precio y duracion_min ya los incluyen.
+CREATE TABLE IF NOT EXISTS cita_adicionales (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  cita_id      INT UNSIGNED NOT NULL,
+  adicional_id INT UNSIGNED DEFAULT NULL,
+  nombre       VARCHAR(80)  NOT NULL,
+  precio       INT UNSIGNED NOT NULL,
+  duracion_min SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE CASCADE,
+  FOREIGN KEY (adicional_id) REFERENCES adicionales(id) ON DELETE SET NULL,
+  INDEX idx_cita_adicionales (cita_id)
+) ENGINE=InnoDB;
+
+-- Fila virtual para clientes sin cita (la barbería del barrio vive de quien
+-- llega sin avisar). sedes.fila_abierta: el dueño la abre y la cierra.
+
+CREATE TABLE IF NOT EXISTS turnos_fila (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id      INT UNSIGNED NOT NULL,
+  cliente_id   INT UNSIGNED NOT NULL,
+  servicio_id  INT UNSIGNED DEFAULT NULL,
+  empleado_id  INT UNSIGNED DEFAULT NULL,
+  estado       ENUM('esperando','llamado','atendido','se_fue') NOT NULL DEFAULT 'esperando',
+  token        CHAR(32)     NOT NULL,
+  cita_id      INT UNSIGNED DEFAULT NULL,
+  creado_en    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  llamado_en   DATETIME     DEFAULT NULL,
+  cerrado_en   DATETIME     DEFAULT NULL,
+  UNIQUE KEY uniq_turno_token (token),
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
+  FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE SET NULL,
+  FOREIGN KEY (cita_id) REFERENCES citas(id) ON DELETE SET NULL,
+  INDEX idx_turnos_sede (sede_id, estado, creado_en)
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -688,4 +779,6 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_10_pasarela_wompi.sql'),
   ('2026-10-03_11_referidos.sql'),
   ('2026-10-03_12_sedes_extra.sql'),
-  ('2026-10-03_13_imprevistos.sql');
+  ('2026-10-03_13_imprevistos.sql'),
+  ('2026-10-03_14_profesionales.sql'),
+  ('2026-10-03_15_no_asistio_abono.sql');

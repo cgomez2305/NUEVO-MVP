@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\Adicional;
 use App\Models\Bono;
 use App\Models\Cita;
 use App\Models\Cliente;
@@ -75,6 +76,8 @@ class TiendaController
                 'abiertoAhora'     => $abiertoAhora,
                 'proximaApertura'  => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
                 'disponibilidadHoy' => $disponibilidadHoy,
+                'equipo'           => Empleado::listarPorSede((int) $negocio['id'], true),
+                'filaAbierta'      => (int) $negocio['fila_abierta'] === 1 && ($abiertoAhora === null || $abiertoAhora['abierto']),
                 'metaDescripcion'  => $metaDescripcion,
                 'canonicalUrl'     => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
@@ -123,17 +126,28 @@ class TiendaController
             $fecha = date('Y-m-d');
         }
 
-        $empleados = Empleado::listarPorSede((int) $negocio['id'], true);
+        // Con equipo, solo aparecen quienes hacen este servicio. Si hay
+        // equipo pero nadie lo hace, el servicio no se puede reservar (antes
+        // caía en "sin equipo" y se agendaba contra el negocio entero).
+        $hayEquipo = Empleado::listarPorSede((int) $negocio['id'], true) !== [];
+        $empleados = $hayEquipo ? Empleado::paraServicio((int) $negocio['id'], (int) $servicio['id']) : [];
+        $sinProfesional = $hayEquipo && $empleados === [];
         $empleadoId = (int) ($_GET['empleado'] ?? 0);
         $empleadoElegido = null;
-        if ($empleados !== []) {
-            foreach ($empleados as $emp) {
-                if ((int) $emp['id'] === $empleadoId) {
-                    $empleadoElegido = $emp;
-                    break;
-                }
+        foreach ($empleados as $emp) {
+            if ((int) $emp['id'] === $empleadoId) {
+                $empleadoElegido = $emp;
+                break;
             }
         }
+
+        // Precio y duración con ese profesional, más los adicionales elegidos:
+        // los cupos se calculan con el tiempo total.
+        $condiciones = Empleado::condiciones($empleadoElegido, $servicio);
+        $adicionalesDisponibles = Adicional::paraServicio((int) $negocio['id'], (int) $servicio['id']);
+        $adicionalesElegidos = Adicional::elegidos((int) $negocio['id'], (int) $servicio['id'], Adicional::idsDesdeTexto((string) ($_GET['ad'] ?? '')));
+        $duracionTotal = $condiciones['duracion_min'] + array_sum(array_map(fn ($a) => (int) $a['duracion_min'], $adicionalesElegidos));
+        $precioAdicionales = array_sum(array_map(fn ($a) => (int) $a['precio'], $adicionalesElegidos));
 
         // Los próximos 14 días, para que el cliente pueda cambiar de fecha sin escribirla a mano.
         $fechasDisponibles = [];
@@ -143,6 +157,9 @@ class TiendaController
 
         $bloqueada = false;
         $faltaElegirEmpleado = $empleados !== [] && $empleadoElegido === null;
+        if ($sinProfesional) {
+            $faltaElegirEmpleado = true;
+        }
         $slots = [];
         $cerradoEseDia = false;
         $proximoDisponible = null;
@@ -156,13 +173,13 @@ class TiendaController
         // honesto con un botón de reintentar en vez de una pantalla en
         // blanco o un error de PHP crudo.
         try {
-            $horario = Sede::horario($negocio);
+            $horario = Empleado::horario($empleadoElegido, $negocio);
             $intervalo = (int) $negocio['intervalo_citas_min'];
             $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
 
             if (!$bloqueada && !$faltaElegirEmpleado) {
                 $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoElegido['id'] ?? null);
-                $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
+                $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, $duracionTotal, $ocupados, (int) $negocio['colchon_min']);
             }
 
             $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
@@ -186,7 +203,7 @@ class TiendaController
                         continue;
                     }
                     $ocupadosOpcion = Cita::ocupadosEnFecha((int) $negocio['id'], $opcion, null, $empleadoElegido['id'] ?? null);
-                    $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion, (int) $negocio['colchon_min']);
+                    $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, $duracionTotal, $ocupadosOpcion, (int) $negocio['colchon_min']);
                     if ($slotsOpcion !== []) {
                         $proximoDisponible = ['fecha' => $opcion, 'hora' => $slotsOpcion[0]];
                         break;
@@ -204,7 +221,13 @@ class TiendaController
             'titulo'            => 'Reservar ' . $servicio['nombre'] . ' · ' . $negocio['nombre'],
             'negocio'           => $negocio,
             'servicio'          => $servicio,
-            'anticipo'          => Servicio::calcularAnticipo($servicio),
+            'anticipo'          => Servicio::calcularAnticipo(['precio' => $condiciones['precio'] + $precioAdicionales] + $servicio),
+            'condiciones'       => $condiciones,
+            'duracionTotal'     => $duracionTotal,
+            'precioAdicionales' => $precioAdicionales,
+            'adicionalesDisponibles' => $adicionalesDisponibles,
+            'adicionalesElegidos'    => $adicionalesElegidos,
+            'sinProfesional'    => $sinProfesional,
             'fecha'             => $fecha,
             'fechasDisponibles' => $fechasDisponibles,
             'proximoDisponible' => $proximoDisponible,
@@ -224,6 +247,33 @@ class TiendaController
             // sesión — así que ese botón no queda como una gestión
             // permanente del cupo sin login.
             'listaEsperaId'     => ($idFlash = flash_obtener('lista_espera_id')) !== null ? (int) $idFlash : null,
+        ], 'tienda');
+    }
+
+    /** Perfil público de un profesional: foto, especialidad, sus trabajos y lo que hace (con sus precios). */
+    public function profesional(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+        $empleado = Empleado::buscar((int) $parametros['empleado'], (int) $negocio['id']);
+        if ($negocio['tipo_negocio'] !== 'reservas' || $empleado === null || (int) $empleado['activo'] !== 1) {
+            abortar404();
+        }
+        $servicios = [];
+        foreach (Servicio::listarPorSede((int) $negocio['id'], true) as $servicio) {
+            $hace = array_filter(Empleado::paraServicio((int) $negocio['id'], (int) $servicio['id']), fn ($e) => (int) $e['id'] === (int) $empleado['id']);
+            if ($hace !== []) {
+                $servicios[] = ['servicio' => $servicio, 'condiciones' => Empleado::condiciones($empleado, $servicio)];
+            }
+        }
+
+        ver('tienda/profesional', [
+            'titulo'          => $empleado['nombre'] . ' · ' . nombre_publico_sede($negocio),
+            'negocio'         => $negocio,
+            'empleado'        => $empleado,
+            'fotos'           => Empleado::fotos((int) $empleado['id']),
+            'servicios'       => $servicios,
+            'metaDescripcion' => $empleado['nombre'] . (!empty($empleado['especialidad']) ? ', ' . $empleado['especialidad'] : '') . ' en ' . nombre_publico_sede($negocio) . '. Mira sus trabajos y reserva con su agenda.',
+            'canonicalUrl'    => url_publica('/t/' . $negocio['slug'] . '/equipo/' . $empleado['id']),
         ], 'tienda');
     }
 
@@ -262,27 +312,43 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
-        $empleados = Empleado::listarPorSede((int) $negocio['id'], true);
         $empleadoId = null;
-        if ($empleados !== []) {
+        $empleado = null;
+        if (Empleado::listarPorSede((int) $negocio['id'], true) !== []) {
+            // Solo vale alguien activo que haga este servicio.
             $empleadoPost = (int) ($_POST['empleado_id'] ?? 0);
-            $empleado = Empleado::buscar($empleadoPost, (int) $negocio['id']);
-            if ($empleado === null || (int) $empleado['activo'] !== 1) {
+            foreach (Empleado::paraServicio((int) $negocio['id'], (int) $servicio['id']) as $candidato) {
+                if ((int) $candidato['id'] === $empleadoPost) {
+                    $empleado = $candidato;
+                }
+            }
+            if ($empleado === null) {
                 flash_set('error', 'Elige con quién quieres agendar.');
                 redirigir($volverAReservar);
             }
             $empleadoId = (int) $empleado['id'];
         }
+        $condiciones = Empleado::condiciones($empleado, $servicio);
+        $adicionales = Adicional::elegidos((int) $negocio['id'], (int) $servicio['id'], Adicional::idsDesdeTexto((string) ($_POST['adicionales'] ?? '')));
+        $precioAdicionales = array_sum(array_map(fn ($a) => (int) $a['precio'], $adicionales));
+        $duracionTotal = $condiciones['duracion_min'] + array_sum(array_map(fn ($a) => (int) $a['duracion_min'], $adicionales));
+        $precioTotal = $condiciones['precio'] + $precioAdicionales;
+        if ($adicionales !== []) {
+            $volverAReservar .= '&ad=' . implode(',', array_column($adicionales, 'id'));
+        }
+        if ($empleadoId !== null) {
+            $volverAReservar .= '&empleado=' . $empleadoId;
+        }
 
         // Vuelve a calcular disponibilidad justo antes de guardar, por si alguien más
         // tomó ese horario mientras el cliente llenaba el formulario.
-        $horario = Sede::horario($negocio);
+        $horario = Empleado::horario($empleado, $negocio);
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoId);
         $slots = Cita::calcularDisponibilidad(
             $horario,
             (int) $negocio['intervalo_citas_min'],
             $fecha,
-            (int) $servicio['duracion_min'],
+            $duracionTotal,
             $ocupados,
             (int) $negocio['colchon_min']
         );
@@ -302,21 +368,22 @@ class TiendaController
         }
 
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
-        $anticipo = Servicio::calcularAnticipo($servicio);
+        $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal] + $servicio);
 
         // Bono de sesiones: si el cliente tiene uno vigente de este servicio,
-        // la cita va por cuenta del bono (sin anticipo ni cupón).
+        // la cita va por cuenta del bono (sin anticipo ni cupón). El bono
+        // cubre el servicio; los adicionales se pagan aparte.
         $bono = Bono::paraCita((int) $negocio['id'], $clienteId, (int) $servicio['id'], $fecha);
         $codigoCupon = $bono === null ? Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? '')) : '';
         $cuponUsado = null;
         $descuentoCita = 0;
         if ($bono !== null) {
-            $descuentoCita = (int) $servicio['precio'];
+            $descuentoCita = $condiciones['precio'];
             $anticipo = 0;
         }
         if ($codigoCupon !== '') {
             $cuponUsado = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigoCupon);
-            $evaluacion = Cupon::evaluar($cuponUsado, (int) $servicio['precio'], $clienteId);
+            $evaluacion = Cupon::evaluar($cuponUsado, $precioTotal, $clienteId);
             if (!$evaluacion['ok']) {
                 flash_set('error', 'Cupón ' . $codigoCupon . ': ' . $evaluacion['mensaje']);
                 redirigir($volverAReservar . '&hora=' . rawurlencode($hora));
@@ -330,17 +397,20 @@ class TiendaController
             $clienteId,
             (int) $servicio['id'],
             $servicio['nombre'],
-            (int) $servicio['precio'],
+            $precioTotal,
             "{$fecha} {$hora}:00",
-            (int) $servicio['duracion_min'],
+            $duracionTotal,
             null,
             $empleadoId,
             $anticipo,
             $descuentoCita,
             $cuponUsado['codigo'] ?? null,
-            (string) $servicio['precio_tipo'],
-            $servicio['precio_max'] !== null ? (int) $servicio['precio_max'] : null,
+            $condiciones['precio_tipo'],
+            $condiciones['precio_max'] !== null ? $condiciones['precio_max'] + $precioAdicionales : null,
         );
+        if ($adicionales !== []) {
+            Adicional::guardarEnCita($citaId, $adicionales);
+        }
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
         if ($cuponUsado !== null && $descuentoCita > 0) {
             Cupon::registrarUso((int) $cuponUsado['id'], $clienteId, $descuentoCita, null, $citaId);
@@ -360,11 +430,13 @@ class TiendaController
 
         $resumenTexto = "Reserva nueva de {$nombre}:\n"
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
-            . (precio_es_estimado($servicio) ? 'Valor estimado: ' . precio_texto($servicio) . ' (se confirma al ver el trabajo)' : 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita))
-            . ($descuentoCita > 0 ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
+            . ($empleado !== null ? "- Con {$empleado['nombre']}\n" : '')
+            . ($adicionales !== [] ? '- Adicionales: ' . implode(', ', array_column($adicionales, 'nombre')) . "\n" : '')
+            . (precio_es_estimado($cita) ? 'Valor estimado: ' . precio_texto($cita) . ' (se confirma al ver el trabajo)' : 'Valor: ' . pesos($precioTotal - $descuentoCita))
+            . ($descuentoCita > 0 && $cuponUsado !== null ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
             . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '')
             . ($usoBono !== null ? "\nCon bono: sesión {$usoBono['usadas']} de {$usoBono['sesiones_total']}" : '');
-        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, (int) $servicio['precio'] - $descuentoCita);
+        $tarjeta = $this->tarjetaDeSellos($negocio, $clienteId, $precioTotal - $descuentoCita);
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
         }
@@ -845,10 +917,13 @@ class TiendaController
             abortar404();
         }
 
+        $sede = Sede::buscarPorId((int) $cita['sede_id']);
         ver('tienda/cita_gestionar', [
             'titulo'  => 'Tu cita · ' . $cita['negocio_nombre'],
-            'negocio' => Sede::buscarPorId((int) $cita['sede_id']),
+            'negocio' => $sede,
             'cita'    => $cita,
+            'puedeGestionar' => Imprevisto::clientePuedeGestionar($cita, $sede),
+            'cuponAbono' => !empty($cita['cupon_abono_id']) ? Cupon::buscar((int) $cita['cupon_abono_id'], (int) $sede['negocio_id']) : null,
             'error'   => flash_obtener('error'),
             'ok'      => flash_obtener('ok'),
         ], 'tienda');
@@ -861,7 +936,7 @@ class TiendaController
             abortar404();
         }
 
-        if (csrf_verificar() && in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+        if (csrf_verificar() && Imprevisto::clientePuedeGestionar($cita, Sede::buscarPorId((int) $cita['sede_id']))) {
             Cita::actualizarEstado((int) $cita['id'], (int) $cita['sede_id'], 'cancelada');
             flash_set('ok', 'Tu cita quedó cancelada.');
         }
@@ -876,7 +951,7 @@ class TiendaController
         if ($cita === null) {
             abortar404();
         }
-        if (csrf_verificar()) {
+        if (csrf_verificar() && $this->tasaDeLaCita($cita)) {
             $aprueba = ($_POST['respuesta'] ?? '') === 'aprobar';
             if (Imprevisto::responderAjuste((int) $cita['id'], $aprueba)) {
                 WebPush::notificarSede(
@@ -899,7 +974,7 @@ class TiendaController
             abortar404();
         }
         $minutos = (int) ($_POST['minutos'] ?? 0);
-        if (csrf_verificar() && Imprevisto::clienteLlegaTarde((int) $cita['id'], $minutos)) {
+        if (csrf_verificar() && $this->tasaDeLaCita($cita) && Imprevisto::clienteLlegaTarde((int) $cita['id'], $minutos)) {
             WebPush::notificarSede(
                 (int) $cita['sede_id'],
                 $cita['cliente_nombre'] . " llega {$minutos} min tarde",
@@ -909,6 +984,22 @@ class TiendaController
             flash_set('ok', 'Le avisamos al negocio que llegas unos ' . $minutos . ' minutos tarde.');
         }
         redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /**
+     * Quien tenga el enlace de una cita no puede mandarle notificaciones sin
+     * parar al negocio: 6 acciones por hora por cita.
+     */
+    private function tasaDeLaCita(array $cita): bool
+    {
+        $clave = 'cita_accion|' . (int) $cita['id'];
+        if (LimiteTasa::excedido('cita_accion', $clave, 6, 3600)) {
+            flash_set('error', 'Ya le avisaste varias veces al negocio. Si necesitas algo más, escríbele por WhatsApp.');
+            return false;
+        }
+        LimiteTasa::registrar('cita_accion', $clave);
+
+        return true;
     }
 
     /** El cliente vio el retraso del negocio y dice que espera. */
@@ -932,10 +1023,10 @@ class TiendaController
             abortar404();
         }
 
-        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+        $negocio = Sede::buscarPorId((int) $cita['sede_id']);
+        if (!Imprevisto::clientePuedeGestionar($cita, $negocio)) {
             redirigir('/cita/' . $cita['token_gestion']);
         }
-        $negocio = Sede::buscarPorId((int) $cita['sede_id']);
 
         // Sin ?fecha, se abre en el día que ya tiene la cita (si no pasó):
         // casi siempre se cambia la hora dentro del mismo día o uno cercano,
@@ -946,9 +1037,9 @@ class TiendaController
             $fecha = date('Y-m-d');
         }
 
-        $horario = Sede::horario($negocio);
-        $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
+        $horario = Empleado::horario($empleadoId !== null ? Empleado::buscar($empleadoId, (int) $negocio['id']) : null, $negocio);
+        $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         $ocupados = $bloqueada ? [] : Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
         $slots = $bloqueada ? [] : Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
 
@@ -981,7 +1072,7 @@ class TiendaController
         $hora = (string) ($_POST['hora'] ?? '');
         $volver = '/cita/' . $cita['token_gestion'] . '/reprogramar?fecha=' . rawurlencode($fecha);
 
-        if (!csrf_verificar() || !in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+        if (!csrf_verificar() || !Imprevisto::clientePuedeGestionar($cita, $negocio)) {
             redirigir('/cita/' . $cita['token_gestion']);
         }
 
@@ -995,8 +1086,8 @@ class TiendaController
             redirigir($volver);
         }
 
-        $horario = Sede::horario($negocio);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
+        $horario = Empleado::horario($empleadoId !== null ? Empleado::buscar($empleadoId, (int) $negocio['id']) : null, $negocio);
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
         $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
 

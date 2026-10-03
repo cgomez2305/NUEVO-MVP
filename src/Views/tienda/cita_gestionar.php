@@ -12,7 +12,9 @@ $sellos = [
     'cancelada'  => ['Cancelada', 'no'],
 ];
 [$selloTexto, $selloTono] = $sellos[$cita['estado']] ?? [ucfirst((string) $cita['estado']), ''];
-$activa = in_array($cita['estado'], ['pendiente', 'confirmada'], true);
+// Solo mientras no haya pasado la hora (+ tolerancia y retrasos avisados):
+// ver Imprevisto::clientePuedeGestionar.
+$activa = !empty($puedeGestionar);
 $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
 $esHoy = date('Y-m-d', $tsCita) === date('Y-m-d');
 $motivosDia = \App\Models\Imprevisto::MOTIVOS_DIA;
@@ -27,6 +29,8 @@ $ajustePendiente = $cita['ajuste_estado'] === 'pendiente' && in_array($cita['est
       Esta cita ya fue atendida. ¡Gracias por venir!
     <?php elseif ($cita['estado'] === 'no_asistio'): ?>
       El negocio marcó que no pudiste llegar a esta cita. Si fue un error, escríbele por WhatsApp.
+    <?php elseif (in_array($cita['estado'], ['pendiente', 'confirmada'], true) && !$activa): ?>
+      Ya pasó la hora de tu cita. Si necesitas cambiarla, escríbele al negocio por WhatsApp.
     <?php elseif ($cita['estado'] === 'en_curso'): ?>
       Tu cita está en curso.
     <?php else: ?>
@@ -39,6 +43,15 @@ $ajustePendiente = $cita['ajuste_estado'] === 'pendiente' && in_array($cita['est
   <?php endif; ?>
   <?php if (!empty($error)): ?>
     <div class="pq-alerta pq-confirmacion-aviso"><?= e($error) ?></div>
+  <?php endif; ?>
+
+  <?php if ($cita['estado'] === 'no_asistio' && !empty($cuponAbono)): ?>
+    <section class="pq-imprevisto-aviso" aria-labelledby="pq-abono-titulo">
+      <h2 id="pq-abono-titulo">Tu anticipo quedó abonado</h2>
+      <p>Usa este código en tu próxima reserva y se descuentan <?= pesos((int) $cuponAbono['valor']) ?><?= !empty($cuponAbono['vence_en']) ? ' (vale hasta el ' . e(fecha_larga((string) $cuponAbono['vence_en'])) . ')' : '' ?>.</p>
+      <p class="pq-imprevisto-precios"><strong><?= e($cuponAbono['codigo']) ?></strong></p>
+      <a href="<?= e(base_url('/t/' . $negocio['slug'])) ?>" class="pq-btn pq-btn-oscuro">Reservar otra cita</a>
+    </section>
   <?php endif; ?>
 
   <?php // Lo que cambió va antes del tiquete: es lo que el cliente vino a ver. ?>

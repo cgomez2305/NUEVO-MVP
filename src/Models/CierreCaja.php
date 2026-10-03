@@ -64,6 +64,15 @@ class CierreCaja
         );
         $stmt->execute($rango);
         $citas = $stmt->fetch() ?: ['citas' => 0, 'total' => 0, 'anticipos' => 0];
+        // El anticipo que se quedó el negocio porque el cliente no llegó
+        // (regla "se pierde": sin cupón de abono) es plata que sí entró.
+        $stmt = $pdo->prepare(
+            "SELECT COALESCE(SUM(anticipo_monto), 0) FROM citas
+             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta
+               AND estado = 'no_asistio' AND anticipo_estado = 'pagado' AND cupon_abono_id IS NULL"
+        );
+        $stmt->execute($rango);
+        $citas['total'] = (int) $citas['total'] + (int) $stmt->fetchColumn();
 
         return [
             'fecha'         => $fecha,

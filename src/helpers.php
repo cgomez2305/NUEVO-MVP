@@ -242,7 +242,11 @@ function etiqueta_estado_pedido(string $estado): string
  */
 function dinero_desde_texto(string $texto): int
 {
-    return (int) preg_replace('/\D+/', '', $texto);
+    // Tope de $99.999.999: un número más largo (un dedazo, un pegado raro)
+    // desbordaba la columna INT y tumbaba la página a mitad de una acción.
+    $digitos = (string) preg_replace('/\D+/', '', $texto);
+
+    return strlen($digitos) > 8 ? 99_999_999 : (int) $digitos;
 }
 
 /** Minutos transcurridos desde una fecha DATETIME hasta ahora. */
@@ -254,6 +258,9 @@ function minutos_desde(string $fechaHora): int
 /** "5 min esperando" / "2 horas esperando": para pedidos y citas sin resolver. */
 function texto_espera(int $minutos): string
 {
+    if ($minutos < 1) {
+        return 'recién llegó';
+    }
     if ($minutos < 60) {
         return $minutos . ' min esperando';
     }

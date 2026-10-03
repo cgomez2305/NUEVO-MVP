@@ -181,6 +181,69 @@ $resumenAnticipo = static function (array $servicio): string {
 </details>
 
 <?php if ($esDueno): ?>
+  <?php // Lo que se suma al servicio al reservar (cejas, hidratación…): suma precio y tiempo al turno. ?>
+  <section class="pq-adicionales-panel" id="adicionales" aria-labelledby="pq-titulo-adicionales">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-adicionales">Adicionales</h2>
+    <p class="pq-ayuda">Lo que el cliente le puede sumar a su servicio al reservar. Suma al precio y, si pones minutos, al tiempo del turno.</p>
+    <?php if (!empty($adicionales)): ?>
+      <ul class="pq-admin-tarjeta pq-admin-filas">
+        <?php foreach ($adicionales as $adicional): ?>
+          <?php $activo = (int) $adicional['activo'] === 1; ?>
+          <li class="pq-admin-fila<?= $activo ? '' : ' pq-adicional-pausado' ?>">
+            <span class="pq-admin-fila-texto">
+              <strong><?= e($adicional['nombre']) ?></strong>
+              <span class="pq-ayuda">
+                <span class="pq-mono">+<?= pesos((int) $adicional['precio']) ?></span><?= (int) $adicional['duracion_min'] > 0 ? ' · +' . (int) $adicional['duracion_min'] . ' min' : '' ?>
+                · <?= !empty($adicional['servicio_nombre']) ? 'con ' . e($adicional['servicio_nombre']) : 'con cualquier servicio' ?>
+                <?= $activo ? '' : ' · en pausa' ?>
+              </span>
+            </span>
+            <span class="pq-adicional-acciones">
+              <form method="post" action="<?= e(base_url('/panel/adicionales/' . $adicional['id'] . '/alternar')) ?>">
+                <?= csrf_campo() ?>
+                <button type="submit" class="pq-enlace-boton"><?= $activo ? 'Pausar' : 'Ofrecer' ?></button>
+              </form>
+              <form method="post" action="<?= e(base_url('/panel/adicionales/' . $adicional['id'] . '/eliminar')) ?>" data-confirmar="¿Quitar «<?= e($adicional['nombre']) ?>»? Las citas que ya lo tienen lo conservan.">
+                <?= csrf_campo() ?>
+                <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Quitar</button>
+              </form>
+            </span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+    <details class="pq-agregar-panel pq-adicional-nuevo"<?= empty($adicionales) ? ' open' : '' ?>>
+      <summary>Agregar adicional</summary>
+      <form method="post" action="<?= e(base_url('/panel/adicionales')) ?>" class="pq-servicio-panel-form">
+        <?= csrf_campo() ?>
+        <div class="pq-campo">
+          <label class="pq-label" for="ad-nombre">Nombre</label>
+          <input class="pq-input" id="ad-nombre" type="text" name="nombre" maxlength="80" placeholder="Ej: Diseño de cejas" required>
+        </div>
+        <div class="pq-servicio-panel-par">
+          <div class="pq-campo">
+            <label class="pq-label" for="ad-precio">Precio</label>
+            <div class="pq-campo-dinero"><input class="pq-input pq-mono" id="ad-precio" type="text" inputmode="numeric" name="precio" placeholder="0" data-precio-cop required></div>
+          </div>
+          <div class="pq-campo">
+            <label class="pq-label" for="ad-duracion">Tiempo extra</label>
+            <div class="pq-campo-sufijo" data-sufijo="min"><input class="pq-input pq-mono" id="ad-duracion" type="number" name="duracion_min" min="0" max="240" step="5" value="0"></div>
+          </div>
+        </div>
+        <div class="pq-campo">
+          <label class="pq-label" for="ad-servicio">Se ofrece con</label>
+          <select class="pq-select" id="ad-servicio" name="servicio_id">
+            <option value="0">Cualquier servicio</option>
+            <?php foreach ($servicios as $servicio): ?>
+              <option value="<?= (int) $servicio['id'] ?>"><?= e($servicio['nombre']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Agregar adicional</button>
+      </form>
+    </details>
+  </section>
+
   <?php // Las reglas que el cliente ve antes de reservar (ver reservar.php). ?>
   <section class="pq-reglas-agenda" aria-labelledby="pq-titulo-reglas">
     <h2 class="pq-seccion-titulo" id="pq-titulo-reglas">Reglas de tu agenda</h2>

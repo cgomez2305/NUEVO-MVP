@@ -1,6 +1,14 @@
 <?php require __DIR__ . '/_cabecera.php'; ?>
 
 <main class="pq-content-tienda pq-vitrina">
+  <?php if (!empty($filaAbierta)): ?>
+    <?php // Para quien pasa por la puerta sin cita: la fila se hace desde el celular. ?>
+    <a class="pq-cola-aviso" href="<?= e(base_url('/t/' . $negocio['slug'] . '/fila')) ?>">
+      <span class="pq-cola-aviso-punto" aria-hidden="true"></span>
+      <span><strong>¿Sin cita?</strong> Haz la fila desde aquí y te avisamos por WhatsApp.</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </a>
+  <?php endif; ?>
   <?php if ($servicios === []): ?>
     <div class="pq-vacio-tienda">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
@@ -49,6 +57,32 @@
           </<?= $etiquetaTag ?>>
         <?php endforeach; ?>
       </div>
+    </section>
+  <?php endif; ?>
+
+  <?php
+  // El equipo, solo si hay alguien que mostrar con cara o especialidad: una
+  // lista de nombres sueltos no le dice nada al cliente.
+  $equipoVisible = array_values(array_filter($equipo ?? [], fn ($e) => !empty($e['foto']) || !empty($e['especialidad'])));
+  ?>
+  <?php if ($equipoVisible !== []): ?>
+    <section class="pq-carta pq-equipo-tienda" aria-labelledby="titulo-equipo">
+      <h2 class="pq-carta-titulo" id="titulo-equipo">Nuestro equipo</h2>
+      <ul class="pq-equipo-tienda-lista">
+        <?php foreach ($equipoVisible as $persona): ?>
+          <li>
+            <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/equipo/' . (int) $persona['id'])) ?>" class="pq-equipo-tienda-ficha">
+              <?php if (!empty($persona['foto'])): ?>
+                <img src="<?= e(base_url($persona['foto'])) ?>" alt="" width="72" height="72" loading="lazy">
+              <?php else: ?>
+                <span class="pq-equipo-tienda-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $persona['nombre'], 0, 1))) ?></span>
+              <?php endif; ?>
+              <span class="pq-equipo-tienda-nombre"><?= e($persona['nombre']) ?></span>
+              <?php if (!empty($persona['especialidad'])): ?><span class="pq-equipo-tienda-esp"><?= e($persona['especialidad']) ?></span><?php endif; ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
     </section>
   <?php endif; ?>
 

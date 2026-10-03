@@ -72,8 +72,10 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   `php bin/migrar.php` las aplica. Detalle en `references/crecimiento.md`.
 
 - Features por línea de negocio: plan en `.claude/contexto/PLAN-LINEAS.md`.
-  Fase 1 (imprevistos) hecha; fase 4 (tiendas) en un subagente (worktree,
-  migraciones 20-29); siguen belleza, visitas y salud.
+  Fase 1 (imprevistos) hecha y revisada (migración 15 con los ajustes);
+  fase 2 (belleza: equipo con foto/servicios/horario, adicionales, fila
+  virtual, comisiones; migración 14) hecha; fase 4 (tiendas) en un subagente
+  (worktree, migraciones 20-29); siguen visitas (16-17) y salud (18).
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
