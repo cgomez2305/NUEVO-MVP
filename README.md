@@ -164,7 +164,9 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    negocio, sube una foto de menú y publica la tienda. Para el panel
    interno crea tu admin por consola con una contraseña larga y única
    (`php bin/crear_admin.php "Tu nombre" tu@correo`; la pide sin que
-   quede en el historial).
+   quede en el historial) y activa su segundo factor con
+   `php bin/admin_2fa.php tu@correo` (te da una clave para Google
+   Authenticator o similar; sin ella no se entra a `/admin`).
 
 ### Cobro de planes con Wompi (opcional)
 
@@ -220,7 +222,8 @@ negocio use la app:
   crea la primera cuenta con:
 
   ```bash
-  php bin/crear_admin.php "Tu nombre" tu@correo.com "una-contraseña-larga"
+  php bin/crear_admin.php "Tu nombre" tu@correo.com   # pide la contraseña (mín. 12)
+  php bin/admin_2fa.php tu@correo.com                 # segundo factor, obligatorio
   ```
 
 - **Legal y hábeas data**: política de privacidad y términos de servicio
@@ -284,18 +287,40 @@ querer en un cambio futuro):
   veces); el webhook Bre-B verifica firma HMAC **y** que el monto cubra el
   total.
 - **Límites de tasa** (`limites_tasa`, ver `App\Models\LimiteTasa`):
-  3 cuentas nuevas por IP al día; 20 logins fallidos por IP cada 15 min
-  (además del bloqueo de 5 intentos por cuenta, también en `/admin`);
+  3 cuentas nuevas por IP al día; 20 logins fallidos por IP cada 15 min;
+  5 fallos por número + lugar (IP, o celular de confianza) frenan 15 min
+  solo ese lugar, así nadie deja por fuera a un dueño desde afuera; con 30
+  fallos en una hora desde lugares desconocidos la cuenta solo acepta
+  celulares donde ya se entró (o recuperar la contraseña);
   5 correos de recuperación por IP y 3 por cuenta por hora; 5 pedidos,
   citas o inscripciones a lista de espera por IP y tienda por hora (20 en
   total entre tiendas), para que nadie agote el cupo Gratis de un negocio
   con pedidos falsos.
-- **Cuentas**: contraseñas de mínimo 8 caracteres con `password_hash`;
-  los tokens de recuperación se guardan como SHA-256 (un backup filtrado no
-  sirve para tomar cuentas); la sesión de `/admin` se cierra sola a los
-  30 minutos sin actividad.
+- **Cuentas**: contraseñas de mínimo 8 caracteres con `password_hash`, y
+  se rechazan las fáciles (12345678, "contraseña", el propio WhatsApp o el
+  nombre del negocio); los tokens de recuperación se guardan como SHA-256
+  (un backup filtrado no sirve para tomar cuentas). Cambiar la llave Bre-B,
+  el correo de recuperación, crear un colaborador o exportar a CSV pide la
+  contraseña otra vez (vale 10 minutos). En **Mi cuenta** cada usuario ve
+  dónde ha entrado y puede cerrar la sesión en los demás dispositivos; el
+  dueño ve la **bitácora de seguridad** del negocio (inicios de sesión,
+  celular nuevo, llave, correo, colaboradores, exportaciones, anticipos
+  marcados a mano y lo que haga el equipo de Veci sobre su cuenta).
+- **Panel interno**: entra con contraseña **y** código de una app
+  autenticadora (TOTP). Actívalo con `php bin/admin_2fa.php correo` (sin
+  él no se entra); la sesión se cierra a los 30 minutos sin actividad y a
+  las 10 horas en todo caso. Cada acción del equipo queda en "Actividad
+  del equipo" y en la bitácora del negocio afectado.
+- **Dinero**: la última sesión de un bono y los usos de un cupón se toman
+  con la fila bloqueada (dos pedidos a la vez no pasan el límite); un bono
+  solo se aplica si quien reserva demuestra ser el cliente (su celular o
+  el enlace de su bono); los sellos solo cuentan pedidos entregados y
+  citas completadas; cancelar o reactivar no duplica saldos ni sesiones;
+  los pagos de plan cancelados no se borran (si Wompi aprueba tarde, el
+  plan igual se activa).
 - **Aplicación**: consultas 100% preparadas (PDO sin emulación), CSRF en
-  todo POST, escape de salida con `e()`, todo dato de un negocio filtrado
+  todo POST verificado en el router (aunque un controlador nuevo lo olvide)
+  y con rechazo de peticiones de otro origen, escape de salida con `e()`, todo dato de un negocio filtrado
   por su `negocio_id`/sede, subidas de imagen con lista blanca de tipos y
   nombres aleatorios, CSV de exportación protegido contra inyección de
   fórmulas, errores nunca visibles al visitante (van al log del servidor),
@@ -321,7 +346,14 @@ querer en un cambio futuro):
 
   ```bash
   php tests/aislamiento.php http://localhost:8000 3001234567 veci123
+  php tests/aislamiento.php http://localhost:8000 3001110000 veci123   # colaborador: también entre sedes
   ```
+
+  Con un colaborador, las sedes de su negocio que no tiene asignadas
+  cuentan como ajenas; también revisa las pantallas de lista (fiado,
+  mostrador). Y `php tests/estatico.php` (sin base ni servidor) revisa que
+  toda ruta del panel exija sesión, las del admin sesión de admin, y que
+  ninguna vista imprima texto de la base sin `e()`.
 
 Pendiente fuera del código: HTTPS obligatorio en el hosting, backups
 diarios de la base y monitorear el log de errores de PHP.

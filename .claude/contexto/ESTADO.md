@@ -1,4 +1,4 @@
-# Estado de la sesión — 2026-10-03 (núcleo clientes + recompra: consentimiento, recuperado, Hoy, repetir, huecos; migraciones 32-33)
+# Estado de la sesión — 2026-10-03 (núcleo clientes + recompra + blindaje de seguridad; migraciones 32-37)
 
 ## Objetivo actual
 - Último pedido: "crea la skill y empieza por la tienda pública" → skill
@@ -192,6 +192,42 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
      una cuenta ajena 15 min; anticipos los puede marcar el colaborador
      (decisión de negocio); pagos de plan pendientes se borran al
      cancelar/rechazar (sin rastro si Wompi aprueba tarde).
+
+  6. "Ahora enfócate en blindar la seguridad" (commits 1632fa7 y 45ec0dc,
+     migraciones 35-37):
+     - Router: CSRF + Origin/Sec-Fetch-Site en TODO POST (sinCsrf: webhooks).
+       Página `errores/expirado.php`.
+     - Login: freno por número+lugar en limites_tasa (`login_cuenta`, 5/15
+       min; `login_desconocido` 30/h → solo celulares de confianza). Se
+       quitaron usuarios/admins.intentos_fallidos/bloqueado_hasta.
+       `DispositivoConfianza` (cookie veci_dc, hash en BD).
+     - `EventoSeguridad` (bitácora por negocio, 180 días) en Mi cuenta +
+       "Actividad del equipo" en /admin; cerrar sesión en los demás
+       dispositivos; `Auth::confirmarIdentidad` (10 min) para llave Bre-B,
+       correo, nuevo colaborador y exportar CSV (`/panel/confirmar`).
+     - `password_debil()` en registro/reset/cambio/colaborador.
+     - Admin: TOTP obligatorio (`App\Totp`, `bin/admin_2fa.php`), freno por
+       correo+IP y por correo (20/h), sesión máx. 10 h, contraseña admin ≥12.
+     - Bonos solo con prueba (celular del cliente o `$_SESSION['bono_cliente']`
+       al abrir /bono/{token}); `Bono::usar` con FOR UPDATE; `Cupon::apartarUso`
+       / asignarUso / liberarUso (6 pedidos simultáneos → 1 uso).
+     - Cancelar/no vino con `soloSiEstaEn` (sin abonos dobles); reactivar
+       una cancelada con bono vuelve a cobrar la sesión (bono_devuelto_id).
+     - Fidelidad: solo pedidos entregados / citas completadas; tarjeta solo
+       al celular del cliente (o si tiene 0 sellos).
+     - Colaborador: `Fiado::filtroSedes/clienteVisible` (fiado y mostrador);
+       eliminar producto solo dueño; anticipo marcado y bono vendido en
+       bitácora (el colaborador SÍ puede marcar anticipos: decisión abierta).
+     - Fila sin nombre guardado; códigos de barras por votos (36); pagos de
+       plan con cancelado_en (37); redirigir/base_url sin "\"; serve.php.
+     - Pruebas: tests/aislamiento.php (colaborador entre sedes + listas,
+       control negativo OK), tests/estatico.php (rutas con sesión, e() en
+       vistas, SQL). Suites 7/7 verdes (actualizadas: garantía se reserva
+       desde su enlace, mensaje de fila, votos de códigos).
+     Aceptado sin cambio: exportar en Gratis exporta todo (decisión
+     previa "tus datos son tuyos"); páginas con token de un negocio
+     suspendido siguen visibles para el cliente; push reasigna endpoint al
+     usuario que inicia sesión en ese navegador (endpoint secreto).
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
