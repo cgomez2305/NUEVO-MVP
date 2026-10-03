@@ -204,6 +204,7 @@ $router->post('/panel/fiado/{cliente}/abono', [$fiado, 'abonar']);
 $router->post('/panel/fiado/{cliente}/cargo', [$fiado, 'cargar']);
 $router->post('/panel/fiado/{cliente}/limite', [$fiado, 'limite']);
 $router->post('/panel/fiado/{cliente}/recordatorio', [$fiado, 'recordar']);
+$router->post('/panel/fiado/{cliente}/movimientos/{movimiento}/anular', [$fiado, 'anularMovimiento']);
 $router->get('/panel/compras', [$compras, 'ver']);
 $router->post('/panel/compras', [$compras, 'enviar']);
 $router->post('/panel/compras/agregar', [$compras, 'agregar']);

@@ -82,6 +82,7 @@
     var botonCobrar = raiz.querySelector('[data-mostrador-cobrar]');
     var csrf = raiz.getAttribute('data-csrf');
     var crearUrl = raiz.getAttribute('data-crear-url');
+    var codigosUrl = raiz.getAttribute('data-codigos-url');
     var catalogo = null;
     var porCodigo = {};
     var porId = {};
@@ -404,7 +405,7 @@
       if (codigo && /^\d+$/.test(codigo)) {
         decir('No tienes ningún producto con el código ' + codigo + '.', 'error', { texto: 'Crearlo', href: crearUrl + encodeURIComponent(codigo) });
         // ¿Otra tienda Veci ya lo usa? Solo el nombre.
-        fetch('/panel/codigos/' + encodeURIComponent(codigo), { credentials: 'same-origin' })
+        fetch(codigosUrl + encodeURIComponent(codigo), { credentials: 'same-origin' })
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (d) {
             if (d && d.sugerencia) decir('No tienes ningún producto con el código ' + codigo + '. Otras tiendas lo llaman: «' + d.sugerencia + '».', 'error', { texto: 'Crearlo', href: crearUrl + encodeURIComponent(codigo) });
@@ -525,6 +526,62 @@
         });
       }
     }
+    // El lector es un teclado: si alguien deja el cursor en "¿Con cuánto
+    // paga?" (o en otro campo del cobro) y escanea, el código no puede
+    // cobrarse como plata. Una ráfaga de teclas a velocidad de lector que
+    // termina en Enter se saca del campo y va al tiquete. Un Enter normal
+    // en el cobro no cobra: lleva al botón "Cobrar" (un segundo Enter cobra).
+    var rafaga = { campo: null, antes: '', teclas: 0, ultima: 0 };
+    cobro.addEventListener('keydown', function (evento) {
+      var t = evento.target;
+      if (!t.matches || !t.matches('input[type="text"], input[type="tel"], input[type="search"], input:not([type])')) return;
+      var ahora = Date.now();
+      if (evento.key === 'Enter') {
+        evento.preventDefault();
+        if (rafaga.campo === t && rafaga.teclas >= 6) {
+          var antes = soloDigitos(rafaga.antes);
+          var codigo = t.matches('[data-precio]') ? soloDigitos(t.value).slice(antes.length) : t.value.slice(rafaga.antes.length);
+          t.value = rafaga.antes;
+          if (t === recibido) actualizarVueltas();
+          rafaga = { campo: null, antes: '', teclas: 0, ultima: 0 };
+          procesar(codigo);
+          return;
+        }
+        rafaga = { campo: null, antes: '', teclas: 0, ultima: 0 };
+        botonCobrar.focus();
+        return;
+      }
+      if (!evento.key || evento.key.length !== 1) return;
+      if (rafaga.campo !== t || ahora - rafaga.ultima > 50) {
+        rafaga = { campo: t, antes: t.value, teclas: 0, ultima: ahora };
+      }
+      rafaga.teclas += 1;
+      rafaga.ultima = ahora;
+    });
+
+    // Buscar entre muchos clientes al fiar: filtra las opciones del select.
+    var filtro = cobro.querySelector('[data-filtro-clientes]');
+    var selectClientes = filtro ? cobro.querySelector(filtro.getAttribute('data-filtro-clientes')) : null;
+    if (filtro && selectClientes) {
+      filtro.hidden = false;
+      filtro.addEventListener('input', function () {
+        var t = sinTildes(filtro.value.trim());
+        var primero = null;
+        Array.prototype.forEach.call(selectClientes.options, function (op) {
+          if (!op.hasAttribute('data-buscar')) return; // "Elige…" y "+ Cliente nuevo" siempre
+          var ve = t === '' || sinTildes(op.getAttribute('data-buscar')).indexOf(t) !== -1;
+          op.hidden = !ve;
+          op.disabled = !ve;
+          if (ve && !primero) primero = op;
+        });
+        var actual = selectClientes.options[selectClientes.selectedIndex];
+        if (t !== '' && primero && (!actual || actual.disabled || actual.value === '')) {
+          selectClientes.value = primero.value;
+          selectClientes.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
+
     cobro.addEventListener('change', function (evento) {
       if (evento.target.name === 'metodo') actualizarVueltas();
     });
@@ -537,6 +594,7 @@
       var total = parseInt(raiz.getAttribute('data-total'), 10) || 0;
       if (catalogo && lineas.length === 0) problema = 'La venta está vacía: agrega al menos un producto.';
       else if (metodo() === 'efectivo' && recibido && recibido.value.trim() && numero(recibido.value) < total) problema = 'Con ' + pesos(numero(recibido.value)) + ' no alcanza: faltan ' + pesos(total - numero(recibido.value)) + '.';
+      else if (metodo() === 'efectivo' && recibido && numero(recibido.value) > total + 200000) problema = '"¿Con cuánto paga?" dice ' + pesos(numero(recibido.value)) + ': parece un código escaneado en ese campo. Bórralo y escribe con cuánto paga.';
       else if (metodo() === 'fiado') {
         var cliente = cobro.querySelector('[name="cliente_id"]');
         if (!cliente.value) problema = 'Para fiar, elige a quién (o crea el cliente).';
@@ -545,7 +603,7 @@
           var tel = soloDigitos(cobro.querySelector('[name="cliente_telefono"]').value).replace(/^57(?=\d{10}$)/, '');
           if (!nombre.value.trim()) problema = 'Escribe el nombre del cliente.';
           else if (!/^3\d{9}$/.test(tel)) problema = 'Escribe un WhatsApp de 10 dígitos que empiece por 3.';
-          else if (!cobro.querySelector('[name="cliente_autorizo"]').checked) problema = 'Marca que el cliente autorizó guardar su nombre y número (Ley 1581).';
+          else if (!cobro.querySelector('[name="cliente_autorizo"]').checked && !(cobro.querySelector('[name="cliente_confirmado"]') || {}).checked) problema = 'Marca que el cliente autorizó guardar su nombre y número (Ley 1581).';
         }
       }
       if (problema) {
@@ -679,6 +737,16 @@
       var elegido = document.querySelector('[data-vende-por]:checked');
       if (!elegido) return;
       var peso = elegido.value === 'peso';
+      // Las existencias estaban en la otra unidad (kilos ↔ unidades): se piden de nuevo.
+      var stock = document.querySelector('[data-stock-original]');
+      var avisoStock = document.querySelector('[data-stock-aviso]');
+      if (stock && stock.getAttribute('data-stock-original') !== '') {
+        var cambio = elegido.value !== stock.getAttribute('data-vende-por-original');
+        stock.value = cambio ? '' : stock.getAttribute('data-stock-original');
+        stock.placeholder = cambio ? (peso ? 'Kilos que hay' : 'Unidades que hay') : 'Sin contar';
+        stock.required = cambio;
+        if (avisoStock) avisoStock.hidden = !cambio;
+      }
       document.querySelectorAll('[data-etiqueta-peso]').forEach(function (el) {
         el.textContent = el.getAttribute(peso ? 'data-etiqueta-peso' : 'data-etiqueta-unidad');
       });

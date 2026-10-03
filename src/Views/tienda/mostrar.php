@@ -103,8 +103,8 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
                 <?php if ($agotado): ?>
                   <?php // Solo "por hoy" si de verdad vuelve mañana; un agotado indefinido no promete fecha. ?>
                   <span class="pq-plato-agotado-etiqueta"><?= ($producto['motivo_agotado'] ?? '') === 'hoy' ? 'Agotado por hoy' : 'Agotado' ?></span>
-                <?php elseif ($producto['stock'] !== null && ($producto['vende_por'] ?? '') !== 'peso' && (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES): ?>
-                  <span class="pq-plato-quedan"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
+                <?php elseif (($hay = \App\Models\Producto::unidadesDisponibles($producto)) !== null && $hay <= \App\Models\Producto::POCAS_UNIDADES): ?>
+                  <span class="pq-plato-quedan"><?= $hay === 1 ? 'Queda 1' : 'Quedan ' . $hay ?><?= ($producto['vende_por'] ?? '') === 'peso' ? ' kg' : '' ?></span>
                 <?php endif; ?>
               </div>
 

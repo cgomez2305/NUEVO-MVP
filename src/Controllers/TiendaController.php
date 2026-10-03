@@ -538,9 +538,11 @@ class TiendaController
                 $nueva = ($carrito[$productoId] ?? 0) + 1;
                 // Con inventario no se deja pedir más de lo que hay: el "+"
                 // se queda quieto y se dice por qué (sin JS, con un aviso).
-                if ($producto['stock'] !== null && $nueva > (int) $producto['stock']) {
+                // Por peso se pide por kilos y el stock va en gramos (ver Producto::unidadesDisponibles).
+                $hay = Producto::unidadesDisponibles($producto);
+                if ($hay !== null && $nueva > $hay) {
                     if (!$this->esPeticionAjax()) {
-                        flash_set('error', 'Solo quedan ' . (int) $producto['stock'] . ' de ' . $producto['nombre'] . '.');
+                        flash_set('error', 'Solo quedan ' . $hay . (($producto['vende_por'] ?? '') === 'peso' ? ' kg' : '') . ' de ' . $producto['nombre'] . '.');
                     }
                 } else {
                     $carrito[$productoId] = $nueva;
@@ -634,7 +636,7 @@ class TiendaController
             'producto_id' => (int) $linea['producto']['id'],
             'cantidad'    => $linea['cantidad'],
             'subtotal'    => (int) $linea['producto']['precio'] * $linea['cantidad'],
-            'tope'        => $linea['producto']['stock'] !== null ? (int) $linea['producto']['stock'] : null,
+            'tope'        => Producto::unidadesDisponibles($linea['producto']),
         ], $carrito['lineas']);
         // Las líneas de ajuste de la comanda (subtotal, cupón, domicilio) las
         // arma el mismo parcial que la página: así el JS no repite reglas.
@@ -1228,8 +1230,9 @@ class TiendaController
                 continue;
             }
             // Si el inventario bajó mientras el producto estaba en el carrito.
-            if ($producto['stock'] !== null && $cantidad > (int) $producto['stock']) {
-                $cantidad = (int) $producto['stock'];
+            $hay = Producto::unidadesDisponibles($producto);
+            if ($hay !== null && $cantidad > $hay) {
+                $cantidad = $hay;
                 $recortados[] = $cantidad === 1 ? "solo queda 1 de {$producto['nombre']}" : "solo quedan {$cantidad} de {$producto['nombre']}";
             }
             $lineas[] = ['producto' => $producto, 'cantidad' => $cantidad];

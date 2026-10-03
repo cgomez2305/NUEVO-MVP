@@ -164,3 +164,37 @@ leyéndose igual. Un cargo a mano en el fiado no mueve la caja.
   ganancia = cobrado − costo en ventas de mostrador (costo copiado al vender)
   y pedidos entregados (costo actual del producto). Solo con ≥ 3 productos y
   ≥ 10 renglones con costo; si no, no aparece.
+
+## Revisión (reglas que se agregaron)
+
+- **Por peso en la tienda en línea**: se pide por kilos enteros. Lo
+  disponible es `Producto::unidadesDisponibles` (gramos / 1000): el "+" del
+  carrito, el `tope`, los combos y "Quedan N kg". Con menos de 1 kg sale
+  agotado en línea (`motivo_agotado = 'stock'`), aunque en el mostrador se
+  puedan vender esos gramos; el panel dice "Quedan 600 g · menos de 1 kg".
+- **Doble cobro**: el token del formulario es la llave. Si ya hizo una venta
+  con los mismos productos y cantidades, es el mismo formulario (se muestra
+  esa venta); si la venta de ese token es otra, esta va con un token nuevo y
+  se cobra. `VentaDuplicada` se busca después del rollback. Vaciar y vender
+  rotan el token.
+- **Lector en el cobro**: una ráfaga a velocidad de lector que termina en
+  Enter dentro de un campo del cobro se saca del campo y va al tiquete; un
+  Enter normal lleva al botón "Cobrar". El servidor rechaza "¿con cuánto
+  paga?" por encima del total + $200.000 (`Venta::MAX_VUELTAS`).
+- **Unidad ↔ peso**: cambiar cómo se vende un producto con inventario pide
+  escribir otra vez las existencias (el JS las borra y las vuelve
+  obligatorias; sin JS el servidor no guarda nada y lo dice). Anular una
+  venta o cancelar un pedido devuelve en la unidad copiada
+  (`venta_items.por_peso`, `pedido_items.por_peso`, migración 25).
+- **Cuaderno**: el dueño anula abonos y cargos a mano ("Anular" bajo el
+  concepto); un abono en efectivo solo el mismo día. Lo anulado queda
+  tachado. El cargo de una venta se anula anulando la venta.
+- **Saldo a favor** (abonó y luego se anuló la venta fiada): verde, "Saldo a
+  favor $X" en la cuenta y en la lista; la venta fiada siguiente lo usa y lo
+  dice; antes de anular se avisa.
+- **Cliente al fiar**: se resuelve dentro de la transacción de la venta. Un
+  WhatsApp guardado con otro nombre no se usa en silencio: aparece "Sí, es
+  X: fiarle a su cuenta" (`ClienteDeOtroNombre`). "+ Cliente nuevo" en el
+  fiado con un WhatsApp existente abre su cuenta sin cargarle nada.
+- **Borrar un cliente** (Copiloto) no se puede con saldo en el fiado ni con
+  movimientos de hoy.

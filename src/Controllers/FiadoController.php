@@ -24,13 +24,16 @@ class FiadoController
         if (ctype_digit((string) ($_GET['cliente'] ?? ''))) {
             redirigir('/panel/fiado/' . (int) $_GET['cliente']);
         }
-        $clientes = Fiado::clientesConSaldo($negocioId);
+        $conSaldo = Fiado::clientesConSaldo($negocioId);
+        $clientes = array_values(array_filter($conSaldo, fn ($c) => (int) $c['saldo'] > 0));
 
         ver('panel/fiado', [
             'titulo'   => 'Fiado · Veci',
             'activo'   => 'fiado',
             'negocio'  => $negocio,
             'clientes' => $clientes,
+            // Saldo a favor (abonó y después se anuló una venta fiada): se ve, no se esconde.
+            'aFavor'   => array_values(array_filter($conSaldo, fn ($c) => (int) $c['saldo'] < 0)),
             'todos'    => Fiado::clientesParaElegir($negocioId),
             'total'    => array_sum(array_map(fn ($c) => (int) $c['saldo'], $clientes)),
             'formAnterior' => $this->sacarFormAnterior(),
@@ -53,21 +56,29 @@ class FiadoController
             'saldo_inicial' => mb_substr((string) ($_POST['saldo_inicial'] ?? ''), 0, 20),
         ];
         try {
-            $clienteId = Fiado::clienteParaFiar($negocioId, (string) ($_POST['nombre'] ?? ''), (string) ($_POST['telefono'] ?? ''), isset($_POST['autorizo']));
-            $inicial = dinero_desde_texto((string) ($_POST['saldo_inicial'] ?? ''));
-            if ($inicial > 0) {
-                Fiado::cargar($negocioId, (int) $negocio['id'], $clienteId, $inicial, 'Lo que debía en el cuaderno', (int) $negocio['usuario_id']);
-            }
-            if ($negocio['rol'] === 'dueno' && trim((string) ($_POST['limite'] ?? '')) !== '') {
-                Fiado::establecerLimite($negocioId, $clienteId, dinero_desde_texto((string) $_POST['limite']));
-            }
+            $textoLimite = trim((string) ($_POST['limite'] ?? ''));
+            $cliente = Fiado::crearCuenta(
+                $negocioId,
+                (int) $negocio['id'],
+                (string) ($_POST['nombre'] ?? ''),
+                (string) ($_POST['telefono'] ?? ''),
+                isset($_POST['autorizo']),
+                dinero_desde_texto((string) ($_POST['saldo_inicial'] ?? '')),
+                $negocio['rol'] === 'dueno' && $textoLimite !== '' ? dinero_desde_texto($textoLimite) : null,
+                (int) $negocio['usuario_id']
+            );
         } catch (\DomainException $e) {
             flash_set('error', $e->getMessage());
             redirigir('/panel/fiado#nuevo-cliente');
         }
         unset($_SESSION['fiado_form']);
-        flash_set('ok', 'Cliente listo para fiarle.');
-        redirigir('/panel/fiado/' . $clienteId);
+        if ($cliente['nuevo']) {
+            flash_set('ok', 'Cliente listo para fiarle.');
+        } else {
+            // El WhatsApp ya era de alguien: se muestra su cuenta, sin cargarle nada.
+            flash_set('error', 'Ese WhatsApp ya es de «' . $cliente['nombre'] . '»: esta es su cuenta. No se le cargó nada ni se cambió su límite; si te debía algo más, cárgalo aquí.');
+        }
+        redirigir('/panel/fiado/' . $cliente['id']);
     }
 
     public function detalle(array $parametros): void
@@ -137,6 +148,27 @@ class FiadoController
             }
             Fiado::cargar($negocioId, (int) $negocio['id'], (int) $cliente['id'], $monto, (string) ($_POST['nota'] ?? ''), (int) $negocio['usuario_id']);
             flash_set('ok', 'Cargo anotado en la cuenta.');
+        } catch (\DomainException $e) {
+            flash_set('error', $e->getMessage());
+        }
+        redirigir($volver);
+    }
+
+    /** Anular un abono o un cargo a mano: solo el dueño (un abono en efectivo, solo el mismo día). */
+    public function anularMovimiento(array $parametros): void
+    {
+        $negocio = $this->exigirPedidos();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $cliente = $this->cliente($negocioId, $parametros);
+        $volver = '/panel/fiado/' . (int) $cliente['id'];
+        if (!csrf_verificar()) {
+            redirigir($volver);
+        }
+        try {
+            $mov = Fiado::anularMovimiento($negocioId, (int) $cliente['id'], (int) ($parametros['movimiento'] ?? 0));
+            $saldo = Fiado::saldo($negocioId, (int) $cliente['id']);
+            flash_set('ok', ($mov['tipo'] === 'abono' ? 'Abono' : 'Cargo') . ' anulado. ' . ($saldo > 0 ? 'Ahora debe ' . pesos($saldo) . '.' : ($saldo < 0 ? 'Queda con saldo a favor de ' . pesos(-$saldo) . '.' : 'Queda a paz y salvo.')));
         } catch (\DomainException $e) {
             flash_set('error', $e->getMessage());
         }

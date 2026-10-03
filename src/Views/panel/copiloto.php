@@ -1,5 +1,6 @@
 <?php
 $ok = flash_obtener('ok');
+$errorCopiloto = flash_obtener('error');
 $etiquetas = [
     'inactivo'   => 'Inactivos',
     'vip'        => 'VIP',
@@ -23,6 +24,9 @@ $vacio = [
 ];
 $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo' => 'pq-chip-cancelado', 'recurrente' => ''];
 ?>
+<?php if (!empty($errorCopiloto)): ?>
+  <div class="pq-alerta" role="alert"><?= e($errorCopiloto) ?></div>
+<?php endif; ?>
 <div class="pq-pagina-cabeza">
   <div>
     <span class="pq-eyebrow">Copiloto</span>

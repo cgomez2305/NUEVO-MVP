@@ -245,6 +245,8 @@ CREATE TABLE IF NOT EXISTS pedido_items (
   nombre_producto   VARCHAR(120) NOT NULL,
   precio_unitario   INT UNSIGNED NOT NULL,
   cantidad          SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  -- Si el producto iba por peso al pedirlo (1 = 1 kg): cancelar devuelve en esa unidad.
+  por_peso          TINYINT(1)   NOT NULL DEFAULT 0,
   FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
   FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -945,4 +947,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_21_ventas_mostrador.sql'),
   ('2026-10-03_22_fiado.sql'),
   ('2026-10-03_23_compras.sql'),
-  ('2026-10-03_24_codigos_barras.sql');
+  ('2026-10-03_24_codigos_barras.sql'),
+  ('2026-10-03_25_pedido_items_por_peso.sql');

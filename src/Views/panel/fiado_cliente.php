@@ -33,10 +33,13 @@ $conceptoDe = static function (array $mov): string {
 <div class="pq-fiado-detalle">
   <div class="pq-fiado-columna">
     <section class="pq-fiado-resumen" aria-label="Saldo">
-      <span class="pq-fiado-resumen-etiqueta"><?= $saldo > 0 ? 'Debe' : 'A paz y salvo' ?></span>
-      <strong class="pq-fiado-resumen-cifra"><?= pesos(max(0, $saldo)) ?></strong>
+      <span class="pq-fiado-resumen-etiqueta"><?= $saldo > 0 ? 'Debe' : ($saldo < 0 ? 'Saldo a favor' : 'A paz y salvo') ?></span>
+      <strong class="pq-fiado-resumen-cifra<?= $saldo < 0 ? ' pq-fiado-a-favor' : '' ?>"><?= pesos(abs($saldo)) ?></strong>
+      <?php if ($saldo < 0): ?>
+        <span class="pq-ayuda">Le debes tú: ya había abonado y se anuló una venta. Su próxima compra fiada lo usa primero, o devuélveselo y anota un cargo a mano.</span>
+      <?php endif; ?>
       <span class="pq-ayuda">
-        <?= $debeDesde !== null ? 'Desde ' . e(hace_dias(dias_desde((string) $debeDesde))) . ' (' . e(fecha_larga((string) $debeDesde)) . ')' : 'No tiene nada pendiente' ?>
+        <?= $debeDesde !== null ? 'Desde ' . e(hace_dias(dias_desde((string) $debeDesde))) . ' (' . e(fecha_larga((string) $debeDesde)) . ')' : ($saldo < 0 ? '' : 'No tiene nada pendiente') ?>
         <?= $limite !== null ? ' · límite ' . pesos($limite) : '' ?>
       </span>
       <?php if ($limite !== null && $limite > 0): ?>
@@ -147,14 +150,21 @@ $conceptoDe = static function (array $mov): string {
             <span class="pq-libreta-fecha"><?= e(Fiado::diaCorto((string) $mov['creado_en'])) ?></span>
             <span class="pq-libreta-concepto">
               <?php if ($mov['venta_id'] !== null): ?>
-                <a href="<?= e(base_url('/panel/mostrador/ventas/' . (int) $mov['venta_id'])) ?>"><?= e($conceptoDe($mov)) ?></a>
+                <a class="pq-libreta-texto" href="<?= e(base_url('/panel/mostrador/ventas/' . (int) $mov['venta_id'])) ?>"><?= e($conceptoDe($mov)) ?></a>
               <?php else: ?>
-                <?= e($conceptoDe($mov)) ?>
+                <span class="pq-libreta-texto"><?= e($conceptoDe($mov)) ?></span>
               <?php endif; ?>
-              <?= $anulado ? '<span class="pq-libreta-nota">anulada, no cuenta</span>' : '' ?>
+              <?= $anulado ? '<span class="pq-libreta-nota">anulado, no cuenta</span>' : '' ?>
+              <?php if ($esDueno && Fiado::anulable($mov)): ?>
+                <form method="post" action="<?= e(base_url('/panel/fiado/' . (int) $cliente['id'] . '/movimientos/' . (int) $mov['id'] . '/anular')) ?>" class="pq-libreta-anular"
+                      data-confirmar="¿Anular este <?= $mov['tipo'] === 'abono' ? 'abono' : 'cargo' ?> de <?= e(pesos((int) $mov['monto'])) ?>? Queda tachado en el cuaderno.">
+                  <?= csrf_campo() ?>
+                  <button type="submit" class="pq-enlace-boton pq-enlace-boton-peligro">Anular</button>
+                </form>
+              <?php endif; ?>
             </span>
             <span class="pq-libreta-monto pq-mono"><?= $mov['tipo'] === 'abono' ? '−' : '+' ?><?= pesos((int) $mov['monto']) ?></span>
-            <span class="pq-libreta-saldo pq-mono"><?= pesos((int) $mov['saldo_despues']) ?></span>
+            <span class="pq-libreta-saldo pq-mono"><?= (int) $mov['saldo_despues'] < 0 ? 'a favor ' . pesos(-(int) $mov['saldo_despues']) : pesos((int) $mov['saldo_despues']) ?></span>
           </li>
         <?php endforeach; ?>
       </ol>

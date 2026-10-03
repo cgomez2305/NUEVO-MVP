@@ -111,17 +111,21 @@ class Pedido
                 $stmtDescontar->execute(['cantidad' => $unidades, 'id' => $productoId]);
             }
 
+            // por_peso se copia: cancelar devuelve en la unidad en que se pidió.
+            $stmtPeso = $pdo->prepare("SELECT vende_por = 'peso' FROM productos WHERE id = :id AND sede_id = :sede");
             $stmtItem = $pdo->prepare(
-                'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad)
-                 VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad)'
+                'INSERT INTO pedido_items (pedido_id, producto_id, nombre_producto, precio_unitario, cantidad, por_peso)
+                 VALUES (:pedido_id, :producto_id, :nombre, :precio, :cantidad, :por_peso)'
             );
             foreach ($items as $item) {
+                $stmtPeso->execute(['id' => $item['producto_id'], 'sede' => $sedeId]);
                 $stmtItem->execute([
                     'pedido_id'   => $pedidoId,
                     'producto_id' => $item['producto_id'],
                     'nombre'      => $item['nombre'],
                     'precio'      => $item['precio'],
                     'cantidad'    => $item['cantidad'],
+                    'por_peso'    => (int) $stmtPeso->fetchColumn() === 1 ? 1 : 0,
                 ]);
             }
 
@@ -303,14 +307,17 @@ class Pedido
                 default => null,
             };
             if ($signo !== null) {
-                $stmtItems = $pdo->prepare('SELECT producto_id, cantidad FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
+                $stmtItems = $pdo->prepare('SELECT producto_id, cantidad, por_peso FROM pedido_items WHERE pedido_id = :id AND producto_id IS NOT NULL');
                 $stmtItems->execute(['id' => $id]);
                 $pedidas = [];
+                $porPeso = [];
                 foreach ($stmtItems->fetchAll() as $item) {
                     $pedidas[(int) $item['producto_id']] = ($pedidas[(int) $item['producto_id']] ?? 0) + (int) $item['cantidad'];
+                    $porPeso[(int) $item['producto_id']] = (int) $item['por_peso'] === 1;
                 }
                 $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
-                foreach (self::demandaDeUnidades($pdo, $pedidas) as $productoId => $unidades) {
+                // En la unidad en que se pidió (por_peso copiado), no en la de hoy.
+                foreach (Producto::demandaDeStock($pdo, $pedidas, $porPeso) as $productoId => $unidades) {
                     $ajustar->execute(['n' => $unidades, 'p' => $productoId]);
                 }
             }

@@ -23,6 +23,13 @@ class Venta
     public const MAX_GRAMOS = 50000;
 
     /**
+     * "¿Con cuánto paga?" no puede pasar del total por más de esto: un código
+     * de barras escaneado en ese campo por error (7.702.010.000.010) no se
+     * cobra como si el cliente hubiera dado esa plata.
+     */
+    public const MAX_VUELTAS = 200000;
+
+    /**
      * Arma las líneas del tiquete a partir de producto_id => cantidad de
      * venta, con nombre, precio y costo leídos de la base (nunca del
      * formulario). Ignora productos de otra sede y cantidades en 0 o
@@ -109,9 +116,14 @@ class Venta
      * es fiado, revisa el límite del cliente y le carga la cuenta. Todo o
      * nada: si algo no alcanza, lanza \DomainException y no se vende nada.
      * Si el token ya se usó (doble envío), lanza VentaDuplicada con la venta
-     * que sí quedó.
+     * que sí quedó (buscada después del rollback).
+     *
+     * $clienteNuevo (fiado a alguien que no estaba elegido): nombre,
+     * telefono, autorizo, confirmado (id). Se resuelve DENTRO de la
+     * transacción: si la venta falla, el cliente tampoco queda creado.
      *
      * @param array<int, array<string, mixed>> $lineas salidas de armarLineas()
+     * @param array{nombre:string, telefono:string, autorizo:bool, confirmado:?int}|null $clienteNuevo
      */
     public static function crear(
         int $sedeId,
@@ -121,7 +133,8 @@ class Venta
         ?int $recibido,
         ?int $clienteId,
         ?int $usuarioId,
-        string $token
+        string $token,
+        ?array $clienteNuevo = null
     ): int {
         if ($lineas === []) {
             throw new \DomainException('La venta está vacía: agrega al menos un producto.');
@@ -141,20 +154,30 @@ class Venta
             if ($recibido < $total) {
                 throw new \DomainException('Con ' . pesos($recibido) . ' no alcanza: faltan ' . pesos($total - $recibido) . '.');
             }
+            if ($recibido > $total + self::MAX_VUELTAS) {
+                throw new \DomainException('"¿Con cuánto paga?" dice ' . pesos($recibido) . ': parece un código escaneado en ese campo. Bórralo y escribe con cuánto paga.');
+            }
             $cambio = $recibido - $total;
         } else {
             $recibido = null;
         }
-        if ($metodo === 'fiado' && $clienteId === null) {
+        if ($metodo === 'fiado' && $clienteId === null && $clienteNuevo === null) {
             throw new \DomainException('Para fiar, elige a quién (o crea el cliente).');
         }
         if ($metodo !== 'fiado') {
             $clienteId = null;
+            $clienteNuevo = null;
         }
 
         $pdo = Database::conexion();
         $pdo->beginTransaction();
         try {
+            if ($clienteNuevo !== null) {
+                $clienteId = Fiado::resolverCliente(
+                    $pdo, $negocioId, (string) $clienteNuevo['nombre'], (string) $clienteNuevo['telefono'],
+                    (bool) $clienteNuevo['autorizo'], $clienteNuevo['confirmado'] ?? null
+                )['id'];
+            }
             if ($metodo === 'fiado') {
                 // El cliente bloqueado: dos ventas fiadas a la vez no pasan
                 // juntas por encima del límite.
@@ -169,8 +192,8 @@ class Venta
                     if ($saldo + $total > (int) $cliente['fiado_limite']) {
                         $primerNombre = explode(' ', trim((string) $cliente['nombre']))[0];
                         throw new \DomainException(
-                            "No se puede fiar: {$primerNombre} ya debe " . pesos($saldo) . ' y su límite es de ' . pesos((int) $cliente['fiado_limite'])
-                            . '. Con esta venta quedaría en ' . pesos($saldo + $total) . '. Cobra una parte o pide que abone primero.'
+                            "No se puede fiar: {$primerNombre} ya debe " . pesos(max(0, $saldo)) . ' y su límite es de ' . pesos((int) $cliente['fiado_limite'])
+                            . '; con esta venta quedaría en ' . pesos($saldo + $total) . '. Que abone primero, o cobra esta venta en efectivo, Nequi o Bre-B.'
                         );
                     }
                 }
@@ -207,8 +230,11 @@ class Venta
                     'cambio' => $cambio, 'cliente' => $clienteId, 'usuario' => $usuarioId, 'token' => $token,
                 ]);
             } catch (\PDOException $e) {
-                if ((string) $e->getCode() === '23000' && ($existente = self::idPorToken($token, $sedeId)) !== null) {
-                    throw new VentaDuplicada($existente);
+                if ((string) $e->getCode() === '23000' && str_contains($e->getMessage(), 'uniq_ventas_token')) {
+                    // Se busca después del rollback (abajo): dentro de esta
+                    // transacción la lectura no ve la venta que otra petición
+                    // confirmó mientras tanto (REPEATABLE READ).
+                    throw new VentaDuplicada(null);
                 }
                 throw $e;
             }
@@ -238,8 +264,35 @@ class Venta
             return $ventaId;
         } catch (\Throwable $e) {
             $pdo->rollBack();
+            if ($e instanceof VentaDuplicada) {
+                throw new VentaDuplicada(self::idPorToken($token, $sedeId));
+            }
             throw $e;
         }
+    }
+
+    /**
+     * ¿Es la misma venta? Mismos productos y mismas cantidades (unidades o
+     * kilos, a 3 decimales). Así un doble envío se reconoce y una venta
+     * distinta con el mismo total no se pierde.
+     *
+     * @param array<int|string, mixed> $cantidades producto_id => cantidad enviada
+     */
+    public static function mismasLineas(int $ventaId, array $cantidades): bool
+    {
+        $guardadas = [];
+        foreach (self::items($ventaId) as $item) {
+            $id = (int) ($item['producto_id'] ?? 0);
+            $guardadas[$id] = round(($guardadas[$id] ?? 0) + (float) $item['cantidad'], 3);
+        }
+        $enviadas = [];
+        foreach (self::cantidadesValidas($cantidades) as $id => $cantidad) {
+            $enviadas[$id] = round($cantidad, 3);
+        }
+        ksort($guardadas);
+        ksort($enviadas);
+
+        return $guardadas === $enviadas;
     }
 
     private static function idPorToken(string $token, int $sedeId): ?int
@@ -335,13 +388,16 @@ class Venta
             }
 
             $cantidades = [];
+            $porPeso = [];
             foreach (self::items($id) as $item) {
                 if ($item['producto_id'] !== null) {
                     $cantidades[(int) $item['producto_id']] = ($cantidades[(int) $item['producto_id']] ?? 0) + (float) $item['cantidad'];
+                    $porPeso[(int) $item['producto_id']] = (int) $item['por_peso'] === 1;
                 }
             }
             $devolver = $pdo->prepare('UPDATE productos SET stock = stock + :n WHERE id = :p AND sede_id = :s AND stock IS NOT NULL');
-            foreach (Producto::demandaDeStock($pdo, $cantidades) as $productoId => $cantidad) {
+            // En la unidad en que se vendió (por_peso copiado), no en la de hoy.
+            foreach (Producto::demandaDeStock($pdo, $cantidades, $porPeso) as $productoId => $cantidad) {
                 $devolver->execute(['n' => $cantidad, 'p' => $productoId, 's' => $sedeId]);
             }
 

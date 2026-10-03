@@ -52,6 +52,25 @@ $form = $formAnterior ?? [];
   </section>
 <?php endif; ?>
 
+<?php if ($aFavor !== []): ?>
+  <?php // Saldo a favor: abonó y después se anuló una venta fiada. Se ve, no se esconde. ?>
+  <section class="pq-admin-seccion" aria-labelledby="pq-titulo-a-favor">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-a-favor">Saldo a favor <span class="pq-seccion-cuenta"><?= count($aFavor) ?></span></h2>
+    <p class="pq-ayuda">Les debes tú: su próxima compra fiada lo usa primero, o devuélveselo.</p>
+    <ul class="pq-admin-tarjeta pq-admin-filas">
+      <?php foreach ($aFavor as $cliente): ?>
+        <li class="pq-admin-fila">
+          <a class="pq-fiado-fila" href="<?= e(base_url('/panel/fiado/' . (int) $cliente['id'])) ?>">
+            <span class="pq-fiado-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $cliente['nombre'], 0, 1))) ?></span>
+            <span class="pq-admin-fila-texto"><strong class="pq-fiado-nombre"><?= e($cliente['nombre']) ?></strong></span>
+            <span class="pq-fiado-saldo pq-fiado-a-favor pq-mono">A favor <?= pesos(-(int) $cliente['saldo']) ?></span>
+          </a>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </section>
+<?php endif; ?>
+
 <?php if ($todos !== []): ?>
   <?php // Para abrir la cuenta de alguien que hoy no debe (abonar, cargar lo del cuaderno, ponerle límite). ?>
   <form method="get" action="<?= e(base_url('/panel/fiado')) ?>" class="pq-fiado-buscar">

@@ -5068,7 +5068,19 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-libreta-saldo { grid-area: saldo; justify-self: end; font-size: 12.5px; color: var(--gris-texto); white-space: nowrap; }
 @media (min-width: 560px) { .pq-libreta-saldo { font-size: 14px; font-weight: 700; color: var(--carbon); } }
 .pq-libreta-abono .pq-libreta-monto { color: #0f6b45; }
-.pq-libreta-anulado .pq-libreta-monto, .pq-libreta-anulado .pq-libreta-concepto a { text-decoration: line-through; text-decoration-color: var(--margen-cuaderno); color: var(--gris-suave); }
+.pq-libreta-anulado .pq-libreta-monto, .pq-libreta-anulado .pq-libreta-texto { text-decoration: line-through; text-decoration-color: var(--margen-cuaderno); color: var(--gris-suave); }
+/* Anular un movimiento (solo dueño): discreto, bajo el concepto. */
+.pq-libreta-anular { display: block; }
+.pq-libreta-anular .pq-enlace-boton { min-height: 32px; padding: 0; font-size: 12.5px; }
+/* Saldo a favor del cliente (le debe la tienda): verde, para que no pase por deuda. */
+.pq-fiado-a-favor { color: #0f6b45; }
+.pq-fiado-saldo.pq-fiado-a-favor { font-size: 14px; }
+/* Mostrador: buscar entre muchos clientes y confirmar un WhatsApp que ya era de otro. */
+.pq-mostrador-cliente-buscar { margin-bottom: var(--esp-2); }
+.pq-mostrador-cliente-buscar[hidden] { display: none; }
+.pq-mostrador-confirmar { border-color: var(--mostaza); background: #FDF1DA; }
+.pq-producto-stock-aviso { color: #6b4600; font-weight: 600; }
+.pq-producto-stock-aviso[hidden] { display: none; }
 .pq-libreta-anterior .pq-libreta-concepto { font-style: italic; color: var(--gris-texto); }
 
 /* Compras: la compra en curso es un solo formulario. */

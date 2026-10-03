@@ -11,7 +11,7 @@ namespace App\Models;
  */
 class VentaDuplicada extends \RuntimeException
 {
-    public function __construct(public readonly int $ventaId)
+    public function __construct(public readonly ?int $ventaId)
     {
         parent::__construct('La venta ya estaba registrada.');
     }
