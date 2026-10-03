@@ -157,6 +157,14 @@
         </div>
         <div class="telefono" aria-hidden="true">
           <span class="telefono-badge mono">EN VIVO EN WHATSAPP</span>
+          <div class="telefono-statusbar">
+            <span>9:14</span>
+            <span class="iconos">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v4H2zM7 13h2v8H7zM12 9h2v12h-2zM17 5h2v16h-2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a11 11 0 0 1 13 0M9 15.5a6 6 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+              <svg width="20" height="11" viewBox="0 0 24 13" fill="none"><rect x="1" y="1" width="19" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.2" fill="currentColor"/><rect x="21.3" y="4" width="1.6" height="5" rx=".8" fill="currentColor"/></svg>
+            </span>
+          </div>
           <div class="telefono-pantalla" data-telefono-vivo>
             <div class="telefono-estado tel-chat activo" data-telefono-estado="1">
               <div class="demo-chat-header">
@@ -165,6 +173,8 @@
                   <strong>Doña María</strong>
                   <span>en línea</span>
                 </div>
+                <button type="button" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></button>
+                <button type="button" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
               </div>
               <div class="demo-chat-cuerpo tel-chat-cuerpo">
                 <div class="demo-chat-burbuja tel-chat-catalogo">
@@ -207,6 +217,8 @@
                   <strong>Doña María</strong>
                   <span>en línea</span>
                 </div>
+                <button type="button" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></button>
+                <button type="button" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
               </div>
               <div class="demo-chat-cuerpo tel-chat-cuerpo">
                 <div class="demo-chat-burbuja tel-chat-recibo">
@@ -216,7 +228,7 @@ Bre-B · en 18 segundos
 3 productos — $27.500
 Domicilio — $0
 Total — $27.500</span>
-                  <span class="demo-chat-hora">9:16 a.m. <svg width="14" height="14" viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l3.5 3.5L11 4.5"/><path d="M5.5 8l3.5 3.5L16 4.5"/></svg></span>
+                  <span class="demo-chat-hora">9:16 a.m.</span>
                 </div>
               </div>
             </div>
@@ -247,6 +259,7 @@ Total — $27.500</span>
               <span class="activo"></span><span></span><span></span>
             </div>
           </div>
+          <div class="telefono-home-indicator" aria-hidden="true"></div>
         </div>
       </div>
     </div>
@@ -1024,6 +1037,7 @@ Total — $27.500</span>
 
     var estados = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-estado'));
     var puntos = Array.prototype.slice.call(pantalla.querySelectorAll('.telefono-puntos span'));
+    var telefono = pantalla.closest('.telefono');
     var actual = 0;
 
     function irA(idx) {
@@ -1032,6 +1046,9 @@ Total — $27.500</span>
       actual = idx;
       estados[actual].classList.add('activo');
       puntos[actual].classList.add('activo');
+      // el estado 3 (copiloto) es de fondo claro: la barra de estado del
+      // teléfono pasa a oscura-sobre-claro en vez de blanca-sobre-teal.
+      if (telefono) telefono.classList.toggle('telefono--claro', estados[actual].getAttribute('data-telefono-estado') === '3');
     }
 
     function animarChat(estado, listo) {

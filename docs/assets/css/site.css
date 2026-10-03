@@ -386,12 +386,19 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 /* hero: layout de dos columnas + mockup de teléfono */
 .hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding-top:8px}
 .hero-col-tel{display:flex;justify-content:center;animation:entrada .7s ease .3s both}
-.telefono{width:290px;background:#0a0b0e;border-radius:40px;padding:12px;position:relative;box-shadow:0 45px 90px -24px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
-.telefono::after{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:52px;height:5px;border-radius:4px;background:#000;opacity:.55;z-index:2}
+.telefono{width:290px;background:linear-gradient(160deg,#3a3d46 0%,#15161b 14%,#0a0b0e 55%);border-radius:40px;padding:12px;position:relative;box-shadow:0 2px 5px rgba(0,0,0,.35),0 45px 90px -24px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);animation:telefonoFlota 8s ease-in-out infinite;transform-origin:bottom center}
+.telefono::after{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:52px;height:5px;border-radius:4px;background:#000;opacity:.55;z-index:5}
 .telefono-pantalla{background:var(--papel-mock,#F6F1E7);border-radius:30px;overflow:hidden;min-height:492px;position:relative}
+.telefono-pantalla::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 18%,transparent 32%)}
+@keyframes telefonoFlota{0%,100%{transform:rotate(-.6deg)}50%{transform:rotate(.6deg)}}
+.telefono-statusbar{position:absolute;top:0;left:0;right:0;z-index:4;height:26px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:10.5px;font-weight:700;font-family:var(--fuente-texto);font-variant-numeric:tabular-nums;background:#005C4B;border-radius:30px 30px 0 0;transition:background-color .3s ease,color .3s ease}
+[data-theme="dark"] .telefono-statusbar{background:#0B141A}
+.telefono.telefono--claro .telefono-statusbar{background:#F6F1E7;color:#1B1A17}
+.telefono-statusbar .iconos{display:flex;align-items:center;gap:5px}
+.telefono-home-indicator{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:84px;height:4px;border-radius:4px;background:rgba(255,255,255,.45);z-index:5}
 
 /* estados del teléfono: cicla entre 3 momentos reales del producto */
-.telefono-estado{position:absolute;inset:0;padding:22px 15px 28px;opacity:0;transform:translateY(10px) scale(.985);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.telefono-estado{position:absolute;inset:0;padding:48px 15px 28px;opacity:0;transform:translateY(10px) scale(.985);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none}
 .telefono-estado.activo{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;position:relative;transition-duration:.5s}
 .telefono-puntos{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:3}
 .telefono-puntos span{width:5px;height:5px;border-radius:50%;background:#00000024;transition:background .35s cubic-bezier(.2,.8,.2,1),transform .35s cubic-bezier(.2,.8,.2,1)}
@@ -422,12 +429,19 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
    cabecera verde azulado, fondo con textura, burbujas y doble check),
    en vez de una tarjeta genérica que solo dice "EN VIVO EN WHATSAPP". */
 .telefono-estado.tel-chat{padding:0;display:flex;flex-direction:column}
-.tel-chat .demo-chat-header{flex-shrink:0}
+.tel-chat .demo-chat-header{flex-shrink:0;padding-top:26px;border-radius:30px 30px 0 0}
 .demo-chat-cuerpo.tel-chat-cuerpo{flex:1;min-height:0;padding:16px 14px 32px;background-color:#E5DDD5}
 [data-theme="dark"] .demo-chat-cuerpo.tel-chat-cuerpo{background-color:#0B141A}
 .demo-chat-burbuja.tel-chat-catalogo{max-width:94%}
 .tel-chat-catalogo .telefono-productos{margin:8px 0 6px}
 .tel-chat-recibo .demo-chat-texto{font-weight:600}
+
+/* catálogo y recibo los manda Doña María (el negocio) al cliente: en el
+   WhatsApp del cliente —que es lo que simula este teléfono— esos dos
+   llegan como mensaje RECIBIDO (blanco, alineado a la izquierda), nunca
+   verde a la derecha como si el cliente se los mandara a sí mismo. */
+.demo-chat-burbuja.tel-chat-catalogo,.demo-chat-burbuja.tel-chat-recibo{align-self:flex-start;background:#fff;color:#111b21;border-radius:10px 10px 10px 2px}
+[data-theme="dark"] .demo-chat-burbuja.tel-chat-catalogo,[data-theme="dark"] .demo-chat-burbuja.tel-chat-recibo{background:#1F2C34;color:#E9EDEF}
 
 /* cada burbuja aparece recién cuando el JS la marca .visto (después de los
    puntos de "escribiendo…"), no todas de una vez con el cross-fade del
@@ -461,7 +475,12 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   .chip-pago{right:-4%;bottom:8%}
 }
 @media (max-width:460px){
-  .chip-flotante{display:none}
+  /* en vez de ocultarlos (el negocio deja de sentirse "en vivo" justo en
+     el ancho que más importa: el celular), se bajan del todo y se acomodan
+     en fila, estáticos, debajo del teléfono — nunca superpuestos. */
+  .hero-col-tel{flex-direction:column;align-items:center;gap:10px}
+  .telefono{order:1}
+  .chip-flotante{position:static;order:2;animation:chipEntrada .5s ease both;font-size:10.5px;padding:8px 12px;white-space:normal}
 }
 
 @keyframes pulso{0%,100%{opacity:1}50%{opacity:.35}}
@@ -482,6 +501,7 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   .recibo-badge .dot{animation:none}
   .demo-teaser-en-vivo .dot{animation:none}
   .cierre-glow{animation:none}
+  .telefono{animation:none}
 }
 
 section{padding:72px 0}
@@ -1080,7 +1100,7 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
 .demo-chat-header button{background:none;border:none;color:#fff;padding:2px;cursor:pointer;display:flex;opacity:.9;flex-shrink:0}
 .demo-chat-header button svg{width:18px;height:18px}
 .demo-chat-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fuente-titulo);font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
-.demo-chat-info{min-width:0}
+.demo-chat-info{min-width:0;flex:1}
 .demo-chat-info strong{display:block;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .demo-chat-info span{display:block;font-size:11px;color:rgba(255,255,255,.75)}
 .demo-chat-cuerpo{padding:16px 14px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px}
