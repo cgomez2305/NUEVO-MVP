@@ -5275,3 +5275,5 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-motivo-consulta { margin-top: var(--esp-2); }
 /* Plan y cotización: espacio abajo para que el sello no tape la nota. */
 .pq-plan-carta .pq-comanda-hoja, .pq-cotizacion .pq-comanda-hoja { padding-bottom: 64px; }
+.pq-recordar-quitar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2); margin-top: var(--esp-4); }
+.pq-recordar-quitar .pq-ayuda { margin: 0; }

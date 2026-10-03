@@ -70,9 +70,11 @@ class RecordatorioWhatsapp
     public static function mensajeRecordatorio(array $cita): string
     {
         $fecha = date('d/m/Y', strtotime((string) $cita['fecha_hora']));
-        $hora = date('g:i a', strtotime((string) $cita['fecha_hora']));
+        $hora = \App\Models\Visita::esVisita($cita)
+            ? \App\Models\Visita::textoFranja($cita)
+            : 'a las ' . date('g:i a', strtotime((string) $cita['fecha_hora']));
 
         return "Hola {$cita['cliente_nombre']}, te recordamos tu cita de {$cita['nombre_servicio']} "
-            . "mañana {$fecha} a las {$hora}. Si necesitas cambiarla, escríbenos por aquí.";
+            . "mañana {$fecha} {$hora}. Si necesitas cambiarla, escríbenos por aquí.";
     }
 }

@@ -262,6 +262,7 @@ $router->post('/panel/repetir/{id}', [$visita, 'recordar']);
 $router->get('/cotizacion/{token}', [$visita, 'cotizacionCliente']);
 $router->post('/cotizacion/{token}', [$visita, 'responderCotizacion']);
 $router->get('/cita/{token}/fotos/{foto}', [$visita, 'fotoCliente']);
+$router->post('/cita/{token}/no-recordar', [$visita, 'noRecordar']);
 $router->get('/fila/{token}', [$fila, 'estado']);
 $router->post('/fila/{token}/salir', [$fila, 'salir']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);

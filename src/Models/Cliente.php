@@ -95,6 +95,19 @@ class Cliente
      */
     public static function eliminar(int $id, int $negocioId): void
     {
+        // Borrar al cliente (derecho de supresión, Ley 1581) también borra
+        // las fotos de sus visitas del disco, no solo sus filas.
+        $fotos = Database::conexion()->prepare(
+            'SELECT f.archivo FROM cita_fotos f JOIN citas c ON c.id = f.cita_id JOIN clientes cl ON cl.id = c.cliente_id
+             WHERE cl.id = :id AND cl.negocio_id = :n'
+        );
+        $fotos->execute(['id' => $id, 'n' => $negocioId]);
+        foreach ($fotos->fetchAll(\PDO::FETCH_COLUMN) as $archivo) {
+            $ruta = \App\Services\Subida::rutaPrivada((string) $archivo);
+            if ($ruta !== null && is_file($ruta)) {
+                @unlink($ruta);
+            }
+        }
         $stmt = Database::conexion()->prepare(
             'DELETE FROM clientes WHERE id = :id AND negocio_id = :negocio_id'
         );

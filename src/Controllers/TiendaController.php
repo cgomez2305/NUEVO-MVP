@@ -352,6 +352,14 @@ class TiendaController
 
         $volverAReservar = '/t/' . $negocio['slug'] . '/reservar/' . $servicioId . '?fecha=' . rawurlencode($fecha);
 
+        if (post_demasiado_grande()) {
+            // PHP descarta todo el formulario si las fotos superan el límite:
+            // se dice qué pasó en vez de volver al inicio sin explicación.
+            flash_set('error', 'Las fotos pesan demasiado para enviarlas juntas. Manda menos fotos (o más livianas) y vuelve a intentarlo.');
+            $origen = (string) parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH) . (($q = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_QUERY)) ? '?' . $q : '');
+            redirigir(str_starts_with($origen, '/t/' . $negocio['slug'] . '/reservar/') ? $origen : '/t/' . $negocio['slug']);
+        }
+
         if (!csrf_verificar() || $servicio === null || (int) $servicio['agotado'] === 1 || (int) $servicio['activo'] !== 1) {
             redirigir('/t/' . $negocio['slug']);
         }
@@ -363,8 +371,11 @@ class TiendaController
             redirigir($volverAReservar);
         }
 
+        $aDomicilio = Visita::esDomicilio($negocio);
+        // En una visita la hora que viene en el formulario es solo la del
+        // momento en que se abrió la página: abajo se recalcula con la franja.
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !preg_match('/^\d{2}:\d{2}$/', $hora)
-            || strtotime("{$fecha} {$hora}") < time()) {
+            || ($aDomicilio ? $fecha < date('Y-m-d') : strtotime("{$fecha} {$hora}") < time())) {
             flash_set('error', 'Elige una fecha y una hora válidas.');
             redirigir($volverAReservar);
         }
@@ -376,7 +387,6 @@ class TiendaController
 
         $empleadoId = null;
         $empleado = null;
-        $aDomicilio = Visita::esDomicilio($negocio);
         if (!$aDomicilio && Empleado::listarPorSede((int) $negocio['id'], true) !== []) {
             // Solo vale alguien activo que haga este servicio.
             $empleadoPost = (int) ($_POST['empleado_id'] ?? 0);
@@ -403,6 +413,15 @@ class TiendaController
             $volverAReservar .= '&empleado=' . $empleadoId;
         }
 
+        // Dos reservas al mismo tiempo para el mismo día verían el mismo cupo
+        // libre (en visitas, todos reciben "el primer turno de la franja"):
+        // el candado las pone en fila hasta que la primera queda guardada.
+        // Si algo redirige antes, MySQL lo suelta al cerrar la conexión.
+        $candado = 'veci_cita_' . (int) $negocio['id'] . '_' . $fecha;
+        $st = \App\Database::conexion()->prepare('SELECT GET_LOCK(:k, 10)');
+        $st->execute(['k' => $candado]);
+        $st->fetchColumn();
+
         $franja = null;
         if ($aDomicilio) {
             // Visita: se vuelve a buscar el primer turno libre de la franja y
@@ -416,6 +435,11 @@ class TiendaController
                 redirigir($volverAReservar);
             }
             $hora = $franja['hora'];
+            // Pedida para hoy a media franja: la promesa empieza en el turno
+            // reservado ("entre 11:30 y 12:00"), no a las 8 que ya pasaron.
+            if ($fecha === date('Y-m-d') && $hora > $franja['inicio']) {
+                $franja['inicio'] = $hora;
+            }
             $empleado = $franja['empleado'];
             $empleadoId = $empleado !== null ? (int) $empleado['id'] : null;
             $volverConTurno = $volverAReservar . '&franja=' . rawurlencode($claveFranja);
@@ -488,7 +512,9 @@ class TiendaController
         }
 
         $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true);
-        $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal] + $servicio);
+        // El anticipo y el cupón son sobre el servicio, como se mostraron al
+        // reservar: el transporte de la zona no entra en el porcentaje.
+        $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal - $recargo] + $servicio);
 
         // Bono de sesiones: si el cliente tiene uno vigente de este servicio,
         // la cita va por cuenta del bono (sin anticipo ni cupón). El bono
@@ -505,7 +531,7 @@ class TiendaController
         }
         if ($codigoCupon !== '') {
             $cuponUsado = Cupon::buscarPorCodigo((int) $negocio['negocio_id'], $codigoCupon);
-            $evaluacion = Cupon::evaluar($cuponUsado, $precioTotal, $clienteId);
+            $evaluacion = Cupon::evaluar($cuponUsado, $precioTotal - $recargo, $clienteId);
             if (!$evaluacion['ok']) {
                 flash_set('error', 'Cupón ' . $codigoCupon . ': ' . $evaluacion['mensaje']);
                 redirigir($volverConTurno);
@@ -530,11 +556,17 @@ class TiendaController
             $condiciones['precio_tipo'],
             $condiciones['precio_max'] !== null ? $condiciones['precio_max'] + $precioAdicionales + $recargo : null,
         );
+        $st = \App\Database::conexion()->prepare('SELECT RELEASE_LOCK(:k)');
+        $st->execute(['k' => $candado]);
+        $st->fetchColumn();
         if ($adicionales !== []) {
             Adicional::guardarEnCita($citaId, $adicionales);
         }
         if ($motivoConsulta !== '') {
             \App\Models\PlanTratamiento::guardarMotivo($citaId, $motivoConsulta);
+        }
+        if ($datosVisita === null && !empty($_POST['recordar_repetir']) && !empty($servicio['repetir_cada_meses'])) {
+            Visita::pedirRecordatorio($citaId, true);
         }
         if ($datosVisita !== null) {
             Visita::guardarDatos($citaId, $datosVisita);
@@ -1114,7 +1146,7 @@ class TiendaController
             abortar404();
         }
         $minutos = (int) ($_POST['minutos'] ?? 0);
-        if (csrf_verificar() && $this->tasaDeLaCita($cita) && Imprevisto::clienteLlegaTarde((int) $cita['id'], $minutos)) {
+        if (!Visita::esVisita($cita) && csrf_verificar() && $this->tasaDeLaCita($cita) && Imprevisto::clienteLlegaTarde((int) $cita['id'], $minutos)) {
             WebPush::notificarSede(
                 (int) $cita['sede_id'],
                 $cita['cliente_nombre'] . " llega {$minutos} min tarde",

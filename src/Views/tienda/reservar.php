@@ -422,7 +422,7 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             </div>
             <div class="pq-campo">
               <label class="pq-label" for="fotos">Fotos del daño <span class="pq-ayuda">(opcional, hasta <?= \App\Models\Visita::MAX_FOTOS_CLIENTE ?>)</span></label>
-              <input class="pq-input" type="file" id="fotos" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple>
+              <input class="pq-input" type="file" id="fotos" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple data-max-total-mb="12">
               <span class="pq-ayuda">Ayudan a llevar el repuesto correcto. Solo las ven el negocio y tú.</span>
             </div>
             <?php if (!empty($servicio['repetir_cada_meses'])): ?>
@@ -437,6 +437,15 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
           </fieldset>
         <?php endif; ?>
 
+        <?php if (!$aDomicilio && !empty($servicio['repetir_cada_meses'])): ?>
+          <label class="pq-consentimiento">
+            <input type="checkbox" name="recordar_repetir" value="1">
+            <span>
+              <span class="pq-consentimiento-titulo">Recuérdame el próximo en <?= (int) $servicio['repetir_cada_meses'] ?> <?= (int) $servicio['repetir_cada_meses'] === 1 ? 'mes' : 'meses' ?></span>
+              <span class="pq-ayuda">Un solo mensaje por WhatsApp cuando toque, nada más. Lo puedes quitar desde el enlace de tu cita.</span>
+            </span>
+          </label>
+        <?php endif; ?>
         <?php if (\App\Models\PlanTratamiento::esSalud($negocio)): ?>
           <?php // Dato de salud = dato sensible: opcional y con su propia autorización, separada de la general. ?>
           <fieldset class="pq-visita-datos pq-motivo-consulta">

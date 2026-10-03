@@ -110,6 +110,11 @@ class Visita
                 }
             }
             $franjas[$clave] += $mejor ?? ['hora' => null, 'empleado' => null];
+            // Una franja más corta que el servicio nunca tendrá cupo (el sábado
+            // de 12 a 1 para una instalación de 3 horas): no se ofrece.
+            if ($mejor === null && (strtotime($franja['fin']) - strtotime($franja['inicio'])) / 60 < $duracion) {
+                unset($franjas[$clave]);
+            }
         }
 
         return $franjas;
@@ -299,6 +304,13 @@ class Visita
         $stmt->execute(['s' => $sedeId]);
 
         return $stmt->fetchAll();
+    }
+
+    /** El cliente pide (o retira) el recordatorio del próximo servicio. */
+    public static function pedirRecordatorio(int $citaId, bool $quiere): void
+    {
+        Database::conexion()->prepare('UPDATE citas SET recordar_repetir = :r WHERE id = :id')
+            ->execute(['r' => $quiere ? 1 : 0, 'id' => $citaId]);
     }
 
     public static function marcarRecordado(int $citaId, int $sedeId): bool

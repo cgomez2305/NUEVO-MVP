@@ -81,7 +81,8 @@ class CierreCaja
         $stmt = $pdo->prepare(
             "SELECT COALESCE(SUM(q.anticipo), 0) FROM cotizaciones q JOIN citas c ON c.id = q.cita_id
              WHERE c.sede_id = :s AND c.fecha_hora >= :desde AND c.fecha_hora < :hasta
-               AND c.estado = 'completada' AND q.estado = 'aprobada' AND q.anticipo_pagado = 1"
+               AND c.estado = 'completada' AND q.estado = 'aprobada' AND q.anticipo_pagado = 1
+               AND q.id = (SELECT MAX(q2.id) FROM cotizaciones q2 WHERE q2.cita_id = c.id AND q2.estado = 'aprobada')"
         );
         $stmt->execute($rango);
         $citas['anticipos'] = (int) $citas['anticipos'] + (int) $stmt->fetchColumn();

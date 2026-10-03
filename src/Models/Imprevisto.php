@@ -65,19 +65,38 @@ class Imprevisto
         if (!empty($cita['imprevisto_motivo'])) {
             return true;
         }
-        $limite = (strtotime((string) $cita['fecha_hora']) ?: 0)
-            + ((int) ($sede['tolerancia_min'] ?? 15) + (int) $cita['retraso_cliente_min'] + (int) $cita['retraso_negocio_min']) * 60;
-
-        return time() <= $limite;
+        return time() <= self::limiteDeLlegada($cita, $sede);
     }
 
-    /** ¿Ya se puede marcar "No vino"? Pasada la hora más la tolerancia y los retrasos avisados, y si el negocio no pidió moverla. */
+    /**
+     * Hasta cuándo se espera al cliente: la hora más la tolerancia y los
+     * retrasos avisados. En una visita a domicilio lo prometido es la
+     * franja ("entre 8 y 12"): el límite es el final de la franja.
+     */
+    public static function limiteDeLlegada(array $cita, array $sede): int
+    {
+        if (!empty($cita['franja_fin'])) {
+            return (strtotime(date('Y-m-d', strtotime((string) $cita['fecha_hora']) ?: 0) . ' ' . $cita['franja_fin']) ?: 0)
+                + (int) $cita['retraso_negocio_min'] * 60;
+        }
+
+        return (strtotime((string) $cita['fecha_hora']) ?: 0)
+            + ((int) ($sede['tolerancia_min'] ?? 15) + (int) $cita['retraso_cliente_min'] + (int) $cita['retraso_negocio_min']) * 60;
+    }
+
+    /**
+     * ¿Ya se puede marcar "No vino"? Pasada la hora más la tolerancia y los
+     * retrasos avisados, y si el negocio no pidió moverla. En una visita a
+     * domicilio, además, el técnico tuvo que haber salido ("Voy en camino"):
+     * no se queda con el anticipo de una visita a la que nunca fue (y se
+     * espera 15 minutos después de la hora de llegada que le dijo).
+     */
     public static function puedeMarcarNoVino(array $cita, array $sede): bool
     {
         return in_array($cita['estado'], ['pendiente', 'confirmada'], true)
             && empty($cita['imprevisto_motivo'])
-            && time() > (strtotime((string) $cita['fecha_hora']) ?: 0)
-                + ((int) ($sede['tolerancia_min'] ?? 15) + (int) $cita['retraso_cliente_min'] + (int) $cita['retraso_negocio_min']) * 60;
+            && (empty($cita['franja_fin']) || !empty($cita['en_camino_en']))
+            && time() > (!empty($cita['franja_fin']) ? (strtotime((string) $cita['llegada_estimada']) ?: 0) + 900 : self::limiteDeLlegada($cita, $sede));
     }
 
     // ---------- Reglas de la agenda ----------
@@ -110,7 +129,8 @@ class Imprevisto
         $stmt = Database::conexion()->prepare(
             "UPDATE citas SET retraso_negocio_min = :m, cliente_espera = 0, " . self::sqlAviso('retraso') . "
              WHERE sede_id = :s AND estado IN ('pendiente', 'confirmada') AND imprevisto_motivo IS NULL
-               AND DATE(fecha_hora) = CURDATE() AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 2 HOUR)"
+               AND DATE(fecha_hora) = CURDATE()
+               AND (fecha_hora >= DATE_SUB(NOW(), INTERVAL 2 HOUR) OR (franja_fin IS NOT NULL AND TIMESTAMP(DATE(fecha_hora), franja_fin) >= NOW()))"
             . ($empleadoId !== null ? ' AND empleado_id = :e' : '')
         );
         $stmt->execute(['m' => $minutos, 's' => $sedeId] + ($empleadoId !== null ? ['e' => $empleadoId] : []));
@@ -160,7 +180,8 @@ class Imprevisto
         }
         $stmt = Database::conexion()->prepare(
             "UPDATE citas SET imprevisto_motivo = :m, " . self::sqlAviso('reprogramar') . ", retraso_negocio_min = 0
-             WHERE sede_id = :s AND DATE(fecha_hora) = :f AND fecha_hora >= NOW()
+             WHERE sede_id = :s AND DATE(fecha_hora) = :f
+               AND (fecha_hora >= NOW() OR (franja_fin IS NOT NULL AND TIMESTAMP(DATE(fecha_hora), franja_fin) >= NOW()))
                AND estado IN ('pendiente', 'confirmada')"
             . ($empleadoId !== null ? ' AND empleado_id = :e' : '')
         );

@@ -55,7 +55,9 @@ class Cotizacion
             $total += ($tipo === 'descuento' ? -1 : 1) * $cantidad * $valor;
         }
 
-        return ['items' => $items, 'total' => max(0, $total)];
+        // Un tope realista (mil millones): más que eso es un error de tecleo
+        // y además no cabe en la columna.
+        return ['items' => $items, 'total' => $total > 1000000000 ? 0 : max(0, $total)];
     }
 
     /**
@@ -107,6 +109,24 @@ class Cotizacion
         $stmt->execute(['c' => $citaId]);
 
         return $stmt->fetch() ?: null;
+    }
+
+    /** La última cotización aprobada (la que fija el valor), aunque haya una más nueva esperando respuesta. */
+    public static function aprobadaDeCita(int $citaId): ?array
+    {
+        $stmt = Database::conexion()->prepare("SELECT * FROM cotizaciones WHERE cita_id = :c AND estado = 'aprobada' ORDER BY id DESC LIMIT 1");
+        $stmt->execute(['c' => $citaId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    /** ¿Ya se recibió anticipo de materiales en alguna cotización aprobada de esta visita? */
+    public static function anticipoYaRecibido(int $citaId): bool
+    {
+        $stmt = Database::conexion()->prepare("SELECT 1 FROM cotizaciones WHERE cita_id = :c AND estado = 'aprobada' AND anticipo_pagado = 1 LIMIT 1");
+        $stmt->execute(['c' => $citaId]);
+
+        return $stmt->fetchColumn() !== false;
     }
 
     public static function buscarPorToken(string $token): ?array
@@ -181,6 +201,14 @@ class Cotizacion
 
     public static function marcarAnticipoPagado(int $id, int $sedeId): void
     {
+        // Si ya se recibió con una cotización anterior de la misma visita, no
+        // se marca otra vez: el cierre de caja lo restaría dos veces.
+        $cita = Database::conexion()->prepare('SELECT cita_id FROM cotizaciones WHERE id = :id AND sede_id = :s');
+        $cita->execute(['id' => $id, 's' => $sedeId]);
+        $citaId = $cita->fetchColumn();
+        if ($citaId === false || self::anticipoYaRecibido((int) $citaId)) {
+            return;
+        }
         Database::conexion()->prepare(
             "UPDATE cotizaciones SET anticipo_pagado = 1 WHERE id = :id AND sede_id = :s AND estado = 'aprobada' AND anticipo > 0"
         )->execute(['id' => $id, 's' => $sedeId]);

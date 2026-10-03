@@ -11,7 +11,9 @@ $fotosAntes = array_values(array_filter($fotos, fn ($f) => $f['momento'] === 'an
 $fotosDespues = array_values(array_filter($fotos, fn ($f) => $f['momento'] === 'despues'));
 $siguientePaso = Cita::siguientePaso($cita);
 $telefono = preg_replace('/\D+/', '', (string) $cita['cliente_telefono']);
-$anticipoMateriales = $cotizacion !== null && $cotizacion['estado'] === 'aprobada' ? (int) $cotizacion['anticipo'] : 0;
+// El anticipo se mira en la última cotización APROBADA (la que fija el valor),
+// aunque después se haya mandado otra que aún no responden.
+$anticipoMateriales = $aprobada !== null ? (int) $aprobada['anticipo'] : 0;
 // Primera línea de una cotización nueva: el servicio a su precio, y el transporte de la zona si lo hay.
 $filasIniciales = [['tipo' => 'mano_obra', 'descripcion' => (string) $cita['nombre_servicio'], 'cantidad' => 1, 'valor' => (int) $cita['precio'] - (int) $cita['recargo_zona']]];
 if ((int) $cita['recargo_zona'] > 0) {
@@ -112,8 +114,8 @@ $renderFotos = static function (array $lista, bool $sePuedeBorrar) use ($base): 
             <span class="pq-campo-dinero"><input class="pq-input pq-mono" type="text" inputmode="numeric" name="cobrado" value="<?= number_format(Cita::valor($cita), 0, ',', '.') ?>" data-precio-cop required></span>
           </label>
           <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico"><?= e($siguientePaso['texto']) ?> →</button>
-          <?php if ($anticipoMateriales > 0 && (int) $cotizacion['anticipo_pagado'] === 1): ?>
-            <span class="pq-ayuda">Incluye el anticipo de materiales que ya te pagó (<?= pesos($anticipoMateriales) ?>).</span>
+          <?php if ($anticipoRecibido): ?>
+            <span class="pq-ayuda">Incluye el anticipo de materiales que ya te pagó<?= $aprobada !== null && (int) $aprobada['anticipo_pagado'] === 1 ? ' (' . pesos($anticipoMateriales) . ')' : '' ?>.</span>
           <?php endif; ?>
         </form>
       <?php elseif ($siguientePaso !== null): ?>
@@ -144,12 +146,12 @@ $renderFotos = static function (array $lista, bool $sePuedeBorrar) use ($base): 
         </span>
         <a href="<?= e(url_publica('/cotizacion/' . $cotizacion['token'])) ?>" target="_blank" rel="noopener">Verla como el cliente</a>
       </div>
-      <?php if ($cotizacion['estado'] === 'aprobada' && (int) $cotizacion['anticipo'] > 0 && (int) $cotizacion['anticipo_pagado'] === 0): ?>
-        <form method="post" action="<?= e(base_url($base . '/anticipo')) ?>">
-          <?= csrf_campo() ?>
-          <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Ya me pagó el anticipo de materiales</button>
-        </form>
-      <?php endif; ?>
+    <?php endif; ?>
+    <?php if ($anticipoMateriales > 0 && !$anticipoRecibido): ?>
+      <form method="post" action="<?= e(base_url($base . '/anticipo')) ?>">
+        <?= csrf_campo() ?>
+        <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Ya me pagó el anticipo de materiales (<?= pesos($anticipoMateriales) ?>)</button>
+      </form>
     <?php endif; ?>
 
     <?php if (Cotizacion::sePuedeCotizar($cita)): ?>
@@ -218,7 +220,7 @@ $renderFotos = static function (array $lista, bool $sePuedeBorrar) use ($base): 
           <form method="post" action="<?= e(base_url($base . '/fotos')) ?>" enctype="multipart/form-data" class="pq-ficha-subir">
             <?= csrf_campo() ?>
             <input type="hidden" name="momento" value="<?= $momento ?>">
-            <input class="pq-input" type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple required aria-label="Fotos de <?= mb_strtolower($etiqueta) ?>">
+            <input class="pq-input" type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple required data-max-total-mb="12" aria-label="Fotos de <?= mb_strtolower($etiqueta) ?>">
             <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Subir</button>
           </form>
         <?php endif; ?>

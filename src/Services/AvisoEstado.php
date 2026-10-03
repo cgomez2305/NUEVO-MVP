@@ -43,7 +43,9 @@ class AvisoEstado
             };
         }
 
-        $cuando = date('d/m', strtotime((string) $registro['fecha_hora'])) . ' a las ' . date('g:i a', strtotime((string) $registro['fecha_hora']));
+        $cuando = date('d/m', strtotime((string) $registro['fecha_hora'])) . (\App\Models\Visita::esVisita($registro)
+            ? ', ' . \App\Models\Visita::textoFranja($registro)
+            : ' a las ' . date('g:i a', strtotime((string) $registro['fecha_hora'])));
         return match ((string) $registro['estado']) {
             'confirmada' => "Hola {$nombre}, tu cita de {$registro['nombre_servicio']} en {$negocio} quedó confirmada para el {$cuando}.",
             'cancelada'  => "Hola {$nombre}, tu cita de {$registro['nombre_servicio']} del {$cuando} en {$negocio} fue cancelada. Escríbenos si quieres otra hora.",

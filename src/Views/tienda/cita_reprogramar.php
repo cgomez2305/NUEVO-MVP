@@ -24,7 +24,7 @@ $grupos = array_filter([
   </p>
   <div class="pq-reprogramar-actual">
     <span class="pq-reprogramar-actual-etiqueta">Turno actual</span>
-    <strong><?= e(ucfirst(fecha_larga(date('Y-m-d', $tsActual)))) ?> · <?= e(hora_completa(date('H:i', $tsActual))) ?></strong>
+    <strong><?= e(ucfirst(fecha_larga(date('Y-m-d', $tsActual)))) ?> · <?= e(\App\Models\Visita::esVisita($cita) ? \App\Models\Visita::textoFranja($cita) : hora_completa(date('H:i', $tsActual))) ?></strong>
     <span>Elige el nuevo turno abajo: el cambio se guarda al tocar la hora.</span>
   </div>
 

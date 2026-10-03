@@ -82,7 +82,7 @@ $urlPublica = url_publica('/t/' . $negocio['slug'] . '/equipo/' . $id);
     <?php if (count($fotos) < \App\Models\Empleado::MAX_FOTOS): ?>
       <form method="post" action="<?= e(base_url($base . '/fotos')) ?>" enctype="multipart/form-data" class="pq-ficha-subir">
         <?= csrf_campo() ?>
-        <input class="pq-input" type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple required aria-label="Fotos de trabajos de <?= e($primerNombre) ?>">
+        <input class="pq-input" type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp" multiple required data-max-total-mb="12" aria-label="Fotos de trabajos de <?= e($primerNombre) ?>">
         <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Subir fotos</button>
       </form>
     <?php endif; ?>

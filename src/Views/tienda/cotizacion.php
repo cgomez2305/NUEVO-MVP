@@ -84,7 +84,7 @@ $anticipo = (int) $cotizacion['anticipo'];
       <button type="submit" name="respuesta" value="rechazar" class="pq-btn pq-btn-ghost-oscuro pq-btn-ancho">Por ahora no</button>
       <p class="pq-ayuda">Aprobarla le dice al negocio que puede seguir con el trabajo. ¿Dudas? Escríbele antes por WhatsApp.</p>
     </form>
-  <?php elseif ($estado === 'aprobada' && $anticipo > 0 && (int) $cotizacion['anticipo_pagado'] === 0 && !empty($negocio['llave_breb_valor'])): ?>
+  <?php elseif ($estado === 'aprobada' && $anticipo > 0 && !$anticipoRecibido && !empty($negocio['llave_breb_valor'])): ?>
     <?php
     $pagoTitulo = 'Cómo pagar el anticipo de materiales';
     $pagoMetodo = 'Bre-B';
@@ -94,7 +94,7 @@ $anticipo = (int) $cotizacion['anticipo'];
     $pagoPara = 'reserva';
     require __DIR__ . '/_pasos_pago.php';
     ?>
-  <?php elseif ($estado === 'aprobada' && $anticipo > 0): ?>
-    <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso">El negocio ya recibió tu anticipo de <?= pesos($anticipo) ?>.</div>
+  <?php elseif ($estado === 'aprobada' && $anticipo > 0 && $anticipoRecibido): ?>
+    <div class="pq-alerta pq-alerta-ok pq-confirmacion-aviso">El negocio ya recibió tu anticipo para materiales.</div>
   <?php endif; ?>
 </div>

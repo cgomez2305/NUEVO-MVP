@@ -34,6 +34,8 @@ class VisitaController
             'cita'        => $cita,
             'fotos'       => Visita::fotos((int) $cita['id']),
             'cotizacion'  => $cotizacion,
+            'aprobada'    => Cotizacion::aprobadaDeCita((int) $cita['id']),
+            'anticipoRecibido' => Cotizacion::anticipoYaRecibido((int) $cita['id']),
             'itemsCotizacion' => $cotizacion !== null ? Cotizacion::items((int) $cotizacion['id']) : [],
             'whatsapp'    => flash_obtener('wa_visita'),
             'ok'          => flash_obtener('ok'),
@@ -47,6 +49,10 @@ class VisitaController
         [$negocio, $cita] = $this->citaDelPost($parametros);
         if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
             flash_set('error', 'Esta visita ya empezó o se cerró.');
+            redirigir($this->hojaUrl($cita));
+        }
+        if (date('Y-m-d', strtotime((string) $cita['fecha_hora']) ?: 0) !== date('Y-m-d')) {
+            flash_set('error', '"Voy en camino" es para el día de la visita.');
             redirigir($this->hojaUrl($cita));
         }
         Visita::enCamino((int) $cita['id'], (int) $negocio['id'], (int) ($_POST['minutos'] ?? 30));
@@ -99,7 +105,7 @@ class VisitaController
         }
         ['items' => $items, 'total' => $total] = Cotizacion::itemsDesdeFormulario((array) ($_POST['items'] ?? []));
         if ($items === [] || $total <= 0) {
-            flash_set('error', 'Escribe al menos un ítem con su valor.');
+            flash_set('error', $items === [] ? 'Escribe al menos un ítem con su valor.' : 'Revisa los valores: el total no cuadra (¿un cero de más?).');
             redirigir($this->hojaUrl($cita) . '#cotizacion');
         }
         $token = Cotizacion::crear(
@@ -120,7 +126,7 @@ class VisitaController
     public function anticipoCotizacion(array $parametros): void
     {
         [$negocio, $cita] = $this->citaDelPost($parametros);
-        $cotizacion = Cotizacion::deCita((int) $cita['id']);
+        $cotizacion = Cotizacion::aprobadaDeCita((int) $cita['id']);
         if ($cotizacion !== null) {
             Cotizacion::marcarAnticipoPagado((int) $cotizacion['id'], (int) $negocio['id']);
             flash_set('ok', 'Anticipo de materiales marcado como recibido.');
@@ -220,6 +226,7 @@ class VisitaController
             'cotizacion' => $cotizacion,
             'items'      => Cotizacion::items((int) $cotizacion['id']),
             'vencida'    => Cotizacion::vencida($cotizacion),
+            'anticipoRecibido' => Cotizacion::anticipoYaRecibido((int) $cita['id']),
             'ok'         => flash_obtener('ok'),
             'error'      => flash_obtener('error'),
         ], 'tienda');
@@ -253,6 +260,20 @@ class VisitaController
         redirigir($volver);
     }
 
+    /** El cliente retira el permiso para el recordatorio del próximo servicio. */
+    public function noRecordar(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+        if (csrf_verificar()) {
+            Visita::pedirRecordatorio((int) $cita['id'], false);
+            flash_set('ok', 'Listo: no te escribiremos para recordarte el próximo.');
+        }
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
     public function fotoCliente(array $parametros): void
     {
         $cita = Cita::buscarPorToken((string) $parametros['token']);
@@ -284,6 +305,10 @@ class VisitaController
     private function citaDelPost(array $parametros): array
     {
         [$negocio, $cita] = $this->citaDelPanel($parametros);
+        if (post_demasiado_grande()) {
+            flash_set('error', 'Las fotos pesan demasiado para subirlas juntas. Sube menos a la vez.');
+            redirigir($this->hojaUrl($cita) . '#evidencia');
+        }
         if (!csrf_verificar()) {
             redirigir($this->hojaUrl($cita));
         }

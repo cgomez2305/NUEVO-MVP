@@ -637,3 +637,18 @@ function destino_agenda(): string
 
     return preg_match('#^/panel/visitas/\d+$#', $volver) ? $volver : '/panel/citas';
 }
+
+/**
+ * ¿El POST llegó vacío porque superó post_max_size? (PHP descarta todo el
+ * cuerpo y el formulario parece no haber enviado nada, ni el CSRF.)
+ */
+function post_demasiado_grande(): bool
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $_POST !== [] || $_FILES !== []) {
+        return false;
+    }
+    $limite = trim((string) ini_get('post_max_size'));
+    $bytes = (int) $limite * match (strtoupper(substr($limite, -1))) { 'G' => 1073741824, 'M' => 1048576, 'K' => 1024, default => 1 };
+
+    return $bytes > 0 && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $bytes;
+}

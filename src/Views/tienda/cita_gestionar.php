@@ -161,6 +161,15 @@ $evidencia = $evidencia ?? [];
     </section>
   <?php endif; ?>
 
+  <?php if ((int) ($cita['recordar_repetir'] ?? 0) === 1 && empty($cita['repetir_avisado_en'])): ?>
+    <?php // Retirar el permiso tiene que ser tan fácil como darlo (Ley 1581). ?>
+    <form method="post" action="<?= e(base_url('/cita/' . $cita['token_gestion'] . '/no-recordar')) ?>" class="pq-recordar-quitar">
+      <?= csrf_campo() ?>
+      <span class="pq-ayuda">Pediste que te recordemos el próximo <?= e(mb_strtolower((string) $cita['nombre_servicio'])) ?>.</span>
+      <button type="submit" class="pq-enlace-boton">Ya no me lo recuerden</button>
+    </form>
+  <?php endif; ?>
+
   <?php if (!$esVisita && $activa && $esHoy && empty($cita['imprevisto_motivo'])): ?>
     <?php // "Llego tarde": la cortesía de avisar, con la tolerancia del negocio a la vista. ?>
     <details class="pq-llego-tarde"<?= (int) $cita['retraso_cliente_min'] > 0 ? ' open' : '' ?>>

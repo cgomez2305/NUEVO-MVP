@@ -952,3 +952,20 @@
     if (form) revisar(form);
   });
 })();
+
+// ---------------------------------------------------------------------
+// Fotos: si las elegidas pesan más de lo que el servidor recibe en un
+// envío (data-max-total-mb), se avisa antes de enviar. Sin esto PHP
+// descarta el formulario entero y el usuario pierde lo que escribió.
+// ---------------------------------------------------------------------
+document.addEventListener('change', function (evento) {
+  var campo = evento.target;
+  if (!campo.matches || !campo.matches('input[type=file][data-max-total-mb]')) return;
+  var maximo = parseFloat(campo.getAttribute('data-max-total-mb')) * 1024 * 1024;
+  var total = 0;
+  Array.prototype.forEach.call(campo.files || [], function (archivo) { total += archivo.size; });
+  campo.setCustomValidity(total > maximo
+    ? 'Estas fotos pesan ' + (total / 1048576).toFixed(1) + ' MB y se pueden enviar hasta ' + campo.getAttribute('data-max-total-mb') + ' MB juntas. Elige menos fotos.'
+    : '');
+  if (total > maximo && campo.reportValidity) campo.reportValidity();
+});
