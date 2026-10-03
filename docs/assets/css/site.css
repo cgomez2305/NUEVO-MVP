@@ -579,7 +579,9 @@ h3{font-size:clamp(16px,.6vw + .95rem,19px)}
 .feature-card h3{font-size:16px;margin:0 0 8px}
 .feature-card p{font-size:13.5px;color:var(--texto-suave);line-height:1.55;margin:0}
 @media (max-width:860px){.feature-grid{grid-template-columns:1fr 1fr}.feature-grid>:last-child{grid-column:1/-1}}
-@media (max-width:560px){.feature-grid{grid-template-columns:1fr}}
+.feature-grid-2{grid-template-columns:repeat(2,1fr)}
+.feature-grid-2>:last-child{grid-column:auto}
+@media (max-width:560px){.feature-grid,.feature-grid-2{grid-template-columns:1fr}}
 
 .dolores{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .dolor-card{background:var(--bg-suave);border-radius:20px;padding:24px;display:flex;gap:16px;align-items:flex-start;box-shadow:var(--sombra-suave);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}

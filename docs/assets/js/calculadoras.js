@@ -8,8 +8,8 @@
       return {
         ventas: cop(v.ventas),
         comision: cop(bajo) + ' – ' + cop(alto),
-        ahorro: cop(Math.max(0, v.ventas * 0.275 - 59000)),
-        anual: cop(Math.max(0, v.ventas * 0.275 - 59000) * 12)
+        ahorro: cop(Math.max(0, v.ventas * 0.275 - 29900)),
+        anual: cop(Math.max(0, v.ventas * 0.275 - 29900) * 12)
       };
     },
     'citas-perdidas': function (v) {

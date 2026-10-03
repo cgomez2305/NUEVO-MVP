@@ -5,7 +5,7 @@
   var elComision = document.getElementById('reciboComision');
   var elAhorro = document.getElementById('calcAhorro');
   var elAhorroFill = document.getElementById('calcAhorroFill');
-  var VECI_PRO = 129000;
+  var VECI_BARRIO = 29900;
 
   function formatoCOP(n) {
     return '$' + Math.round(n).toLocaleString('es-CO');
@@ -16,7 +16,7 @@
     var baja = venta * 0.25;
     var alta = venta * 0.30;
     var promedio = venta * 0.275;
-    var ahorro = Math.max(0, promedio - VECI_PRO);
+    var ahorro = Math.max(0, promedio - VECI_BARRIO);
 
     elValorGrande.textContent = formatoCOP(venta);
     elVentas.textContent = formatoCOP(venta);

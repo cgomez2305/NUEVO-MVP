@@ -12,7 +12,7 @@
   // cupo total). Lo de aquí es solo fricción: quien borre su navegador ve la
   // oferta otra vez, pero el backend no debe aceptarla dos veces.
   var OFERTA = {
-    activa: true,
+    activa: false, // la app aún no valida códigos de plan (PRODUCT.md); no encender antes
     codigo: 'VECICHAT30',
     titulo: '30% de descuento en tu primer mes',
     detalle: 'Aplica al plan Barrio o Pro, pago mensual. Solo para negocios nuevos, un uso por negocio.',
@@ -103,9 +103,9 @@
     { id: 'precios', peso: 2, keys: ['precio', 'precios', 'cuanto cuesta', 'cuanto vale', 'cuanto sale', 'cuanto cobran', 'tarifa', 'planes', 'plan', 'mensualidad', 'valor', 'costo', 'cuesta'],
       r: ['Tres planes, todos con 0% de comisión:',
           '**Gratis — $0.** Hasta 50 pedidos o citas al mes y 3 fotos leídas con IA. No vence.',
-          '**Barrio — $59.000/mes.** Sin límite de pedidos, IA sin límite, copiloto de recompra y sin la marca "Hecho con Veci".',
-          '**Pro — $129.000/mes.** Todo lo de Barrio, hasta 3 sedes, estadísticas completas y soporte prioritario.',
-          'Pagando anual te ahorras 2 meses: Barrio queda en $49.000/mes y Pro en $108.000/mes.'],
+          '**Barrio — $29.900/mes.** Sin límite de pedidos, IA sin límite, copiloto de recompra y sin la marca "Hecho con Veci".',
+          '**Pro — $69.900/mes.** Todo lo de Barrio, hasta 3 sedes, historial completo con estadísticas y soporte prioritario.',
+          'Pagando anual te ahorras 2 meses: Barrio queda en $299.000 al año y Pro en $699.000 al año.'],
       links: [{ t: 'Comparar planes en detalle', h: 'precios.html' }],
       chips: [C.recomendar, C.ahorro, C.permanencia] },
     { id: 'gratis', peso: 2, keys: ['gratis', 'plan gratis', 'free', 'sin pagar', 'prueba gratis', 'periodo de prueba', 'trial', 'gratuito'],
@@ -119,20 +119,24 @@
           'Subes desde tu panel cuando lo necesites, sin perder tu historial.'],
       chips: [C.precios, C.recomendar] },
     { id: 'barrio', peso: 2, keys: ['plan barrio', 'barrio'],
-      r: ['**Barrio — $59.000/mes** ($49.000/mes si pagas anual). Es el más elegido.',
+      r: ['**Barrio — $29.900/mes** ($299.000 al año si pagas anual). Es el más elegido.',
           'Incluye todo lo de Gratis sin el límite de 50 pedidos, fotos leídas con IA sin límite, el copiloto de recompra con mensajes listos para WhatsApp y tu tienda sin la marca "Hecho con Veci".'],
       chips: [{ t: '¿Y el plan Pro?', v: 'pro' }, C.copiloto, C.empezar] },
     { id: 'pro', peso: 2, keys: ['plan pro', 'pro'],
-      r: ['**Pro — $129.000/mes** ($108.000/mes si pagas anual).',
-          'Todo lo de Barrio, más: hasta 3 sedes incluidas ($30.000/mes cada sede extra), historial completo con panel de estadísticas y soporte prioritario por WhatsApp.'],
+      r: ['**Pro — $69.900/mes** ($699.000 al año si pagas anual).',
+          'Todo lo de Barrio, más: hasta 3 sedes incluidas ($19.900/mes cada sede extra), historial completo con panel de estadísticas y soporte prioritario por WhatsApp.'],
       chips: [C.sedes, C.empezar] },
     { id: 'anual', peso: 2, keys: ['anual', 'pago anual', 'por ano', 'al ano', 'descuento anual', 'meses gratis'],
-      r: ['Pagando anual te regalamos 2 meses: Barrio queda en $49.000/mes y Pro en $108.000/mes, facturado una vez al año.'],
+      r: ['Pagando anual te regalamos 2 meses: Barrio queda en $299.000 al año y Pro en $699.000 al año.'],
       chips: [C.precios, C.permanencia] },
-    { id: 'permanencia', keys: ['permanencia', 'contrato', 'cancelar', 'cancelo', 'clausula', 'amarrado', 'me puedo salir', 'darme de baja', 'retirarme', 'exportar'],
+    { id: 'permanencia', keys: ['permanencia', 'contrato', 'cancelar', 'cancelo', 'clausula', 'amarrado', 'me puedo salir', 'darme de baja', 'retirarme'],
       r: ['Sin permanencia ni contrato. Cancelas cuando quieras, y cambiar o bajar de plan no tiene costo ni penalidad.',
-          'Tus datos son tuyos: los puedes exportar en cualquier momento, en cualquier plan.'],
-      chips: [C.precios, C.empezar] },
+          'Tus datos son tuyos: desde el panel exportas pedidos, citas y clientes en CSV (abre en Excel), con todo tu historial y en cualquier plan.'],
+      chips: [{ t: '¿Cómo pago el plan?', v: 'pago-plan' }, C.precios] },
+    { id: 'pago-plan', keys: ['pago el plan', 'pagar el plan', 'pagar la mensualidad', 'como pago', 'renovar', 'renueva', 'se renueva', 'cobro automatico', 'debito automatico', 'pago automatico', 'vence el plan', 'si no pago', 'se vence'],
+      r: ['Pagas tu plan desde "Tu plan" en el panel, por transferencia Bre-B. No guardamos tu tarjeta ni hay cobros automáticos: cada mes (o cada año) pagas tú cuando quieras renovar.',
+          'Si se vence sin pago, tu negocio vuelve al plan Gratis. Tu tienda nunca se bloquea ni pierdes tus pedidos: solo vuelven los límites de Gratis.'],
+      chips: [C.precios, C.permanencia] },
     { id: 'breb', keys: ['bre b', 'breb', 'bre-b', 'llave', 'cobrar', 'cobro', 'como me pagan', 'como cobro', 'transferencia', 'pagos', 'como pagan', 'metodos de pago', 'medios de pago'],
       r: ['Tu cliente te paga con tu llave Bre-B (celular, cédula o correo) desde cualquier banco o billetera participante, en menos de 20 segundos y sin comisión de tarjeta.',
           'Hoy la confirmación es manual: ves el pago en tu banco y marcas el pedido como pagado. También puedes aceptar Nequi (con comprobante) o efectivo contraentrega.'],
@@ -144,8 +148,8 @@
     { id: 'daviplata', keys: ['daviplata', 'davivienda', 'bancolombia'],
       r: ['No tenemos integraciones con bancos o billeteras específicas. Lo que sí funciona es Bre-B: si la app de tu cliente permite pagar a una llave Bre-B, te puede pagar desde ahí.', 'Además aceptas Nequi con comprobante y efectivo.'],
       chips: [C.breb] },
-    { id: 'tarjeta', keys: ['tarjeta', 'credito', 'debito', 'pasarela', 'datafono', 'pse', 'wompi', 'mercado pago', 'bold', 'pago automatico', 'automatico'],
-      r: ['La pasarela de tarjeta de crédito y débito está en camino (próximamente). Hoy cobras por Bre-B, Nequi o efectivo, que no tienen comisión de tarjeta.'],
+    { id: 'tarjeta', keys: ['tarjeta', 'credito', 'debito', 'pasarela', 'datafono', 'pse', 'wompi', 'mercado pago', 'bold'],
+      r: ['Que tus clientes te paguen con tarjeta en tu tienda está en camino (próximamente). Hoy te pagan por Bre-B, Nequi o efectivo, que no tienen comisión de tarjeta.'],
       links: [{ t: 'Ver integraciones', h: 'integraciones.html' }],
       chips: [C.breb] },
     { id: 'ia', keys: ['foto', 'fotos', 'ia', 'inteligencia artificial', 'menu', 'carta', 'catalogo', 'subir productos', 'cargar productos', 'armar la tienda', 'claude', 'escanear'],
@@ -162,16 +166,16 @@
       chips: [C.reservas, C.recomendar] },
     { id: 'reservas', keys: ['cita', 'citas', 'agenda', 'agendar', 'reserva', 'reservas', 'turno', 'turnos', 'horario', 'peluqueria', 'barberia', 'spa', 'consultorio', 'odontologo', 'entrenador', 'anticipo'],
       r: ['En modo reservas tu cliente elige servicio, día y hora en tu enlace, y la cita te llega a WhatsApp.',
-          'Configuras la duración de cada servicio, tus empleados y un anticipo si lo quieres. Si tienes varios profesionales, el cliente puede escoger con quién agendar. También vendes paquetes de sesiones que se descuentan solos.'],
+          'Configuras la duración de cada servicio, tus profesionales y un anticipo si lo quieres. Si tienes varios, el cliente escoge con quién agendar. También vendes paquetes de sesiones que se descuentan solos, y hay variantes para visitas a domicilio y consultorios de salud.'],
       links: [{ t: 'Probar la demo de reservas', h: 'demo.html#reservas' }],
       chips: [C.recomendar, C.precios] },
     { id: 'copiloto', peso: 2, keys: ['copiloto', 'recompra', 'clientes que no vuelven', 'reactivar', 'fidelizar', 'que vuelvan', 'dejo de comprar', 'clientes perdidos', 'retener', 'no vuelven', 'no vuelve', 'volver a comprar'],
       r: ['Cada mañana el copiloto revisa quién lleva más tiempo del habitual sin pedir o agendar, comparando a cada cliente con su propio ritmo, no con un promedio.',
-          'Te sugiere el mensaje y con un clic se abre WhatsApp con el texto listo. Está en los planes Barrio y Pro.'],
+          'Te sugiere el mensaje, con un clic se abre WhatsApp con el texto listo, y te muestra la plata que recuperaste: cuenta la primera compra o cita que llega en los 14 días siguientes al mensaje. En negocios de citas también te ayuda a llenar huecos de la agenda. Está en los planes Barrio y Pro.'],
       links: [{ t: 'Cómo evitar que tus clientes no vuelvan', h: 'blog/como-evitar-que-tus-clientes-no-vuelvan.html' }],
       chips: [C.precios, C.empezar] },
     { id: 'sedes', peso: 2, keys: ['sedes', 'sede', 'sucursal', 'sucursales', 'varios locales', 'otro local', 'dos locales', 'multisede'],
-      r: ['El plan Pro incluye hasta 3 sedes, y cada sede adicional cuesta $30.000/mes. Cada sede tiene su propia tienda, catálogo y horario, en una sola cuenta.'],
+      r: ['El plan Pro incluye hasta 3 sedes, y cada sede adicional cuesta $19.900/mes. Cada sede tiene su propia tienda, catálogo y horario, en una sola cuenta.'],
       chips: [{ t: '¿Y mi equipo?', v: 'equipo' }, { t: '¿Y el plan Pro?', v: 'pro' }] },
     { id: 'equipo', keys: ['colaborador', 'colaboradores', 'empleado', 'empleados', 'equipo', 'usuarios', 'accesos', 'meseros', 'cajero'],
       r: ['Puedes invitar colaboradores con su propio acceso al panel en todos los planes, incluido Gratis, y darles acceso solo a la sede que atienden. Como dueño, tú ves todo.'],
@@ -181,11 +185,15 @@
           'El reparto lo haces tú o tu mensajero: Veci no tiene flota de domiciliarios propia.'],
       chips: [C.precios, C.demo] },
     { id: 'herramientas', keys: ['cupon', 'cupones', 'descuentos a mis clientes', 'tarjeta de sellos', 'sellos', 'resenas', 'combos', 'inventario', 'agotado', 'cierre de caja', 'promociones', 'herramientas'],
-      r: ['Incluidas en los tres planes, desde Gratis: cupones de descuento, tarjeta de sellos, reseñas por WhatsApp, combos y "lo más pedido", domicilios por zona, inventario y "agotado por hoy", paquetes de sesiones, cierre de caja diario y avisos automáticos de estado por WhatsApp.'],
+      r: ['Incluidas en los tres planes, desde Gratis: cupones de descuento, tarjeta de sellos, reseñas por WhatsApp, combos y "lo más pedido", domicilios por zona, inventario y "agotado por hoy", paquetes de sesiones, cierre de caja diario y avisos de estado por WhatsApp que envías con un toque.'],
       links: [{ t: 'Ver todas las funciones', h: 'funciones.html' }],
       chips: [C.precios, C.demo] },
+    { id: 'mostrador', keys: ['fiado', 'fiar', 'cuaderno', 'escaner', 'codigo de barras', 'mostrador', 'punto de venta', 'pos', 'venta por peso', 'por peso', 'gramos', 'libras', 'kilo', 'proveedores', 'compras'],
+      r: ['Para tiendas y minimarkets, Veci también trae mostrador: vendes en caja con escáner de código de barras, vendes por peso, llevas el fiado de cada cliente y registras tus compras a proveedores, con el inventario al día.'],
+      links: [{ t: 'Veci para tiendas', h: 'tiendas.html' }, { t: 'Demo del minimarket', h: 'demo.html#minimarket' }],
+      chips: [C.precios, C.empezar] },
     { id: 'avisos', keys: ['notificacion', 'notificaciones', 'me avisa', 'aviso', 'avisos', 'como me entero', 'alerta'],
-      r: ['Cuando llega un pedido o una cita nueva te llega una notificación al celular, aunque tengas el panel cerrado. Y tu cliente recibe avisos por WhatsApp cuando cambia el estado de su pedido o cita.'],
+      r: ['Cuando llega un pedido o una cita nueva te llega una notificación al celular, aunque tengas el panel cerrado. Cuando cambia el estado de un pedido o cita, el panel te deja el mensaje para tu cliente listo para enviar por WhatsApp con un toque.'],
       chips: [C.empezar] },
     { id: 'whatsapp', keys: ['whatsapp', 'whatsapp business', 'wsp', 'wpp', 'chat'],
       r: ['Tu cliente arma el pedido o elige su cita en tu enlace y le llega listo a tu WhatsApp, con productos y cantidades. Tu cliente no tiene que instalar nada nuevo.'],
@@ -199,7 +207,8 @@
       links: [{ t: 'Alternativas a Rappi para tu negocio', h: 'blog/alternativas-a-rappi.html' }],
       chips: [C.ahorro, C.precios] },
     { id: 'datos', keys: ['datos', 'privacidad', 'seguridad', 'seguro', 'ley 1581', 'habeas data', 'datos personales'],
-      r: ['Cumplimos la Ley 1581 de datos personales. La información de tus clientes es tuya: no la vendemos ni la compartimos, y la puedes exportar cuando quieras.',
+      r: ['Cada negocio ve solo sus propios datos, y eso se comprueba con pruebas automáticas. Para la Ley 1581 tienes autorizaciones separadas de datos y de promociones, registro de cada consentimiento, enlace para dejar de recibir promociones y borrado completo de un cliente cuando lo pida.',
+          'Tu cuenta pide la contraseña otra vez para cambios sensibles (llave Bre-B, exportar clientes) y tienes una bitácora de seguridad. No vendemos ni compartimos la información de tus clientes.',
           'Este chat tampoco guarda lo que escribes en ningún servidor.'],
       links: [{ t: 'Política de privacidad', h: 'privacidad.html' }] },
     { id: 'demo', keys: ['demo', 'demos', 'ejemplo', 'ver como se ve', 'probar', 'muestra', 'como se ve'],
@@ -211,16 +220,18 @@
       links: [{ t: 'Tiendas', h: 'tiendas.html' }, { t: 'Peluquerías', h: 'peluquerias.html' }, { t: 'Entrenadores', h: 'entrenadores.html' }, { t: 'Odontólogos', h: 'odontologos.html' }],
       chips: [C.recomendar] },
     { id: 'referidos', keys: ['referido', 'referidos', 'recomendar a otro', 'invitar', 'ganar'],
-      r: ['El programa de referidos está en camino (próximamente). Cuando abra, te contamos en tu panel.'],
-      chips: [C.precios] },
-    { id: 'excel', keys: ['excel', 'sheets', 'google sheets', 'contabilidad', 'reporte', 'reportes', 'estadisticas', 'webhook', 'webhooks', 'api'],
-      r: ['El panel de estadísticas completo viene en el plan Pro. Exportar a Excel o Google Sheets y los webhooks están en camino (próximamente). Mientras tanto, tus datos en bruto son tuyos y los puedes pedir en cualquier plan.'],
+      r: ['Sí: en tu panel tienes un enlace para invitar a otros negocios. Cuando un invitado paga su primer plan, te regalamos 30 días de Veci (si estás en Gratis, te damos Barrio esos días). Sin límite de invitados.'],
+      links: [{ t: 'Cómo funcionan los referidos', h: 'referidos.html' }],
+      chips: [C.empezar] },
+    { id: 'excel', keys: ['excel', 'exportar', 'csv', 'descargar mis datos', 'descargar los pedidos', 'sheets', 'google sheets', 'contabilidad', 'reporte', 'reportes', 'estadisticas', 'webhook', 'webhooks', 'api'],
+      r: ['En cualquier plan exportas pedidos, citas y clientes en CSV, que abre bien en Excel, con todo tu historial. El historial completo con estadísticas dentro del panel es del plan Pro (Gratis y Barrio ven 30 días).',
+          'El archivo .xlsx, Google Sheets y los webhooks para conectar otros sistemas están en camino (próximamente).'],
       links: [{ t: 'Ver integraciones', h: 'integraciones.html' }] },
     { id: 'soporte', keys: ['soporte', 'ayuda', 'humano', 'persona', 'asesor', 'hablar con alguien', 'contacto', 'contactar', 'correo', 'email', 'telefono', 'llamar'],
       r: ['Escríbenos a ' + SOPORTE + ' y te responde una persona que conoce el producto. En el plan Barrio el soporte es por WhatsApp, y en Pro es prioritario.'],
       links: [{ t: 'Escribir a soporte', h: 'mailto:' + SOPORTE }] },
     { id: 'nosotros', keys: ['quienes son', 'quien esta detras', 'empresa', 'colombianos', 'de donde son', 'confiable', 'confiar'],
-      r: ['Veci está hecho en Colombia para negocios de barrio: pesos colombianos, Bre-B nativo y Ley 1581 desde el primer día.'],
+      r: ['Veci está hecho en Colombia para negocios de barrio: pesos colombianos, Bre-B nativo y herramientas para la Ley 1581 desde el primer día.'],
       links: [{ t: 'Quiénes somos', h: 'nosotros.html' }] },
     { id: 'empezar', peso: 2, keys: ['empezar', 'registrarme', 'registro', 'crear cuenta', 'abrir cuenta', 'quiero empezar', 'como empiezo', 'inscribirme', 'me interesa', 'lo quiero', 'activar'],
       r: ['¡Listo! Te registras gratis, sin tarjeta, y en menos de 10 minutos tienes tu tienda o agenda publicada.'],
@@ -576,11 +587,11 @@
       r = ['Empieza con el plan **Gratis**: te alcanza para 50 ' + (modo === 'reservas' ? 'citas' : 'pedidos') + ' al mes, sin pagar nada y sin fecha de vencimiento. Usarías ' + modoTxt + '.',
            'Cuando crezcas, pasas a Barrio desde tu panel sin perder nada.'];
     } else if (vol === 'medio' || vol === 'alto') {
-      r = ['Para ese volumen te sirve el plan **Barrio ($59.000/mes)**: sin límite de ' + (modo === 'reservas' ? 'citas' : 'pedidos') + ' y con el copiloto de recompra, que es lo que más rinde cuando ya tienes clientela. Usarías ' + modoTxt + '.',
-           'Si pagas anual queda en $49.000/mes.'];
+      r = ['Para ese volumen te sirve el plan **Barrio ($29.900/mes)**: sin límite de ' + (modo === 'reservas' ? 'citas' : 'pedidos') + ' y con el copiloto de recompra, que es lo que más rinde cuando ya tienes clientela. Usarías ' + modoTxt + '.',
+           'Si pagas anual son $299.000 al año.'];
     } else {
-      r = ['Con varios locales, el plan **Pro ($129.000/mes)** es el tuyo: hasta 3 sedes incluidas, cada una con su tienda y horario, estadísticas completas y soporte prioritario. Usarías ' + modoTxt + '.',
-           'Cada sede adicional cuesta $30.000/mes.'];
+      r = ['Con varios locales, el plan **Pro ($69.900/mes)** es el tuyo: hasta 3 sedes incluidas, cada una con su tienda y horario, estadísticas completas y soporte prioritario. Usarías ' + modoTxt + '.',
+           'Cada sede adicional cuesta $19.900/mes.'];
     }
     evento('plan_recomendado', { tipo: estado.tipo, volumen: vol });
     var links = [{ t: 'Crear mi cuenta gratis', h: REGISTRO, cta: true }];
@@ -602,7 +613,7 @@
     estado.flujo = null;
     estado.puntos += 2;
     var bajo = monto * 0.25, alto = monto * 0.30, medio = monto * 0.275;
-    var plan = 'Barrio', cuota = 59000;
+    var plan = 'Barrio', cuota = 29900;
     var ahorro = Math.max(0, medio - cuota);
     evento('ahorro_calculado', { monto: monto });
     responder({ de: 'bot', r: [
