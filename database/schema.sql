@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
   plan_vence_en DATE         DEFAULT NULL,
   plan_ciclo    ENUM('mensual','anual') NOT NULL DEFAULT 'mensual',
-  -- Sedes pagadas por encima de las incluidas en el plan (Pro: $30.000/mes
+  -- Sedes pagadas por encima de las incluidas en el plan (Pro: $19.900/mes
   -- cada una). El cupo de sedes es planes.sedes_incluidas + sedes_extra.
   sedes_extra   TINYINT UNSIGNED NOT NULL DEFAULT 0,
   -- El equipo de Veci suspende una cuenta desde el panel interno (mora,
@@ -72,9 +72,8 @@ CREATE TABLE IF NOT EXISTS negocios (
   FOREIGN KEY (plan_id) REFERENCES planes(id)
 ) ENGINE=InnoDB;
 
--- Precios actuales (ver docs/precios.html): mismo precio mensual×12 para
--- el anual, sin descuento todavía definido — se ajusta aquí si se decide
--- uno. limite_ia_mes cuenta usos reales de la API de Claude por negocio
+-- Precios actuales (ver docs/precios.html): el anual es "2 meses gratis"
+-- (10 veces el mensual). limite_ia_mes cuenta usos reales de la API de Claude por negocio
 -- (ver usos_ia); limite_pedidos_mes cuenta pedidos+citas creados por mes
 -- calendario (ver Pedido::contarEsteMesPorNegocio / Cita::ídem).
 INSERT INTO planes
@@ -82,8 +81,8 @@ INSERT INTO planes
    incluye_copiloto, incluye_estadisticas_completas, incluye_multisede, sedes_incluidas, precio_sede_extra)
 VALUES
   (1, 'gratis', 0,      0,       50,   3,    0, 0, 0, 1, NULL),
-  (2, 'barrio', 59000,  708000,  NULL, NULL, 1, 0, 0, 1, NULL),
-  (3, 'pro',    129000, 1548000, NULL, NULL, 1, 1, 1, 3, 30000);
+  (2, 'barrio', 29900,  299000,  NULL, NULL, 1, 0, 0, 1, NULL),
+  (3, 'pro',    69900,  699000,  NULL, NULL, 1, 1, 1, 3, 19900);
 
 -- Quién entra al panel. 'dueno' ve y administra TODAS las sedes de su
 -- negocio (incluyendo crear sedes y colaboradores). 'colaborador' solo

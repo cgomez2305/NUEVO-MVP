@@ -16,12 +16,17 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 - "incluyas una skill para compactar sin perder contexto" → `.claude/skills/compactar/`.
 
 ## Decisiones del usuario (no volver a preguntar)
-- Planes: Gratis $0 / Barrio $59.000 / Pro $129.000 al mes.
+- Planes: Gratis $0 / Barrio $29.900 / Pro $69.900 al mes (bajados el
+  2026-10-03 para competir: Treinta $39.900, Tiendanube $33.900, AgendaPro
+  $50.000-99.000, Alegra POS $25.900). Anual = 2 meses gratis (×10).
+  Exportar CSV en todos los planes; IA Gratis 3/mes, Barrio y Pro sin
+  límite; "pedidos y reservas en la misma cuenta" quitado del sitio (no
+  existe). Migración 26.
 - Cobro → Híbrido: manual verificado por Bre-B ahora, pasarela después.
 - Límite Gratis → por mes calendario (50 pedidos/citas, 3 análisis IA).
 - Plan pago vencido → degrada a Gratis automáticamente, nunca bloquea la tienda.
-- Multisede Pro → 3 sedes incluidas + $30.000/sede extra (cobro de la extra
-  aún no implementado: la cuarta sede se bloquea en el servidor).
+- Multisede Pro → 3 sedes incluidas + $19.900/sede extra (cobro prorrateado
+  hecho, ver migración 12).
 
 ## Hecho (verificado)
 - `9afbef0`, `3ae398d` — sistema de planes y suscripciones + pulido.
@@ -92,7 +97,7 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).
-1. Sede extra ($30.000/mes en Pro): hecho (`2026-10-03_12_sedes_extra.sql`,
+1. Sede extra ($19.900/mes en Pro, antes $30.000): hecho (`2026-10-03_12_sedes_extra.sql`,
    prorrateo hasta el vencimiento, renovación con extras, `/panel/sedes`).
 2. Wompi ya está en código: falta poner llaves reales en
    `config/config.php` y registrar `/webhooks/wompi` en el panel de Wompi.

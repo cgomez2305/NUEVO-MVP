@@ -54,13 +54,13 @@ class Plan
         return max(0, $sedes - (int) ($plan['sedes_incluidas'] ?? 1));
     }
 
-    /** Lo que cuesta el plan en ese ciclo con esas sedes extra (la sede extra se paga 12 veces en el anual). */
+    /** Lo que cuesta el plan en ese ciclo con esas sedes extra (anual = 2 meses gratis, también en la sede extra: se paga 10 veces). */
     public static function precio(array $plan, string $ciclo, int $sedesExtra = 0): int
     {
         $anual = $ciclo === 'anual';
         $base = $anual ? (int) $plan['precio_anual'] : (int) $plan['precio_mensual'];
 
-        return $base + $sedesExtra * (int) ($plan['precio_sede_extra'] ?? 0) * ($anual ? 12 : 1);
+        return $base + $sedesExtra * (int) ($plan['precio_sede_extra'] ?? 0) * ($anual ? 10 : 1);
     }
 
     /**

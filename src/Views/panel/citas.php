@@ -3,10 +3,9 @@
     <span class="pq-eyebrow">Agenda</span>
     <h1 class="pq-h1">Tus próximas citas</h1>
   </div>
-  <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
+  <?php // Tus datos son tuyos: exportar va en todos los planes (solo el dueño descarga). ?>
+  <?php if ($negocio['rol'] === 'dueno'): ?>
     <a href="<?= e(base_url('/panel/citas/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar CSV</a>
-  <?php else: ?>
-    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico pq-btn-bloqueado">Exportar CSV · Pro</a>
   <?php endif; ?>
 </div>
 

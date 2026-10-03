@@ -3,13 +3,14 @@
     <span class="pq-eyebrow">Pedidos</span>
     <h1 class="pq-h1">Tus pedidos</h1>
   </div>
-  <?php if (!empty($negocio['incluye_estadisticas_completas'])): ?>
+  <?php // Tus datos son tuyos: exportar va en todos los planes. Con el historial de 30 días (Gratis) se exporta todo, no solo lo que se ve. ?>
+  <?php if ($negocio['rol'] === 'dueno' && !$historialLimitado): ?>
     <a href="<?= e(base_url('/panel/pedidos/exportar.csv') . '?' . http_build_query(array_filter([
         'estado' => $filtro, 'q' => $busqueda, 'rango' => $rango,
         'desde' => $desdePersonalizado, 'hasta' => $hastaPersonalizado,
     ]))) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar <?= $historialTotal ?> pedido<?= $historialTotal === 1 ? '' : 's' ?></a>
-  <?php else: ?>
-    <a href="<?= e(base_url('/panel/plan')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico pq-btn-bloqueado">Exportar CSV · Pro</a>
+  <?php elseif ($negocio['rol'] === 'dueno'): ?>
+    <a href="<?= e(base_url('/panel/pedidos/exportar.csv')) ?>" class="pq-btn pq-btn-ghost pq-btn-chico">Exportar todo (CSV)</a>
   <?php endif; ?>
 </div>
 

@@ -248,7 +248,6 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $this->exigirExportar($negocio);
 
         $filtro = (string) ($_GET['estado'] ?? '');
         if (!in_array($filtro, Pedido::ESTADOS, true)) {
@@ -801,7 +800,6 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $this->exigirExportar($negocio);
         $citas = Cita::listarPorSede((int) $negocio['id'], 100000);
 
         $salida = $this->abrirDescargaCsv('citas');
@@ -831,7 +829,6 @@ class PanelController
     {
         $negocio = Auth::exigirSesion();
         Auth::exigirDueno($negocio);
-        $this->exigirExportar($negocio);
         $clientes = Cliente::listarPorNegocio((int) $negocio['negocio_id']);
 
         $salida = $this->abrirDescargaCsv('clientes');
@@ -1722,15 +1719,6 @@ class PanelController
     {
         if (!Copiloto::disponiblePara($negocio)) {
             flash_set('error', 'El copiloto de recompra es parte de los planes Barrio y Pro.');
-            redirigir('/panel/plan');
-        }
-    }
-
-    /** Exportar a CSV es parte del histórico completo de Pro (planes.incluye_estadisticas_completas). */
-    private function exigirExportar(array $negocio): void
-    {
-        if (!($negocio['incluye_estadisticas_completas'] ?? false)) {
-            flash_set('error', 'Exportar a CSV es parte del plan Pro.');
             redirigir('/panel/plan');
         }
     }

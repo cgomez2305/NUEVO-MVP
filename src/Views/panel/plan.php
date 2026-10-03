@@ -99,7 +99,7 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
       if ($plan['incluye_copiloto']) {
           $bullets[] = 'Copiloto de recompra';
       }
-      $bullets[] = $plan['incluye_estadisticas_completas'] ? 'Historial completo + exportar a CSV' : 'Historial de 30 días';
+      $bullets[] = $plan['incluye_estadisticas_completas'] ? 'Historial completo y estadísticas' : 'Historial de 30 días';
       if ($plan['incluye_multisede']) {
           $bullets[] = (int) $plan['sedes_incluidas'] . ' sedes incluidas' . ($plan['precio_sede_extra'] ? ' (+' . pesos((int) $plan['precio_sede_extra']) . '/sede extra)' : '');
       }
@@ -124,7 +124,7 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
               <input type="radio" name="ciclo" value="mensual" checked> Mensual · <?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan)) ?>
             </label>
             <label class="pq-plan-card-ciclo">
-              <input type="radio" name="ciclo" value="anual"> Anual · <?= pesos(\App\Models\Plan::precio($plan, 'anual', $extrasPlan)) ?>
+              <input type="radio" name="ciclo" value="anual"> Anual · <?= pesos(\App\Models\Plan::precio($plan, 'anual', $extrasPlan)) ?> <span class="pq-ayuda">(2 meses gratis)</span>
             </label>
             <?php if ($extrasPlan > 0): ?>
               <span class="pq-ayuda">Incluye <?= $extrasPlan ?> sede<?= $extrasPlan === 1 ? '' : 's' ?> extra (<?= pesos((int) $plan['precio_sede_extra']) ?>/mes c/u).</span>

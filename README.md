@@ -227,19 +227,21 @@ negocio use la app:
 
 ## Planes y suscripciones
 
-Tres planes — Gratis ($0), Barrio ($59.000/mes) y Pro ($129.000/mes) — con
+Tres planes — Gratis ($0), Barrio ($29.900/mes) y Pro ($69.900/mes); el
+anual es "2 meses gratis" (10 veces el mensual) — con
 límites y funciones que sí se hacen cumplir en el código (`database/schema.sql`
 → tabla `planes`; `negocios.plan_id/plan_estado/plan_vence_en/plan_ciclo`):
 
 - **Gratis**: hasta 50 pedidos o citas por mes calendario (se resetea el
   día 1), hasta 3 análisis con foto con IA por mes, sin copiloto de
   recompra, historial de 30 días, sello "Hecho con Veci" visible en la
-  tienda pública.
+  tienda pública. Las ventas de mostrador (tiendas) no cuentan en el límite.
+  Exportar a CSV va en todos los planes (los datos son del negocio).
 - **Barrio**: todo ilimitado salvo estadísticas completas (sigue en 30 días
   de historial), incluye el copiloto de recompra.
-- **Pro**: historial completo + exportar a CSV, y es el único con
+- **Pro**: historial completo y estadísticas, y es el único con
   multisede (3 sedes incluidas en el precio). Cada sede extra cuesta
-  $30.000/mes (`planes.precio_sede_extra`): desde `/panel/sedes` el dueño
+  $19.900/mes (`planes.precio_sede_extra`): desde `/panel/sedes` el dueño
   la pide y paga solo los días que le quedan al plan (prorrateo); al
   confirmarse el pago sube `negocios.sedes_extra` y puede crearla. Las
   renovaciones de Pro ya cobran las sedes extra que el negocio tenga en ese

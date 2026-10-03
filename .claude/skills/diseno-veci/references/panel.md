@@ -296,11 +296,11 @@ ilustraciones.
   quedaron más sedes que el cupo, dice "4 sedes" sin el "de".
 - "+ Nueva sede" solo aparece si hay cupo. Sin cupo, en su lugar va una
   caja punteada de tiquete (`.pq-sede-extra`) con tres estados: Pro vigente
-  ("¿Otra sede? $30.000/mes · hoy pagas solo $X por los N días que le
+  ("¿Otra sede? $19.900/mes · hoy pagas solo $X por los N días que le
   quedan a tu plan" + "Pedir sede extra"), pago pendiente ("esperando el
   pago" + "Ver cómo pagar") o plan sin multisede ("Ver planes").
 - En `/panel/plan` los precios de Pro son los que se cobrarían de verdad:
-  con sedes extra, "Mensual · $159.000" y la nota "Incluye 1 sede extra".
+  con sedes extra, "Mensual · $89.800" y la nota "Incluye 1 sede extra".
   El pendiente de sede extra se titula "1 sede extra hasta el …"; el admin
   la ve en la consignación como "Concepto: Sede extra".
 

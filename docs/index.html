@@ -38,8 +38,8 @@
   "url": "https://tuveci.co/",
   "offers": [
     { "@type": "Offer", "name": "Gratis", "price": "0", "priceCurrency": "COP" },
-    { "@type": "Offer", "name": "Barrio", "price": "59000", "priceCurrency": "COP" },
-    { "@type": "Offer", "name": "Pro", "price": "129000", "priceCurrency": "COP" }
+    { "@type": "Offer", "name": "Barrio", "price": "29900", "priceCurrency": "COP" },
+    { "@type": "Offer", "name": "Pro", "price": "69900", "priceCurrency": "COP" }
   ]
 }
 </script>
@@ -301,7 +301,7 @@
         <div class="calc-marcas"><span>$500 mil</span><span>$15 M</span><span>$30 M</span></div>
 
         <div class="calc-ahorro">
-          <span class="calc-ahorro-label">TE AHORRAS AL MES CON VECI (PLAN PRO)</span>
+          <span class="calc-ahorro-label">TE AHORRAS AL MES CON VECI (PLAN BARRIO)</span>
           <span class="calc-ahorro-cifra mono" id="calcAhorro">$0</span>
           <div class="calc-ahorro-track"><div class="calc-ahorro-fill" id="calcAhorroFill"></div></div>
           <span class="calc-ahorro-nota">Comisión promedio de apps (27.5%) menos la cuota fija de Veci.</span>
@@ -318,8 +318,8 @@
           <span class="valor" id="reciboComision">$0 – $0</span>
         </div>
         <div class="recibo-linea final">
-          <span class="etiqueta">CON VECI (PLAN PRO)</span>
-          <span class="valor">$129.000/mes fijo</span>
+          <span class="etiqueta">CON VECI (PLAN BARRIO)</span>
+          <span class="valor">$29.900/mes fijo</span>
         </div>
       </div>
     </div>
@@ -667,6 +667,7 @@
         <span class="plan-sub">Para probar sin arriesgar nada</span>
         <ul>
           <li>Hasta 50 pedidos o citas al mes</li>
+          <li>Tu menú o servicios leídos de una foto con IA (3 al mes)</li>
           <li>Tienda con tu propio enlace</li>
           <li>Cobro por Bre-B, Nequi o efectivo</li>
           <li>Marca "Hecho con Veci" visible</li>
@@ -677,12 +678,12 @@
         <span class="chip-popular">Más elegido</span>
         <div class="plan-icono" style="background:var(--tinte-sello)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></div>
         <span class="nombre">Barrio</span>
-        <span class="precio"><span class="precio-mensual">$59<small>.000/mes</small></span><span class="precio-anual">$49<small>.000/mes, facturado anual</small></span></span>
+        <span class="precio"><span class="precio-mensual">$29<small>.900/mes</small></span><span class="precio-anual">$24<small>.900/mes, facturado anual</small></span></span>
         <span class="plan-sub">Para el negocio que ya vende todos los días</span>
         <ul>
           <li>Pedidos o citas ilimitados</li>
           <li>Copiloto de recompra</li>
-          <li>Pedidos <strong>y</strong> reservas en la misma cuenta</li>
+          <li>IA sin límite para cargar tu menú o servicios</li>
           <li>Sin marca de Veci</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=barrio" class="btn btn-sello" style="margin-top:auto">Elegir plan Barrio →</a>
@@ -690,19 +691,18 @@
       <div class="plan">
         <div class="plan-icono" style="background:var(--tinte-mostaza)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
         <span class="nombre">Pro</span>
-        <span class="precio"><span class="precio-mensual">$129<small>.000/mes</small></span><span class="precio-anual">$108<small>.000/mes, facturado anual</small></span></span>
+        <span class="precio"><span class="precio-mensual">$69<small>.900/mes</small></span><span class="precio-anual">$58<small>.250/mes, facturado anual</small></span></span>
         <span class="plan-sub">Para el negocio que ya tiene equipo</span>
         <ul>
           <li>Todo lo de Barrio</li>
-          <li>Onboarding con IA (lee tu foto con Claude)</li>
           <li>Historial completo y panel de estadísticas</li>
-          <li>3 sedes incluidas (+$30.000/mes cada sede extra)</li>
+          <li>3 sedes incluidas (+$19.900/mes cada sede extra)</li>
           <li>Soporte prioritario por WhatsApp</li>
         </ul>
         <a href="https://app.tuveci.co/registro?plan=pro" class="btn btn-ghost-oscuro" style="margin-top:auto">Elegir plan Pro →</a>
       </div>
     </div>
-    <p class="precios-nota">¿Tienes varias sedes? Pro incluye 3 y cada sede extra cuesta $30.000/mes. Los colaboradores con su propio acceso vienen en todos los planes.</p>
+    <p class="precios-nota">¿Tienes varias sedes? Pro incluye 3 y cada sede extra cuesta $19.900/mes. Los colaboradores con su propio acceso vienen en todos los planes.</p>
   </div>
 </section>
 
@@ -796,7 +796,7 @@
   var elComision = document.getElementById('reciboComision');
   var elAhorro = document.getElementById('calcAhorro');
   var elAhorroFill = document.getElementById('calcAhorroFill');
-  var VECI_PRO = 129000;
+  var VECI_BARRIO = 29900;
 
   function formatoCOP(n) {
     return '$' + Math.round(n).toLocaleString('es-CO');
@@ -807,7 +807,7 @@
     var baja = venta * 0.25;
     var alta = venta * 0.30;
     var promedio = venta * 0.275;
-    var ahorro = Math.max(0, promedio - VECI_PRO);
+    var ahorro = Math.max(0, promedio - VECI_BARRIO);
 
     elValorGrande.textContent = formatoCOP(venta);
     elVentas.textContent = formatoCOP(venta);
