@@ -466,13 +466,17 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 @keyframes chipEntrada{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes chipFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @media (max-width:900px){
+  /* el texto va primero: un visitante que entra en celular/tablet necesita
+     saber qué es Veci antes de ver un chat sin contexto (antes el teléfono
+     iba arriba de todo con order:-1, y el titular quedaba fuera de la
+     primera pantalla). */
   .hero-grid{grid-template-columns:1fr}
-  .hero-col-tel{order:-1;margin-bottom:8px}
+  .hero-col-tel{margin-top:40px}
   .telefono{width:230px}
   .telefono-pantalla{min-height:400px}
   .chip-flotante{font-size:10.5px;padding:8px 11px}
-  .chip-pedido{left:-4%;top:2%}
-  .chip-pago{right:-4%;bottom:8%}
+  .chip-pedido{left:2%;top:2%}
+  .chip-pago{right:2%;bottom:8%}
 }
 @media (max-width:460px){
   /* en vez de ocultarlos (el negocio deja de sentirse "en vivo" justo en
