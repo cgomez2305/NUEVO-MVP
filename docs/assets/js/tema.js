@@ -20,17 +20,16 @@
     }
   }
 
+  // El logo claro/oscuro del nav se resuelve en CSS ([data-theme="dark"] .brand
+  // .logo-claro/.logo-oscuro, ver site.css) con las dos imágenes ya en el DOM,
+  // no cambiando el src por JS — así no depende de que este script corra a
+  // tiempo en cualquier entorno donde se publique la página.
   function aplicarTema(tema) {
     if (tema === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
-    document.querySelectorAll('.brand[data-logo-claro][data-logo-oscuro]').forEach(function (marca) {
-      var img = marca.querySelector('img');
-      if (!img) return;
-      img.src = tema === 'dark' ? marca.getAttribute('data-logo-oscuro') : marca.getAttribute('data-logo-claro');
-    });
   }
 
   var inicial = temaGuardado();

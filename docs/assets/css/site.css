@@ -74,6 +74,9 @@ nav{
 }
 .brand{text-decoration:none;color:inherit;display:inline-flex;align-items:center;flex-shrink:0}
 .brand img{height:36px;width:auto;display:block}
+.brand .logo-oscuro{display:none}
+[data-theme="dark"] .brand .logo-claro{display:none}
+[data-theme="dark"] .brand .logo-oscuro{display:block}
 .nav-derecha{display:flex;align-items:center;gap:16px}
 .nav-links{display:flex;gap:6px;align-items:center}
 .nav-links a{
@@ -417,6 +420,12 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 .demo-chat-burbuja.tel-chat-catalogo{max-width:94%}
 .tel-chat-catalogo .telefono-productos{margin:8px 0 6px}
 .tel-chat-recibo .demo-chat-texto{font-weight:600}
+
+/* cada burbuja aparece recién cuando el JS la marca .visto (después de los
+   puntos de "escribiendo…"), no todas de una vez con el cross-fade del
+   estado — así el chat del hero se siente una conversación en curso. */
+.js-anim-chat .demo-chat-burbuja{animation:none;opacity:0;transform:translateY(8px) scale(.95);transition:opacity .3s cubic-bezier(.2,.8,.2,1),transform .3s cubic-bezier(.2,.8,.2,1)}
+.js-anim-chat .demo-chat-burbuja.visto{opacity:1;transform:translateY(0) scale(1)}
 
 /* chips flotantes: refuerzan que la tienda "vive" en tiempo real */
 .hero-col-tel{position:relative}

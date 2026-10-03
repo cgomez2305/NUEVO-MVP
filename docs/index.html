@@ -48,8 +48,9 @@
 <div class="nav-fija clara">
   <div class="wrap">
     <nav class="nav-clara">
-      <a href="./" class="brand" data-logo-claro="assets/img/logo-veci-lockup.png" data-logo-oscuro="assets/img/logo-veci-lockup-blanco.png">
-        <img src="assets/img/logo-veci-lockup.png" alt="Veci" height="26">
+      <a href="./" class="brand">
+        <img class="logo-claro" src="assets/img/logo-veci-lockup.png" alt="Veci" height="26">
+        <img class="logo-oscuro" src="assets/img/logo-veci-lockup-blanco.png" alt="Veci" height="26">
       </a>
 
       <div class="nav-derecha">
@@ -988,7 +989,12 @@ Total — $27.500</span>
     window.addEventListener('resize', pedir);
   })();
 
-  // ---- Teléfono del hero: cicla entre pedido / pago confirmado / copiloto ----
+  // ---- Teléfono del hero: cicla entre pedido / pago confirmado / copiloto,
+  // y dentro de cada chat, las burbujas aparecen una a una con los puntos de
+  // "escribiendo…" entre medio — como una conversación real de WhatsApp,
+  // no un simple cross-fade de tarjetas completas. Las burbujas ya están en
+  // el HTML (visibles) por defecto: si prefers-reduced-motion está activo,
+  // o si este script no llega a correr, se ven completas desde el inicio.
   (function () {
     var pantalla = document.querySelector('[data-telefono-vivo]');
     if (!pantalla) return;
@@ -1007,9 +1013,42 @@ Total — $27.500</span>
       puntos[actual].classList.add('activo');
     }
 
-    setInterval(function () {
-      irA((actual + 1) % estados.length);
-    }, 3400);
+    function animarChat(estado, listo) {
+      var cuerpo = estado.querySelector('.demo-chat-cuerpo');
+      var burbujas = cuerpo ? Array.prototype.slice.call(cuerpo.querySelectorAll('.demo-chat-burbuja')) : [];
+      if (!cuerpo || !burbujas.length) { listo(); return; }
+
+      cuerpo.classList.add('js-anim-chat');
+      burbujas.forEach(function (b) { b.classList.remove('visto'); });
+
+      var puntosEscribiendo = document.createElement('div');
+      puntosEscribiendo.className = 'demo-chat-escribiendo';
+      puntosEscribiendo.innerHTML = '<span></span><span></span><span></span>';
+
+      var i = 0;
+      function siguiente() {
+        if (i >= burbujas.length) { puntosEscribiendo.remove(); listo(); return; }
+        cuerpo.insertBefore(puntosEscribiendo, burbujas[i]);
+        window.setTimeout(function () {
+          puntosEscribiendo.remove();
+          burbujas[i].classList.add('visto');
+          i++;
+          window.setTimeout(siguiente, 420);
+        }, 700);
+      }
+      siguiente();
+    }
+
+    function ciclo() {
+      animarChat(estados[actual], function () {
+        window.setTimeout(function () {
+          irA((actual + 1) % estados.length);
+          ciclo();
+        }, 2600);
+      });
+    }
+
+    ciclo();
   })();
 </script>
 
