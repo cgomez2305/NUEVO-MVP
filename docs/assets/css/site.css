@@ -465,17 +465,20 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 /* chips flotantes: refuerzan que la tienda "vive" en tiempo real */
 .hero-col-tel{position:relative}
 .chip-flotante{
-  position:absolute;display:flex;align-items:center;gap:10px;background:var(--tiquete);color:var(--carbon);
-  border-radius:12px;padding:10px 14px;box-shadow:0 16px 32px -10px rgba(0,0,0,.5);z-index:4;
+  position:absolute;display:flex;align-items:center;gap:0;background:var(--tiquete);color:var(--carbon);
+  border-radius:10px;padding:9px 14px;box-shadow:0 16px 32px -10px rgba(0,0,0,.5);z-index:4;
+  border:1px solid rgba(32,33,36,.08);
   font-size:12px;font-weight:600;white-space:nowrap;
   opacity:0;animation:chipEntrada .6s ease both, chipFlota 4.5s ease-in-out infinite;
 }
-.chip-flotante .icono-chip{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .chip-flotante small{display:block;font-weight:400;color:var(--texto-tenue);font-size:10.5px;font-family:var(--fuente-texto)}
-.chip-pedido{top:6%;left:-9%;animation-delay:1.1s, 1.7s}
-.chip-pedido .icono-chip{background:#EAF6EF}
-.chip-pago{bottom:12%;right:-11%;animation-delay:1.4s, 2.1s}
-.chip-pago .icono-chip{background:#EEF0FB}
+.chip-divisor{width:1px;align-self:stretch;flex-shrink:0;margin:0 12px;background-image:linear-gradient(to bottom,var(--borde) 0 4px,transparent 4px 7px);background-size:1px 7px;background-repeat:repeat-y}
+.chip-ticket-num{font-family:var(--fuente-titulo);font-weight:800;font-size:16px;letter-spacing:-.01em;color:var(--sello);flex-shrink:0}
+.chip-sello-marca{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--caja);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;rotate:-13deg}
+.chip-sello-marca::before{content:"";position:absolute;inset:3px;border:1px solid var(--caja);border-radius:50%;opacity:.5}
+.chip-sello-marca span{font-family:var(--fuente-texto);font-weight:800;font-size:6.5px;letter-spacing:.03em;color:var(--caja);text-transform:uppercase}
+.chip-pedido{top:6%;left:-9%;animation-delay:1.1s, 1.7s;rotate:-2deg}
+.chip-pago{bottom:12%;right:-11%;animation-delay:1.4s, 2.1s;rotate:1.5deg}
 @keyframes chipEntrada{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes chipFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @media (max-width:900px){
@@ -488,6 +491,9 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   .telefono{width:230px}
   .telefono-pantalla{min-height:400px}
   .chip-flotante{font-size:10.5px;padding:8px 11px}
+  .chip-ticket-num{font-size:14px}
+  .chip-sello-marca{width:28px;height:28px}
+  .chip-divisor{margin:0 10px}
   .chip-pedido{left:2%;top:2%}
   .chip-pago{right:2%;bottom:8%}
 }
@@ -1007,7 +1013,7 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
 }
 
 /* blog: artículo */
-.articulo{padding:40px 0 80px}
+.articulo{padding-top:40px;padding-bottom:80px}
 .articulo-volver{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--texto-suave);text-decoration:none;margin-bottom:28px;transition:color .15s ease,gap .15s ease}
 .articulo-volver:hover{color:var(--sello);gap:10px}
 .articulo-categoria{display:inline-flex;align-items:center;gap:9px;margin-bottom:18px}
