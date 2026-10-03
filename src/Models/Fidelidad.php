@@ -76,8 +76,8 @@ class Fidelidad
                    AND pe.total >= :min1 AND pe.creado_en >= :desde1
                  UNION ALL
                  SELECT ci.cliente_id FROM citas ci JOIN sedes s ON s.id = ci.sede_id
-                 WHERE s.negocio_id = :n2 AND ci.estado <> 'cancelada'
-                   AND (ci.precio - ci.descuento) >= :min2 AND ci.creado_en >= :desde2
+                 WHERE s.negocio_id = :n2 AND " . Cita::sqlCuenta('ci') . "
+                   AND " . Cita::sqlValor('ci') . " >= :min2 AND ci.creado_en >= :desde2
                ) t GROUP BY t.cliente_id
              ) x ON x.cliente_id = c.id
              LEFT JOIN (

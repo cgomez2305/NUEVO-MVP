@@ -33,7 +33,7 @@
               <span class="pq-servicio-meta">
                 <span><?= (int) $servicio['duracion_min'] ?> min</span>
                 <span aria-hidden="true">·</span>
-                <span class="pq-servicio-precio"><?= pesos((int) $servicio['precio']) ?></span>
+                <span class="pq-servicio-precio"><?= e(precio_texto($servicio)) ?></span>
               </span>
             </span>
 

@@ -145,7 +145,7 @@ $chipEstado = ['activo' => 'pq-chip-caja', 'agotado' => '', 'vencido' => 'pq-chi
         <?php $estado = Bono::estado($bono); ?>
         <li class="pq-admin-fila">
           <span class="pq-admin-fila-texto">
-            <strong><?= e($bono['cliente_nombre']) ?></strong>
+            <strong><?= e($bono['cliente_nombre']) ?><?= !empty($bono['garantia_de']) ? ' · garantía' : '' ?></strong>
             <span class="pq-ayuda"><?= e($bono['nombre_servicio']) ?><?= !empty($bono['vence_en']) ? ' · vence el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?></span>
             <?php // Las sesiones como puntos: llenos los usados. Se lee de un vistazo cuánto le queda. ?>
             <span class="pq-bono-puntos" aria-label="<?= (int) $bono['usadas'] ?> de <?= (int) $bono['sesiones_total'] ?> sesiones usadas">

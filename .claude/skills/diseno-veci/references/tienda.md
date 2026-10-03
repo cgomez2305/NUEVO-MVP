@@ -232,3 +232,18 @@ llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
 - Reprogramar abre en el **día que ya tiene la cita** (no en "hoy") y marca
   el turno actual con la etiqueta "actual" y deshabilitado.
 
+
+## Imprevistos del lado del cliente (`/cita/{token}`, reservar)
+
+- El aviso del negocio es un **recado pegado con cinta** (`.pq-imprevisto-aviso`):
+  papel `--marca-suave`, cinta arriba, levemente torcido. Va antes del tiquete
+  porque es lo que el cliente vino a ver: nuevo valor por aprobar (Apruebo /
+  No lo apruebo), "Tenemos que mover tu cita" (motivo + Elegir otra hora) o
+  "Vamos con N minutos de retraso" (Espero / Mejor otra hora).
+- "¿Se te hizo tarde?" (`.pq-llego-tarde`, plegado, solo el día de la cita):
+  chips de minutos; los que pasan la tolerancia del negocio van punteados.
+- Reservar dice las reglas antes de confirmar (`.pq-turno-reglas`): cuánto se
+  espera y qué pasa con el anticipo si no llega. Precio "desde"/rango lleva
+  la nota "El valor final se confirma al ver el trabajo".
+- El tiquete muestra el precio por tipo, "Valor estimado" mientras no haya
+  cobro, y "Valor aprobado/final" cuando lo hay.

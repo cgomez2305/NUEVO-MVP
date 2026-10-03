@@ -30,8 +30,11 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <?= (int) $servicio['duracion_min'] ?> min
     </span>
-    <span class="pq-pagina-meta-precio"><?= pesos((int) $servicio['precio']) ?></span>
+    <span class="pq-pagina-meta-precio"><?= e(precio_texto($servicio)) ?></span>
   </p>
+  <?php if (precio_es_estimado($servicio)): ?>
+    <p class="pq-ayuda pq-precio-estimado-nota">El valor final se confirma al ver el trabajo. Si cambia, te lo mandamos para que lo apruebes antes de seguir.</p>
+  <?php endif; ?>
   <?php if ($anticipo > 0): ?>
     <div class="pq-alerta pq-alerta-aviso">
       Este servicio pide un anticipo de <strong><?= pesos($anticipo) ?></strong> para confirmar la reserva.
@@ -235,6 +238,13 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
       <?php if ($anticipo > 0): ?>
         <p class="pq-turno-anticipo">Anticipo para confirmar: <strong><?= pesos($anticipo) ?></strong>. Te mostramos cómo pagarlo en la siguiente pantalla.</p>
       <?php endif; ?>
+      <?php // Las reglas se dicen antes de reservar, no después: nadie se entera de una política cuando ya la incumplió. ?>
+      <p class="pq-turno-reglas">
+        Te esperamos hasta <?= (int) $negocio['tolerancia_min'] ?> minutos; si se te hace tarde, avísanos desde el enlace de tu cita.
+        <?php if ($anticipo > 0): ?>
+          Si no llegas, <?= $negocio['anticipo_no_asiste'] === 'se_abona' ? 'el anticipo queda abonado para tu próxima cita' : 'el anticipo no se devuelve' ?>.
+        <?php endif; ?>
+      </p>
 
       <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/cita')) ?>" id="pq-form-reserva" class="pq-confirmar-form">
         <?= csrf_campo() ?>

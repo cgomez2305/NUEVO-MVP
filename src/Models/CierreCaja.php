@@ -57,10 +57,10 @@ class CierreCaja
 
         // Citas del día (las de la agenda de ese día, no las reservadas ese día).
         $stmt = $pdo->prepare(
-            "SELECT COUNT(*) AS citas, COALESCE(SUM(precio - descuento), 0) AS total,
+            'SELECT COUNT(*) AS citas, COALESCE(SUM(' . Cita::sqlValor() . "), 0) AS total,
                     COALESCE(SUM(CASE WHEN anticipo_estado = 'pagado' THEN anticipo_monto ELSE 0 END), 0) AS anticipos
              FROM citas
-             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta AND estado <> 'cancelada'"
+             WHERE sede_id = :s AND fecha_hora >= :desde AND fecha_hora < :hasta AND " . Cita::sqlCuenta()
         );
         $stmt->execute($rango);
         $citas = $stmt->fetch() ?: ['citas' => 0, 'total' => 0, 'anticipos' => 0];

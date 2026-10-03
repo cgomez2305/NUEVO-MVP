@@ -7,6 +7,8 @@
  * Espera: $cita, $selloTexto, $selloTono ('' | 'ok' | 'no').
  */
 $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
+$cobrado = $cita['precio_final'] !== null ? (int) $cita['precio_final'] : null;
+$valorCita = \App\Models\Cita::valor($cita);
 ?>
 <div class="pq-comanda pq-comanda-final">
   <div class="pq-comanda-hoja">
@@ -22,9 +24,19 @@ $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
       <div class="pq-comanda-fila">
         <span class="pq-comanda-nombre"><?= e($cita['nombre_servicio']) ?></span>
         <span class="pq-plato-guia" aria-hidden="true"></span>
-        <span class="pq-comanda-subtotal"><?= pesos((int) $cita['precio']) ?></span>
+        <span class="pq-comanda-subtotal"><?= e(precio_texto($cita)) ?></span>
       </div>
+      <?php if ($cobrado === null && precio_es_estimado($cita)): ?>
+        <p class="pq-ayuda pq-comanda-nota">Valor estimado: se confirma al ver el trabajo.</p>
+      <?php endif; ?>
     </div>
+    <?php if ($cobrado !== null && $cobrado !== (int) $cita['precio']): ?>
+      <div class="pq-comanda-ajuste">
+        <span><?= $cita['ajuste_estado'] === 'aprobado' ? 'Valor aprobado' : 'Valor final' ?></span>
+        <span class="pq-plato-guia" aria-hidden="true"></span>
+        <span><?= pesos($cobrado) ?></span>
+      </div>
+    <?php endif; ?>
     <?php if ((int) ($cita['descuento'] ?? 0) > 0): ?>
       <div class="pq-comanda-ajuste pq-comanda-ajuste-cupon">
         <span><?= !empty($cita['cupon_codigo']) ? 'Cupón <strong>' . e($cita['cupon_codigo']) . '</strong>' : 'Descuento' ?></span>
@@ -34,7 +46,7 @@ $tsCita = strtotime((string) $cita['fecha_hora']) ?: 0;
       <div class="pq-comanda-ajuste">
         <span><strong>A pagar</strong></span>
         <span class="pq-plato-guia" aria-hidden="true"></span>
-        <span><strong><?= pesos((int) $cita['precio'] - (int) $cita['descuento']) ?></strong></span>
+        <span><strong><?= pesos($valorCita) ?></strong></span>
       </div>
     <?php endif; ?>
     <dl class="pq-comanda-datos">

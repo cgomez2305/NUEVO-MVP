@@ -4578,3 +4578,113 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-sede-extra { display: flex; flex-direction: column; align-items: flex-start; gap: var(--esp-2); max-width: 560px; margin-top: var(--esp-4); padding: var(--esp-4); border: 1.5px dashed var(--borde); border-radius: var(--radio-m); background: var(--tiquete); }
 .pq-sede-extra-precio { margin-left: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pq-sede-extra-precio small { font-weight: 500; color: var(--gris-texto); }
+
+/* ---------- Imprevistos (tienda): recado, llego tarde, reglas ---------- */
+/* El aviso del negocio como el recado que se pega en la puerta del local:
+   papel del color del negocio, una cinta arriba y levemente torcido. Es lo
+   primero que el cliente tiene que ver al abrir su cita. */
+.pq-imprevisto-aviso {
+  position: relative;
+  margin: var(--esp-5) 0 var(--esp-4);
+  padding: var(--esp-5) var(--esp-4) var(--esp-4);
+  border-radius: 4px;
+  background: var(--marca-suave);
+  border: 1px solid color-mix(in oklab, var(--marca) 30%, var(--linea-tienda));
+  box-shadow: 0 10px 18px -14px rgba(27, 26, 23, .35);
+  transform: rotate(-.6deg);
+}
+.pq-imprevisto-aviso::before {
+  content: "";
+  position: absolute; top: -9px; left: 50%;
+  width: 72px; height: 18px;
+  transform: translateX(-50%) rotate(2deg);
+  background: rgba(255, 253, 248, .72);
+  border: 1px solid rgba(27, 26, 23, .06);
+  box-shadow: 0 1px 2px rgba(27, 26, 23, .08);
+}
+.pq-imprevisto-aviso h2 { margin: 0 0 var(--esp-2); font: 700 18px/1.25 var(--fuente-titulo); color: var(--tinta); letter-spacing: -.01em; }
+.pq-imprevisto-aviso p { margin: 0 0 var(--esp-3); font-size: 14.5px; line-height: 1.5; color: var(--texto-calido); }
+.pq-imprevisto-aviso .pq-btn { width: 100%; justify-content: center; }
+.pq-imprevisto-precios { font-variant-numeric: tabular-nums; font-size: 16px !important; }
+.pq-imprevisto-precios s { color: var(--texto-tenue); margin-right: var(--esp-2); }
+.pq-imprevisto-precios strong { color: var(--tinta); font-size: 20px; }
+.pq-imprevisto-botones { display: grid; gap: var(--esp-2); }
+.pq-imprevisto-hecho { font-weight: 600; color: #1d6b3f !important; }
+@media (prefers-reduced-motion: reduce) { .pq-imprevisto-aviso { transform: none; } }
+
+.pq-llego-tarde { margin-top: var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8; }
+.pq-llego-tarde summary { min-height: 48px; display: flex; align-items: center; padding: 0 var(--esp-4); font-weight: 600; cursor: pointer; list-style: none; }
+.pq-llego-tarde summary::-webkit-details-marker { display: none; }
+.pq-llego-tarde summary::after { content: "+"; margin-left: auto; font-weight: 400; color: var(--texto-tenue); }
+.pq-llego-tarde[open] summary::after { content: "−"; }
+.pq-llego-tarde > p { margin: 0 var(--esp-4) var(--esp-2); }
+.pq-llego-tarde-opciones { display: flex; flex-wrap: wrap; gap: var(--esp-2); padding: 0 var(--esp-4) var(--esp-4); }
+.pq-chip-opcion {
+  min-height: 44px; min-width: 64px; padding: 0 var(--esp-3);
+  border: 1.5px solid var(--linea-tienda); border-radius: 999px; background: #fff;
+  font: 600 14px/1 var(--fuente-texto); font-variant-numeric: tabular-nums; color: var(--tinta); cursor: pointer;
+  transition: border-color var(--rapido) ease, background var(--rapido) ease;
+}
+.pq-chip-opcion:hover { border-color: var(--marca-texto); background: var(--marca-suave); }
+.pq-chip-opcion:focus-visible { outline: 3px solid var(--marca-texto); outline-offset: 2px; }
+/* Pasar la tolerancia se puede avisar, pero se nota que ya es mucho. */
+.pq-chip-opcion-tarde { border-style: dashed; color: var(--texto-calido); }
+
+.pq-turno-reglas { margin: var(--esp-2) 0 0; font-size: 13px; line-height: 1.5; color: var(--texto-calido); }
+.pq-precio-estimado-nota { margin: calc(-1 * var(--esp-2)) 0 var(--esp-4); }
+
+/* ---------- Imprevistos (panel): agenda, servicios ---------- */
+.pq-chip-curso { background: var(--tinte-sello); color: var(--sello); }
+/* La franja de imprevistos: botones discretos que se despliegan en el sitio. */
+.pq-imprevistos-barra { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--esp-2); margin-top: var(--esp-4); }
+.pq-imprevistos-estado { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-s); background: #FDF1DA; color: #6e4800; font-size: 14px; }
+.pq-imprevistos-estado form { display: contents; }
+.pq-imprevisto-menu > summary { list-style: none; }
+.pq-imprevisto-menu > summary::-webkit-details-marker { display: none; }
+.pq-imprevisto-menu[open] { flex-basis: 100%; }
+.pq-imprevisto-menu[open] > summary { border-color: var(--sello); color: var(--sello); }
+.pq-imprevisto-menu-panel { display: grid; gap: var(--esp-3); max-width: 560px; margin-top: var(--esp-2); padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); box-shadow: var(--sombra-suave); }
+.pq-imprevisto-menu-panel .pq-ayuda { margin: 0; }
+.pq-imprevisto-menu-panel .pq-btn { justify-self: start; }
+.pq-imprevisto-minutos { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: 0; padding: 0; border: 0; }
+.pq-imprevisto-minutos legend { margin-bottom: var(--esp-2); }
+.pq-imprevisto-minutos label { position: relative; }
+.pq-imprevisto-minutos input { position: absolute; opacity: 0; }
+.pq-imprevisto-minutos span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--esp-3); border: 1.5px solid var(--recibo); border-radius: 999px; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; cursor: pointer; }
+.pq-imprevisto-minutos input:checked + span { border-color: var(--sello); background: var(--tinte-sello); color: var(--sello); }
+.pq-imprevisto-minutos input:focus-visible + span { outline: 3px solid var(--sello); outline-offset: 2px; }
+.pq-imprevisto-check { display: flex; align-items: center; gap: var(--esp-2); min-height: 44px; font-size: 14px; }
+.pq-avisos-imprevisto { margin-top: var(--esp-5); }
+
+/* Marcas de lo que se movió en una cita: una línea de etiquetas pequeñas. */
+.pq-agenda-marcas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pq-agenda-marca { padding: 2px 8px; border-radius: 999px; background: var(--recibo); color: var(--gris-texto); font-size: 12px; font-weight: 600; }
+.pq-agenda-marca.pq-marca-aviso { background: #FDF1DA; color: #8a5a00; }
+.pq-agenda-marca.pq-marca-ok { background: #DFF3E8; color: #0f6b45; }
+.pq-agenda-marca.pq-marca-no { background: #FBE3E0; color: #9c2c17; }
+
+.pq-terminar-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--esp-2); }
+.pq-terminar-cobrado { display: grid; gap: 2px; width: 140px; }
+.pq-terminar-cobrado .pq-input { min-height: 36px; padding-top: 4px; padding-bottom: 4px; }
+.pq-ajuste-form { display: grid; gap: var(--esp-2); margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px dashed var(--recibo); }
+.pq-ajuste-form .pq-btn { justify-self: start; }
+
+.pq-atendidas { margin-top: var(--esp-6); }
+.pq-atendidas > summary { list-style: none; cursor: pointer; }
+.pq-atendidas > summary::-webkit-details-marker { display: none; }
+.pq-atendidas > summary::after { content: "+"; margin-left: var(--esp-2); color: var(--gris-suave); font-weight: 400; }
+.pq-atendidas[open] > summary::after { content: "−"; }
+.pq-garantia-form { display: flex; gap: var(--esp-2); align-items: center; flex: none; }
+.pq-garantia-form .pq-select { width: auto; min-height: 36px; }
+
+/* Duración real: una nota de la libreta, no una alerta. */
+.pq-duracion-real { display: grid; gap: var(--esp-2); margin-bottom: var(--esp-4); padding: var(--esp-3) var(--esp-4); border-left: 3px solid var(--sello); border-radius: 0 var(--radio-s) var(--radio-s) 0; background: var(--tinte-sello); }
+.pq-duracion-real p { margin: 0; font-size: 14px; line-height: 1.5; }
+.pq-duracion-real .pq-btn { justify-self: start; }
+
+.pq-reglas-agenda { margin-top: var(--esp-6); max-width: 720px; }
+.pq-reglas-agenda-form { display: grid; gap: var(--esp-4); padding: var(--esp-4); border: 1px solid var(--recibo); border-radius: var(--radio-m); background: var(--tiquete); }
+.pq-reglas-agenda-form fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--esp-2); }
+.pq-reglas-agenda-form .pq-btn { justify-self: start; }
+.pq-reglas-opcion { display: flex; align-items: flex-start; gap: var(--esp-2); min-height: 32px; font-size: 14px; line-height: 1.4; }
+.pq-reglas-opcion input { margin-top: 3px; }

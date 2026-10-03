@@ -72,6 +72,33 @@ class Servicio
         ]);
     }
 
+    /**
+     * Tipo de precio: 'fijo', 'desde' o 'rango' (de precio a precio_max).
+     * Un rango sin máximo mayor al precio no es rango: queda como 'desde'.
+     * Devuelve el tipo que quedó guardado.
+     */
+    public static function guardarTipoPrecio(int $id, int $sedeId, string $tipo, int $precioMax): string
+    {
+        $servicio = self::buscar($id, $sedeId);
+        if ($servicio === null) {
+            return 'fijo';
+        }
+        $tipo = in_array($tipo, ['fijo', 'desde', 'rango'], true) ? $tipo : 'fijo';
+        if ($tipo === 'rango' && $precioMax <= (int) $servicio['precio']) {
+            $tipo = 'desde';
+        }
+        Database::conexion()->prepare('UPDATE servicios SET precio_tipo = :t, precio_max = :m WHERE id = :id AND sede_id = :s')
+            ->execute(['t' => $tipo, 'm' => $tipo === 'rango' ? $precioMax : null, 'id' => $id, 's' => $sedeId]);
+
+        return $tipo;
+    }
+
+    public static function actualizarDuracion(int $id, int $sedeId, int $duracionMin): void
+    {
+        Database::conexion()->prepare('UPDATE servicios SET duracion_min = :d WHERE id = :id AND sede_id = :s')
+            ->execute(['d' => max(5, min(600, $duracionMin)), 'id' => $id, 's' => $sedeId]);
+    }
+
     public static function eliminar(int $id, int $sedeId): void
     {
         $stmt = Database::conexion()->prepare(

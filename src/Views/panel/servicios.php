@@ -46,11 +46,24 @@ $resumenAnticipo = static function (array $servicio): string {
               <?php if ($agotado): ?><span class="pq-chip pq-chip-cancelado">No disponible</span><?php endif; ?>
             </span>
           </span>
-          <span class="pq-servicio-panel-precio pq-mono"><?= pesos((int) $servicio['precio']) ?></span>
+          <span class="pq-servicio-panel-precio pq-mono"><?= e(precio_texto($servicio)) ?></span>
           <span class="pq-servicio-panel-editar">Editar</span>
         </summary>
 
         <div class="pq-servicio-panel-cuerpo">
+          <?php
+          // Cuánto dura de verdad (medido de Empezar a Terminar). Solo con
+          // muestra suficiente y si difiere de verdad (5+ min) de lo anotado.
+          $medida = $duraciones[(int) $servicio['id']] ?? null;
+          $sugerida = $medida !== null ? \App\Models\Imprevisto::redondearDuracion($medida['promedio']) : null;
+          ?>
+          <?php if ($sugerida !== null && abs($sugerida - (int) $servicio['duracion_min']) >= 5): ?>
+            <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/duracion-real')) ?>" class="pq-duracion-real">
+              <?= csrf_campo() ?>
+              <p>En tus últimas <?= (int) $medida['citas'] ?> citas, este servicio te tomó en promedio <strong><?= (int) $medida['promedio'] ?> min</strong>; tu agenda lo reparte en <?= (int) $servicio['duracion_min'] ?>.</p>
+              <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Usar <?= $sugerida ?> min</button>
+            </form>
+          <?php endif; ?>
           <form method="post" action="<?= e(base_url('/panel/servicios/' . $servicio['id'] . '/actualizar')) ?>" class="pq-servicio-panel-form">
             <?= csrf_campo() ?>
             <input type="hidden" name="volver" value="/panel/servicios">
@@ -69,6 +82,23 @@ $resumenAnticipo = static function (array $servicio): string {
                 <label class="pq-label" for="<?= $idBase ?>-duracion">Duración</label>
                 <div class="pq-campo-sufijo" data-sufijo="min">
                   <input class="pq-input pq-mono" id="<?= $idBase ?>-duracion" type="number" name="duracion_min" value="<?= (int) $servicio['duracion_min'] ?>" min="5" step="5" required>
+                </div>
+              </div>
+            </div>
+            <?php $tipoPrecio = (string) $servicio['precio_tipo']; ?>
+            <div class="pq-servicio-panel-par">
+              <div class="pq-campo">
+                <label class="pq-label" for="<?= $idBase ?>-tipo">¿El precio es exacto?</label>
+                <select class="pq-select" id="<?= $idBase ?>-tipo" name="precio_tipo">
+                  <option value="fijo" <?= $tipoPrecio === 'fijo' ? 'selected' : '' ?>>Sí, precio fijo</option>
+                  <option value="desde" <?= $tipoPrecio === 'desde' ? 'selected' : '' ?>>Desde ese valor</option>
+                  <option value="rango" <?= $tipoPrecio === 'rango' ? 'selected' : '' ?>>Entre ese valor y otro</option>
+                </select>
+              </div>
+              <div class="pq-campo" data-mostrar-si="precio_tipo=rango">
+                <label class="pq-label" for="<?= $idBase ?>-max">Hasta</label>
+                <div class="pq-campo-dinero">
+                  <input class="pq-input pq-mono" id="<?= $idBase ?>-max" type="text" inputmode="numeric" name="precio_max" value="<?= $servicio['precio_max'] !== null ? number_format((int) $servicio['precio_max'], 0, ',', '.') : '' ?>" data-precio-cop data-requerido-si-visible>
                 </div>
               </div>
             </div>
@@ -126,6 +156,20 @@ $resumenAnticipo = static function (array $servicio): string {
         </div>
       </div>
       <div class="pq-campo">
+        <label class="pq-label" for="srv-nuevo-tipo">¿Exacto?</label>
+        <select class="pq-select" id="srv-nuevo-tipo" name="precio_tipo">
+          <option value="fijo">Precio fijo</option>
+          <option value="desde">Desde ese valor</option>
+          <option value="rango">Entre dos valores</option>
+        </select>
+      </div>
+      <div class="pq-campo" data-mostrar-si="precio_tipo=rango">
+        <label class="pq-label" for="srv-nuevo-max">Hasta</label>
+        <div class="pq-campo-dinero">
+          <input class="pq-input pq-mono" id="srv-nuevo-max" type="text" inputmode="numeric" name="precio_max" placeholder="0" data-precio-cop data-requerido-si-visible>
+        </div>
+      </div>
+      <div class="pq-campo">
         <label class="pq-label" for="srv-nuevo-duracion">Duración</label>
         <div class="pq-campo-sufijo" data-sufijo="min">
           <input class="pq-input pq-mono" id="srv-nuevo-duracion" type="number" name="duracion_min" min="5" step="5" value="30" required>
@@ -135,6 +179,43 @@ $resumenAnticipo = static function (array $servicio): string {
     <button type="submit" class="pq-btn pq-btn-sello">Agregar servicio</button>
   </form>
 </details>
+
+<?php if ($esDueno): ?>
+  <?php // Las reglas que el cliente ve antes de reservar (ver reservar.php). ?>
+  <section class="pq-reglas-agenda" aria-labelledby="pq-titulo-reglas">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-reglas">Reglas de tu agenda</h2>
+    <p class="pq-ayuda">Para cuando las cosas no salen exactas. Tus clientes las ven antes de reservar.</p>
+    <form method="post" action="<?= e(base_url('/panel/agenda/reglas')) ?>" class="pq-reglas-agenda-form">
+      <?= csrf_campo() ?>
+      <div class="pq-servicio-panel-par">
+        <div class="pq-campo">
+          <label class="pq-label" for="regla-colchon">Colchón entre citas</label>
+          <select class="pq-select" id="regla-colchon" name="colchon_min">
+            <?php foreach (\App\Models\Imprevisto::COLCHONES as $minutos): ?>
+              <option value="<?= $minutos ?>" <?= (int) $negocio['colchon_min'] === $minutos ? 'selected' : '' ?>><?= $minutos === 0 ? 'Sin colchón' : $minutos . ' min' ?></option>
+            <?php endforeach; ?>
+          </select>
+          <span class="pq-ayuda">Si un servicio se alarga, no se come el siguiente turno.</span>
+        </div>
+        <div class="pq-campo">
+          <label class="pq-label" for="regla-tolerancia">Esperas a quien llega tarde</label>
+          <select class="pq-select" id="regla-tolerancia" name="tolerancia_min">
+            <?php foreach (\App\Models\Imprevisto::TOLERANCIAS as $minutos): ?>
+              <option value="<?= $minutos ?>" <?= (int) $negocio['tolerancia_min'] === $minutos ? 'selected' : '' ?>>Hasta <?= $minutos ?> min</option>
+            <?php endforeach; ?>
+          </select>
+          <span class="pq-ayuda">Después de eso aparece «No vino» en la agenda.</span>
+        </div>
+      </div>
+      <fieldset class="pq-campo">
+        <legend class="pq-label">Si alguien no llega y pagó anticipo</legend>
+        <label class="pq-reglas-opcion"><input type="radio" name="anticipo_no_asiste" value="se_pierde" <?= $negocio['anticipo_no_asiste'] !== 'se_abona' ? 'checked' : '' ?>><span>El anticipo no se devuelve</span></label>
+        <label class="pq-reglas-opcion"><input type="radio" name="anticipo_no_asiste" value="se_abona" <?= $negocio['anticipo_no_asiste'] === 'se_abona' ? 'checked' : '' ?>><span>Se le abona para su próxima cita <span class="pq-ayuda">(le queda un cupón por ese valor)</span></span></label>
+      </fieldset>
+      <button type="submit" class="pq-btn pq-btn-sello pq-btn-chico">Guardar reglas</button>
+    </form>
+  </section>
+<?php endif; ?>
 
 <?php if (!empty($ok)): ?>
   <div class="pq-toast" role="status">

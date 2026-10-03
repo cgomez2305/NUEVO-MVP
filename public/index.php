@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/bootstrap.php';
 
 use App\Controllers\AdminController;
+use App\Controllers\AgendaController;
 use App\Controllers\AuthController;
 use App\Controllers\CajaController;
 use App\Controllers\CrecimientoController;
@@ -26,6 +27,7 @@ $caja = new CajaController();
 $tienda = new TiendaController();
 $webhook = new WebhookController();
 $admin = new AdminController();
+$agenda = new AgendaController();
 
 // --- Público ---------------------------------------------------------
 $router->get('/', [$home, 'index']);
@@ -82,6 +84,16 @@ $router->post('/panel/citas/{id}/estado', [$panel, 'cambiarEstadoCita']);
 $router->post('/panel/lista-espera/{id}/contactado', [$panel, 'marcarContactadoListaEspera']);
 $router->post('/panel/citas/{id}/anticipo', [$panel, 'marcarAnticipoPagado']);
 $router->get('/panel/citas/exportar.csv', [$panel, 'exportarCitasCsv']);
+// Imprevistos de la agenda (AgendaController)
+$router->post('/panel/agenda/reglas', [$agenda, 'guardarReglas']);
+$router->post('/panel/agenda/retraso', [$agenda, 'retraso']);
+$router->post('/panel/agenda/dia-complicado', [$agenda, 'diaComplicado']);
+$router->post('/panel/citas/{id}/terminar', [$agenda, 'terminar']);
+$router->post('/panel/citas/{id}/no-vino', [$agenda, 'noVino']);
+$router->post('/panel/citas/{id}/ajuste', [$agenda, 'ajuste']);
+$router->post('/panel/citas/{id}/garantia', [$agenda, 'garantia']);
+$router->post('/panel/citas/{id}/aviso-imprevisto', [$agenda, 'avisar']);
+$router->post('/panel/servicios/{id}/duracion-real', [$agenda, 'usarDuracionReal']);
 $router->get('/panel/clientes/exportar.csv', [$panel, 'exportarClientesCsv']);
 $router->get('/panel/horario', [$panel, 'horario']);
 $router->post('/panel/horario', [$panel, 'guardarHorario']);
@@ -167,6 +179,9 @@ $router->get('/r/{token}', [$tienda, 'verResena']);
 $router->get('/bono/{token}', [$tienda, 'verBono']);
 $router->post('/r/{token}', [$tienda, 'responderResena']);
 $router->post('/cita/{token}/cancelar', [$tienda, 'cancelarCitaCliente']);
+$router->post('/cita/{token}/ajuste', [$tienda, 'responderAjusteCliente']);
+$router->post('/cita/{token}/tarde', [$tienda, 'llegoTardeCliente']);
+$router->post('/cita/{token}/espero', [$tienda, 'esperoCliente']);
 $router->get('/cita/{token}/reprogramar', [$tienda, 'reprogramarCitaVista']);
 $router->post('/cita/{token}/reprogramar', [$tienda, 'guardarReprogramacion']);
 

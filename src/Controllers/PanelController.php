@@ -11,6 +11,7 @@ use App\Models\Copiloto;
 use App\Models\Cupon;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\Imprevisto;
 use App\Models\Fidelidad;
 use App\Models\ListaEspera;
 use App\Models\Negocio;
@@ -545,6 +546,7 @@ class PanelController
             'activo'    => 'servicios',
             'negocio'   => $negocio,
             'servicios' => Servicio::listarPorSede((int) $negocio['id']),
+            'duraciones' => Imprevisto::duracionesReales((int) $negocio['id']),
             'volver'    => '/panel/servicios',
             'ok'        => flash_obtener('ok'),
         ], 'panel');
@@ -566,7 +568,10 @@ class PanelController
         $duracion = (int) ($_POST['duracion_min'] ?? 30);
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
-            Servicio::crear((int) $negocio['id'], $nombre, $precio, $duracion);
+            $servicioId = Servicio::crear((int) $negocio['id'], $nombre, $precio, $duracion);
+            if (isset($_POST['precio_tipo'])) {
+                Servicio::guardarTipoPrecio($servicioId, (int) $negocio['id'], (string) $_POST['precio_tipo'], dinero_desde_texto((string) ($_POST['precio_max'] ?? '')));
+            }
             flash_set('ok', "«{$nombre}» se agregó a tu lista.");
         }
 
@@ -588,6 +593,13 @@ class PanelController
 
         if ($nombre !== '' && $precio > 0 && $duracion >= 5) {
             Servicio::actualizar((int) $parametros['id'], (int) $negocio['id'], $nombre, $precio, $duracion);
+            if (isset($_POST['precio_tipo'])) {
+                $tipoGuardado = Servicio::guardarTipoPrecio((int) $parametros['id'], (int) $negocio['id'], (string) $_POST['precio_tipo'], dinero_desde_texto((string) ($_POST['precio_max'] ?? '')));
+                if ($tipoGuardado !== $_POST['precio_tipo'] && $volver === '/panel/servicios') {
+                    flash_set('ok', 'Guardado como «Desde»: para un rango, el valor «hasta» tiene que ser mayor al precio.');
+                    redirigir($volver);
+                }
+            }
 
             // El panel guarda servicio y anticipo con un solo botón. El anticipo
             // es plata del negocio: solo el dueño lo cambia (igual que en
@@ -669,7 +681,11 @@ class PanelController
             'negocio'     => $negocio,
             'citas'       => Cita::listarProximas((int) $negocio['id']),
             'listaEspera' => ListaEspera::listarPorSede((int) $negocio['id']),
+            'porAvisar'   => Imprevisto::porAvisar((int) $negocio['id']),
+            'retrasoHoy'  => Imprevisto::retrasoDeHoy((int) $negocio['id']),
+            'atendidas'   => Cita::completadasRecientes((int) $negocio['id']),
             'ok'          => flash_obtener('ok'),
+            'error'       => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -679,6 +695,10 @@ class PanelController
 
         if (csrf_verificar()) {
             $estado = (string) ($_POST['estado'] ?? '');
+            // "No vino" aplica la regla del anticipo (ver Imprevisto::noAsistio).
+            if ($estado === 'no_asistio') {
+                (new AgendaController())->noVino($parametros);
+            }
             Cita::actualizarEstado((int) $parametros['id'], (int) $negocio['id'], $estado);
             $cita = Cita::buscar((int) $parametros['id'], (int) $negocio['id']);
             if ($cita !== null && AvisoEstado::automatico('cita', $cita, $negocio)) {

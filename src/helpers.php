@@ -86,6 +86,28 @@ function pesos(int $valor): string
 }
 
 /**
+ * Precio de un servicio o de una cita según su tipo: "$20.000",
+ * "Desde $20.000" o "$20.000 – $35.000". Sirve para filas de servicios y de
+ * citas (las dos tienen precio, precio_tipo y precio_max).
+ */
+function precio_texto(array $fila): string
+{
+    $precio = (int) ($fila['precio'] ?? 0);
+
+    return match ((string) ($fila['precio_tipo'] ?? 'fijo')) {
+        'desde' => 'Desde ' . pesos($precio),
+        'rango' => pesos($precio) . ' – ' . pesos((int) ($fila['precio_max'] ?? $precio)),
+        default => pesos($precio),
+    };
+}
+
+/** ¿El precio todavía no es exacto? (se confirma al ver el trabajo) */
+function precio_es_estimado(array $fila): bool
+{
+    return in_array((string) ($fila['precio_tipo'] ?? 'fijo'), ['desde', 'rango'], true);
+}
+
+/**
  * Renderiza una vista de src/Views/{plantilla}.php con $datos extraídos
  * como variables locales, opcionalmente envuelta en un layout.
  */
@@ -192,7 +214,8 @@ function chip_estado(string $estado): string
 {
     return match ($estado) {
         'pagado', 'entregado', 'completada', 'confirmada' => 'pq-chip-caja',
-        'cancelado', 'cancelada' => 'pq-chip-cancelado',
+        'cancelado', 'cancelada', 'no_asistio' => 'pq-chip-cancelado',
+        'en_curso' => 'pq-chip-curso',
         default => 'pq-chip-pendiente',
     };
 }

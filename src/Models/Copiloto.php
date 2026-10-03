@@ -116,9 +116,9 @@ class Copiloto
         // el negocio (si compra en dos sedes de la misma marca, es el mismo
         // cliente), así que se cruza con sedes para filtrar por negocio_id.
         $sql = $tipoNegocio === 'reservas'
-            ? 'SELECT c.cliente_id, c.fecha_hora AS fecha, c.precio AS monto FROM citas c
+            ? 'SELECT c.cliente_id, c.fecha_hora AS fecha, ' . Cita::sqlValor('c') . ' AS monto FROM citas c
                JOIN sedes s ON s.id = c.sede_id
-               WHERE s.negocio_id = :negocio_id AND c.estado != "cancelada" ORDER BY c.cliente_id ASC, c.fecha_hora ASC'
+               WHERE s.negocio_id = :negocio_id AND ' . Cita::sqlCuenta('c') . ' ORDER BY c.cliente_id ASC, c.fecha_hora ASC'
             : 'SELECT p.cliente_id, p.creado_en AS fecha, p.total AS monto FROM pedidos p
                JOIN sedes s ON s.id = p.sede_id
                WHERE s.negocio_id = :negocio_id ORDER BY p.cliente_id ASC, p.creado_en ASC';
@@ -223,7 +223,7 @@ class Copiloto
         $sql = $tipoNegocio === 'reservas'
             ? 'SELECT c.cliente_id, COUNT(*) AS total FROM citas c
                JOIN sedes s ON s.id = c.sede_id
-               WHERE s.negocio_id = :negocio_id AND c.fecha_hora >= NOW() - INTERVAL 30 DAY AND c.estado != "cancelada"
+               WHERE s.negocio_id = :negocio_id AND c.fecha_hora >= NOW() - INTERVAL 30 DAY AND ' . Cita::sqlCuenta('c') . '
                GROUP BY c.cliente_id'
             : 'SELECT p.cliente_id, COUNT(*) AS total FROM pedidos p
                JOIN sedes s ON s.id = p.sede_id
@@ -295,7 +295,7 @@ class Copiloto
     {
         $sql = $tipoNegocio === 'reservas'
             ? 'SELECT 1 FROM citas c JOIN sedes s ON s.id = c.sede_id
-               WHERE s.negocio_id = :negocio_id AND c.cliente_id = :cliente_id AND c.estado != "cancelada"
+               WHERE s.negocio_id = :negocio_id AND c.cliente_id = :cliente_id AND ' . Cita::sqlCuenta('c') . '
                  AND c.fecha_hora > :fecha LIMIT 1'
             : 'SELECT 1 FROM pedidos p JOIN sedes s ON s.id = p.sede_id
                WHERE s.negocio_id = :negocio_id AND p.cliente_id = :cliente_id AND p.creado_en > :fecha LIMIT 1';

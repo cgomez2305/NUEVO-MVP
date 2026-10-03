@@ -9,14 +9,17 @@ $estado = Bono::estado($bono);
 $quedan = max(0, (int) $bono['sesiones_total'] - (int) $bono['usadas']);
 $total = (int) $bono['sesiones_total'];
 $columnas = $total <= 6 ? $total : (int) ceil($total / 2);
+$esGarantia = !empty($bono['garantia_de']);
 ?>
 <div class="pq-content-tienda pq-flujo pq-flujo-angosto">
-  <h1 class="pq-pagina-titulo">Tu bono de <?= e(mb_strtolower((string) $bono['nombre_servicio'])) ?></h1>
+  <h1 class="pq-pagina-titulo"><?= $esGarantia ? 'Tu garantía de ' : 'Tu bono de ' ?><?= e(mb_strtolower((string) $bono['nombre_servicio'])) ?></h1>
   <p class="pq-pagina-bajada">
     <?php if ($estado === 'agotado'): ?>
-      Ya usaste todas las sesiones. ¡Gracias por venir!
+      <?= $esGarantia ? 'Ya usaste tu garantía. ¡Gracias por la confianza!' : 'Ya usaste todas las sesiones. ¡Gracias por venir!' ?>
     <?php elseif ($estado === 'vencido'): ?>
-      Este bono venció el <?= e(fecha_larga((string) $bono['vence_en'])) ?>. Escríbele al negocio si te quedó alguna pendiente.
+      <?= $esGarantia ? 'Esta garantía' : 'Este bono' ?> venció el <?= e(fecha_larga((string) $bono['vence_en'])) ?>. Escríbele al negocio si te quedó alguna pendiente.
+    <?php elseif ($esGarantia): ?>
+      El retoque va sin costo<?= !empty($bono['vence_en']) ? ' hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Reserva con tu mismo WhatsApp y se aplica solo.
     <?php else: ?>
       <?= $quedan === 1 ? 'Te queda 1 sesión' : 'Te quedan ' . $quedan . ' sesiones' ?><?= !empty($bono['vence_en']) ? ', hasta el ' . e(fecha_larga((string) $bono['vence_en'])) : '' ?>. Se descuentan solas al reservar con tu WhatsApp.
     <?php endif; ?>

@@ -125,6 +125,11 @@ CREATE TABLE IF NOT EXISTS sedes (
   llave_breb_valor    VARCHAR(120) DEFAULT NULL,
   horario_atencion    JSON         DEFAULT NULL,
   intervalo_citas_min SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  -- Reglas de la agenda (imprevistos): colchón entre citas, minutos que se
+  -- espera a quien llega tarde y qué pasa con el anticipo si no llega.
+  colchon_min         TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  tolerancia_min      TINYINT UNSIGNED NOT NULL DEFAULT 15,
+  anticipo_no_asiste  ENUM('se_pierde','se_abona') NOT NULL DEFAULT 'se_pierde',
   -- Si el checkout público ofrece "Comer aquí" como forma de entrega. Por
   -- defecto activo (no cambia el comportamiento de sedes ya creadas); un
   -- negocio sin consumo en el local (tienda, panadería solo para llevar...)
@@ -252,6 +257,10 @@ CREATE TABLE IF NOT EXISTS servicios (
   sede_id       INT UNSIGNED NOT NULL,
   nombre        VARCHAR(120) NOT NULL,
   precio        INT UNSIGNED NOT NULL,
+  -- 'fijo' ($20.000), 'desde' (desde $20.000) o 'rango' (hasta precio_max):
+  -- muchos trabajos no tienen un precio exacto hasta verlos.
+  precio_tipo   ENUM('fijo','desde','rango') NOT NULL DEFAULT 'fijo',
+  precio_max    INT UNSIGNED DEFAULT NULL,
   duracion_min  SMALLINT UNSIGNED NOT NULL DEFAULT 30,
   color         CHAR(7)      NOT NULL DEFAULT '#5B7F3A',
   activo        TINYINT(1)   NOT NULL DEFAULT 1,
@@ -303,11 +312,19 @@ CREATE TABLE IF NOT EXISTS citas (
   empleado_id   INT UNSIGNED DEFAULT NULL,
   nombre_servicio VARCHAR(120) NOT NULL,
   precio        INT UNSIGNED NOT NULL,
+  -- Copiados del servicio: 'fijo', 'desde' o 'rango' (hasta precio_max).
+  precio_tipo   ENUM('fijo','desde','rango') NOT NULL DEFAULT 'fijo',
+  precio_max    INT UNSIGNED DEFAULT NULL,
+  -- Lo que de verdad se cobró (al terminar o al aprobar un ajuste). NULL = precio.
+  precio_final  INT UNSIGNED DEFAULT NULL,
   descuento     INT UNSIGNED NOT NULL DEFAULT 0,
   cupon_codigo  VARCHAR(20)  DEFAULT NULL,
   fecha_hora    DATETIME     NOT NULL,
   duracion_min  SMALLINT UNSIGNED NOT NULL DEFAULT 30,
-  estado        ENUM('pendiente','confirmada','completada','cancelada')
+  -- Duración real: de "Empezar" a "Terminar" en la agenda.
+  iniciada_en   DATETIME     DEFAULT NULL,
+  terminada_en  DATETIME     DEFAULT NULL,
+  estado        ENUM('pendiente','confirmada','en_curso','completada','no_asistio','cancelada')
                 NOT NULL DEFAULT 'pendiente',
   notas         VARCHAR(255) DEFAULT NULL,
   token_gestion CHAR(32)     DEFAULT NULL,
@@ -315,6 +332,19 @@ CREATE TABLE IF NOT EXISTS citas (
   aviso_estado  VARCHAR(20)  DEFAULT NULL,
   anticipo_monto  INT UNSIGNED NOT NULL DEFAULT 0,
   anticipo_estado ENUM('no_requerido','pendiente','pagado') NOT NULL DEFAULT 'no_requerido',
+  -- Imprevistos: retraso avisado por el negocio o por el cliente (y si el
+  -- cliente dijo que espera), cita que el negocio pidió mover por un
+  -- imprevisto (se limpia al reprogramar), aviso de imprevisto pendiente de
+  -- mandar ('retraso'|'reprogramar') y ajuste de precio que el cliente
+  -- aprueba o no desde su enlace.
+  retraso_negocio_min SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  retraso_cliente_min SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  cliente_espera      TINYINT(1)   NOT NULL DEFAULT 0,
+  imprevisto_motivo   VARCHAR(120) DEFAULT NULL,
+  aviso_imprevisto    VARCHAR(20)  DEFAULT NULL,
+  ajuste_precio       INT UNSIGNED DEFAULT NULL,
+  ajuste_motivo       VARCHAR(200) DEFAULT NULL,
+  ajuste_estado       ENUM('pendiente','aprobado','rechazado') DEFAULT NULL,
   creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
@@ -592,6 +622,8 @@ CREATE TABLE IF NOT EXISTS bonos (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   sede_id         INT UNSIGNED     NOT NULL,
   paquete_id      INT UNSIGNED     DEFAULT NULL,
+  -- Garantía o retoque: bono de 1 sesión a $0 ligado a la cita original.
+  garantia_de     INT UNSIGNED     DEFAULT NULL,
   cliente_id      INT UNSIGNED     NOT NULL,
   servicio_id     INT UNSIGNED     DEFAULT NULL,
   nombre_servicio VARCHAR(120)     NOT NULL,
@@ -604,6 +636,7 @@ CREATE TABLE IF NOT EXISTS bonos (
   UNIQUE KEY uniq_bono_token (token),
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE SET NULL,
+  CONSTRAINT fk_bonos_garantia FOREIGN KEY (garantia_de) REFERENCES citas(id) ON DELETE SET NULL,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
   FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
   INDEX idx_bonos_cliente (sede_id, cliente_id)
@@ -654,4 +687,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_09_avisos_estado.sql'),
   ('2026-10-03_10_pasarela_wompi.sql'),
   ('2026-10-03_11_referidos.sql'),
-  ('2026-10-03_12_sedes_extra.sql');
+  ('2026-10-03_12_sedes_extra.sql'),
+  ('2026-10-03_13_imprevistos.sql');

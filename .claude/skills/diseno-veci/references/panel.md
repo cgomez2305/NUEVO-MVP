@@ -303,3 +303,28 @@ ilustraciones.
   con sedes extra, "Mensual · $159.000" y la nota "Incluye 1 sede extra".
   El pendiente de sede extra se titula "1 sede extra hasta el …"; el admin
   la ve en la consignación como "Concepto: Sede extra".
+
+## Imprevistos de la agenda (`/panel/citas`, `/panel/servicios`)
+
+Lógica en `App\Models\Imprevisto` y `AgendaController`; migración
+`2026-10-03_13_imprevistos.sql`. Nada en la agenda es exacto:
+- **Precio fijo / desde / rango** por servicio ("¿El precio es exacto?" +
+  "Hasta" con `data-mostrar-si`, que ahora busca dentro de su propio
+  formulario). La cita copia el tipo; al **Terminar** se pregunta "Cobrado"
+  solo si el precio no era exacto o hubo ajuste (`citas.precio_final`). Toda
+  suma usa `Cita::sqlValor()` / `Cita::sqlCuenta()` (sin canceladas ni "no vino").
+- Estados nuevos `en_curso` (botón **Empezar**, solo el mismo día y cerca de
+  la hora) y `no_asistio` (**No vino**, solo pasada la tolerancia + lo que
+  el cliente avisó que llegaba tarde). Etiquetas en `Cita::ETIQUETAS`.
+- Franja **Voy retrasado** / **Se me complicó el día** arriba de la agenda
+  (`<details>` que se abren en el sitio). Los avisos pendientes van en
+  "Por avisar" con el mensaje listo (o salen solos con la API de WhatsApp).
+- Marcas en cada cita (`.pq-agenda-marca`): llega tarde, por reprogramar,
+  retraso por avisar / sabe / espera, nuevo valor por aprobar / aprobado / no.
+- **Más** guarda el cambio de estado y "Cambió el valor" (ajuste que el
+  cliente aprueba desde su enlace).
+- **Atendidas en los últimos 30 días** (plegado): "Dar garantía" crea un bono
+  de 1 sesión a $0 (`bonos.garantia_de`) y abre WhatsApp con su enlace.
+- Servicios: **Reglas de tu agenda** (colchón, tolerancia, anticipo si no
+  llega) y la nota de **duración real** (≥ 5 citas medidas, diferencia ≥ 5 min)
+  con "Usar N min".

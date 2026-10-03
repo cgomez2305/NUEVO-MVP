@@ -8,7 +8,48 @@ use App\Database;
 
 class Cita
 {
-    public const ESTADOS = ['pendiente', 'confirmada', 'completada', 'cancelada'];
+    public const ESTADOS = ['pendiente', 'confirmada', 'en_curso', 'completada', 'no_asistio', 'cancelada'];
+
+    /** Estados que no son venta ni ocupan la agenda: la cita no pasó. */
+    public const ESTADOS_SIN_VENTA = ['cancelada', 'no_asistio'];
+
+    public const ETIQUETAS = [
+        'pendiente'  => 'Pendiente',
+        'confirmada' => 'Confirmada',
+        'en_curso'   => 'En curso',
+        'completada' => 'Completada',
+        'no_asistio' => 'No vino',
+        'cancelada'  => 'Cancelada',
+    ];
+
+    /**
+     * Lo que vale una cita en cualquier suma (ventas, caja, sellos): lo que
+     * de verdad se cobró si ya se sabe (precio_final, al terminar o al
+     * aprobar un ajuste), si no el precio con el que se reservó; menos el
+     * descuento (cupón o bono), nunca negativo.
+     */
+    public static function sqlValor(string $alias = ''): string
+    {
+        $a = $alias !== '' ? $alias . '.' : '';
+
+        return "GREATEST(CAST(COALESCE({$a}precio_final, {$a}precio) AS SIGNED) - CAST({$a}descuento AS SIGNED), 0)";
+    }
+
+    /** La cita cuenta (como venta, visita u ocupación): no fue cancelada ni el cliente faltó. */
+    public static function sqlCuenta(string $alias = ''): string
+    {
+        $a = $alias !== '' ? $alias . '.' : '';
+
+        return "{$a}estado NOT IN ('cancelada', 'no_asistio')";
+    }
+
+    /** El mismo valor que sqlValor(), para una fila ya leída. */
+    public static function valor(array $cita): int
+    {
+        $base = $cita['precio_final'] !== null && $cita['precio_final'] !== '' ? (int) $cita['precio_final'] : (int) $cita['precio'];
+
+        return max(0, $base - (int) $cita['descuento']);
+    }
 
     public static function crear(
         int $sedeId,
@@ -22,15 +63,17 @@ class Cita
         ?int $empleadoId = null,
         int $anticipoMonto = 0,
         int $descuento = 0,
-        ?string $cuponCodigo = null
+        ?string $cuponCodigo = null,
+        string $precioTipo = 'fijo',
+        ?int $precioMax = null
     ): int {
         $pdo = Database::conexion();
         $token = bin2hex(random_bytes(16));
         $anticipoEstado = $anticipoMonto > 0 ? 'pendiente' : 'no_requerido';
 
         $stmt = $pdo->prepare(
-            'INSERT INTO citas (sede_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, descuento, cupon_codigo, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
-             VALUES (:sede_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :descuento, :cupon_codigo, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
+            'INSERT INTO citas (sede_id, cliente_id, servicio_id, empleado_id, nombre_servicio, precio, precio_tipo, precio_max, descuento, cupon_codigo, fecha_hora, duracion_min, estado, notas, token_gestion, anticipo_monto, anticipo_estado)
+             VALUES (:sede_id, :cliente_id, :servicio_id, :empleado_id, :nombre_servicio, :precio, :precio_tipo, :precio_max, :descuento, :cupon_codigo, :fecha_hora, :duracion_min, :pendiente, :notas, :token, :anticipo_monto, :anticipo_estado)'
         );
         $stmt->execute([
             'sede_id'      => $sedeId,
@@ -39,6 +82,8 @@ class Cita
             'empleado_id'     => $empleadoId,
             'nombre_servicio' => $nombreServicio,
             'precio'          => $precio,
+            'precio_tipo'     => in_array($precioTipo, ['fijo', 'desde', 'rango'], true) ? $precioTipo : 'fijo',
+            'precio_max'      => $precioTipo === 'rango' ? $precioMax : null,
             'descuento'       => max(0, min($precio, $descuento)),
             'cupon_codigo'    => $cuponCodigo,
             'fecha_hora'      => $fechaHora,
@@ -71,10 +116,18 @@ class Cita
         return $stmt->fetch() ?: null;
     }
 
+    /**
+     * Mueve la cita a otra hora. Lo que era de la hora vieja se limpia: el
+     * retraso avisado, el imprevisto que pedía moverla (y su aviso, si
+     * todavía no se mandó) y el "llego tarde" del cliente.
+     */
     public static function reprogramar(int $id, int $sedeId, string $fechaHora): void
     {
         $stmt = Database::conexion()->prepare(
-            "UPDATE citas SET fecha_hora = :fecha_hora, estado = 'pendiente' WHERE id = :id AND sede_id = :sede_id"
+            "UPDATE citas SET fecha_hora = :fecha_hora, estado = 'pendiente', recordatorio_enviado = 0,
+                    retraso_negocio_min = 0, retraso_cliente_min = 0, cliente_espera = 0, imprevisto_motivo = NULL,
+                    aviso_imprevisto = IF(aviso_imprevisto IN ('retraso', 'reprogramar'), NULL, aviso_imprevisto)
+             WHERE id = :id AND sede_id = :sede_id"
         );
         $stmt->execute(['fecha_hora' => $fechaHora, 'id' => $id, 'sede_id' => $sedeId]);
     }
@@ -140,7 +193,8 @@ class Cita
             "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
              WHERE c.sede_id = :sede_id
-               AND c.estado != 'cancelada'
+               AND c.estado IN ('pendiente', 'confirmada')
+               AND c.imprevisto_motivo IS NULL
                AND c.recordatorio_enviado = 0
                AND c.fecha_hora BETWEEN DATE_ADD(NOW(), INTERVAL 24 HOUR) AND DATE_ADD(NOW(), INTERVAL 30 HOUR)
              ORDER BY c.fecha_hora ASC"
@@ -155,7 +209,8 @@ class Cita
         $stmt = Database::conexion()->prepare(
             "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono
              FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
-             WHERE c.estado != 'cancelada'
+             WHERE c.estado IN ('pendiente', 'confirmada')
+               AND c.imprevisto_motivo IS NULL
                AND c.recordatorio_enviado = 0
                AND c.fecha_hora BETWEEN DATE_ADD(NOW(), INTERVAL 24 HOUR) AND DATE_ADD(NOW(), INTERVAL 30 HOUR)
              ORDER BY c.sede_id ASC, c.fecha_hora ASC"
@@ -190,10 +245,15 @@ class Cita
         if (!in_array($estado, self::ESTADOS, true)) {
             return;
         }
+        // Empezar y terminar dejan la hora real (la primera vez): de ahí sale
+        // cuánto dura de verdad cada servicio (ver Imprevisto::duracionesReales).
         $stmt = Database::conexion()->prepare(
-            'UPDATE citas SET estado = :estado WHERE id = :id AND sede_id = :sede_id'
+            "UPDATE citas SET estado = :estado,
+                    iniciada_en = IF(:e1 = 'en_curso', COALESCE(iniciada_en, NOW()), iniciada_en),
+                    terminada_en = IF(:e2 = 'completada' AND iniciada_en IS NOT NULL, COALESCE(terminada_en, NOW()), terminada_en)
+             WHERE id = :id AND sede_id = :sede_id"
         );
-        $stmt->execute(['estado' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
+        $stmt->execute(['estado' => $estado, 'e1' => $estado, 'e2' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
         // Cancelada (por el negocio o por el cliente): si se pagó con un
         // bono, la sesión vuelve al bono.
         if ($estado === 'cancelada' && $stmt->rowCount() > 0) {
@@ -210,11 +270,50 @@ class Cita
      */
     public static function siguientePaso(array $cita): ?array
     {
+        // "Empezar" solo tiene sentido el mismo día y cerca de la hora; para
+        // una cita de otro día (o anotada después) basta con completarla.
+        $inicio = strtotime((string) $cita['fecha_hora']) ?: 0;
+        $yaToca = date('Y-m-d', $inicio) === date('Y-m-d') && time() >= $inicio - 3600;
+
         return match ($cita['estado']) {
-            'pendiente' => ['estado' => 'confirmada', 'texto' => 'Confirmar cita'],
-            'confirmada' => ['estado' => 'completada', 'texto' => 'Marcar completada'],
-            default => null,
+            'pendiente'  => ['estado' => 'confirmada', 'texto' => 'Confirmar cita'],
+            'confirmada' => $yaToca ? ['estado' => 'en_curso', 'texto' => 'Empezar'] : ['estado' => 'completada', 'texto' => 'Marcar completada'],
+            'en_curso'   => ['estado' => 'completada', 'texto' => 'Terminar'],
+            default      => null,
         };
+    }
+
+    /**
+     * Termina la cita con lo que de verdad se cobró. Sin valor (o con
+     * precio fijo y sin ajuste), queda el precio de la reserva.
+     */
+    public static function terminar(int $id, int $sedeId, ?int $cobrado): void
+    {
+        self::actualizarEstado($id, $sedeId, 'completada');
+        if ($cobrado !== null) {
+            Database::conexion()->prepare('UPDATE citas SET precio_final = :p WHERE id = :id AND sede_id = :s')
+                ->execute(['p' => max(0, $cobrado), 'id' => $id, 's' => $sedeId]);
+        }
+    }
+
+    /** Atendidas en los últimos días, para dar garantía o retoque desde la agenda. */
+    public static function completadasRecientes(int $sedeId, int $dias = 30, int $limite = 30): array
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT c.*, cl.nombre AS cliente_nombre, cl.telefono AS cliente_telefono, e.nombre AS empleado_nombre,
+                    (SELECT b.token FROM bonos b WHERE b.garantia_de = c.id LIMIT 1) AS garantia_token
+             FROM citas c JOIN clientes cl ON cl.id = c.cliente_id
+             LEFT JOIN empleados e ON e.id = c.empleado_id
+             WHERE c.sede_id = :s AND c.estado = 'completada'
+               AND c.fecha_hora >= DATE_SUB(CURDATE(), INTERVAL :d DAY) AND c.fecha_hora < CURDATE()
+             ORDER BY c.fecha_hora DESC LIMIT :l"
+        );
+        $stmt->bindValue('s', $sedeId, \PDO::PARAM_INT);
+        $stmt->bindValue('d', $dias, \PDO::PARAM_INT);
+        $stmt->bindValue('l', $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
 
     /** Citas creadas después de cierto ID, para el polling de notificaciones del panel. */
@@ -255,7 +354,7 @@ class Cita
     {
         $stmt = Database::conexion()->prepare(
             'SELECT COUNT(*) AS total FROM citas
-             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
+             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND ' . self::sqlCuenta()
         );
         $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
@@ -265,8 +364,8 @@ class Cita
     public static function ventasHoy(int $sedeId): int
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT COALESCE(SUM(precio - descuento), 0) AS total FROM citas
-             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND estado != "cancelada"'
+            'SELECT COALESCE(SUM(' . self::sqlValor() . '), 0) AS total FROM citas
+             WHERE sede_id = :sede_id AND DATE(fecha_hora) = CURDATE() AND ' . self::sqlCuenta()
         );
         $stmt->execute(['sede_id' => $sedeId]);
         return (int) $stmt->fetch()['total'];
@@ -283,12 +382,12 @@ class Cita
         $stmt = Database::conexion()->prepare(
             'SELECT
                 COUNT(*) AS citas,
-                COALESCE(SUM(c.precio - c.descuento), 0) AS ventas,
+                COALESCE(SUM(' . self::sqlValor('c') . '), 0) AS ventas,
                 COUNT(DISTINCT CASE WHEN historico.total_citas >= 2 THEN c.cliente_id END) AS recurrentes
              FROM citas c
              JOIN (SELECT cliente_id, COUNT(*) AS total_citas FROM citas WHERE sede_id = :sede_id_h GROUP BY cliente_id) historico
                ON historico.cliente_id = c.cliente_id
-             WHERE c.sede_id = :sede_id AND c.creado_en >= :desde AND c.estado != "cancelada"'
+             WHERE c.sede_id = :sede_id AND c.creado_en >= :desde AND ' . self::sqlCuenta('c')
         );
         $stmt->execute([
             'sede_id_h' => $sedeId,
@@ -317,7 +416,7 @@ class Cita
     public static function ocupadosEnFecha(int $sedeId, string $fecha, ?int $excluirCitaId = null, ?int $empleadoId = null): array
     {
         $sql = 'SELECT fecha_hora, duracion_min FROM citas
-                WHERE sede_id = :sede_id AND DATE(fecha_hora) = :fecha AND estado != "cancelada"';
+                WHERE sede_id = :sede_id AND DATE(fecha_hora) = :fecha AND ' . self::sqlCuenta();
         $params = ['sede_id' => $sedeId, 'fecha' => $fecha];
 
         if ($excluirCitaId !== null) {
@@ -360,7 +459,8 @@ class Cita
         int $intervaloMin,
         string $fecha,
         int $duracionServicioMin,
-        array $ocupados
+        array $ocupados,
+        int $colchonMin = 0
     ): array {
         $diaSemana = (string) (int) date('N', strtotime($fecha));
         $franjas = $horarioAtencion[$diaSemana] ?? [];
@@ -391,9 +491,13 @@ class Cita
                     continue;
                 }
 
+                // El colchón (sedes.colchon_min) separa cada cita de la
+                // siguiente: un servicio que se alarga no se come el
+                // siguiente turno. Solo cuenta entre citas, no contra el
+                // cierre de la franja.
                 $seSolapa = false;
                 foreach ($ocupadosMin as $bloque) {
-                    if ($minuto < $bloque['fin'] && ($minuto + $duracionServicioMin) > $bloque['inicio']) {
+                    if ($minuto < $bloque['fin'] + $colchonMin && ($minuto + $duracionServicioMin + $colchonMin) > $bloque['inicio']) {
                         $seSolapa = true;
                         break;
                     }

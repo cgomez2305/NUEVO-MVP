@@ -103,7 +103,10 @@
       var partes = campo.getAttribute('data-mostrar-si').split('=');
       var nombre = partes[0];
       var valorEsperado = partes[1];
-      var elegido = document.querySelector('[name="' + nombre + '"]:checked') || document.querySelector('[name="' + nombre + '"]');
+      // Se busca dentro del mismo formulario: una lista de servicios tiene
+      // un formulario por fila con los mismos nombres de campo.
+      var ambito = campo.closest('form') || document;
+      var elegido = ambito.querySelector('[name="' + nombre + '"]:checked') || ambito.querySelector('[name="' + nombre + '"]');
       var mostrar = !!elegido && elegido.value === valorEsperado;
       campo.style.display = mostrar ? '' : 'none';
       // Todos, no solo el primero: el bloque del domicilio tiene la zona

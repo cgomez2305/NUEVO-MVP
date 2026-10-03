@@ -13,6 +13,7 @@ use App\Models\Resena;
 use App\Models\ZonaDomicilio;
 use App\Models\Empleado;
 use App\Models\FechaBloqueada;
+use App\Models\Imprevisto;
 use App\Models\LimiteTasa;
 use App\Models\ListaEspera;
 use App\Models\Sede;
@@ -56,7 +57,8 @@ class TiendaController
                         (int) $negocio['intervalo_citas_min'],
                         $hoy,
                         (int) $servicio['duracion_min'],
-                        $ocupadosHoy
+                        $ocupadosHoy,
+                        (int) $negocio['colchon_min']
                     );
                     $disponibilidadHoy[$servicio['id']] = $slots[0] ?? null;
                 }
@@ -160,7 +162,7 @@ class TiendaController
 
             if (!$bloqueada && !$faltaElegirEmpleado) {
                 $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, null, $empleadoElegido['id'] ?? null);
-                $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados);
+                $slots = Cita::calcularDisponibilidad($horario, $intervalo, $fecha, (int) $servicio['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
             }
 
             $slotValido = $horaElegida !== '' && in_array($horaElegida, $slots, true);
@@ -184,7 +186,7 @@ class TiendaController
                         continue;
                     }
                     $ocupadosOpcion = Cita::ocupadosEnFecha((int) $negocio['id'], $opcion, null, $empleadoElegido['id'] ?? null);
-                    $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion);
+                    $slotsOpcion = Cita::calcularDisponibilidad($horario, $intervalo, $opcion, (int) $servicio['duracion_min'], $ocupadosOpcion, (int) $negocio['colchon_min']);
                     if ($slotsOpcion !== []) {
                         $proximoDisponible = ['fecha' => $opcion, 'hora' => $slotsOpcion[0]];
                         break;
@@ -281,7 +283,8 @@ class TiendaController
             (int) $negocio['intervalo_citas_min'],
             $fecha,
             (int) $servicio['duracion_min'],
-            $ocupados
+            $ocupados,
+            (int) $negocio['colchon_min']
         );
 
         if (!in_array($hora, $slots, true)) {
@@ -335,6 +338,8 @@ class TiendaController
             $anticipo,
             $descuentoCita,
             $cuponUsado['codigo'] ?? null,
+            (string) $servicio['precio_tipo'],
+            $servicio['precio_max'] !== null ? (int) $servicio['precio_max'] : null,
         );
         $cita = Cita::buscar($citaId, (int) $negocio['id']);
         if ($cuponUsado !== null && $descuentoCita > 0) {
@@ -355,7 +360,7 @@ class TiendaController
 
         $resumenTexto = "Reserva nueva de {$nombre}:\n"
             . "- {$servicio['nombre']} el " . date('d/m/Y', strtotime($fecha)) . " a las {$hora}\n"
-            . 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita)
+            . (precio_es_estimado($servicio) ? 'Valor estimado: ' . precio_texto($servicio) . ' (se confirma al ver el trabajo)' : 'Valor: ' . pesos((int) $servicio['precio'] - $descuentoCita))
             . ($descuentoCita > 0 ? ' (con cupón ' . $cuponUsado['codigo'] . ', -' . pesos($descuentoCita) . ')' : '')
             . ($anticipo > 0 ? "\nAnticipo requerido: " . pesos($anticipo) : '')
             . ($usoBono !== null ? "\nCon bono: sesión {$usoBono['usadas']} de {$usoBono['sesiones_total']}" : '');
@@ -827,7 +832,7 @@ class TiendaController
         $sede = Sede::buscarPorId((int) $bono['sede_id']);
 
         ver('tienda/bono', [
-            'titulo'  => 'Tu bono · ' . nombre_publico_sede($sede),
+            'titulo'  => (!empty($bono['garantia_de']) ? 'Tu garantía · ' : 'Tu bono · ') . nombre_publico_sede($sede),
             'negocio' => $sede,
             'bono'    => $bono,
         ], 'tienda');
@@ -856,11 +861,67 @@ class TiendaController
             abortar404();
         }
 
-        if (csrf_verificar() && $cita['estado'] !== 'cancelada') {
+        if (csrf_verificar() && in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
             Cita::actualizarEstado((int) $cita['id'], (int) $cita['sede_id'], 'cancelada');
             flash_set('ok', 'Tu cita quedó cancelada.');
         }
 
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /** El cliente aprueba (o no) el nuevo valor que propuso el negocio. */
+    public function responderAjusteCliente(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+        if (csrf_verificar()) {
+            $aprueba = ($_POST['respuesta'] ?? '') === 'aprobar';
+            if (Imprevisto::responderAjuste((int) $cita['id'], $aprueba)) {
+                WebPush::notificarSede(
+                    (int) $cita['sede_id'],
+                    $aprueba ? 'Nuevo valor aprobado' : 'Nuevo valor no aprobado',
+                    $cita['cliente_nombre'] . ' · ' . $cita['nombre_servicio'] . ' · ' . pesos((int) $cita['ajuste_precio']),
+                    '/panel/citas'
+                );
+                flash_set('ok', $aprueba ? 'Listo: aprobaste el nuevo valor.' : 'Le avisamos al negocio que no apruebas el nuevo valor.');
+            }
+        }
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /** El cliente avisa que llega tarde: el negocio lo ve en la agenda y le llega una notificación. */
+    public function llegoTardeCliente(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+        $minutos = (int) ($_POST['minutos'] ?? 0);
+        if (csrf_verificar() && Imprevisto::clienteLlegaTarde((int) $cita['id'], $minutos)) {
+            WebPush::notificarSede(
+                (int) $cita['sede_id'],
+                $cita['cliente_nombre'] . " llega {$minutos} min tarde",
+                $cita['nombre_servicio'] . ' de las ' . hora_legible(date('H:i', strtotime((string) $cita['fecha_hora']) ?: 0)),
+                '/panel/citas'
+            );
+            flash_set('ok', 'Le avisamos al negocio que llegas unos ' . $minutos . ' minutos tarde.');
+        }
+        redirigir('/cita/' . $cita['token_gestion']);
+    }
+
+    /** El cliente vio el retraso del negocio y dice que espera. */
+    public function esperoCliente(array $parametros): void
+    {
+        $cita = Cita::buscarPorToken((string) $parametros['token']);
+        if ($cita === null) {
+            abortar404();
+        }
+        if (csrf_verificar()) {
+            Imprevisto::clienteEspera((int) $cita['id']);
+            flash_set('ok', '¡Gracias por la paciencia! Te esperamos.');
+        }
         redirigir('/cita/' . $cita['token_gestion']);
     }
 
@@ -871,6 +932,9 @@ class TiendaController
             abortar404();
         }
 
+        if (!in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
+            redirigir('/cita/' . $cita['token_gestion']);
+        }
         $negocio = Sede::buscarPorId((int) $cita['sede_id']);
 
         // Sin ?fecha, se abre en el día que ya tiene la cita (si no pasó):
@@ -886,7 +950,7 @@ class TiendaController
         $bloqueada = FechaBloqueada::estaBloqueada((int) $negocio['id'], $fecha);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
         $ocupados = $bloqueada ? [] : Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
-        $slots = $bloqueada ? [] : Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados);
+        $slots = $bloqueada ? [] : Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
 
         $fechasDisponibles = [];
         for ($i = 0; $i < 14; $i++) {
@@ -917,7 +981,7 @@ class TiendaController
         $hora = (string) ($_POST['hora'] ?? '');
         $volver = '/cita/' . $cita['token_gestion'] . '/reprogramar?fecha=' . rawurlencode($fecha);
 
-        if (!csrf_verificar()) {
+        if (!csrf_verificar() || !in_array($cita['estado'], ['pendiente', 'confirmada'], true)) {
             redirigir('/cita/' . $cita['token_gestion']);
         }
 
@@ -934,7 +998,7 @@ class TiendaController
         $horario = Sede::horario($negocio);
         $empleadoId = $cita['empleado_id'] !== null ? (int) $cita['empleado_id'] : null;
         $ocupados = Cita::ocupadosEnFecha((int) $negocio['id'], $fecha, (int) $cita['id'], $empleadoId);
-        $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados);
+        $slots = Cita::calcularDisponibilidad($horario, (int) $negocio['intervalo_citas_min'], $fecha, (int) $cita['duracion_min'], $ocupados, (int) $negocio['colchon_min']);
 
         if (!in_array($hora, $slots, true)) {
             flash_set('error', 'Ese horario ya no está disponible. Elige otro.');

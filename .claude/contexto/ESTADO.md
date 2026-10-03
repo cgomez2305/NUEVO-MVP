@@ -71,6 +71,10 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   por feature + `schema.sql` y sus `INSERT IGNORE INTO migraciones` al día;
   `php bin/migrar.php` las aplica. Detalle en `references/crecimiento.md`.
 
+- Features por línea de negocio: plan en `.claude/contexto/PLAN-LINEAS.md`.
+  Fase 1 (imprevistos) hecha; fase 4 (tiendas) en un subagente (worktree,
+  migraciones 20-29); siguen belleza, visitas y salud.
+
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).
