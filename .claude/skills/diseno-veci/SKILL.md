@@ -23,6 +23,12 @@ nivel en vez de reinventar (o degradar) lo que existe.
 | Acento | `--marca` (color del negocio) | `--sello` #3B4CCA (azul Veci) |
 | Tipografía | **La misma en las dos:** Bricolage Grotesque (títulos) + Inter Tight (texto y cifras con `tabular-nums`), vía `--fuente-titulo` / `--fuente-texto` | (igual) |
 
+La Ruta 1 tiene **fachadas** según la línea de negocio: `barrio` (toldo,
+la de arriba), `consultorio` y `despacho` (membrete, otra paleta y otra
+letra). Antes de tocar la tienda lee `references/fachadas.md`: los colores
+y la letra salen de tokens que cada fachada redefine, y las palabras
+("turno", "cita", "consulta") de `textos_fachada()`.
+
 En la tienda manda la marca del negocio: Veci solo aparece en el sello
 "Hecho con Veci" del plan Gratis. En el panel, la marca del negocio
 aparece solo donde el dueño piensa en *su* tienda (insignia de la sede,
@@ -160,6 +166,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/tiendas.md` — tiendas de barrio (fase 4): mostrador con lector
   y visor de registradora, báscula, fiado con el cuaderno de margen rojo,
   recordatorio de cobro con la Ley 2300, compras a proveedor y margen real.
+- `references/fachadas.md` — fachadas de la tienda pública por línea de
+  negocio (barrio, consultorio, despacho): tokens, membrete, vocabulario
+  y cómo agregar una nueva.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 

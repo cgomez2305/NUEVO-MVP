@@ -75,7 +75,7 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
             <?php if (!empty($emp['foto'])): ?>
               <img class="pq-persona-foto" src="<?= e(base_url($emp['foto'])) ?>" alt="" width="44" height="44" loading="lazy">
             <?php else: ?>
-              <span class="pq-persona-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $emp['nombre'], 0, 1))) ?></span>
+              <span class="pq-persona-inicial" aria-hidden="true"><?= e(inicial_persona((string) $emp['nombre'])) ?></span>
             <?php endif; ?>
             <span class="pq-persona-texto">
               <span class="pq-persona-nombre"><?= e($emp['nombre']) ?></span>
@@ -224,11 +224,11 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
         <span class="pq-sin-cupos-titulo"><?= e($tituloSinCupos) ?></span>
         <?php if ($proximoDisponible !== null): ?>
           <div class="pq-sin-cupos-proximo">
-            <span class="pq-ayuda">Próximo turno libre</span>
+            <span class="pq-ayuda"><?= e(textos_fachada(fachada_tienda($negocio))['proximo']) ?></span>
             <span class="pq-sin-cupos-fecha"><?= e(ucfirst($diasLargo[(int) date('w', strtotime($proximoDisponible['fecha']))])) ?> <?= (int) date('j', strtotime($proximoDisponible['fecha'])) ?> de <?= e($mesesLargo[(int) date('n', strtotime($proximoDisponible['fecha'])) - 1]) ?> · <?= e($horaCompleta($proximoDisponible['hora'])) ?></span>
           </div>
           <a href="<?= e(base_url('/t/' . $negocio['slug'] . '/reservar/' . $servicio['id']) . '?fecha=' . $proximoDisponible['fecha'] . $sufijoEmpleado . '&hora=' . $proximoDisponible['hora']) ?>#confirmar"
-             class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reservar ese turno</a>
+             class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto"><?= e(textos_fachada(fachada_tienda($negocio))['tomar']) ?></a>
         <?php else: ?>
           <p class="pq-ayuda">No encontramos disponibilidad en los próximos días. Elige otro servicio o anótate en la lista de espera.</p>
         <?php endif; ?>
@@ -341,7 +341,7 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
 
   <?php if ($horaElegida !== null): ?>
     <section id="confirmar" class="pq-reserva-bloque pq-confirmar">
-      <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span><?= $aDomicilio ? 'Confirma tu visita' : 'Confirma tu turno' ?></h2>
+      <h2 class="pq-etapa"><span class="pq-etapa-numero" aria-hidden="true"><?= ++$paso ?></span><?= $aDomicilio ? 'Confirma tu visita' : e(textos_fachada(fachada_tienda($negocio))['confirmar']) ?></h2>
       <div class="pq-turno">
         <?php if ($aDomicilio && $franjaElegida !== null): ?>
           <span class="pq-turno-hora"><?= e($franjaElegida['etiqueta']) ?></span>

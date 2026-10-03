@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS negocios (
   modalidad     ENUM('local','domicilio') NOT NULL DEFAULT 'local',
   -- 'salud': consultorios (planes de tratamiento, datos sensibles).
   rubro         ENUM('general','salud') NOT NULL DEFAULT 'general',
+  -- Fachada de la tienda pública (ver migración 40): barrio, consultorio o
+  -- despacho. Solo cambia la presentación; los de pedidos van de barrio.
+  fachada       ENUM('barrio','consultorio','despacho') NOT NULL DEFAULT 'barrio',
+  -- Credencial que escribe el dueño ("T.P. 123.456"); Veci no la verifica.
+  credencial    VARCHAR(140) DEFAULT NULL,
+  presentacion  VARCHAR(600) DEFAULT NULL,
   plan_id       TINYINT UNSIGNED NOT NULL DEFAULT 1,
   plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
   plan_vence_en DATE         DEFAULT NULL,
@@ -1292,4 +1298,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_36_codigos_votos.sql'),
   ('2026-10-03_37_pagos_cancelados.sql'),
   ('2026-10-03_38_origen_y_ofertas.sql'),
-  ('2026-10-03_39_otp_y_demo_ia.sql');
+  ('2026-10-03_39_otp_y_demo_ia.sql'),
+  ('2026-10-03_40_fachadas.sql');

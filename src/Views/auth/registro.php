@@ -21,7 +21,7 @@
   </div>
 
   <div class="pq-campo">
-    <label class="pq-label">¿Qué vendes?</label>
+    <label class="pq-label">¿A qué te dedicas?</label>
     <p class="pq-ayuda pq-auth-ayuda-tipo">Podrás cambiar algunas configuraciones después, pero esto define cómo funciona tu tienda.</p>
     <div class="pq-stack pq-auth-opciones">
       <label class="pq-card-borde pq-tipo-opcion">
@@ -71,6 +71,19 @@
         <span class="pq-stack pq-tipo-opcion-texto">
           <span class="pq-tipo-opcion-titulo">Consultorio de salud</span>
           <span class="pq-ayuda">Odontología, fisioterapia, psicología, nutrición: citas y planes de tratamiento con abonos.</span>
+        </span>
+        <span class="pq-tipo-opcion-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+      </label>
+      <label class="pq-card-borde pq-tipo-opcion">
+        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="profesional">
+        <span class="pq-tipo-opcion-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>
+        </span>
+        <span class="pq-stack pq-tipo-opcion-texto">
+          <span class="pq-tipo-opcion-titulo">Servicios profesionales</span>
+          <span class="pq-ayuda">Abogado, contador, arquitecto, consultor: tus clientes agendan una consulta contigo.</span>
         </span>
         <span class="pq-tipo-opcion-check" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>

@@ -122,7 +122,15 @@ Los `cupones` de cada negocio para sus propios clientes son aparte y siguen igua
 
 ### Otras capacidades confirmadas
 
-- **Modos de negocio:** pedidos (catálogo y carrito) y reservas (agenda, profesionales, duración, anticipo), con variantes de visitas a domicilio y consultorio de salud. Un negocio usa un modo, nunca ambos a la vez: es un límite de diseño.
+- **Modos de negocio:** pedidos (catálogo y carrito) y reservas (agenda, profesionales, duración, anticipo), con variantes de visitas a domicilio, consultorio de salud y servicios profesionales (abogados, contadores, arquitectos, consultores). Un negocio usa un modo, nunca ambos a la vez: es un límite de diseño.
+- **Página pública con estilo según la línea de negocio (fachadas): construido para tres.**
+  - **Barrio:** toldo de colores y carta. Comida, tiendas, salones y talleres; todos los negocios de pedidos.
+  - **Consultorio:** membrete clínico limpio, paleta fría y "Agenda tu cita". Se asigna sola a los consultorios de salud.
+  - **Despacho:** membrete de papelería con letra serif, consultas numeradas y "Agenda una consulta". Se asigna a "Servicios profesionales".
+  - El dueño la cambia en "Editar sede" y puede agregar su **credencial** (p. ej. tarjeta profesional) y un párrafo **"Quiénes somos"**. **Veci no verifica la credencial:** la escribe el dueño.
+  - Cambian la cabecera, la letra, los colores base y las palabras (turno / cita / consulta) en todas las pantallas de la tienda; los datos y el flujo de reserva son los mismos.
+  - Estudio (belleza y bienestar), Oficio (técnicos a domicilio) y Marca (emprendimientos con catálogo de fotos): **Próximamente.**
+  - Para un abogado o arquitecto, la agenda sigue siendo por citas de duración fija. Portafolio de proyectos y precio "a convenir": **Próximamente.**
 - **Onboarding:** foto con IA real (API de Claude). Si no hay credenciales, usa un catálogo de ejemplo.
 - **Copiloto de recompra:**
   - Segmenta clientes en inactivo, VIP, nuevo y recurrente.

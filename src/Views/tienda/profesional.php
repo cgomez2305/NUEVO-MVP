@@ -10,7 +10,7 @@ $primerNombre = explode(' ', trim((string) $empleado['nombre']))[0];
     <?php if (!empty($empleado['foto'])): ?>
       <img class="pq-profesional-foto" src="<?= e(base_url($empleado['foto'])) ?>" alt="Foto de <?= e($empleado['nombre']) ?>" width="120" height="120">
     <?php else: ?>
-      <span class="pq-profesional-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $empleado['nombre'], 0, 1))) ?></span>
+      <span class="pq-profesional-inicial" aria-hidden="true"><?= e(inicial_persona((string) $empleado['nombre'])) ?></span>
     <?php endif; ?>
     <div>
       <h1 class="pq-pagina-titulo"><?= e($empleado['nombre']) ?></h1>

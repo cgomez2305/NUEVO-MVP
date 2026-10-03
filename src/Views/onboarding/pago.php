@@ -38,11 +38,19 @@ $cobroOpcional = $esReservas && !$tieneAnticipos;
     // nombre). interacciones.js le cambia --marca al elegir un color; sin
     // JS muestra el color guardado y la elección se aplica al publicar.
     ?>
-    <div class="pq-escaparate pq-onb-vista" data-vista-marca style="--marca: <?= e($colorActual) ?>; --marca-sobre: <?= e(color_texto_sobre($colorActual)) ?>">
-      <div class="pq-toldo pq-toldo-corto" aria-hidden="true"></div>
+    <?php
+    // Consultorios y despachos no llevan toldo: la vista previa muestra su membrete.
+    $fachadaAlta = fachada_tienda($negocio);
+    ?>
+    <div class="pq-escaparate pq-onb-vista pq-estilo-<?= e($fachadaAlta) ?>" data-vista-marca style="--marca: <?= e($colorActual) ?>; --marca-sobre: <?= e(color_texto_sobre($colorActual)) ?>">
+      <?php if ($fachadaAlta === 'barrio'): ?>
+        <div class="pq-toldo pq-toldo-corto" aria-hidden="true"></div>
+      <?php else: ?>
+        <div class="pq-membrete-filete pq-membrete-filete-corto" aria-hidden="true"></div>
+      <?php endif; ?>
       <div class="pq-escaparate-cuerpo">
         <div class="pq-escaparate-letrero">
-          <span class="pq-letrero-insignia pq-letrero-insignia-chica" aria-hidden="true"><?= e($inicial) ?></span>
+          <span class="<?= $fachadaAlta === 'barrio' ? 'pq-letrero-insignia pq-letrero-insignia-chica' : 'pq-membrete-sello pq-membrete-sello-chico' ?>" aria-hidden="true"><?= e($inicial) ?></span>
           <div class="pq-escaparate-texto">
             <span class="pq-escaparate-eyebrow">Así te verán tus clientes</span>
             <strong class="pq-escaparate-nombre"><?= e($nombreNegocio) ?></strong>
@@ -53,7 +61,7 @@ $cobroOpcional = $esReservas && !$tieneAnticipos;
     </div>
 
     <fieldset class="pq-onb-colores">
-      <legend class="pq-label">Color de tu toldo</legend>
+      <legend class="pq-label"><?= $fachadaAlta === 'barrio' ? 'Color de tu toldo' : 'Color de tu marca' ?></legend>
       <div class="pq-onb-colores-lista">
         <?php foreach ($paleta as $hex => $nombreColor): ?>
           <label class="pq-onb-color" style="--muestra: <?= e($hex) ?>">

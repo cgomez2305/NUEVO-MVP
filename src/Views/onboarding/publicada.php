@@ -10,10 +10,16 @@ $queEs = $esReservas ? 'agenda' : 'tienda';
 // elegido se despliega (la misma animación que ve el cliente al entrar) y
 // la insignia se monta encima. Es "abrir la persiana" del negocio.
 ?>
-<main class="pq-onb-abierta">
-  <div class="pq-toldo" aria-hidden="true"></div>
-  <div class="pq-letrero pq-onb-abierta-letrero">
-    <div class="pq-letrero-insignia" aria-hidden="true"><?= e($inicial) ?></div>
+<?php $fachadaAlta = fachada_tienda($negocio); ?>
+<main class="pq-onb-abierta pq-estilo-<?= e($fachadaAlta) ?>">
+  <?php if ($fachadaAlta === 'barrio'): ?>
+    <div class="pq-toldo" aria-hidden="true"></div>
+  <?php else: ?>
+    <?php // Consultorio o despacho: su membrete, no el toldo de barrio. ?>
+    <div class="pq-membrete-filete" aria-hidden="true"></div>
+  <?php endif; ?>
+  <div class="pq-letrero pq-onb-abierta-letrero<?= $fachadaAlta !== 'barrio' ? ' pq-onb-abierta-membrete' : '' ?>">
+    <div class="<?= $fachadaAlta === 'barrio' ? 'pq-letrero-insignia' : 'pq-membrete-sello' ?>" aria-hidden="true"><?= e($inicial) ?></div>
     <p class="pq-onb-abierta-eyebrow">¡Ya abriste!</p>
     <h1 class="pq-letrero-nombre"><?= e(nombre_publico_sede($negocio)) ?></h1>
     <p class="pq-onb-abierta-texto">Tu <?= $queEs ?> ya recibe <?= $esReservas ? 'reservas' : 'pedidos' ?>. Compártela en tu estado de WhatsApp o en Instagram para que lleguen los primeros.</p>

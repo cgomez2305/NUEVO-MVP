@@ -1575,6 +1575,15 @@ class PanelController
                 if (isset($_POST['color_marca'])) {
                     \App\Models\Negocio::actualizarColor((int) $negocio['negocio_id'], (string) $_POST['color_marca']);
                 }
+                // Fachada, credencial y "Quiénes somos" (solo agendas).
+                if (isset($_POST['fachada']) && $sede['tipo_negocio'] === 'reservas') {
+                    \App\Models\Negocio::actualizarPresentacion(
+                        (int) $negocio['negocio_id'],
+                        (string) $_POST['fachada'],
+                        (string) ($_POST['credencial'] ?? ''),
+                        (string) ($_POST['presentacion'] ?? '')
+                    );
+                }
                 // La llave Bre-B solo se elegía al abrir la tienda: si el
                 // dueño cambiaba de cuenta, no tenía dónde corregirla.
                 if ($whatsapp !== (string) $sede['whatsapp']) {

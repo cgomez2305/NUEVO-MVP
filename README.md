@@ -319,6 +319,23 @@ cron diario:
   `php tests/menu_demo.php http://localhost:8002`). Esas dos variables de
   entorno solo funcionan con el servidor de desarrollo de PHP.
 
+## Fachadas de la tienda por línea de negocio
+
+La página pública no se ve igual para una arepera que para un consultorio
+o un despacho de abogados (`negocios.fachada`, migración 40):
+
+- **barrio** (toldo y carta), **consultorio** (membrete clínico) y
+  **despacho** (membrete de papelería con letra serif). Se asigna al
+  registrarse ("Consultorio de salud" → consultorio, "Servicios
+  profesionales" → despacho) y se cambia en Editar sede. Los negocios de
+  pedidos siempre son barrio.
+- Editar sede también guarda la credencial y el "Quiénes somos" que salen
+  en la portada.
+- La clase `pq-estilo-{fachada}` del `<body>` redefine los tokens de la
+  tienda; las palabras salen de `textos_fachada()`. Guía de diseño:
+  `.claude/skills/diseno-veci/references/fachadas.md`.
+- Prueba: `php tests/fachadas.php http://localhost:8000`.
+
 ## Seguridad y anti-abuso
 
 Lo que ya está blindado en el código (para que nadie lo desactive sin

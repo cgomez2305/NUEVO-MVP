@@ -1,4 +1,22 @@
-<?php require __DIR__ . '/_cabecera.php'; ?>
+<?php
+require __DIR__ . '/_cabecera.php';
+$fachada = fachada_tienda($negocio);
+$textos = textos_fachada($fachada);
+$presentacion = trim((string) ($negocio['presentacion'] ?? ''));
+// "Quiénes somos": en un despacho es lo primero que se lee (el cliente
+// elige a quién confiarle su caso); en las demás fachadas va después de la agenda.
+$bloquePresentacion = static function () use ($presentacion, $textos): void {
+    if ($presentacion === '') {
+        return;
+    } ?>
+    <section class="pq-carta pq-presentacion" aria-labelledby="titulo-presentacion">
+      <h2 class="pq-carta-titulo" id="titulo-presentacion"><?= e($textos['sobre']) ?></h2>
+      <div class="pq-presentacion-texto">
+        <?php foreach (parrafos_texto($presentacion) as $parrafo): ?><p><?= $parrafo ?></p><?php endforeach; ?>
+      </div>
+    </section>
+<?php };
+?>
 
 <main class="pq-content-tienda pq-vitrina">
   <?php if (!empty($filaAbierta)): ?>
@@ -9,6 +27,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </a>
   <?php endif; ?>
+  <?php if ($fachada === 'despacho') { $bloquePresentacion(); } ?>
   <?php if ($servicios === []): ?>
     <div class="pq-vacio-tienda">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
@@ -37,7 +56,7 @@
       </section>
     <?php endif; ?>
     <section class="pq-carta" aria-labelledby="titulo-servicios">
-      <h2 class="pq-carta-titulo" id="titulo-servicios">Reserva tu turno</h2>
+      <h2 class="pq-carta-titulo" id="titulo-servicios"><?= e($textos['agenda']) ?></h2>
       <?php
       // Un solo aviso arriba cuando hoy ya no queda ningún turno, en vez de
       // repetir "sin cupos" en cada servicio (ruido que no ayuda a elegir).
@@ -46,7 +65,7 @@
       <?php if ($sinTurnosHoy): ?>
         <p class="pq-carta-nota">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          Hoy ya no quedan turnos. Elige un servicio para ver los próximos días.
+          <?= e($textos['sin_hoy']) ?>
         </p>
       <?php endif; ?>
       <div class="pq-carta-lista">
@@ -81,6 +100,8 @@
     </section>
   <?php endif; ?>
 
+  <?php if ($fachada !== 'despacho') { $bloquePresentacion(); } ?>
+
   <?php
   // El equipo, solo si hay alguien que mostrar con cara o especialidad: una
   // lista de nombres sueltos no le dice nada al cliente.
@@ -88,7 +109,7 @@
   ?>
   <?php if ($equipoVisible !== []): ?>
     <section class="pq-carta pq-equipo-tienda" aria-labelledby="titulo-equipo">
-      <h2 class="pq-carta-titulo" id="titulo-equipo">Nuestro equipo</h2>
+      <h2 class="pq-carta-titulo" id="titulo-equipo"><?= e($textos['equipo']) ?></h2>
       <ul class="pq-equipo-tienda-lista">
         <?php foreach ($equipoVisible as $persona): ?>
           <li>
@@ -96,7 +117,7 @@
               <?php if (!empty($persona['foto'])): ?>
                 <img src="<?= e(base_url($persona['foto'])) ?>" alt="" width="72" height="72" loading="lazy">
               <?php else: ?>
-                <span class="pq-equipo-tienda-inicial" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $persona['nombre'], 0, 1))) ?></span>
+                <span class="pq-equipo-tienda-inicial" aria-hidden="true"><?= e(inicial_persona((string) $persona['nombre'])) ?></span>
               <?php endif; ?>
               <span class="pq-equipo-tienda-nombre"><?= e($persona['nombre']) ?></span>
               <?php if (!empty($persona['especialidad'])): ?><span class="pq-equipo-tienda-esp"><?= e($persona['especialidad']) ?></span><?php endif; ?>

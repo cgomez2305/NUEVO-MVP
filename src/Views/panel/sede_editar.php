@@ -47,7 +47,7 @@
 
   <?php $colorActualMarca = strtoupper(color_seguro($sede['color_marca'] ?? null)); ?>
   <fieldset class="pq-onb-colores">
-    <legend class="pq-label">Color de tu toldo <span class="pq-ayuda">(es el mismo en todas tus sedes)</span></legend>
+    <legend class="pq-label">Color de tu marca <span class="pq-ayuda">(es el mismo en todas tus sedes)</span></legend>
     <div class="pq-onb-colores-lista">
       <?php foreach (paleta_marca() as $hex => $nombreColor): ?>
         <label class="pq-onb-color" style="--muestra: <?= e($hex) ?>">
@@ -58,6 +58,43 @@
       <?php endforeach; ?>
     </div>
   </fieldset>
+
+  <?php if ($sede['tipo_negocio'] === 'reservas'): ?>
+    <?php
+    // Cómo se presenta la página pública: la fachada cambia la cabecera, la
+    // letra y las palabras ("turno", "cita", "consulta"), no los datos.
+    $fachadaActual = fachada_tienda($sede);
+    $fachadas = [
+        'barrio'      => ['Barrio', 'Toldo de colores y lista de servicios. Para salones, barberías, talleres.'],
+        'consultorio' => ['Consultorio', 'Membrete limpio y sereno. Para odontología, fisioterapia, psicología.'],
+        'despacho'    => ['Despacho', 'Membrete de papelería con letra clásica. Para abogados, contadores, arquitectos.'],
+    ];
+    ?>
+    <fieldset class="pq-fachada-elegir">
+      <legend class="pq-label">Estilo de tu página <span class="pq-ayuda">(el mismo en todas tus sedes)</span></legend>
+      <div class="pq-fachada-opciones">
+        <?php foreach ($fachadas as $clave => [$titulo, $texto]): ?>
+          <label class="pq-fachada-opcion">
+            <input type="radio" name="fachada" value="<?= e($clave) ?>"<?= $fachadaActual === $clave ? ' checked' : '' ?>>
+            <span class="pq-fachada-muestra pq-fachada-muestra-<?= e($clave) ?>" aria-hidden="true"><span></span></span>
+            <span class="pq-fachada-opcion-texto">
+              <strong><?= e($titulo) ?></strong>
+              <span class="pq-ayuda"><?= e($texto) ?></span>
+            </span>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    </fieldset>
+    <div class="pq-campo">
+      <label class="pq-label" for="credencial">Credencial o registro <span class="pq-ayuda">(opcional)</span></label>
+      <input class="pq-input" id="credencial" name="credencial" maxlength="140" value="<?= e((string) ($sede['credencial'] ?? '')) ?>" placeholder="Tarjeta profesional 123.456 · Registro ReTHUS">
+      <span class="pq-ayuda">Sale debajo de tu nombre. Escríbelo tal como aparece en tu documento: es tu responsabilidad que sea cierto.</span>
+    </div>
+    <div class="pq-campo">
+      <label class="pq-label" for="presentacion">Quiénes somos <span class="pq-ayuda">(opcional)</span></label>
+      <textarea class="pq-textarea" id="presentacion" name="presentacion" maxlength="600" rows="4" placeholder="Cuéntale a tus clientes tu experiencia y cómo trabajas, en pocas líneas."><?= e((string) ($sede['presentacion'] ?? '')) ?></textarea>
+    </div>
+  <?php endif; ?>
 
   <?php if ($sede['tipo_negocio'] === 'pedidos'): ?>
     <label class="pq-interruptor pq-interruptor-con-texto">

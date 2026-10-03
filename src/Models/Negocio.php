@@ -24,7 +24,14 @@ class Negocio
         // "Salud" (consultorio): reservas con planes de tratamiento y el
         // cuidado de los datos sensibles.
         $rubro = $tipoNegocio === 'salud' ? 'salud' : 'general';
-        if ($tipoNegocio === 'domicilio' || $tipoNegocio === 'salud') {
+        // La fachada de la tienda pública sale de la línea elegida; el dueño
+        // la puede cambiar después en "Editar sede".
+        $fachada = match ($tipoNegocio) {
+            'salud'       => 'consultorio',
+            'profesional' => 'despacho',
+            default       => 'barrio',
+        };
+        if (in_array($tipoNegocio, ['domicilio', 'salud', 'profesional'], true)) {
             $tipoNegocio = 'reservas';
         }
         if (!in_array($tipoNegocio, ['pedidos', 'reservas'], true)) {
@@ -33,11 +40,27 @@ class Negocio
 
         $pdo = Database::conexion();
         $stmt = $pdo->prepare(
-            'INSERT INTO negocios (nombre, tipo_negocio, modalidad, rubro) VALUES (:nombre, :tipo_negocio, :modalidad, :rubro)'
+            'INSERT INTO negocios (nombre, tipo_negocio, modalidad, rubro, fachada) VALUES (:nombre, :tipo_negocio, :modalidad, :rubro, :fachada)'
         );
-        $stmt->execute(['nombre' => $nombre, 'tipo_negocio' => $tipoNegocio, 'modalidad' => $modalidad, 'rubro' => $rubro]);
+        $stmt->execute(['nombre' => $nombre, 'tipo_negocio' => $tipoNegocio, 'modalidad' => $modalidad, 'rubro' => $rubro, 'fachada' => $fachada]);
 
         return (int) $pdo->lastInsertId();
+    }
+
+    /**
+     * Cómo se presenta el negocio en su página pública: la fachada (solo
+     * para reservas; los de pedidos siempre van de barrio), la credencial y
+     * el párrafo "Quiénes somos". Textos vacíos quedan en NULL.
+     */
+    public static function actualizarPresentacion(int $id, string $fachada, string $credencial, string $presentacion): void
+    {
+        $fachada = in_array($fachada, FACHADAS_TIENDA, true) ? $fachada : 'barrio';
+        $credencial = mb_substr(trim(preg_replace('/\s+/u', ' ', $credencial) ?? ''), 0, 140);
+        // El párrafo conserva los saltos de línea, pero no más de uno seguido.
+        $presentacion = mb_substr(trim(preg_replace("/\n{3,}/", "\n\n", str_replace("\r", '', $presentacion)) ?? ''), 0, 600);
+        Database::conexion()->prepare(
+            "UPDATE negocios SET fachada = IF(tipo_negocio = 'reservas', :f, 'barrio'), credencial = :c, presentacion = :p WHERE id = :id"
+        )->execute(['f' => $fachada, 'c' => $credencial !== '' ? $credencial : null, 'p' => $presentacion !== '' ? $presentacion : null, 'id' => $id]);
     }
 
     /**

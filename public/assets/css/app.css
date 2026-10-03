@@ -123,7 +123,7 @@ button { font-family: inherit; }
   padding: 7px 14px;
   width: fit-content;
   border-radius: 20px;
-  background: var(--tiquete);
+  background: var(--hoja, var(--tiquete));
   border: 1px solid var(--borde);
   color: var(--gris-suave);
   font-size: 11.5px;
@@ -1518,7 +1518,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   padding: 0 16px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   color: var(--tinta);
   font-size: 14px;
@@ -1591,7 +1591,7 @@ a.pq-stat:hover { border-color: var(--sello); }
 .pq-carta-titulo::before { content: ""; width: 6px; height: 18px; border-radius: 3px; background: var(--marca); flex-shrink: 0; }
 .pq-carta-lista {
   padding: 0 var(--esp-4);
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   border-radius: var(--radio-l);
   box-shadow: 0 1px 2px rgba(27, 26, 23, .04), 0 14px 30px -22px rgba(27, 26, 23, .3);
@@ -1676,7 +1676,7 @@ a.pq-stat:hover { border-color: var(--sello); }
   font: 700 11.5px/20px var(--fuente-texto);
   font-variant-numeric: tabular-nums;
   text-align: center;
-  box-shadow: 0 0 0 2px #FFFDF8;
+  box-shadow: 0 0 0 2px var(--hoja, #FFFDF8);
 }
 .pq-agregar-cuenta[hidden] { display: none; }
 .pq-agregar-pop { animation: pqPop .35s var(--curva); }
@@ -1840,7 +1840,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   transition: transform var(--rapido) ease, border-color var(--rapido) ease;
 }
@@ -1880,7 +1880,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-comanda-hoja {
   --diente: 9px;
   padding: var(--esp-4) var(--esp-4) calc(var(--esp-5) + var(--diente));
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border-radius: var(--radio-m) var(--radio-m) 0 0;
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--diente) * 2) 100%;
@@ -1947,17 +1947,17 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 /* Formularios de la tienda: tokens cálidos y la marca en el foco y en lo
    elegido. 16px en los campos evita que el iPhone haga zoom al tocarlos. */
 .pq-shell-tienda .pq-label { color: var(--texto-calido); }
-.pq-shell-tienda .pq-input { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 16px; color: var(--tinta); }
+.pq-shell-tienda .pq-input { background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 16px; color: var(--tinta); }
 .pq-shell-tienda .pq-input:focus { border-color: var(--marca-texto); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 30%, transparent); }
 .pq-shell-tienda .pq-input[type="tel"] { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .pq-shell-tienda .pq-input-telefono-prefijo { border-color: var(--linea-tienda); border-radius: var(--radio-m); background: var(--papel-hondo); color: var(--tinta); font-size: 15px; font-variant-numeric: tabular-nums; }
-.pq-shell-tienda .pq-opcion-entrega { justify-content: center; min-height: 76px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); color: var(--texto-calido); }
+.pq-shell-tienda .pq-opcion-entrega { justify-content: center; min-height: 76px; background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: var(--radio-m); color: var(--texto-calido); }
 .pq-shell-tienda .pq-opcion-entrega:hover { border-color: color-mix(in srgb, var(--tinta) 30%, transparent); }
 .pq-shell-tienda .pq-opcion-entrega:has(input:checked) { border-color: var(--marca-texto); background: var(--marca-suave); color: var(--tinta); }
 .pq-shell-tienda .pq-opcion-entrega:has(input:checked) svg { color: var(--marca-texto); }
 .pq-shell-tienda .pq-opcion-entrega:has(input:focus-visible) { outline: 3px solid var(--marca); outline-offset: 2px; }
 .pq-shell-tienda .pq-opcion-entrega-check { color: var(--marca-texto); }
-.pq-shell-tienda .pq-consentimiento-requerido { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); }
+.pq-shell-tienda .pq-consentimiento-requerido { background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: var(--radio-m); }
 .pq-shell-tienda .pq-consentimiento-titulo { color: var(--tinta); }
 .pq-shell-tienda .pq-consentimiento input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--marca-texto); }
 .pq-consentimientos { display: flex; flex-direction: column; gap: var(--esp-3); margin: var(--esp-6) 0 var(--esp-1); }
@@ -1990,7 +1990,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   min-height: 44px;
   padding: 0 16px 0 6px;
   border-radius: 999px;
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   color: var(--tinta);
   font-size: 14px;
@@ -2015,7 +2015,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
   gap: 1px;
   padding: 10px 0 8px;
   border-radius: var(--radio-m);
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   box-shadow: inset 0 4px 0 var(--marca-claro);
   color: var(--tinta);
@@ -2040,13 +2040,13 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-shell-tienda .pq-calendario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: var(--esp-2); border-top-color: var(--linea-tienda); }
 .pq-calendario-grid .pq-dia { width: auto; }
 
-.pq-shell-tienda .pq-slot { min-height: 48px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-variant-numeric: tabular-nums; }
+.pq-shell-tienda .pq-slot { min-height: 48px; background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: var(--radio-m); font-variant-numeric: tabular-nums; }
 .pq-shell-tienda .pq-slot:hover { border-color: color-mix(in srgb, var(--tinta) 35%, transparent); }
 .pq-shell-tienda .pq-slot:focus-visible { outline: 3px solid var(--marca); }
 .pq-shell-tienda .pq-slot-seleccionado, .pq-shell-tienda .pq-slot-seleccionado:hover { background: var(--marca); border-color: var(--marca); color: var(--marca-sobre); }
 .pq-shell-tienda .pq-slot-grupo-titulo { font: 600 13px/1.2 var(--fuente-texto); letter-spacing: 0; color: var(--texto-calido); margin-bottom: var(--esp-2); }
 
-.pq-sin-cupos { padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
+.pq-sin-cupos { padding: var(--esp-5); background: var(--hoja, #FFFDF8); border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
 .pq-sin-cupos-titulo { display: block; font: 700 16px/1.25 var(--fuente-titulo); color: var(--tinta); }
 .pq-sin-cupos-proximo { display: flex; flex-direction: column; gap: 2px; margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 1px dashed var(--linea-tienda); }
 .pq-sin-cupos-fecha { font-size: 15.5px; font-weight: 650; color: var(--tinta); }
@@ -2055,9 +2055,9 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-btn-ancho { width: 100%; }
 .pq-disponibilidad-error .pq-ayuda { margin-top: 4px; }
 .pq-shell-tienda .pq-lista-espera-detalle { margin-top: var(--esp-3); }
-.pq-shell-tienda .pq-lista-espera-detalle > summary { min-height: 48px; background: #FFFDF8; border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 14px; color: var(--tinta); }
+.pq-shell-tienda .pq-lista-espera-detalle > summary { min-height: 48px; background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: var(--radio-m); font-size: 14px; color: var(--tinta); }
 .pq-shell-tienda .pq-lista-espera-detalle[open] > summary { border-radius: var(--radio-m) var(--radio-m) 0 0; }
-.pq-shell-tienda .pq-lista-espera-detalle[open] form { background: #FFFDF8; border-color: var(--linea-tienda); border-radius: 0 0 var(--radio-m) var(--radio-m); }
+.pq-shell-tienda .pq-lista-espera-detalle[open] form { background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); border-radius: 0 0 var(--radio-m) var(--radio-m); }
 .pq-reserva-espera { margin-top: var(--esp-3); }
 .pq-reserva-espera-titulo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
 .pq-reserva-espera-servicio { margin: 8px 0 0; font-size: 14px; }
@@ -2127,7 +2127,7 @@ a.pq-servicio:focus-visible { outline: 3px solid var(--marca); outline-offset: 4
 .pq-confirmacion-aviso { margin-top: var(--esp-4); }
 
 /* Pasos de pago: misma numeración con la marca que las etapas. */
-.pq-pago { margin-top: var(--esp-6); padding: var(--esp-5); background: #FFFDF8; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
+.pq-pago { margin-top: var(--esp-6); padding: var(--esp-5); background: var(--hoja, #FFFDF8); border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); }
 /* El comprobante va al negocio por WhatsApp cuando la página no es un pedido ni una reserva (cotización, plan): el botón cierra los pasos, separado de la tarjeta. */
 .pq-pago-wa { margin-top: var(--esp-3); }
 .pq-pago-titulo { margin: 0 0 var(--esp-4); font: 700 17px/1.2 var(--fuente-titulo); color: var(--tinta); }
@@ -3465,7 +3465,7 @@ body.pq-auth-bg {
 }
 .pq-escaparate-nota { margin-top: var(--esp-1); }
 .pq-escaparate-botones { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin-top: var(--esp-4); }
-.pq-escaparate-botones .pq-btn-ghost { background: #FFFDF8; border-color: var(--linea-tienda); }
+.pq-escaparate-botones .pq-btn-ghost { background: var(--hoja, #FFFDF8); border-color: var(--linea-tienda); }
 
 /* Listas cortas del inicio: número de pedido u hora en la primera columna. */
 .pq-inicio-bloque { margin-top: var(--esp-8); }
@@ -3916,7 +3916,7 @@ body.pq-auth-bg {
 .pq-onb-abierta .pq-letrero-nombre { margin-top: var(--esp-2); }
 .pq-onb-abierta-texto { margin: var(--esp-2) 0 0; font-size: 15px; line-height: 1.5; color: var(--texto-calido); text-wrap: pretty; }
 .pq-onb-abierta-cuerpo { display: flex; flex-direction: column; gap: var(--esp-5); padding: var(--esp-4) var(--esp-5) var(--esp-10); }
-.pq-onb-abierta-enlace { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-4); background: #FFFDF8; border: 1.5px dashed var(--marca-texto); border-radius: var(--radio-m); }
+.pq-onb-abierta-enlace { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-4); background: var(--hoja, #FFFDF8); border: 1.5px dashed var(--marca-texto); border-radius: var(--radio-m); }
 .pq-onb-abierta-enlace .pq-mono { min-width: 0; overflow-wrap: anywhere; font-size: 13px; color: var(--tinta); }
 .pq-onb-abierta-enlace .pq-btn { flex-shrink: 0; }
 .pq-onb-abierta-botones { display: flex; flex-direction: column; gap: var(--esp-2); }
@@ -4301,7 +4301,7 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
   gap: var(--esp-3);
   min-height: 52px;
   padding: var(--esp-3) var(--esp-4) var(--esp-3) 44px;
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1.5px solid var(--linea-tienda);
   border-radius: var(--radio-m);
   cursor: pointer;
@@ -4319,12 +4319,12 @@ h2.pq-seccion-titulo, h3.pq-seccion-titulo { margin: 0; }
   margin-top: -9px;
   border-radius: 50%;
   border: 2px solid var(--borde);
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   transition: border-color var(--rapido), box-shadow var(--rapido);
 }
 .pq-zona:hover { border-color: color-mix(in srgb, var(--tinta) 30%, transparent); }
 .pq-zona:has(input:checked) { border-color: var(--marca-texto); background: var(--marca-suave); }
-.pq-zona:has(input:checked)::before { border-color: var(--marca-texto); box-shadow: inset 0 0 0 4px #FFFDF8, inset 0 0 0 9px var(--marca-texto); }
+.pq-zona:has(input:checked)::before { border-color: var(--marca-texto); box-shadow: inset 0 0 0 4px var(--hoja, #FFFDF8), inset 0 0 0 9px var(--marca-texto); }
 .pq-zona:has(input:focus-visible) { outline: 2px solid var(--marca-texto); outline-offset: 2px; }
 .pq-zona-nombre { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--tinta); overflow-wrap: anywhere; }
 .pq-zona-min { font-size: 12.5px; font-weight: 500; color: var(--texto-tenue); }
@@ -4511,7 +4511,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
    (lo que se compra es "cuántas"). Panel: las sesiones de cada bono como
    puntos, llenos los usados.
    ========================================================================== */
-.pq-paquetes-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); background: #FFFDF8; }
+.pq-paquetes-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linea-tienda); border-radius: var(--radio-l); background: var(--hoja, #FFFDF8); }
 .pq-paquete { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); }
 .pq-paquete + .pq-paquete { border-top: 1px dashed var(--linea-tienda); }
 .pq-paquete-cuantas { flex: none; width: 48px; height: 48px; border-radius: var(--radio-m); display: grid; place-items: center; background: var(--marca-suave); color: var(--marca-texto); font: 800 22px/1 var(--fuente-titulo); font-variant-numeric: tabular-nums; }
@@ -4621,7 +4621,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-imprevisto-hecho { font-weight: 600; color: #1d6b3f !important; }
 @media (prefers-reduced-motion: reduce) { .pq-imprevisto-aviso { transform: none; } }
 
-.pq-llego-tarde { margin-top: var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8; }
+.pq-llego-tarde { margin-top: var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: var(--hoja, #FFFDF8); }
 .pq-llego-tarde summary { min-height: 48px; display: flex; align-items: center; padding: 0 var(--esp-4); font-weight: 600; cursor: pointer; list-style: none; }
 .pq-llego-tarde summary::-webkit-details-marker { display: none; }
 .pq-llego-tarde summary::after { content: "+"; margin-left: auto; font-weight: 400; color: var(--texto-tenue); }
@@ -4717,7 +4717,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-adicional {
   display: inline-flex; align-items: center; gap: var(--esp-2);
   min-height: 44px; padding: 6px var(--esp-4) 6px 6px;
-  border: 1.5px dashed var(--linea-tienda); border-radius: 999px; background: #FFFDF8;
+  border: 1.5px dashed var(--linea-tienda); border-radius: 999px; background: var(--hoja, #FFFDF8);
   color: var(--tinta); text-decoration: none; font-size: 14px;
   transition: border-color var(--rapido) ease, background var(--rapido) ease;
 }
@@ -4737,8 +4737,8 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-equipo-tienda-lista li { flex: none; scroll-snap-align: start; }
 .pq-equipo-tienda-ficha { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 96px; padding: var(--esp-2) 0; color: var(--tinta); text-decoration: none; text-align: center; border-radius: var(--radio-m); }
 .pq-equipo-tienda-ficha:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
-.pq-equipo-tienda-ficha img, .pq-equipo-tienda-inicial { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #FFFDF8, 0 0 0 4px var(--linea-tienda); transition: box-shadow var(--rapido) ease; }
-.pq-equipo-tienda-ficha:hover img, .pq-equipo-tienda-ficha:hover .pq-equipo-tienda-inicial { box-shadow: 0 0 0 3px #FFFDF8, 0 0 0 5px var(--marca); }
+.pq-equipo-tienda-ficha img, .pq-equipo-tienda-inicial { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px var(--hoja, #FFFDF8), 0 0 0 4px var(--linea-tienda); transition: box-shadow var(--rapido) ease; }
+.pq-equipo-tienda-ficha:hover img, .pq-equipo-tienda-ficha:hover .pq-equipo-tienda-inicial { box-shadow: 0 0 0 3px var(--hoja, #FFFDF8), 0 0 0 5px var(--marca); }
 .pq-equipo-tienda-inicial { display: grid; place-items: center; background: var(--marca-suave); color: var(--marca-texto); font: 700 26px/1 var(--fuente-titulo); }
 .pq-equipo-tienda-nombre { margin-top: 4px; font-size: 14px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
 .pq-equipo-tienda-esp { font-size: 12px; line-height: 1.3; color: var(--texto-tenue); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -4747,7 +4747,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-profesional-ficha { display: flex; align-items: center; gap: var(--esp-4); margin-bottom: var(--esp-4); }
 .pq-profesional-ficha .pq-pagina-titulo { margin: 0; }
 .pq-profesional-ficha p { margin: 2px 0 0; }
-.pq-profesional-foto, .pq-profesional-inicial { width: 96px; height: 96px; flex: none; border-radius: var(--radio-l); object-fit: cover; transform: rotate(-2deg); box-shadow: 0 0 0 4px #FFFDF8, 0 6px 16px -6px rgba(27, 26, 23, .35); }
+.pq-profesional-foto, .pq-profesional-inicial { width: 96px; height: 96px; flex: none; border-radius: var(--radio-l); object-fit: cover; transform: rotate(-2deg); box-shadow: 0 0 0 4px var(--hoja, #FFFDF8), 0 6px 16px -6px rgba(27, 26, 23, .35); }
 .pq-profesional-inicial { display: grid; place-items: center; background: var(--marca); color: var(--marca-sobre); font: 700 40px/1 var(--fuente-titulo); }
 .pq-profesional-especialidad { font-size: 15px; font-weight: 600; color: var(--marca-texto); }
 .pq-profesional-bio { margin: 0 0 var(--esp-6); font-size: 15.5px; line-height: 1.55; color: var(--texto-calido); }
@@ -4757,7 +4757,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 @media (prefers-reduced-motion: reduce) { .pq-profesional-foto, .pq-profesional-inicial { transform: none; } }
 
 /* Aviso de fila abierta en la tienda: el punto vivo es el único bucle permitido (estado en vivo). */
-.pq-cola-aviso { display: flex; align-items: center; gap: var(--esp-3); min-height: 52px; margin: var(--esp-4) 0; padding: var(--esp-2) var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8; color: var(--tinta); font-size: 14.5px; line-height: 1.4; text-decoration: none; }
+.pq-cola-aviso { display: flex; align-items: center; gap: var(--esp-3); min-height: 52px; margin: var(--esp-4) 0; padding: var(--esp-2) var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: var(--hoja, #FFFDF8); color: var(--tinta); font-size: 14.5px; line-height: 1.4; text-decoration: none; }
 .pq-cola-aviso:hover { border-color: var(--marca-texto); }
 .pq-cola-aviso:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
 .pq-cola-aviso svg { width: 18px; height: 18px; flex: none; margin-left: auto; color: var(--texto-tenue); }
@@ -4772,7 +4772,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-cola-ficha {
   position: relative; display: grid; justify-items: center; gap: var(--esp-1);
   margin: var(--esp-4) 0; padding: var(--esp-6) var(--esp-4) var(--esp-5);
-  border-radius: var(--radio-m); background: #FFFDF8; text-align: center;
+  border-radius: var(--radio-m); background: var(--hoja, #FFFDF8); text-align: center;
   border: 1px solid var(--linea-tienda);
   -webkit-mask: radial-gradient(circle 10px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
           mask: radial-gradient(circle 10px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
@@ -5125,7 +5125,7 @@ a.pq-cierre-dias-flecha:focus-visible { outline: 2px solid var(--sello); outline
 .pq-franjas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--esp-3); }
 .pq-franja {
   position: relative; display: grid; gap: 2px; padding: var(--esp-4);
-  border: 1.5px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8;
+  border: 1.5px solid var(--linea-tienda); border-radius: var(--radio-m); background: var(--hoja, #FFFDF8);
   color: var(--tinta); text-decoration: none; transition: border-color var(--rapido) ease, transform var(--rapido) var(--curva);
 }
 a.pq-franja:hover { border-color: var(--marca-texto); transform: translateY(-1px); }
@@ -5145,7 +5145,7 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-visita-datos .pq-campo { margin: 0; }
 
 /* Quién te visita: la cara de quien va a entrar a la casa, con un borde de la marca. */
-.pq-quien-visita { display: flex; align-items: center; gap: var(--esp-4); margin: var(--esp-4) 0; padding: var(--esp-4); border: 1px solid var(--linea-tienda); border-left: 4px solid var(--marca); border-radius: var(--radio-m); background: #FFFDF8; }
+.pq-quien-visita { display: flex; align-items: center; gap: var(--esp-4); margin: var(--esp-4) 0; padding: var(--esp-4); border: 1px solid var(--linea-tienda); border-left: 4px solid var(--marca); border-radius: var(--radio-m); background: var(--hoja, #FFFDF8); }
 .pq-quien-visita img, .pq-quien-visita-inicial { width: 64px; height: 64px; flex: none; border-radius: 50%; object-fit: cover; }
 .pq-quien-visita-inicial { display: grid; place-items: center; background: var(--marca); color: var(--marca-sobre); font: 700 26px/1 var(--fuente-titulo); }
 .pq-quien-visita > div { display: grid; gap: 2px; min-width: 0; }
@@ -5154,7 +5154,7 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-quien-visita-camino { background: var(--marca-suave); }
 .pq-quien-visita-camino .pq-quien-visita-etiqueta { color: #1d6b3f; }
 
-.pq-cotizacion-aviso { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 56px; margin: var(--esp-4) 0; padding: var(--esp-3) var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: #FFFDF8; color: var(--tinta); text-decoration: none; }
+.pq-cotizacion-aviso { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 56px; margin: var(--esp-4) 0; padding: var(--esp-3) var(--esp-4); border: 1px solid var(--linea-tienda); border-radius: var(--radio-m); background: var(--hoja, #FFFDF8); color: var(--tinta); text-decoration: none; }
 .pq-cotizacion-aviso > span:first-child { display: grid; gap: 2px; }
 .pq-cotizacion-aviso .pq-ayuda { margin: 0; font-variant-numeric: tabular-nums; }
 .pq-cotizacion-aviso:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
@@ -5388,7 +5388,7 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
   position: relative;
   margin: 0 0 var(--esp-6);
   padding: var(--esp-5) var(--esp-4) var(--esp-4);
-  background: #FFFDF8;
+  background: var(--hoja, #FFFDF8);
   border: 1px solid var(--linea-tienda);
   border-radius: var(--radio-m);
   box-shadow: var(--sombra-suave);
@@ -5580,3 +5580,240 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
   .pq-admin-nav a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
 }
 .pq-campanas-demo { margin: calc(-1 * var(--esp-3)) 0 0; font-size: 13.5px; color: var(--gris-texto); }
+
+/* =====================================================================
+   FACHADAS DE LA TIENDA: consultorio y despacho (ver fachada_tienda())
+   La de barrio (toldo, carta, papel cálido) no le sirve a un odontólogo
+   ni a un abogado: su cliente busca calma y confianza, no un corrientazo.
+   Mismos datos y mismo flujo; cambian el papel, la tinta, la letra, la
+   cabecera (membrete en vez de toldo) y el vocabulario.
+   Los tokens van en el <body> (layouts/tienda.php) para que el fondo, las
+   hojas y los formularios de TODAS las pantallas de la tienda cambien juntos.
+   ===================================================================== */
+.pq-estilo-consultorio {
+  /* Bruma fría y hoja blanca: limpio sin ser de hospital. */
+  --papel: #F3F6F6;
+  --papel-hondo: #E6EDED;
+  --linea-tienda: #D3DEDE;
+  --texto-calido: #44575A;
+  --texto-tenue: #566A6D;
+  --tinta: #13262A;
+  --hoja: #FFFFFF;
+  --fuente-titulo: 'Inter Tight', system-ui, sans-serif;
+}
+.pq-estilo-despacho {
+  /* Papel de carta marfil y tinta casi negra. La serif solo en el nombre,
+     los títulos de sección y los números: el resto, sans para leer rápido. */
+  --papel: #F8F6F1;
+  --papel-hondo: #EEEAE0;
+  --linea-tienda: #DDD7CA;
+  --texto-calido: #4F4A42;
+  --texto-tenue: #625C52;
+  --tinta: #1A1916;
+  --hoja: #FFFEFB;
+  --fuente-titulo: 'Inter Tight', system-ui, sans-serif;
+  --fuente-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+}
+@media (min-width: 640px) {
+  body.pq-tienda-bg.pq-estilo-consultorio { background: linear-gradient(180deg, #E3EBEB, #D8E2E2); }
+  body.pq-tienda-bg.pq-estilo-despacho { background: #E6E1D6; }
+}
+
+/* ---------- Membrete (cabecera de consultorio y despacho) ---------- */
+.pq-membrete-filete { height: 6px; background: var(--marca); }
+.pq-membrete-cuerpo { padding: var(--esp-6) var(--esp-5) 0; }
+.pq-membrete-encabezado { display: flex; align-items: center; gap: var(--esp-4); }
+.pq-membrete-sello {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--marca-suave);
+  color: var(--marca-texto);
+  font: 700 24px/1 var(--fuente-titulo);
+}
+.pq-membrete-titulos { min-width: 0; }
+.pq-membrete-nombre {
+  margin: 0;
+  font: 700 clamp(24px, 6.6vw, 30px)/1.1 var(--fuente-titulo);
+  letter-spacing: -.02em;
+  color: var(--tinta);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.pq-membrete-desc { margin: 4px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--texto-calido); text-wrap: pretty; }
+.pq-membrete-credencial {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: var(--esp-4) 0 0;
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--linea-tienda);
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--texto-calido);
+}
+.pq-membrete-credencial svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--marca-texto); }
+.pq-membrete-filete.pq-membrete-filete-corto { height: 4px; }
+.pq-membrete-sello.pq-membrete-sello-chico { width: 36px; height: 36px; border-radius: 10px; font-size: 16px; }
+
+/* "Quiénes somos": texto corrido, con medida de lectura cómoda. */
+.pq-presentacion-texto { max-width: 62ch; font-size: 15.5px; line-height: 1.6; color: var(--texto-calido); text-wrap: pretty; }
+.pq-presentacion-texto p { margin: 0; }
+.pq-presentacion-texto p + p { margin-top: var(--esp-3); }
+
+/* Equipo como fichas en fila (foto o inicial + nombre + especialidad):
+   en un consultorio o un despacho importa a quién se ve, no un carrusel. */
+.pq-estilo-consultorio .pq-equipo-tienda-lista,
+.pq-estilo-despacho .pq-equipo-tienda-lista { display: grid; grid-template-columns: 1fr; gap: var(--esp-2); padding: 0; overflow: visible; }
+.pq-estilo-consultorio .pq-equipo-tienda-ficha,
+.pq-estilo-despacho .pq-equipo-tienda-ficha {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-content: center;
+  align-items: center;
+  column-gap: var(--esp-3);
+  width: auto;
+  min-height: 76px;
+  padding: var(--esp-3) var(--esp-4);
+  text-align: left;
+}
+.pq-estilo-consultorio .pq-equipo-tienda-ficha img, .pq-estilo-consultorio .pq-equipo-tienda-inicial,
+.pq-estilo-despacho .pq-equipo-tienda-ficha img, .pq-estilo-despacho .pq-equipo-tienda-inicial { grid-row: 1 / span 2; width: 52px; height: 52px; box-shadow: none; }
+.pq-estilo-consultorio .pq-equipo-tienda-nombre,
+.pq-estilo-despacho .pq-equipo-tienda-nombre { margin: 0; font-size: 15px; }
+.pq-estilo-consultorio .pq-equipo-tienda-esp,
+.pq-estilo-despacho .pq-equipo-tienda-esp { font-size: 13px; }
+
+/* ---------- Consultorio: membrete clínico sobre hoja blanca ----------
+   El detalle propio: la cabecera es una hoja blanca con una banda del
+   color del consultorio arriba, como el membrete de una fórmula médica; el
+   resto de la página queda en bruma para que la agenda se lea tranquila. */
+.pq-estilo-consultorio .pq-membrete { background: var(--hoja); border-bottom: 1px solid var(--linea-tienda); padding-bottom: var(--esp-5); }
+.pq-estilo-consultorio .pq-membrete .pq-acceso { background: var(--papel); }
+.pq-estilo-consultorio .pq-carta-titulo { font-size: 18px; font-weight: 650; }
+.pq-estilo-consultorio .pq-carta-titulo::before { display: none; }
+.pq-estilo-consultorio .pq-carta-lista { border-radius: 16px; box-shadow: 0 1px 2px rgba(19, 38, 42, .04), 0 12px 28px -24px rgba(19, 38, 42, .35); }
+.pq-estilo-consultorio .pq-servicio { border-top-style: solid; }
+/* Duración como etiqueta: en salud el tiempo de la cita sí decide. */
+.pq-estilo-consultorio .pq-servicio-meta { align-items: center; }
+.pq-estilo-consultorio .pq-servicio-meta > span:first-child { padding: 2px 8px; border-radius: 999px; background: var(--papel-hondo); color: var(--texto-calido); font-size: 12.5px; }
+.pq-estilo-consultorio .pq-servicio-meta > span[aria-hidden="true"] { display: none; }
+.pq-estilo-consultorio .pq-equipo-tienda-ficha { background: var(--hoja); border: 1px solid var(--linea-tienda); border-radius: 14px; }
+.pq-estilo-consultorio .pq-equipo-tienda-ficha img, .pq-estilo-consultorio .pq-equipo-tienda-inicial { border-radius: 14px; }
+.pq-estilo-consultorio .pq-info { background: var(--hoja); border-radius: 16px; }
+
+/* ---------- Despacho: membrete de papelería ----------
+   El detalle propio: doble filete arriba (grueso y fino, como el papel
+   membreteado de una firma), el sello con marco doble y el nombre en
+   serif centrado. Las consultas van numeradas 01, 02… como un índice. */
+.pq-estilo-despacho .pq-membrete-filete {
+  height: 7px;
+  background: linear-gradient(var(--marca-texto) 0 3px, transparent 3px 5px, color-mix(in oklab, var(--marca-texto) 60%, transparent) 5px 6px, transparent 6px);
+}
+.pq-estilo-despacho .pq-membrete-cuerpo { padding-top: var(--esp-8); text-align: center; }
+.pq-estilo-despacho .pq-membrete-encabezado { flex-direction: column; gap: var(--esp-4); }
+.pq-estilo-despacho .pq-membrete-sello {
+  width: 58px;
+  height: 58px;
+  border-radius: 2px;
+  background: transparent;
+  border: 1px solid var(--marca-texto);
+  box-shadow: inset 0 0 0 3px var(--papel), inset 0 0 0 4px var(--marca-texto);
+  color: var(--marca-texto);
+  font: 400 30px/1 var(--fuente-serif);
+}
+.pq-estilo-despacho .pq-membrete-nombre { font: 400 clamp(34px, 10vw, 46px)/1.02 var(--fuente-serif); letter-spacing: -.01em; }
+.pq-estilo-despacho .pq-membrete-desc { margin-top: 6px; font: italic 400 19px/1.3 var(--fuente-serif); color: var(--texto-calido); }
+.pq-estilo-despacho .pq-membrete-titulos::after { content: ""; display: block; width: 48px; height: 1px; margin: var(--esp-4) auto 0; background: var(--marca-texto); }
+.pq-estilo-despacho .pq-membrete-credencial { justify-content: center; margin-top: var(--esp-3); padding-top: 0; border-top: 0; font-size: 13px; }
+.pq-estilo-despacho .pq-letrero-estado { justify-content: center; }
+/* Accesos centrados: saltan de línea en vez de desplazarse (centrados con
+   scroll horizontal se cortarían por la izquierda). */
+.pq-estilo-despacho .pq-membrete .pq-accesos { flex-wrap: wrap; justify-content: center; margin-left: 0; margin-right: 0; padding: 2px 0; overflow: visible; }
+.pq-estilo-despacho .pq-acceso { border-radius: 4px; background: transparent; border-color: color-mix(in srgb, var(--tinta) 24%, transparent); }
+.pq-estilo-despacho .pq-acceso:hover { background: var(--hoja); }
+.pq-estilo-despacho .pq-carta { margin-top: var(--esp-8); }
+.pq-estilo-despacho .pq-carta-titulo { font: 400 28px/1.1 var(--fuente-serif); letter-spacing: 0; }
+.pq-estilo-despacho .pq-carta-titulo::before { display: none; }
+.pq-estilo-despacho .pq-carta-lista {
+  counter-reset: consulta;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tinta);
+  border-bottom: 1px solid var(--linea-tienda);
+  border-radius: 0;
+  box-shadow: none;
+}
+.pq-estilo-despacho .pq-servicio { counter-increment: consulta; gap: var(--esp-4); border-top: 1px solid var(--linea-tienda); }
+.pq-estilo-despacho .pq-servicio:first-child { border-top: 0; }
+.pq-estilo-despacho .pq-servicio::before {
+  content: counter(consulta, decimal-leading-zero);
+  align-self: flex-start;
+  min-width: 28px;
+  padding-top: 1px;
+  font: italic 400 22px/1 var(--fuente-serif);
+  color: var(--marca-texto);
+}
+.pq-estilo-despacho .pq-servicio-nombre { font-size: 16px; }
+.pq-estilo-despacho .pq-presentacion-texto { font-size: 16px; line-height: 1.65; color: var(--tinta); }
+.pq-estilo-despacho .pq-equipo-tienda-lista { gap: 0; border-top: 1px solid var(--tinta); }
+.pq-estilo-despacho .pq-equipo-tienda-ficha { padding: var(--esp-3) 0; border-bottom: 1px solid var(--linea-tienda); border-radius: 0; }
+.pq-estilo-despacho .pq-equipo-tienda-ficha img, .pq-estilo-despacho .pq-equipo-tienda-inicial { border-radius: 2px; }
+.pq-estilo-despacho .pq-equipo-tienda-inicial { font: 400 26px/1 var(--fuente-serif); }
+.pq-estilo-despacho .pq-info { padding: var(--esp-4) 0; background: transparent; border: 0; border-top: 1px solid var(--tinta); border-radius: 0; }
+.pq-estilo-despacho .pq-info-titulo { font: 400 22px/1.2 var(--fuente-serif); }
+.pq-estilo-despacho .pq-horario-hoy { border-radius: 2px; }
+.pq-estilo-despacho .pq-pagina-titulo { font: 400 clamp(32px, 9vw, 40px)/1.05 var(--fuente-serif); letter-spacing: 0; }
+.pq-estilo-despacho .pq-membrete-sello.pq-membrete-sello-chico { width: 36px; height: 36px; border-radius: 2px; font-size: 19px; box-shadow: inset 0 0 0 2px var(--papel), inset 0 0 0 3px var(--marca-texto); }
+.pq-estilo-despacho .pq-cabecera-corta-nombre { font: 400 19px/1.2 var(--fuente-serif); }
+
+@media (min-width: 860px) {
+  .pq-membrete-cuerpo { padding-left: 32px; padding-right: 32px; }
+  .pq-membrete-sello { width: 68px; height: 68px; font-size: 28px; }
+  .pq-membrete-nombre { font-size: 38px; }
+  .pq-estilo-despacho .pq-membrete-nombre { font-size: 58px; }
+  .pq-estilo-despacho .pq-membrete-sello { width: 64px; height: 64px; font-size: 34px; }
+  .pq-estilo-consultorio .pq-equipo-tienda-lista,
+  .pq-estilo-despacho .pq-equipo-tienda-lista { grid-template-columns: 1fr 1fr; column-gap: var(--esp-4); }
+  .pq-estilo-despacho .pq-carta-lista { padding: 0; }
+  .pq-estilo-despacho .pq-carta-titulo { font-size: 34px; }
+}
+
+/* ---------- Panel: elegir la fachada (Editar sede) ----------
+   Cada opción lleva una miniatura de su cabecera para elegir viendo. */
+.pq-fachada-elegir { margin: 0; padding: 0; border: 0; }
+.pq-fachada-opciones { display: grid; gap: var(--esp-2); margin-top: var(--esp-2); }
+.pq-fachada-opcion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 64px;
+  padding: var(--esp-3);
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio-m);
+  background: var(--tiquete);
+  cursor: pointer;
+  transition: border-color var(--rapido) ease, background var(--rapido) ease;
+}
+.pq-fachada-opcion input { position: absolute; opacity: 0; pointer-events: none; }
+.pq-fachada-opcion:has(input:checked) { border-color: var(--sello); background: var(--tinte-sello); }
+.pq-fachada-opcion:has(input:focus-visible) { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-fachada-opcion-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pq-fachada-opcion-texto .pq-ayuda { margin: 0; }
+.pq-fachada-muestra { position: relative; width: 56px; height: 44px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--borde); overflow: hidden; background: #F6F1E7; }
+.pq-fachada-muestra span { position: absolute; left: 8px; right: 8px; bottom: 9px; height: 5px; border-radius: 3px; background: currentColor; opacity: .35; }
+.pq-fachada-muestra-barrio { color: #1B1A17; }
+.pq-fachada-muestra-barrio::before { content: ""; position: absolute; inset: 0 0 auto; height: 14px; background: repeating-linear-gradient(90deg, #E8452C 0 7px, #F4B3A6 7px 14px); }
+.pq-fachada-muestra-consultorio { background: #F3F6F6; color: #13262A; }
+.pq-fachada-muestra-consultorio::before { content: ""; position: absolute; inset: 0 0 auto; height: 20px; border-top: 4px solid #1F9AA6; background: #FFFFFF; border-bottom: 1px solid #D3DEDE; }
+.pq-fachada-muestra-despacho { background: #F8F6F1; color: #1A1916; }
+.pq-fachada-muestra-despacho::before { content: "Aa"; position: absolute; inset: 7px 0 auto; text-align: center; font: 400 15px/1 'Instrument Serif', Georgia, serif; color: #1A1916; border-top: 2px solid #1A1916; padding-top: 4px; }
+/* "¡Ya abriste!" de un consultorio o despacho: sin toldo no hay de dónde
+   colgar la insignia (margen negativo), así que el letrero baja a su sitio. */
+.pq-onb-abierta-membrete { margin-top: 0; padding-top: var(--esp-6); }
+.pq-estilo-despacho .pq-onb-abierta-membrete .pq-letrero-nombre { font: 400 clamp(34px, 10vw, 44px)/1.05 var(--fuente-serif); }

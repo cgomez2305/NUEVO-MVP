@@ -11,8 +11,11 @@
 // (--marca) junto con el color de texto que se lee encima (--marca-sobre),
 // y todo el resto de tonos se derivan de ahí en app.css.
 $marcaTienda = color_seguro($negocio['color_marca'] ?? null);
+// La fachada (barrio, consultorio, despacho) redefine papel, tinta y letra
+// en el <body>, así todas las pantallas de la tienda hablan el mismo idioma.
+$fachadaTienda = isset($negocio) ? fachada_tienda($negocio) : 'barrio';
 ?>
-<body class="pq-tienda-bg">
+<body class="pq-tienda-bg pq-estilo-<?= e($fachadaTienda) ?>">
   <div class="pq-shell-tienda" style="--marca: <?= e($marcaTienda) ?>; --marca-sobre: <?= e(color_texto_sobre($marcaTienda)) ?>">
     <?= $contenido ?>
     <?php if (isset($negocio) && ($negocio['plan_nombre'] ?? 'gratis') === 'gratis'): ?>

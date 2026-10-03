@@ -9,6 +9,12 @@ declare(strict_types=1);
  */
 
 /**
+ * Fachadas de la tienda pública (ver migración 40). Cada una cambia la
+ * cabecera, la letra, los colores base y el vocabulario, no los datos.
+ */
+const FACHADAS_TIENDA = ['barrio', 'consultorio', 'despacho'];
+
+/**
  * Lee config/config.php una sola vez por petición.
  * config('db') devuelve el array completo; config('app.url') navega con puntos.
  */
@@ -419,6 +425,78 @@ function nivel_espera(int $minutos, int $objetivoMin): string
         return 'atencion';
     }
     return 'neutral';
+}
+
+/**
+ * La fachada con que se presenta la tienda. Los negocios de pedidos siempre
+ * van de barrio (carta y carrito): las otras son para agendas.
+ */
+function fachada_tienda(array $negocio): string
+{
+    $fachada = (string) ($negocio['fachada'] ?? 'barrio');
+
+    return ($negocio['tipo_negocio'] ?? '') === 'reservas' && in_array($fachada, FACHADAS_TIENDA, true) ? $fachada : 'barrio';
+}
+
+/**
+ * Las palabras de cada fachada: un abogado no "da turnos" y un consultorio
+ * no tiene "carta". Las vistas de la tienda las toman de aquí para no
+ * repetir condiciones.
+ *
+ * @return array<string, string>
+ */
+function textos_fachada(string $fachada): array
+{
+    return match ($fachada) {
+        'consultorio' => [
+            'agenda' => 'Agenda tu cita', 'equipo' => 'Profesionales', 'sobre' => 'Sobre el consultorio',
+            'cita' => 'cita', 'confirmar' => 'Confirma tu cita', 'proximo' => 'Próxima cita libre',
+            'tomar' => 'Agendar esa cita', 'sin_hoy' => 'Hoy ya no quedan citas. Elige un servicio para ver los próximos días.',
+            'sin_dia' => 'No quedan citas ese día', 'elige' => 'Elige la nueva hora abajo: el cambio se guarda al tocarla.',
+        ],
+        'despacho' => [
+            'agenda' => 'Agenda una consulta', 'equipo' => 'Quiénes te atienden', 'sobre' => 'Quiénes somos',
+            'cita' => 'consulta', 'confirmar' => 'Confirma tu consulta', 'proximo' => 'Próximo espacio libre',
+            'tomar' => 'Agendar esa consulta', 'sin_hoy' => 'Hoy ya no quedan espacios. Elige una consulta para ver los próximos días.',
+            'sin_dia' => 'No quedan espacios ese día', 'elige' => 'Elige la nueva hora abajo: el cambio se guarda al tocarla.',
+        ],
+        default => [
+            'agenda' => 'Reserva tu turno', 'equipo' => 'Nuestro equipo', 'sobre' => 'Quiénes somos',
+            'cita' => 'turno', 'confirmar' => 'Confirma tu turno', 'proximo' => 'Próximo turno libre',
+            'tomar' => 'Reservar ese turno', 'sin_hoy' => 'Hoy ya no quedan turnos. Elige un servicio para ver los próximos días.',
+            'sin_dia' => 'No quedan turnos ese día', 'elige' => 'Elige el nuevo turno abajo: el cambio se guarda al tocar la hora.',
+        ],
+    };
+}
+
+/**
+ * Inicial para la ficha de una persona, sin contar el título: "Dra. Paula
+ * Méndez" → "P" (con "D" todas las doctoras saldrían iguales).
+ */
+function inicial_persona(string $nombre): string
+{
+    $palabras = preg_split('/\s+/u', trim($nombre)) ?: [];
+    foreach ($palabras as $palabra) {
+        $limpia = mb_strtolower(rtrim($palabra, '.'));
+        if (!in_array($limpia, ['dr', 'dra', 'doctor', 'doctora', 'lic', 'licenciado', 'licenciada', 'abg', 'ing', 'arq', 'psic', 'odont', 'ft'], true) && $palabra !== '') {
+            return mb_strtoupper(mb_substr($palabra, 0, 1));
+        }
+    }
+
+    return mb_strtoupper(mb_substr(trim($nombre), 0, 1));
+}
+
+/**
+ * Párrafos de un texto libre del dueño ("Quiénes somos"): cada línea con
+ * contenido es un párrafo. Ya escapados, listos para imprimir.
+ *
+ * @return list<string>
+ */
+function parrafos_texto(string $texto): array
+{
+    $lineas = preg_split('/\R+/u', trim($texto)) ?: [];
+
+    return array_values(array_map('e', array_filter(array_map('trim', $lineas), fn ($l) => $l !== '')));
 }
 
 /**

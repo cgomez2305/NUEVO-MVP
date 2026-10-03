@@ -260,6 +260,19 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
      - Falta: el dominio de producción de la app para decirle al sitio la URL
        exacta (connect-src); decisiones de precio fundador y anticipos.
 
+  9. Fachadas de la tienda (migración 40: negocios.fachada/credencial/presentacion):
+     - barrio | consultorio | despacho. `fachada_tienda()`, `textos_fachada()`,
+       `inicial_persona()`, `parrafos_texto()` en helpers. Body
+       `pq-estilo-{x}` redefine tokens; `--hoja` reemplazó #FFFDF8 suelto.
+     - `_membrete.php` + `_letrero_datos.php` (compartido con el toldo);
+       `_cabecera_corta.php`, reservar, reprogramar, onboarding pago/publicada
+       respetan la fachada. Registro: opción "Servicios profesionales".
+     - Editar sede: selector con miniaturas + credencial + "Quiénes somos".
+     - Instrument Serif alojada (public/assets/fonts) solo para despacho.
+     - Prueba: tests/fachadas.php (18). Para capturas, un despacho se crea con
+       el registro "Servicios profesionales" y se publica en el onboarding.
+     - Siguen: Estudio, Oficio, Marca; portafolio y precio "a convenir".
+
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).
