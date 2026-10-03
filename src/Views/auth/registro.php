@@ -6,6 +6,9 @@
   <div class="pq-alerta pq-auth-mt5"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php if (!empty($planElegido)): ?>
+  <p class="pq-registro-invita">Elegiste el plan <strong><?= e(ucfirst($planElegido)) ?></strong>. Tu cuenta nace en Gratis y lo activas en el siguiente paso, sin cobros automáticos.</p>
+<?php endif; ?>
 <?php if (!empty($invitadoPor)): ?>
   <p class="pq-registro-invita"><strong><?= e($invitadoPor) ?></strong> te invitó a Veci.</p>
 <?php endif; ?>
@@ -22,7 +25,7 @@
     <p class="pq-ayuda pq-auth-ayuda-tipo">Podrás cambiar algunas configuraciones después, pero esto define cómo funciona tu tienda.</p>
     <div class="pq-stack pq-auth-opciones">
       <label class="pq-card-borde pq-tipo-opcion">
-        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="pedidos" checked>
+        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="pedidos"<?= ($modoInicial ?? 'pedidos') !== 'reservas' ? ' checked' : '' ?>>
         <span class="pq-tipo-opcion-icono">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.4"/></svg>
         </span>
@@ -35,7 +38,7 @@
         </span>
       </label>
       <label class="pq-card-borde pq-tipo-opcion">
-        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="reservas">
+        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="reservas"<?= ($modoInicial ?? '') === 'reservas' ? ' checked' : '' ?>>
         <span class="pq-tipo-opcion-icono">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </span>

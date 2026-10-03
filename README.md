@@ -275,6 +275,30 @@ cron diario:
 0 3 * * * php /ruta/al/proyecto/bin/revisar_planes.php
 ```
 
+## Registro desde el sitio y ofertas de planes
+
+- **Parámetros de `/registro`** (los manda el sitio web): `ref`, `utm_source`,
+  `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `plan`
+  (`gratis|barrio|pro`), `ciclo` (`mensual|anual`), `modo`
+  (`pedidos|reservas`) y `oferta`. Se recuerdan en la sesión (sobreviven a un
+  error del formulario) y se guardan en `negocio_origen`. Los `utm_*` van como
+  texto plano de hasta 80 caracteres; plan, ciclo y modo solo de una lista
+  blanca; cualquier otro valor se ignora. `modo` deja marcada esa opción. Con
+  plan pago el negocio igual nace en Gratis y va a `/panel/plan` con ese plan
+  y ciclo marcados: nunca se cobra solo.
+- **Códigos de oferta** (`ofertas_plan`, p. ej. `VECICHAT30`): se aplican en
+  "Tu plan" con la cédula o el NIT del titular y se validan otra vez en el
+  servidor al pedir el primer plan. Solo el primer mes de Barrio o Pro con
+  pago mensual; un uso por negocio; no acumulable con el anual ni con otro
+  código; solo negocios nuevos (el WhatsApp y el documento no tuvieron otro
+  negocio, comparados como HMAC con `app.clave_hash`); fecha de fin y cupo
+  desde `/admin/ofertas` (el cupo se cuenta con la oferta bloqueada); 5
+  intentos por hora por IP y por negocio. El pago guarda el monto ya con el
+  descuento (es lo que el admin ve como "Debe llegar" y lo que cobra Wompi) y
+  `/admin/ofertas` lleva el registro de canjes y si pagaron el segundo mes.
+- Prueba de punta a punta (base de prueba y servidor local):
+  `php tests/registro_ofertas.php http://localhost:8000`.
+
 ## Seguridad y anti-abuso
 
 Lo que ya está blindado en el código (para que nadie lo desactive sin

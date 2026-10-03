@@ -44,6 +44,7 @@ class EventoSeguridad
         'pago_rechazado'       => 'El equipo de Veci rechazó un pago del plan',
         'admin_login'          => 'Ingreso al panel interno',
         'admin_2fa'            => 'Segundo factor del panel interno activado',
+        'oferta_guardada'      => 'Oferta de plan creada o cambiada',
     ];
 
     public static function registrar(string $tipo, ?int $negocioId, ?int $usuarioId, string $detalle = '', ?int $adminId = null): void

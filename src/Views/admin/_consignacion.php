@@ -43,6 +43,12 @@ $pqEsSede = ($pago['concepto'] ?? 'plan') === 'sede_extra';
       <dt>Debe llegar</dt>
       <dd><?= pesos($pqMonto) ?></dd>
     </div>
+    <?php if ((int) ($pago['descuento'] ?? 0) > 0): ?>
+      <div class="pq-consignacion-dato pq-consignacion-dato-ancho">
+        <dt>Oferta</dt>
+        <dd><span class="pq-mono"><?= e((string) $pago['oferta_codigo']) ?></span>: <?= pesos((int) $pago['monto_lista']) ?> − <?= pesos((int) $pago['descuento']) ?> (ya descontado arriba)</dd>
+      </div>
+    <?php endif; ?>
   </dl>
 
   <div class="pq-consignacion-corte" aria-hidden="true"></div>

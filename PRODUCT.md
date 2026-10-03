@@ -32,13 +32,15 @@ Verificado contra el código de la app (rama `claude/new-session-mde7lj`, 2026-1
 
 | Parámetro | ¿Lo lee `/registro`? | ¿Lo guarda? |
 |---|---|---|
-| `ref` (código de referido) | Sí. Se valida contra `negocios.codigo_referido` (solo negocios no suspendidos) y se recuerda en la sesión aunque el formulario vuelva con error. | Sí: crea la fila en `referidos` al terminar el registro. |
-| `plan` (`gratis`, `barrio`, `pro`) | No. Todo negocio nace en Gratis; el plan se elige después en `/panel/plan`. | No. **Próximamente.** |
-| `modo` (`pedidos`, `reservas`) | No. El formulario siempre abre con "Pedidos" marcado; el dueño elige entre pedidos, reservas, visitas a domicilio o consultorio. | Solo lo que el dueño marca en el formulario (`tipo_negocio`). Preseleccionar desde la URL: **Próximamente.** |
-| `oferta` (p. ej. `VECICHAT30`) | No. | No. **Próximamente.** |
-| `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | No. | No: no existe ninguna columna de origen o atribución. **Próximamente.** |
+| `ref` (código de referido) | Sí. Se valida contra `negocios.codigo_referido` (solo negocios no suspendidos). | Sí: crea la fila en `referidos` al terminar el registro. |
+| `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | Sí. | Sí, en `negocio_origen` junto con la fecha. Van como texto plano: sin etiquetas, sin caracteres de control y recortados a 80 caracteres. |
+| `plan` (`gratis`, `barrio`, `pro`) y `ciclo` (`mensual`, `anual`) | Sí, solo esos valores. | Sí (`plan_interes`, `ciclo_interes`). El negocio **siempre nace en Gratis**. Si llegó con Barrio o Pro, al terminar el registro va a `/panel/plan` con ese plan y ciclo ya marcados. **Nunca se cobra automáticamente.** |
+| `modo` (`pedidos`, `reservas`) | Sí, solo esos valores. | Deja marcada esa opción en el formulario (el dueño puede cambiarla) y se guarda como `modo_interes`. |
+| `oferta` (p. ej. `VECICHAT30`) | Sí: letras y números, de 3 a 20, en mayúsculas. | Sí (`oferta_codigo`). En "Tu plan" el campo del código aparece ya escrito. Se valida al pagar, no al registrarse (ver abajo). |
 
-Consecuencia: los enlaces de la web con `?plan=`, `?modo=`, `?oferta=` y los `utm_*` llegan al registro, pero la app los ignora. Hoy no se puede medir desde la app qué campaña trajo cada negocio.
+Todo lo anterior:
+- se recuerda en la sesión desde que llega, así que sobrevive si el formulario vuelve con un error, igual que `ref`;
+- solo acepta valores de una lista blanca: cualquier otro valor se ignora.
 
 ### Planes, límites y cobro
 
@@ -55,6 +57,7 @@ Ya existen y se aplican en el servidor (tabla `planes`; el plan vigente se calcu
 | Sello "Hecho con Veci" en la tienda | Sí | No | No |
 
 - Colaboradores con acceso por sede: en todos los planes.
+- Con código de oferta, el primer pago mensual de Barrio o Pro lleva el descuento (ver abajo).
 - Exportar a CSV (pedidos, citas, clientes): en todos los planes y con todo el historial, aunque el panel muestre solo 30 días. Es una decisión explícita ("tus datos son tuyos").
 - 0% de comisión: confirmado, ningún cobro depende del valor de las ventas.
 - Cobro del plan, dos vías:
@@ -65,17 +68,29 @@ Ya existen y se aplican en el servidor (tabla `planes`; el plan vigente se calcu
 - **Cobro recurrente automático** (débito o tarjeta guardada que se renueva sola): **Próximamente.** Hoy cada período se paga a mano: el dueño entra a "Tu plan" y paga.
 - **Precio fundador:** **Próximamente.** Falta decidir si es para los primeros 100 negocios o hasta una fecha.
 
-### Código de oferta
+### Códigos de oferta de los planes de Veci: construido
 
-**No se valida: no existe.** La app no tiene códigos de descuento para los planes de Veci: ni tabla, ni campo en el registro, ni en "Tu plan".
+`VECICHAT30` ya existe: 30% del primer mes de Barrio o Pro con pago mensual, cupo de 300 y sin fecha de fin (se pone desde el admin). El sitio ya puede volver a mostrarlo.
 
-Los cupones que sí existen (`cupones`) son de cada negocio para sus propios clientes, no para los planes de Veci. Sus reglas, por si sirven de modelo:
-- código por negocio, porcentaje o monto, compra mínima y vencimiento;
-- usos máximos y opción de "uno por cliente" (por número de WhatsApp);
-- uso apartado con la fila bloqueada, así que pedidos simultáneos no pasan el límite;
-- 15 intentos por hora por IP y tienda.
+**Cómo se usa.** El dueño aplica el código en "Tu plan" y escribe la cédula o el NIT del titular. Las tarjetas muestran el precio del primer mes con descuento. **La validación definitiva se hace en el servidor al pedir el primer plan**, no al registrarse.
 
-Riesgo actual: el asistente de la web (`veci-chat.js`) ofrece `VECICHAT30` ("30% en tu primer mes, un uso por negocio") y dice que "la app es quien valida el código". Eso **no es cierto hoy**. Hay que quitar la oferta o construir la validación antes de mostrarla. Validar ofertas de plan: **Próximamente.**
+**Reglas:**
+- **Un uso por negocio.** No se acumula con el pago anual (el anual va sin descuento y se avisa) ni con otro código.
+- **Solo negocios nuevos.** Se rechaza si el WhatsApp del dueño o el documento ya tuvieron otro negocio en Veci, aunque esté borrado o suspendido, o si ya usaron una oferta.
+  - El documento se normaliza: sin el dígito de verificación, solo números.
+  - Ambos se guardan solo como HMAC-SHA256 con una clave del servidor (`app.clave_hash`), nunca en claro.
+  - Es la medida mientras no exista verificación por OTP.
+- **Solo el primer mes de Barrio o Pro mensual:** se rechaza si el negocio ya pagó un plan. El descuento se calcula sobre el precio del plan; las sedes extra no tienen descuento.
+- **Fecha de fin, cupo total y porcentaje** se cambian desde `/admin/ofertas`. Desde ahí también se pausa una oferta o se crea otra.
+  - El cupo se cuenta con la oferta bloqueada, así que dos negocios a la vez no pasan del cupo (probado).
+  - Una solicitud cancelada o rechazada libera su cupo.
+- **Límite de intentos:** 5 por hora por IP y 5 por hora por negocio.
+- **Bre-B confirmado a mano:** el pago guarda el monto ya con el descuento. El admin ve "Debe llegar: $20.930" y al lado "VECICHAT30: $29.900 − $8.970". Wompi cobra ese mismo monto.
+- **Registro de canjes** en `/admin/ofertas`: código, fecha, negocio, plan, descuento, estado (por pagar, pagado o cancelado) y si el negocio pagó el segundo mes.
+
+Los `cupones` de cada negocio para sus propios clientes son aparte y siguen igual.
+
+**Pendiente:** verificar por OTP el WhatsApp del titular antes de aplicar la oferta. **Próximamente.**
 
 ### Referidos, pasarela, Excel y webhooks
 
@@ -111,6 +126,11 @@ Riesgo actual: el asistente de la web (`veci-chat.js`) ofrece `VECICHAT30` ("30%
   - Calcula el **dinero recuperado** con regla explicable: primera compra o reserva dentro de 14 días después del mensaje, contada una sola vez.
 - **Tiendas:** mostrador con escáner, fiado, compras, inventario y venta por peso.
 - **Más funciones:** fidelidad con sellos, cupones, bonos de sesiones, reseñas, fila virtual, cierre de caja, PWA con notificaciones push e inicio "Hoy".
+
+### Pendientes para conectar con el sitio
+
+- **Reporte de atribución:** los `utm_*` se guardan por negocio, pero el panel interno todavía no tiene un reporte. Por ahora se consultan en la tabla `negocio_origen`. **Próximamente.**
+- **"Sube tu foto sin cuenta"** (lectura del menú con IA desde el sitio, sin registrarse): **Próximamente.** Es el punto 3 de `PENDIENTES-APP.md`. No existen ni el endpoint ni el permiso CORS para `https://tuveci.co`.
 
 ### Datos, seguridad y Ley 1581: qué se puede prometer
 

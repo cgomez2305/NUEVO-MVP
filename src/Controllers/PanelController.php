@@ -1907,10 +1907,24 @@ class PanelController
         $limiteIa = $negocio['limite_ia_mes'] ?? null;
         $iaUsadaEsteMes = $limiteIa !== null ? UsoIA::contarEsteMesPorNegocio($negocioId) : null;
 
+        // Llegó del sitio con un plan y ciclo elegidos (?plan=pro&ciclo=anual):
+        // se marcan, nunca se cobra nada solo.
+        $planElegido = in_array($_GET['plan'] ?? '', ['barrio', 'pro'], true) ? (string) $_GET['plan'] : null;
+        $cicloElegido = ($_GET['ciclo'] ?? '') === 'anual' ? 'anual' : 'mensual';
+        // Código de oferta: el aplicado en esta sesión, o el que trajo del sitio.
+        $ofertaAplicada = $_SESSION['oferta_plan'][$negocioId] ?? null;
+        $puedeUsarOferta = !\App\Models\OfertaPlan::negocioYaPagoPlan($negocioId) && \App\Models\OfertaPlan::canjeActivoDeNegocio($negocioId) === null;
+        $origen = \App\Models\OrigenRegistro::deNegocio($negocioId);
+
         ver('panel/plan', [
             'titulo'            => 'Tu plan · Veci',
             'activo'            => 'plan',
             'negocio'           => $negocio,
+            'planElegido'       => $planElegido,
+            'cicloElegido'      => $cicloElegido,
+            'ofertaAplicada'    => $puedeUsarOferta ? $ofertaAplicada : null,
+            'puedeUsarOferta'   => $puedeUsarOferta,
+            'codigoSugerido'    => (string) ($origen['oferta_codigo'] ?? ''),
             'planes'            => Plan::listarTodos(),
             'totalSedes'        => Sede::contarPorNegocio($negocioId),
             'pendiente'         => PagoPlan::pendientePorNegocio($negocioId),
@@ -1969,25 +1983,104 @@ class PanelController
 
         // Con más sedes que las incluidas, la renovación cobra también las
         // extra (las que el negocio tiene hoy: si borró una, ya no se cobra).
-        $sedesExtra = Plan::sedesExtraNecesarias($plan, Sede::contarPorNegocio((int) $negocio['negocio_id']));
+        $negocioId = (int) $negocio['negocio_id'];
+        $sedesExtra = Plan::sedesExtraNecesarias($plan, Sede::contarPorNegocio($negocioId));
         $monto = Plan::precio($plan, $ciclo, $sedesExtra);
         $inicio = new \DateTimeImmutable('today');
         $fin = $inicio->modify($ciclo === 'anual' ? '+1 year' : '+30 days');
 
-        PagoPlan::crearPendiente(
-            (int) $negocio['negocio_id'],
-            (int) $plan['id'],
-            $monto,
-            $ciclo,
-            $inicio->format('Y-m-d'),
-            $fin->format('Y-m-d'),
-            'plan',
-            $sedesExtra
-        );
+        // Código de oferta aplicado: se valida otra vez aquí, en el servidor
+        // y con la oferta bloqueada, al pedir el primer plan. Solo mensual.
+        $oferta = $_SESSION['oferta_plan'][$negocioId] ?? null;
+        $usaOferta = $oferta !== null && $ciclo === 'mensual' && in_array($plan['nombre'], \App\Models\OfertaPlan::PLANES_VALIDOS, true);
+        $pdo = \App\Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $canje = null;
+            if ($usaOferta) {
+                $canje = \App\Models\OfertaPlan::apartar($negocio, (string) $oferta['codigo'], (string) $oferta['documento_hash'], $plan, $ciclo, Plan::precio($plan, 'mensual', 0));
+                if (!$canje['ok']) {
+                    $pdo->rollBack();
+                    unset($_SESSION['oferta_plan'][$negocioId]);
+                    flash_set('error', $canje['mensaje'] . ' No se creó la solicitud.');
+                    redirigir('/panel/plan');
+                }
+            }
+            $pagoId = PagoPlan::crearPendiente(
+                $negocioId,
+                (int) $plan['id'],
+                $monto,
+                $ciclo,
+                $inicio->format('Y-m-d'),
+                $fin->format('Y-m-d'),
+                'plan',
+                $sedesExtra,
+                $canje['descuento'] ?? 0,
+                $canje['codigo'] ?? null
+            );
+            if ($canje !== null) {
+                \App\Models\OfertaPlan::asignarPago((int) $canje['canje_id'], $pagoId);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+        if ($canje !== null) {
+            unset($_SESSION['oferta_plan'][$negocioId]);
+        }
+        $aPagar = $monto - (int) ($canje['descuento'] ?? 0);
 
-        flash_set('ok', \App\Services\Wompi::disponible()
-            ? 'Listo: paga ' . pesos($monto) . ' con Wompi y tu plan se activa solo, o transfiere por Bre-B.'
-            : 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($monto) . ' por Bre-B y confirmamos tu plan apenas lo veamos.');
+        flash_set('ok', ($oferta !== null && $canje === null ? 'El código de oferta no aplica al pago anual, así que va sin descuento. ' : '')
+            . (\App\Services\Wompi::disponible()
+                ? 'Listo: paga ' . pesos($aPagar) . ' con Wompi y tu plan se activa solo, o transfiere por Bre-B.'
+                : 'Listo, dejamos tu solicitud registrada. Transfiere ' . pesos($aPagar) . ' por Bre-B y confirmamos tu plan apenas lo veamos.'));
+        redirigir('/panel/plan');
+    }
+
+    /**
+     * Aplica un código de oferta de Veci (no lo canjea todavía: eso pasa al
+     * pedir el plan). Pide la cédula o el NIT del titular: con el WhatsApp
+     * del dueño es lo que impide repetir la oferta abriendo otra cuenta.
+     * Máximo 5 intentos por hora por IP y por negocio.
+     */
+    public function aplicarOfertaPlan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $negocioId = (int) $negocio['negocio_id'];
+        $ip = ip_cliente();
+        if (\App\Models\LimiteTasa::excedido('oferta_ip', $ip, 5, 3600) || \App\Models\LimiteTasa::excedido('oferta_negocio', 'n' . $negocioId, 5, 3600)) {
+            flash_set('error', 'Hiciste muchos intentos con códigos de oferta. Espera una hora e intenta de nuevo.');
+            redirigir('/panel/plan');
+        }
+        \App\Models\LimiteTasa::registrar('oferta_ip', $ip);
+        \App\Models\LimiteTasa::registrar('oferta_negocio', 'n' . $negocioId);
+
+        $codigo = (string) ($_POST['codigo'] ?? '');
+        $documento = (string) ($_POST['documento'] ?? '');
+        $evaluacion = \App\Models\OfertaPlan::evaluar($negocio, $codigo, $documento);
+        if (!$evaluacion['ok']) {
+            flash_set('error', $evaluacion['mensaje']);
+            redirigir('/panel/plan');
+        }
+        // La sesión guarda el hash del documento, nunca el número.
+        $_SESSION['oferta_plan'][$negocioId] = [
+            'codigo'         => (string) $evaluacion['oferta']['codigo'],
+            'porcentaje'     => (int) $evaluacion['oferta']['porcentaje'],
+            'documento_hash' => $evaluacion['documento_hash'],
+        ];
+        flash_set('ok', 'Código ' . $evaluacion['oferta']['codigo'] . ' aplicado: ' . (int) $evaluacion['oferta']['porcentaje'] . '% menos en el primer mes de Barrio o Pro (pago mensual). Elige tu plan.');
+        redirigir('/panel/plan');
+    }
+
+    public function quitarOfertaPlan(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        unset($_SESSION['oferta_plan'][(int) $negocio['negocio_id']]);
         redirigir('/panel/plan');
     }
 

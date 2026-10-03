@@ -16,6 +16,12 @@ return [
         // Sin barra al final. Se usa para armar el enlace público de cada tienda.
         'url'    => 'http://localhost:8000',
         'nombre' => 'Veci',
+        // Clave para las huellas (HMAC) de WhatsApp y cédula/NIT con que las
+        // ofertas reconocen a quien ya tuvo un negocio. Si la dejas en null,
+        // se crea sola en storage/.clave_hash. Inclúyela en tus respaldos:
+        // si se pierde, Veci "olvida" quién ya usó una oferta.
+        // Genera una con: php -r "echo bin2hex(random_bytes(32));"
+        'clave_hash' => null,
     ],
 
     // Opcional. Si defines una llave aquí, la pantalla "La IA arma tu tienda"

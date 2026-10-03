@@ -5483,3 +5483,49 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-confirmar-acciones { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-5); }
 .pq-confirmar-acciones .pq-btn { width: auto; }
 .pq-bitacora-veces { display: inline-block; margin-left: var(--esp-1); padding: 0 7px; border-radius: 999px; background: var(--tinte-sello); color: var(--sello); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; vertical-align: 1px; }
+
+/* ---------- Tu plan · código de oferta ----------
+   El código aplicado se dibuja como un cupón recortado: borde punteado y
+   muescas a los lados (el "talón" de papel de la ruta Tiquete). El precio
+   tachado solo aparece en la tarjeta donde aplica, junto a "el primer
+   mes": nunca se insinúa que el descuento dura más. */
+.pq-oferta-form { margin: 0 0 var(--esp-4); max-width: 520px; }
+.pq-oferta-resumen { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--sello); min-height: 28px; display: flex; align-items: center; }
+.pq-oferta-resumen:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; border-radius: 4px; }
+.pq-oferta-campos { display: flex; flex-direction: column; gap: var(--esp-3); margin-top: var(--esp-3); }
+.pq-oferta-campos .pq-btn { align-self: flex-start; }
+.pq-oferta-aplicada {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3);
+  margin: 0 0 var(--esp-4); padding: var(--esp-3) var(--esp-4); max-width: 640px;
+  background: var(--tinte-caja); border: 1.5px dashed var(--caja); border-radius: var(--radio-m);
+}
+.pq-oferta-cupon {
+  position: relative; padding: 4px 14px; border-radius: 6px;
+  background: var(--tiquete); border: 1.5px solid var(--caja); color: var(--carbon);
+  font-size: 13px; font-weight: 700; letter-spacing: .06em;
+}
+.pq-oferta-cupon::before, .pq-oferta-cupon::after {
+  content: ""; position: absolute; top: 50%; width: 8px; height: 8px; margin-top: -4px;
+  border-radius: 50%; background: var(--tinte-caja); border: 1.5px solid var(--caja);
+}
+.pq-oferta-cupon::before { left: -5px; border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
+.pq-oferta-cupon::after { right: -5px; border-right-color: transparent; border-top-color: transparent; transform: rotate(45deg); }
+.pq-oferta-texto { flex: 1; min-width: 200px; font-size: 14px; color: var(--carbon); }
+.pq-precio-tachado { color: var(--gris-suave); font-weight: 500; }
+.pq-plan-card-elegido { border-color: var(--caja); box-shadow: 0 0 0 3px var(--tinte-caja); }
+.pq-plan-card-badge-elegido { background: var(--caja); color: var(--carbon); }
+.pq-plan-card-ciclo { flex-wrap: wrap; }
+.pq-plan-pendiente-oferta { margin: 0 0 var(--esp-2); }
+
+/* ---------- Panel interno · ofertas ---------- */
+.pq-admin-nav { display: flex; gap: var(--esp-1); margin-left: auto; margin-right: var(--esp-3); }
+.pq-admin-nav a { padding: 6px 10px; border-radius: 8px; color: var(--carbon); font-size: 14px; font-weight: 600; text-decoration: none; }
+.pq-admin-nav a:hover { background: var(--tinte-sello); color: var(--sello); }
+.pq-ofertas-lista { display: flex; flex-direction: column; gap: var(--esp-3); margin-bottom: var(--esp-4); }
+.pq-oferta-admin { display: flex; flex-direction: column; gap: var(--esp-3); }
+.pq-oferta-admin-cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); }
+.pq-oferta-admin-cabeza .pq-oferta-cupon::before, .pq-oferta-admin-cabeza .pq-oferta-cupon::after { background: var(--tiquete); }
+.pq-oferta-admin-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--esp-3); }
+.pq-oferta-admin-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-3); }
+.pq-canjes td, .pq-canjes th { white-space: nowrap; }
+.pq-tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

@@ -194,6 +194,8 @@ $router->post('/panel/confirmar', [$panel, 'confirmarIdentidad']);
 $router->get('/panel/plan', [$panel, 'plan']);
 $router->post('/panel/plan/solicitar', [$panel, 'solicitarCambioPlan']);
 $router->post('/panel/plan/cancelar', [$panel, 'cancelarSolicitudPlan']);
+$router->post('/panel/plan/oferta', [$panel, 'aplicarOfertaPlan']);
+$router->post('/panel/plan/oferta/quitar', [$panel, 'quitarOfertaPlan']);
 $router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente']);
 
 // Tiendas (fase 4): mostrador con lector, fiado, compras a proveedor y el
@@ -313,5 +315,8 @@ $router->post('/admin/negocios/{id}/reactivar', [$admin, 'reactivar']);
 $router->post('/admin/usuarios/{usuario}/generar-reset', [$admin, 'generarReset']);
 $router->post('/admin/pagos/{id}/confirmar', [$admin, 'confirmarPago']);
 $router->post('/admin/pagos/{id}/rechazar', [$admin, 'rechazarPago']);
+$router->get('/admin/ofertas', [$admin, 'ofertas']);
+$router->post('/admin/ofertas', [$admin, 'guardarOferta']);
+$router->post('/admin/ofertas/{id}', [$admin, 'guardarOferta']);
 
 $router->despachar($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

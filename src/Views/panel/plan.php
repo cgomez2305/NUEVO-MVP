@@ -43,6 +43,10 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
   </section>
 <?php endif; ?>
 
+<?php if ((int) ($negocio['publicada'] ?? 1) !== 1 && $negocio['rol'] === 'dueno'): ?>
+  <div class="pq-alerta pq-alerta-aviso pq-pagina-aviso">Tu tienda todavía no está abierta. Puedes elegir tu plan ahora y <a href="<?= e(base_url('/panel/onboarding')) ?>">terminar de armarla</a> cuando quieras.</div>
+<?php endif; ?>
+
 <?php if ($negocio['plan_estado'] === 'degradado_a_gratis'): ?>
   <div class="pq-alerta pq-alerta-aviso pq-pagina-aviso">Tu plan pago venció sin que confirmáramos un pago nuevo, así que volviste al plan Gratis. Tu tienda nunca se bloqueó.</div>
 <?php endif; ?>
@@ -72,6 +76,9 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
         <span class="pq-ayuda">Tarjeta, PSE, Nequi o Bancolombia, con Wompi. El plan se activa solo al aprobarse.</span>
       </form>
       <p class="pq-plan-pendiente-o"><span>o</span></p>
+    <?php endif; ?>
+    <?php if ((int) ($pendiente['descuento'] ?? 0) > 0): ?>
+      <p class="pq-ayuda pq-plan-pendiente-oferta">Con el código <strong class="pq-mono"><?= e((string) $pendiente['oferta_codigo']) ?></strong>: <?= pesos((int) $pendiente['monto_lista']) ?> − <?= pesos((int) $pendiente['descuento']) ?> el primer mes.</p>
     <?php endif; ?>
     <p class="pq-plan-pendiente-texto">
       Transfiere <strong><?= pesos((int) $pendiente['monto']) ?></strong> por Bre-B
@@ -105,6 +112,41 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
   </div>
 <?php endif; ?>
 
+<?php
+// Código de oferta de Veci (p. ej. el del asistente del sitio): solo antes
+// del primer pago y sin otra solicitud pendiente. Se aplica aquí (con la
+// cédula o NIT del titular) y se canjea al pedir el plan.
+?>
+<?php if (!empty($puedeUsarOferta) && $pendiente === null): ?>
+  <?php if (!empty($ofertaAplicada)): ?>
+    <div class="pq-oferta-aplicada" role="status">
+      <span class="pq-oferta-cupon pq-mono"><?= e((string) $ofertaAplicada['codigo']) ?></span>
+      <span class="pq-oferta-texto"><?= (int) $ofertaAplicada['porcentaje'] ?>% menos en el primer mes de Barrio o Pro con pago mensual. Elige tu plan abajo.</span>
+      <form method="post" action="<?= e(base_url('/panel/plan/oferta/quitar')) ?>">
+        <?= csrf_campo() ?>
+        <button type="submit" class="pq-enlace-boton">Quitar</button>
+      </form>
+    </div>
+  <?php else: ?>
+    <details class="pq-card pq-oferta-form"<?= $codigoSugerido !== '' ? ' open' : '' ?>>
+      <summary class="pq-oferta-resumen">¿Tienes un código de oferta?</summary>
+      <form method="post" action="<?= e(base_url('/panel/plan/oferta')) ?>" class="pq-oferta-campos">
+        <?= csrf_campo() ?>
+        <div class="pq-campo">
+          <label class="pq-label" for="oferta-codigo">Código</label>
+          <input class="pq-input pq-mono" id="oferta-codigo" name="codigo" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" required value="<?= e($codigoSugerido) ?>" placeholder="VECICHAT30">
+        </div>
+        <div class="pq-campo">
+          <label class="pq-label" for="oferta-documento">Cédula o NIT del titular</label>
+          <input class="pq-input pq-mono" id="oferta-documento" name="documento" inputmode="numeric" maxlength="20" autocomplete="off" required placeholder="1020304050">
+          <span class="pq-ayuda">Las ofertas son para negocios nuevos, una por persona o empresa. No guardamos el número: solo una huella que sirve para reconocerlo si se repite.</span>
+        </div>
+        <button type="submit" class="pq-btn pq-btn-ghost pq-btn-chico">Aplicar código</button>
+      </form>
+    </details>
+  <?php endif; ?>
+<?php endif; ?>
+
 <div class="pq-planes-grilla pq-planes-grilla-panel">
   <?php foreach ($planes as $plan): ?>
     <?php
@@ -130,7 +172,14 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
           $bullets[] = 'Ojo: incluye ' . (int) $plan['sedes_incluidas'] . ' sede; ' . ($sobran === 1 ? 'tu otra sede queda' : 'tus otras ' . $sobran . ' sedes quedan') . ' en pausa';
       }
     ?>
-    <div class="pq-plan-card<?= $esActual ? ' pq-plan-card-actual' : '' ?>">
+    <?php
+      $esElegido = ($planElegido ?? null) === $plan['nombre'];
+      $conOferta = !empty($ofertaAplicada) && in_array($plan['nombre'], \App\Models\OfertaPlan::PLANES_VALIDOS, true);
+      $descuentoOferta = $conOferta ? (int) round((int) $plan['precio_mensual'] * (int) $ofertaAplicada['porcentaje'] / 100) : 0;
+      $anualElegido = $esElegido && ($cicloElegido ?? 'mensual') === 'anual';
+    ?>
+    <div class="pq-plan-card<?= $esActual ? ' pq-plan-card-actual' : '' ?><?= $esElegido ? ' pq-plan-card-elegido' : '' ?>" id="plan-<?= e($plan['nombre']) ?>">
+      <?php if ($esElegido && !$esActual): ?><span class="pq-plan-card-badge pq-plan-card-badge-elegido">Lo elegiste</span><?php endif; ?>
       <?php if ($esActual): ?><span class="pq-plan-card-badge">Tu plan</span><?php endif; ?>
       <span class="pq-plan-card-nombre"><?= e($nombresBonitos[$plan['nombre']] ?? $plan['nombre']) ?></span>
       <span class="pq-plan-card-precio"><?= pesos((int) $plan['precio_mensual']) ?><small>/mes</small></span>
@@ -144,10 +193,15 @@ if (!empty($recuperado) && (int) $recuperado['total'] > 0):
           <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
           <?php if ($plan['nombre'] !== 'gratis'): ?>
             <label class="pq-plan-card-ciclo">
-              <input type="radio" name="ciclo" value="mensual" checked> Mensual · <?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan)) ?>
+              <input type="radio" name="ciclo" value="mensual"<?= $anualElegido ? '' : ' checked' ?>> Mensual ·
+              <?php if ($conOferta): ?>
+                <s class="pq-precio-tachado"><?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan)) ?></s> <strong><?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan) - $descuentoOferta) ?></strong> <span class="pq-ayuda">el primer mes</span>
+              <?php else: ?>
+                <?= pesos(\App\Models\Plan::precio($plan, 'mensual', $extrasPlan)) ?>
+              <?php endif; ?>
             </label>
             <label class="pq-plan-card-ciclo">
-              <input type="radio" name="ciclo" value="anual"> Anual · <?= pesos(\App\Models\Plan::precio($plan, 'anual', $extrasPlan)) ?> <span class="pq-ayuda">(2 meses gratis)</span>
+              <input type="radio" name="ciclo" value="anual"<?= $anualElegido ? ' checked' : '' ?>> Anual · <?= pesos(\App\Models\Plan::precio($plan, 'anual', $extrasPlan)) ?> <span class="pq-ayuda">(2 meses gratis<?= $conOferta ? '; sin el código' : '' ?>)</span>
             </label>
             <?php if ($extrasPlan > 0): ?>
               <span class="pq-ayuda">Incluye <?= $extrasPlan ?> sede<?= $extrasPlan === 1 ? '' : 's' ?> extra (<?= pesos((int) $plan['precio_sede_extra']) ?>/mes c/u).</span>

@@ -23,19 +23,26 @@ class PagoPlan
         string $periodoInicio,
         string $periodoFin,
         string $concepto = 'plan',
-        int $sedesExtra = 0
+        int $sedesExtra = 0,
+        int $descuento = 0,
+        ?string $ofertaCodigo = null
     ): int {
         $pdo = Database::conexion();
+        // monto es lo que debe llegar (ya con la oferta); monto_lista y
+        // descuento quedan para que el admin vea de dónde sale.
         $stmt = $pdo->prepare(
-            'INSERT INTO pagos_plan (negocio_id, plan_id, concepto, sedes_extra, monto, metodo_pago, ciclo, periodo_inicio, periodo_fin)
-             VALUES (:negocio_id, :plan_id, :concepto, :sedes_extra, :monto, :metodo_pago, :ciclo, :periodo_inicio, :periodo_fin)'
+            'INSERT INTO pagos_plan (negocio_id, plan_id, concepto, sedes_extra, monto, monto_lista, descuento, oferta_codigo, metodo_pago, ciclo, periodo_inicio, periodo_fin)
+             VALUES (:negocio_id, :plan_id, :concepto, :sedes_extra, :monto, :monto_lista, :descuento, :oferta, :metodo_pago, :ciclo, :periodo_inicio, :periodo_fin)'
         );
         $stmt->execute([
             'negocio_id'     => $negocioId,
             'plan_id'        => $planId,
             'concepto'       => $concepto === 'sede_extra' ? 'sede_extra' : 'plan',
             'sedes_extra'    => max(0, $sedesExtra),
-            'monto'          => $monto,
+            'monto'          => max(0, $monto - $descuento),
+            'monto_lista'    => $monto,
+            'descuento'      => max(0, $descuento),
+            'oferta'         => $ofertaCodigo,
             'metodo_pago'    => 'breb_manual',
             'ciclo'          => $ciclo,
             'periodo_inicio' => $periodoInicio,
@@ -202,6 +209,8 @@ class PagoPlan
             $pdo->rollBack();
             throw $e;
         }
+        // El código de oferta de este pago (si tenía) queda usado.
+        OfertaPlan::confirmarPorPago((int) $pago['id']);
         // Si este negocio llegó invitado, quien lo invitó gana sus días
         // ahora que pagó (solo la primera vez; ver Referido).
         Referido::premiarPorPago((int) $pago['negocio_id'], (int) $pago['monto']);
@@ -212,11 +221,20 @@ class PagoPlan
     /** El dueño retira su propia solicitud pendiente (acotado a SU negocio: nunca toca la de otro). */
     public static function cancelarPendienteDeNegocio(int $negocioId): bool
     {
-        $stmt = Database::conexion()->prepare(
-            'UPDATE pagos_plan SET cancelado_en = NOW() WHERE negocio_id = :negocio_id AND confirmado_en IS NULL AND cancelado_en IS NULL'
-        );
-        $stmt->execute(['negocio_id' => $negocioId]);
-        return $stmt->rowCount() > 0;
+        $pdo = Database::conexion();
+        $ids = $pdo->prepare('SELECT id FROM pagos_plan WHERE negocio_id = :negocio_id AND confirmado_en IS NULL AND cancelado_en IS NULL');
+        $ids->execute(['negocio_id' => $negocioId]);
+        $cancelados = 0;
+        foreach (array_map('intval', $ids->fetchAll(\PDO::FETCH_COLUMN)) as $id) {
+            $stmt = $pdo->prepare('UPDATE pagos_plan SET cancelado_en = NOW() WHERE id = :id AND confirmado_en IS NULL AND cancelado_en IS NULL');
+            $stmt->execute(['id' => $id]);
+            if ($stmt->rowCount() === 1) {
+                OfertaPlan::liberarPorPago($id);
+                $cancelados++;
+            }
+        }
+
+        return $cancelados > 0;
     }
 
     /**
@@ -228,6 +246,11 @@ class PagoPlan
     {
         $stmt = Database::conexion()->prepare('UPDATE pagos_plan SET cancelado_en = NOW() WHERE id = :id AND confirmado_en IS NULL AND cancelado_en IS NULL');
         $stmt->execute(['id' => $id]);
-        return $stmt->rowCount() === 1;
+        if ($stmt->rowCount() !== 1) {
+            return false;
+        }
+        OfertaPlan::liberarPorPago($id);
+
+        return true;
     }
 }

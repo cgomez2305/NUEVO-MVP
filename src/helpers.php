@@ -227,6 +227,35 @@ function password_debil(string $password, array $datosPropios = []): ?string
     return null;
 }
 
+/**
+ * Huella de un dato personal que hay que reconocer sin guardarlo: HMAC-SHA256
+ * con una clave del servidor. Una cédula tiene pocos millones de valores
+ * posibles; con un SHA-256 simple bastaría probarlos todos. La clave sale de
+ * config('app.clave_hash') o, si no está, de storage/.clave_hash (se crea
+ * sola la primera vez). Perder la clave es perder la memoria de quién ya
+ * usó una oferta: va en el respaldo del servidor.
+ */
+function hash_identidad(string $tipo, string $valor): string
+{
+    static $clave = null;
+    if ($clave === null) {
+        $clave = (string) config('app.clave_hash', '');
+        if ($clave === '') {
+            $archivo = __DIR__ . '/../storage/.clave_hash';
+            if (!is_file($archivo)) {
+                @file_put_contents($archivo, bin2hex(random_bytes(32)), LOCK_EX);
+                @chmod($archivo, 0600);
+            }
+            $clave = trim((string) @file_get_contents($archivo));
+            if ($clave === '') {
+                throw new RuntimeException('No hay clave para hash_identidad (config app.clave_hash o storage/.clave_hash).');
+            }
+        }
+    }
+
+    return hash_hmac('sha256', $tipo . '|' . $valor, $clave);
+}
+
 /** "ca***@gmail.com": para la bitácora, sin dejar el correo completo a la vista. */
 function correo_enmascarado(string $correo): string
 {

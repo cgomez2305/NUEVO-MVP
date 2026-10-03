@@ -16,6 +16,10 @@
       <img src="<?= e(base_url('assets/img/logo-veci-lockup-transparente.png')) ?>" alt="" class="pq-admin-logo">
       <span class="pq-admin-sello" aria-hidden="true">Interno</span>
     </a>
+    <nav class="pq-admin-nav" aria-label="Panel interno">
+      <a href="<?= e(base_url('/admin')) ?>">Negocios</a>
+      <a href="<?= e(base_url('/admin/ofertas')) ?>">Ofertas</a>
+    </nav>
     <div class="pq-admin-sesion">
       <span class="pq-admin-quien"><?= e($admin['nombre']) ?></span>
       <form method="post" action="<?= e(base_url('/admin/logout')) ?>">

@@ -21,3 +21,6 @@
 /.claude/worktrees/
 /storage/visitas/*
 !/storage/visitas/.gitkeep
+
+# Clave de hash_identidad() (si no está en config): nunca al repo.
+/storage/.clave_hash

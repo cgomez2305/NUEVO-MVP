@@ -225,6 +225,57 @@ class AdminController
         redirigir('/admin/negocios/' . (int) $usuario['negocio_id']);
     }
 
+    /** Códigos de oferta de los planes de Veci: cupo, fecha de fin y registro de canjes. */
+    public function ofertas(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+
+        ver('admin/ofertas', [
+            'titulo'  => 'Ofertas · Panel interno · Veci',
+            'admin'   => $admin,
+            'ofertas' => \App\Models\OfertaPlan::listar(),
+            'canjes'  => \App\Models\OfertaPlan::canjes(),
+            'ok'      => flash_obtener('ok'),
+            'error'   => flash_obtener('error'),
+        ], 'admin');
+    }
+
+    public function guardarOferta(array $parametros): void
+    {
+        $admin = AdminAuth::exigirSesion();
+        $id = isset($parametros['id']) ? (int) $parametros['id'] : null;
+        $actual = $id !== null ? \App\Models\OfertaPlan::buscar($id) : null;
+        if ($id !== null && $actual === null) {
+            redirigir('/admin/ofertas');
+        }
+
+        $codigo = $actual['codigo'] ?? \App\Models\OfertaPlan::normalizarCodigo((string) ($_POST['codigo'] ?? ''));
+        $porcentaje = (int) ($_POST['porcentaje'] ?? 0);
+        $vence = trim((string) ($_POST['vence_en'] ?? ''));
+        $cupo = trim((string) ($_POST['cupo_total'] ?? ''));
+        if ($codigo === '' || $porcentaje < 1 || $porcentaje > 100
+            || ($vence !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $vence))
+            || ($cupo !== '' && (!ctype_digit($cupo) || (int) $cupo < 1))) {
+            flash_set('error', 'Revisa la oferta: código de 3 a 20 letras o números, porcentaje de 1 a 100, fecha AAAA-MM-DD y cupo mayor que cero (o vacíos).');
+            redirigir('/admin/ofertas');
+        }
+        if ($id === null && \App\Models\OfertaPlan::buscarPorCodigo($codigo) !== null) {
+            flash_set('error', 'Ya existe una oferta con el código ' . $codigo . '.');
+            redirigir('/admin/ofertas');
+        }
+        \App\Models\OfertaPlan::guardar([
+            'codigo'      => $codigo,
+            'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+            'porcentaje'  => $porcentaje,
+            'vence_en'    => $vence !== '' ? $vence : null,
+            'cupo_total'  => $cupo !== '' ? (int) $cupo : null,
+            'activa'      => isset($_POST['activa']),
+        ], $id);
+        EventoSeguridad::registrar('oferta_guardada', null, null, $codigo . ' · ' . $porcentaje . '%' . ($cupo !== '' ? ' · cupo ' . $cupo : '') . ($vence !== '' ? ' · hasta ' . $vence : '') . (isset($_POST['activa']) ? '' : ' · pausada'), (int) $admin['id']);
+        flash_set('ok', 'Oferta ' . $codigo . ' guardada.');
+        redirigir('/admin/ofertas');
+    }
+
     /**
      * Los pagos se confirman desde la lista (/admin) o desde la ficha del
      * negocio: se vuelve a donde se hizo, para no perder el hilo cuando hay

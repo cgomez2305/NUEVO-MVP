@@ -229,6 +229,20 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
      suspendido siguen visibles para el cliente; push reasigna endpoint al
      usuario que inicia sesión en ese navegador (endpoint secreto).
 
+  7. PENDIENTES-APP.md (rama work/marketing-web), puntos 1 y 2 (migración 38):
+     - Registro lee utm_*, plan, ciclo, modo, oferta (`OrigenRegistro::captar`,
+       sesión `registro_origen`) → `negocio_origen`. Con plan pago redirige a
+       /panel/plan?plan=X&ciclo=Y (nace en Gratis). `modo` preselecciona.
+     - Ofertas de plan: `OfertaPlan` (evaluar/apartar con FOR UPDATE,
+       confirmarPorPago/liberarPorPago desde PagoPlan), `Identidad` +
+       `identidades_negocio` (HMAC `hash_identidad()`, clave app.clave_hash o
+       storage/.clave_hash), `/panel/plan/oferta` (5/h IP y negocio),
+       `/admin/ofertas` (cupo, fecha, %, canjes, ¿pagó 2.º mes?).
+       pagos_plan.monto = con descuento; monto_lista/descuento/oferta_codigo.
+     - Prueba: tests/registro_ofertas.php (46 comprobaciones, control negativo OK).
+       correr.sh ahora hace DROP/CREATE DATABASE antes de restaurar.
+     - Punto 3 ("Sube tu foto sin cuenta") queda para después; docs/ no se toca.
+
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
    pasado a Bricolage + Inter Tight alojadas (ver `references/sitio.md`).

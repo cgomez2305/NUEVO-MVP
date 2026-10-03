@@ -6,6 +6,8 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\DispositivoConfianza;
+use App\Models\Identidad;
+use App\Models\OrigenRegistro;
 use App\Models\EventoSeguridad;
 use App\Models\Negocio;
 use App\Models\LimiteTasa;
@@ -29,11 +31,17 @@ class AuthController
         }
         $invitaId = (int) ($_SESSION['referido_por'] ?? 0);
         $invitaNombre = $invita['nombre'] ?? ($invitaId > 0 ? (\App\Models\Negocio::buscarPorId($invitaId)['nombre'] ?? null) : null);
+        // Lo que manda el sitio web (utm_*, plan, ciclo, modo, oferta): igual
+        // que ?ref=, queda en la sesión hasta terminar el registro.
+        OrigenRegistro::captar($_GET);
+        $origen = OrigenRegistro::actual();
 
         ver('auth/registro', [
             'titulo' => 'Crear tu tienda · Veci',
             'error'  => flash_obtener('error'),
             'invitadoPor' => $invitaNombre,
+            'modoInicial' => $origen['modo'] ?? 'pedidos',
+            'planElegido' => in_array($origen['plan'] ?? '', ['barrio', 'pro'], true) ? $origen['plan'] : null,
         ], 'auth');
     }
 
@@ -115,10 +123,23 @@ class AuthController
             \App\Models\Referido::registrar((int) $_SESSION['referido_por'], $negocioId);
             unset($_SESSION['referido_por']);
         }
+        // De dónde llegó y qué plan quería (se guarda y sale de la sesión).
+        $origen = OrigenRegistro::actual();
+        OrigenRegistro::guardar($negocioId);
+        // Este WhatsApp ya tuvo un negocio: las ofertas "solo negocios
+        // nuevos" lo reconocen aunque mañana abra otra cuenta.
+        Identidad::registrar('whatsapp', hash_identidad('whatsapp', $whatsapp), $negocioId);
 
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuarioId;
         $_SESSION['sede_id'] = $sedeId;
+
+        // Llegó del sitio con un plan pago elegido: nace en Gratis (nunca se
+        // cobra solo) y va directo a "Tu plan" con ese plan y ciclo marcados.
+        if (in_array($origen['plan'] ?? '', ['barrio', 'pro'], true)) {
+            flash_set('ok', 'Tu negocio ya está creado, en el plan Gratis. Aquí puedes activar el plan ' . ucfirst($origen['plan']) . ' cuando quieras; tu tienda la terminas de armar después.');
+            redirigir('/panel/plan?' . http_build_query(['plan' => $origen['plan'], 'ciclo' => $origen['ciclo'] ?? 'mensual']) . '#plan-' . $origen['plan']);
+        }
 
         redirigir('/panel/onboarding/foto');
     }
