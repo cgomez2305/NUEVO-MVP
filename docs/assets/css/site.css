@@ -870,6 +870,7 @@ a.industria-tag:hover{background:var(--tinte-sello);color:var(--sello)}
 .integra-item p{font-size:13px;color:var(--texto-suave);line-height:1.5;margin:0}
 .badge-disponible{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;background:var(--tinte-caja);color:#16A36A;padding:3px 9px;border-radius:var(--radio-pill)}
 .badge-proximo{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;background:var(--bg-suave);color:var(--texto-tenue);padding:3px 9px;border-radius:var(--radio-pill)}
+.badge-pro{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;background:var(--tinte-mostaza);color:#8a5a00;padding:3px 9px;border-radius:var(--radio-pill)}
 @media (max-width:700px){
   .integra-lista{grid-template-columns:1fr}
 }
