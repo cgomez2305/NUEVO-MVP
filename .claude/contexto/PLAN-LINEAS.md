@@ -51,9 +51,13 @@ Mostrador con escáner (lector o cámara), código de barras/costo/peso en
 productos, compras a proveedor, catálogo compartido de códigos, margen real,
 fiado con recordatorio que respeta la Ley 2300 de 2023, cierre de caja.
 
-## Fase 5 · Salud — migración 18
-Plan de tratamiento por fases con presupuesto aprobable y abonos; controles
-recurrentes; autorización de datos sensibles. Sin historia clínica.
+## Fase 5 · Salud — migración 18 ✓
+`negocios.rubro = 'salud'` sobre reservas. Plan de tratamiento por fases que
+el paciente aprueba desde su enlace y paga con abonos (las citas del plan
+valen $0; la plata entra por los abonos, que van a la caja); avance por
+sesiones; recordatorio de saldo con la Ley 2300; controles recurrentes con
+"Toca repetir"; motivo de consulta opcional con autorización de datos
+sensibles. Sin historia clínica (Resolución 1995 de 1999).
 
 ## Decisiones pendientes del dueño
 - ¿Plan propio más barato para tiendas?

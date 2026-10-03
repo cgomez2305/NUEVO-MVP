@@ -92,9 +92,11 @@ PHP puro + MySQL, sin framework:
    | Doña María | Pedidos | `3001234567` | `veci123` | `/t/donamaria` |
    | Salón Bonita | Reservas | `3005556677` | `veci123` | `/t/salonbonita` |
    | Frío Express | Visitas a domicilio | `3007778899` | `veci123` | `/t/frioexpress` |
+   | Sonrisa Dental | Salud | `3009990011` | `veci123` | `/t/sonrisadental` |
 
-   Frío Express (técnicos de aires) no está en `seed.sql`: se carga aparte,
-   también sobre una base que ya existe, con `mysql veci < database/demo_visitas.sql`.
+   Frío Express (técnicos de aires) y Sonrisa Dental (consultorio) no están en
+   `seed.sql`: se cargan aparte, también sobre una base que ya existe, con
+   `mysql veci < database/demo_visitas.sql` y `mysql veci < database/demo_salud.sql`.
 
 ## Publicar en hosting compartido (cPanel)
 

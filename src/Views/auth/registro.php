@@ -60,6 +60,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
         </span>
       </label>
+      <label class="pq-card-borde pq-tipo-opcion">
+        <input class="pq-sr-solo" type="radio" name="tipo_negocio" value="salud">
+        <span class="pq-tipo-opcion-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>
+        </span>
+        <span class="pq-stack pq-tipo-opcion-texto">
+          <span class="pq-tipo-opcion-titulo">Consultorio de salud</span>
+          <span class="pq-ayuda">Odontología, fisioterapia, psicología, nutrición: citas y planes de tratamiento con abonos.</span>
+        </span>
+        <span class="pq-tipo-opcion-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </span>
+      </label>
     </div>
   </div>
 

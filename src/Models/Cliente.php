@@ -49,6 +49,26 @@ class Cliente
         return (int) $pdo->lastInsertId();
     }
 
+    /**
+     * Para el panel: el cliente con ese WhatsApp si ya existe (sin tocarle el
+     * nombre ni sus permisos), o uno nuevo con la autorización que el
+     * negocio confirmó en persona.
+     */
+    public static function buscarOCrearDesdePanel(int $negocioId, string $nombre, string $telefono): int
+    {
+        $stmt = Database::conexion()->prepare('SELECT id FROM clientes WHERE negocio_id = :n AND telefono = :t');
+        $stmt->execute(['n' => $negocioId, 't' => $telefono]);
+        $id = $stmt->fetchColumn();
+        if ($id !== false) {
+            return (int) $id;
+        }
+        Database::conexion()->prepare(
+            'INSERT INTO clientes (negocio_id, nombre, telefono, autorizo_datos, autorizado_en) VALUES (:n, :nombre, :t, 1, NOW())'
+        )->execute(['n' => $negocioId, 'nombre' => mb_substr($nombre, 0, 120), 't' => $telefono]);
+
+        return (int) Database::conexion()->lastInsertId();
+    }
+
     public static function buscar(int $id, int $negocioId): ?array
     {
         $stmt = Database::conexion()->prepare(

@@ -41,11 +41,16 @@ class Comision
      * la sesión iba por un bono, el descuento no es plata perdida: el bono se
      * pagó antes. Ahí la base es el valor del servicio, como en un salón de
      * verdad, donde el profesional cobra su parte de cada sesión del paquete.
+     * Igual con un plan de tratamiento: la base es su parte de la fase.
      */
     public static function sqlBase(string $alias): string
     {
-        return "IF(EXISTS (SELECT 1 FROM bono_usos bu WHERE bu.cita_id = {$alias}.id), "
-            . "CAST(COALESCE({$alias}.precio_final, {$alias}.precio) AS SIGNED), " . Cita::sqlValor($alias) . ')';
+        // Una sesión de un plan de tratamiento (salud) vale $0 por sí sola
+        // (se paga con abonos): su base es su parte de la fase.
+        return "CASE WHEN {$alias}.plan_fase_id IS NOT NULL THEN "
+            . "(SELECT ROUND(pf.valor / pf.sesiones) FROM plan_fases pf WHERE pf.id = {$alias}.plan_fase_id) "
+            . "WHEN EXISTS (SELECT 1 FROM bono_usos bu WHERE bu.cita_id = {$alias}.id) "
+            . "THEN CAST(COALESCE({$alias}.precio_final, {$alias}.precio) AS SIGNED) ELSE " . Cita::sqlValor($alias) . ' END';
     }
 
     public static function liquidacion(int $sedeId, string $desde, string $hasta): array

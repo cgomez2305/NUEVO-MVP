@@ -78,7 +78,10 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   (worktree, migraciones 20-25) fusionada y revisada; fase 3 (visitas a
   domicilio: modalidad 'domicilio' de reservas, franjas, técnico asignado,
   cotización aprobable, evidencia, zonas, "toca repetir"; migraciones 16-17,
-  demo en database/demo_visitas.sql) hecha; sigue salud (18).
+  demo en database/demo_visitas.sql) hecha; fase 5 (salud: rubro 'salud',
+  motivo con permiso de datos sensibles, planes de tratamiento por fases con
+  abonos, caja y comisiones; migración 18, demo en database/demo_salud.sql)
+  hecha.
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`

@@ -14,14 +14,17 @@ use App\Database;
 class Negocio
 {
     /**
-     * $tipoNegocio: 'pedidos', 'reservas' o 'domicilio'. "Domicilio" (el
+     * $tipoNegocio: 'pedidos', 'reservas', 'domicilio' o 'salud'. "Domicilio" (el
      * técnico que va a la casa) es un negocio de reservas con modalidad
      * domicilio: usa toda la agenda y le suma lo propio de una visita.
      */
     public static function crear(string $nombre, string $tipoNegocio = 'pedidos'): int
     {
         $modalidad = $tipoNegocio === 'domicilio' ? 'domicilio' : 'local';
-        if ($tipoNegocio === 'domicilio') {
+        // "Salud" (consultorio): reservas con planes de tratamiento y el
+        // cuidado de los datos sensibles.
+        $rubro = $tipoNegocio === 'salud' ? 'salud' : 'general';
+        if ($tipoNegocio === 'domicilio' || $tipoNegocio === 'salud') {
             $tipoNegocio = 'reservas';
         }
         if (!in_array($tipoNegocio, ['pedidos', 'reservas'], true)) {
@@ -30,9 +33,9 @@ class Negocio
 
         $pdo = Database::conexion();
         $stmt = $pdo->prepare(
-            'INSERT INTO negocios (nombre, tipo_negocio, modalidad) VALUES (:nombre, :tipo_negocio, :modalidad)'
+            'INSERT INTO negocios (nombre, tipo_negocio, modalidad, rubro) VALUES (:nombre, :tipo_negocio, :modalidad, :rubro)'
         );
-        $stmt->execute(['nombre' => $nombre, 'tipo_negocio' => $tipoNegocio, 'modalidad' => $modalidad]);
+        $stmt->execute(['nombre' => $nombre, 'tipo_negocio' => $tipoNegocio, 'modalidad' => $modalidad, 'rubro' => $rubro]);
 
         return (int) $pdo->lastInsertId();
     }

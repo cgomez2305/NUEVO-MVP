@@ -27,6 +27,7 @@ $pqIconos = [
     'empleados'      => '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="18" cy="8.5" r="2.6"/><path d="M16.5 14.3c2.3.5 4 2.5 4.5 5.7"/>',
     'fila'           => '<circle cx="6" cy="7" r="2.2"/><circle cx="12" cy="7" r="2.2"/><circle cx="18" cy="7" r="2.2"/><path d="M3 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4M9 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4M15 15c0-1.9 1.3-3.4 3-3.4s3 1.5 3 3.4"/><path d="M3 20h18"/>',
     'comisiones'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 15l8-6"/><circle cx="8.5" cy="9.5" r="1.3"/><circle cx="15.5" cy="14.5" r="1.3"/>',
+    'planes'         => '<path d="M9 3h6v4H9z"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/>',
     'repetir'        => '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7"/><path d="M20 4v4.7h-4.7"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.3"/><path d="M4 20v-4.7h4.7"/>',
     'cobertura'      => '<path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13.5M15 6.5V20"/>',
     'horario'        => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
@@ -64,6 +65,9 @@ if ($tipoReservas) {
         $navOperacion[] = ['fila', 'Fila de hoy', base_url('/panel/fila')];
     }
     $navOperacion[] = ['repetir', 'Toca repetir', base_url('/panel/repetir')];
+    if (($negocio['rubro'] ?? 'general') === 'salud') {
+        $navOperacion[] = ['planes', 'Planes de tratamiento', base_url('/panel/planes')];
+    }
     $navOperacion[] = ['servicios', 'Servicios', base_url('/panel/servicios')];
     $navOperacion[] = ['paquetes', 'Paquetes y bonos', base_url('/panel/paquetes')];
     if ($esDueno) {

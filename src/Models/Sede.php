@@ -99,7 +99,7 @@ class Sede
      * puede depender de un cron externo que nadie garantiza que corra.
      */
     private const SELECT_CON_MARCA_Y_PLAN = "
-        SELECT s.*, n.tipo_negocio, n.modalidad, n.color_marca, n.nombre AS negocio_nombre,
+        SELECT s.*, n.tipo_negocio, n.modalidad, n.rubro, n.color_marca, n.nombre AS negocio_nombre,
                n.plan_id, n.plan_estado, n.plan_vence_en, n.plan_ciclo, n.sedes_extra,
                p.nombre AS plan_nombre, p.precio_mensual AS plan_precio_mensual, p.precio_anual AS plan_precio_anual,
                p.limite_pedidos_mes, p.limite_ia_mes, p.incluye_copiloto, p.incluye_estadisticas_completas,

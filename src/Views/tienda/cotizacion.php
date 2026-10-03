@@ -89,7 +89,7 @@ $anticipo = (int) $cotizacion['anticipo'];
     $pagoTitulo = 'Cómo pagar el anticipo de materiales';
     $pagoMetodo = 'Bre-B';
     $pagoLlave = (string) $negocio['llave_breb_valor'];
-    $pagoReferencia = 'VECI-Q' . (int) $cotizacion['id'];
+    $pagoReferencia = null; // el webhook de Bre-B solo concilia pedidos y citas: aquí el comprobante va por WhatsApp
     $pagoMonto = $anticipo;
     $pagoPara = 'reserva';
     require __DIR__ . '/_pasos_pago.php';

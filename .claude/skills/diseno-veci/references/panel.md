@@ -381,3 +381,26 @@ registro: "Visitas a domicilio"). Usa toda la agenda; lo propio está en
   recordatorio al reservar (permiso específico, Ley 1581); "Recordarle" abre
   WhatsApp y lo saca de la lista.
 - Sin "Fila de hoy" para negocios a domicilio.
+
+## Salud: planes de tratamiento (migración 18)
+
+Un negocio de reservas con `negocios.rubro = 'salud'` (registro: "Consultorio
+de salud"). Lógica en `PlanTratamiento` y `SaludController`. No es historia
+clínica: nada de diagnósticos ni evoluciones.
+- **Planes** (`/panel/planes`): filas con paciente, abonado / total y una
+  barra de pago del color del consultorio.
+- **Nuevo plan** (`/panel/planes/nuevo[?cita=]`): paciente (desde la cita o
+  nombre + WhatsApp con autorización confirmada), fases en renglones fijos
+  (nombre, sesiones, valor), validez y nota (nada clínico).
+- **Plan** (`/panel/planes/{id}`, vista `plan_tratamiento.php` — ojo,
+  `panel/plan.php` es la suscripción): cuenta arriba (total, abonado, saldo
+  y barra), fases con las sesiones como **huecos de una tarjeta de citas**
+  (`.pq-plan-hueco`: perforado = atendida, borde = agendada), citas del plan
+  (vincular una cita del paciente a una fase la deja en $0: la plata entra
+  por los abonos), abonos (sin pasarse del saldo; el dueño anula los del
+  día) y "Recordarle el saldo" con las reglas de la Ley 2300.
+- **Agenda**: el motivo de consulta en itálica (solo el equipo) y "Armar plan
+  de tratamiento" / "Ver plan →".
+- **Caja**: "Abonos a planes" por método suma a Vendido; el efectivo va al
+  cajón. **Comisiones**: una sesión del plan cuenta por valor de la fase ÷
+  sesiones.

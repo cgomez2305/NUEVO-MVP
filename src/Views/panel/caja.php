@@ -82,6 +82,9 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
       <?php if ((int) $resumen['domicilios'] > 0): ?>
         <div class="pq-comanda-ajuste"><span>Domicilios (incluidos)</span><span class="pq-plato-guia" aria-hidden="true"></span><span><?= pesos((int) $resumen['domicilios']) ?></span></div>
       <?php endif; ?>
+      <?php foreach (array_filter($resumen['abonos_planes'] ?? [], fn ($a) => (int) $a['total'] > 0) as $metodoAbono => $abono): ?>
+        <div class="pq-comanda-ajuste"><span>Abonos a planes · <?= e(\App\Models\PlanTratamiento::METODOS_ABONO[$metodoAbono] ?? $metodoAbono) ?> <span class="pq-cierre-z-cuenta"><?= (int) $abono['abonos'] === 1 ? '1 abono' : (int) $abono['abonos'] . ' abonos' ?></span></span><span class="pq-plato-guia" aria-hidden="true"></span><span><?= pesos((int) $abono['total']) ?></span></div>
+      <?php endforeach; ?>
       <div class="pq-comanda-total">
         <span>Vendido</span>
         <span><?= pesos((int) $resumen['ventas_total']) ?></span>

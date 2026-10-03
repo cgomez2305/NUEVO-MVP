@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS negocios (
   tipo_negocio  ENUM('pedidos','reservas') NOT NULL DEFAULT 'pedidos',
   -- Reservas en el local o visitas a la casa del cliente (técnicos).
   modalidad     ENUM('local','domicilio') NOT NULL DEFAULT 'local',
+  -- 'salud': consultorios (planes de tratamiento, datos sensibles).
+  rubro         ENUM('general','salud') NOT NULL DEFAULT 'general',
   plan_id       TINYINT UNSIGNED NOT NULL DEFAULT 1,
   plan_estado   ENUM('activo','vencido','degradado_a_gratis') NOT NULL DEFAULT 'activo',
   plan_vence_en DATE         DEFAULT NULL,
@@ -388,11 +390,17 @@ CREATE TABLE IF NOT EXISTS citas (
   llegada_estimada     DATETIME     DEFAULT NULL,
   recordar_repetir     TINYINT(1)   NOT NULL DEFAULT 0,
   repetir_avisado_en   DATETIME     DEFAULT NULL,
+  -- Salud (ver migrations/2026-10-03_18_salud.sql): motivo con permiso de datos sensibles y plan de tratamiento.
+  motivo_consulta       VARCHAR(500) DEFAULT NULL,
+  autorizo_sensibles_en DATETIME     DEFAULT NULL,
+  plan_id               INT UNSIGNED DEFAULT NULL,
+  plan_fase_id          INT UNSIGNED DEFAULT NULL,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
   FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
   FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE SET NULL,
   INDEX idx_citas_sede_fecha (sede_id, fecha_hora),
+  INDEX idx_citas_plan (plan_id),
   UNIQUE KEY uniq_citas_token (token_gestion)
 ) ENGINE=InnoDB;
 
@@ -975,6 +983,52 @@ CREATE TABLE IF NOT EXISTS cotizacion_items (
   FOREIGN KEY (cotizacion_id) REFERENCES cotizaciones(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Planes de tratamiento (ver migrations/2026-10-03_18_salud.sql).
+CREATE TABLE IF NOT EXISTS planes_tratamiento (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id       INT UNSIGNED NOT NULL,
+  cliente_id    INT UNSIGNED NOT NULL,
+  token         CHAR(32)     NOT NULL,
+  titulo        VARCHAR(120) NOT NULL,
+  estado        ENUM('propuesto','aprobado','rechazado','terminado','cancelado') NOT NULL DEFAULT 'propuesto',
+  total         INT UNSIGNED NOT NULL DEFAULT 0,
+  validez_dias  TINYINT UNSIGNED NOT NULL DEFAULT 30,
+  nota          VARCHAR(500) DEFAULT NULL,
+  saldo_recordado_en DATETIME DEFAULT NULL,
+  respondido_en DATETIME     DEFAULT NULL,
+  creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_plan_token (token),
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  INDEX idx_planes_sede (sede_id, estado)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS plan_fases (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  plan_id     INT UNSIGNED NOT NULL,
+  orden       TINYINT UNSIGNED NOT NULL,
+  nombre      VARCHAR(120) NOT NULL,
+  sesiones    SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  valor       INT UNSIGNED NOT NULL,
+  FOREIGN KEY (plan_id) REFERENCES planes_tratamiento(id) ON DELETE CASCADE,
+  INDEX idx_plan_fases (plan_id, orden)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS plan_abonos (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  plan_id     INT UNSIGNED NOT NULL,
+  sede_id     INT UNSIGNED NOT NULL,
+  monto       INT UNSIGNED NOT NULL,
+  metodo      ENUM('efectivo','nequi','breb','tarjeta') NOT NULL DEFAULT 'efectivo',
+  nota        VARCHAR(160) DEFAULT NULL,
+  anulado     TINYINT(1)   NOT NULL DEFAULT 0,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (plan_id) REFERENCES planes_tratamiento(id) ON DELETE CASCADE,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  INDEX idx_plan_abonos_sede (sede_id, creado_en)
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -1008,4 +1062,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_24_codigos_barras.sql'),
   ('2026-10-03_16_visitas.sql'),
   ('2026-10-03_17_cotizaciones.sql'),
-  ('2026-10-03_25_pedido_items_por_peso.sql');
+  ('2026-10-03_25_pedido_items_por_peso.sql'),
+  ('2026-10-03_18_salud.sql');

@@ -17,6 +17,7 @@ use App\Controllers\HomeController;
 use App\Controllers\MostradorController;
 use App\Controllers\OnboardingController;
 use App\Controllers\PanelController;
+use App\Controllers\SaludController;
 use App\Controllers\TiendaController;
 use App\Controllers\VisitaController;
 use App\Controllers\WebhookController;
@@ -37,6 +38,7 @@ $agenda = new AgendaController();
 $equipo = new EquipoController();
 $fila = new FilaController();
 $visita = new VisitaController();
+$salud = new SaludController();
 
 // --- Público ---------------------------------------------------------
 $router->get('/', [$home, 'index']);
@@ -229,6 +231,19 @@ $router->get('/t/{slug}/reservar/{servicio}', [$tienda, 'reservar']);
 $router->get('/t/{slug}/equipo/{empleado}', [$tienda, 'profesional']);
 $router->get('/t/{slug}/fila', [$fila, 'formulario']);
 $router->post('/t/{slug}/fila', [$fila, 'anotarse']);
+// Salud: planes de tratamiento (fase 5)
+$router->get('/panel/planes', [$salud, 'lista']);
+$router->get('/panel/planes/nuevo', [$salud, 'nuevo']);
+$router->post('/panel/planes', [$salud, 'crear']);
+$router->get('/panel/planes/{id}', [$salud, 'ver']);
+$router->post('/panel/planes/{id}/abonos', [$salud, 'abonar']);
+$router->post('/panel/planes/{id}/abonos/{abono}/anular', [$salud, 'anularAbono']);
+$router->post('/panel/planes/{id}/vincular', [$salud, 'vincular']);
+$router->post('/panel/planes/{id}/citas/{cita}/desvincular', [$salud, 'desvincular']);
+$router->post('/panel/planes/{id}/cerrar', [$salud, 'cerrar']);
+$router->post('/panel/planes/{id}/recordar', [$salud, 'recordarSaldo']);
+$router->get('/plan/{token}', [$salud, 'verPaciente']);
+$router->post('/plan/{token}', [$salud, 'responder']);
 // Visitas a domicilio (fase 3)
 $router->get('/panel/visitas/{id}', [$visita, 'hoja']);
 $router->post('/panel/visitas/{id}/en-camino', [$visita, 'enCamino']);

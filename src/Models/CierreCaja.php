@@ -92,10 +92,15 @@ class CierreCaja
         $mostrador = Venta::resumenDelRango($sedeId, $rango['desde'], $rango['hasta']);
         $abonosFiado = Fiado::abonosDelRango($sedeId, $rango['desde'], $rango['hasta']);
         $mostradorCobrado = array_sum(array_column($mostrador['por_metodo'], 'total')) - $mostrador['por_metodo']['fiado']['total'];
+        // Salud (fase 5): los abonos a planes de tratamiento sí son plata que
+        // entró (las citas del plan valen $0 para no cobrarlas dos veces).
+        $abonosPlanes = PlanTratamiento::abonosDelRango($sedeId, $rango['desde'], $rango['hasta']);
+        $totalAbonosPlanes = array_sum(array_column($abonosPlanes, 'total'));
 
         return [
             'mostrador'     => $mostrador,
             'abonos_fiado'  => $abonosFiado,
+            'abonos_planes' => $abonosPlanes,
             'fiado_hoy'     => $mostrador['por_metodo']['fiado']['total'],
             'fecha'         => $fecha,
             'por_metodo'    => $porMetodo,
@@ -108,7 +113,7 @@ class CierreCaja
             'citas'         => (int) $citas['citas'],
             'total_citas'   => (int) $citas['total'],
             'anticipos'     => (int) $citas['anticipos'],
-            'ventas_total'  => $totalPedidos + (int) $citas['total'] + $mostradorCobrado,
+            'ventas_total'  => $totalPedidos + (int) $citas['total'] + $mostradorCobrado + $totalAbonosPlanes,
         ];
     }
 
@@ -119,7 +124,8 @@ class CierreCaja
     public static function efectivoDeTienda(array $resumen): int
     {
         return (int) ($resumen['mostrador']['por_metodo']['efectivo']['total'] ?? 0)
-            + (int) ($resumen['abonos_fiado']['efectivo']['total'] ?? 0);
+            + (int) ($resumen['abonos_fiado']['efectivo']['total'] ?? 0)
+            + (int) ($resumen['abonos_planes']['efectivo']['total'] ?? 0);
     }
 
     public static function buscar(int $sedeId, string $fecha): ?array

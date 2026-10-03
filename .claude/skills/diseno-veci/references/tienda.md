@@ -282,3 +282,13 @@ llave"); el JS restaura esa etiqueta después de mostrar "Copiado".
   comanda, agrupado (mano de obra, materiales, otros, descuentos), sello
   "Por aprobar / Aprobada", garantía y validez; Aprobar / Por ahora no; si
   pide anticipo, los pasos de pago Bre-B.
+
+## Salud
+- **Motivo de consulta** (opcional) con su propia casilla de autorización de
+  datos sensibles (Ley 1581): si escribe el motivo sin autorizar, no se
+  reserva y se explica; el motivo nunca viaja por WhatsApp.
+- **Tu plan de tratamiento** (`/plan/{token}`): la tarjeta de citas en el
+  papel de la comanda (fases numeradas, huecos perforados por sesión, total,
+  abonado, saldo y barra), sello "Por aprobar / En tratamiento", Aprobar /
+  Por ahora no, pasos de pago Bre-B sin referencia (no se concilia sola) y
+  "Tus abonos".

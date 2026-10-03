@@ -437,6 +437,24 @@ $hojaDia = static fn (string $opcion): string => hoja_almanaque(
           </fieldset>
         <?php endif; ?>
 
+        <?php if (\App\Models\PlanTratamiento::esSalud($negocio)): ?>
+          <?php // Dato de salud = dato sensible: opcional y con su propia autorización, separada de la general. ?>
+          <fieldset class="pq-visita-datos pq-motivo-consulta">
+            <div class="pq-campo">
+              <label class="pq-label" for="motivo_consulta">Motivo de la consulta <span class="pq-ayuda">(opcional)</span></label>
+              <textarea class="pq-input" id="motivo_consulta" name="motivo_consulta" rows="2" maxlength="500" placeholder="Ej.: dolor en una muela al tomar frío"></textarea>
+              <span class="pq-ayuda">Si prefieres, déjalo en blanco y lo cuentas en la consulta.</span>
+            </div>
+            <label class="pq-consentimiento">
+              <input type="checkbox" name="autorizo_sensibles" value="1">
+              <span>
+                <span class="pq-consentimiento-titulo">Autorizo el tratamiento de este dato de salud</span>
+                <span class="pq-ayuda">Es un dato sensible (Ley 1581): solo lo ve <?= e(nombre_publico_sede($negocio)) ?> para preparar tu cita, no se comparte y no es obligatorio darlo. Solo hace falta si escribiste el motivo.</span>
+              </span>
+            </label>
+          </fieldset>
+        <?php endif; ?>
+
         <details class="pq-cupon-entrada pq-cupon-entrada-reserva"<?= !empty($error) && str_starts_with((string) $error, 'Cupón') ? ' open' : '' ?>>
           <summary>¿Tienes un cupón de descuento?</summary>
           <div class="pq-cupon-form">

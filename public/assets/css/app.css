@@ -5206,3 +5206,72 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-cobertura-form { margin-top: var(--esp-3); align-items: end; }
 .pq-repetir-lista { max-width: 720px; margin-top: var(--esp-4); }
 .pq-repetir-ya { font-weight: 600; color: #8a5a00; }
+
+/* ---------- Salud: planes de tratamiento (panel y paciente) ---------- */
+/* Las sesiones de cada fase son los huecos de una tarjeta de citas de papel:
+   la sesión atendida queda "perforada" con el color del consultorio, la
+   agendada con el borde marcado y la pendiente en blanco. */
+.pq-plan-perforado { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.pq-plan-hueco { width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed color-mix(in srgb, currentColor 35%, transparent); background: transparent; }
+.pq-plan-hueco-agendado { border-style: solid; border-color: var(--marca-texto); }
+.pq-plan-hueco-hecho { border: 0; background: var(--marca); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .25); }
+
+.pq-plan-fases { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.pq-plan-fase { display: grid; grid-template-columns: 30px 1fr auto; gap: var(--esp-3); align-items: start; padding: var(--esp-3) 0; border-bottom: 1px dashed var(--recibo); }
+.pq-plan-fase:last-child { border-bottom: 0; }
+.pq-plan-fase-numero { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid currentColor; font: 700 13px/1 var(--fuente-titulo); font-variant-numeric: tabular-nums; opacity: .8; }
+.pq-plan-fase-lista .pq-plan-fase-numero { border-color: var(--marca); background: var(--marca); color: var(--marca-sobre); opacity: 1; }
+.pq-plan-fase-texto { display: grid; gap: 2px; min-width: 0; }
+.pq-plan-fase-texto .pq-ayuda { margin: 0; }
+.pq-plan-fase-valor { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.pq-plan-fases-tienda .pq-plan-fase { border-bottom-color: var(--linea-tienda); color: var(--tinta); }
+
+.pq-plan-barra { display: block; height: 6px; margin-top: 6px; border-radius: 999px; background: color-mix(in srgb, var(--marca) 18%, transparent); overflow: hidden; }
+.pq-plan-barra > span { display: block; height: 100%; border-radius: inherit; background: var(--marca); }
+.pq-plan-barra-grande { height: 10px; margin: var(--esp-3) 0 0; }
+
+.pq-planes-lista { max-width: 720px; margin-top: var(--esp-4); list-style: none; }
+.pq-plan-fila { color: var(--carbon); text-decoration: none; }
+.pq-plan-fila:hover strong { color: var(--sello); }
+.pq-plan-fila:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+.pq-plan-fila .pq-admin-fila-texto { flex: 1; }
+
+.pq-plan-cifras { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--esp-3); }
+.pq-plan-cifras > span { display: grid; gap: 2px; }
+.pq-plan-cifras .pq-ayuda { margin: 0; }
+.pq-plan-cifras strong { font-size: clamp(16px, 4.5vw, 22px); }
+.pq-plan-debe { color: #8a5a00; }
+.pq-plan-cuenta .pq-visita-acciones { align-items: center; }
+.pq-plan-recordar-no { flex-basis: 100%; margin: 0; }
+.pq-plan-pago { font-weight: 600; color: #0f6b45; }
+
+.pq-plan-citas, .pq-plan-abonos { list-style: none; margin: var(--esp-3) 0; padding: 0; }
+.pq-plan-abono-anulado .pq-admin-fila-texto { opacity: .55; text-decoration: line-through; }
+.pq-plan-vincular, .pq-plan-abonar { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: center; margin-top: var(--esp-3); }
+.pq-plan-vincular .pq-select { flex: 1 1 180px; width: auto; }
+.pq-plan-abonar .pq-campo-dinero { flex: 1 1 140px; }
+.pq-plan-abonar .pq-select { width: auto; }
+.pq-plan-abonar .pq-input[name=nota] { flex: 2 1 180px; }
+
+.pq-plan-paciente { margin: 0; font-size: 15px; }
+.pq-plan-fases-form { display: grid; gap: var(--esp-2); margin: var(--esp-3) 0; }
+.pq-plan-fase-form { display: grid; grid-template-columns: 30px 1fr; gap: var(--esp-2); align-items: center; }
+.pq-plan-fase-form > .pq-campo-sufijo, .pq-plan-fase-form > .pq-campo-dinero { grid-column: 2; }
+@media (min-width: 720px) {
+  .pq-plan-fase-form { grid-template-columns: 30px 1fr 100px 160px; }
+  .pq-plan-fase-form > .pq-campo-sufijo, .pq-plan-fase-form > .pq-campo-dinero { grid-column: auto; }
+}
+
+.pq-plan-carta .pq-comanda-hoja { padding-top: var(--esp-5); }
+.pq-plan-carta .pq-plan-barra { margin: var(--esp-2) 0 var(--esp-3); }
+.pq-plan-abonos-tienda { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-2); }
+.pq-plan-abonos-tienda li { display: flex; align-items: baseline; gap: var(--esp-2); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.pq-plan-legal { margin-top: var(--esp-6); text-align: center; }
+
+/* Agenda de salud: el motivo va en itálica y aparte, como nota del paciente. */
+.pq-agenda-motivo { margin: 6px 0 0; padding-left: var(--esp-3); border-left: 2px solid var(--recibo); font-size: 13.5px; font-style: italic; color: var(--gris-texto); overflow-wrap: anywhere; }
+.pq-agenda-plan-nuevo { display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--sello); text-decoration: none; }
+.pq-agenda-plan-nuevo:hover { text-decoration: underline; }
+.pq-motivo-consulta { margin-top: var(--esp-2); }
+/* Plan y cotización: espacio abajo para que el sello no tape la nota. */
+.pq-plan-carta .pq-comanda-hoja, .pq-cotizacion .pq-comanda-hoja { padding-bottom: 64px; }

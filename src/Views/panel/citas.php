@@ -210,6 +210,17 @@ $etiquetasMotivo = ['lluvia' => 'Aguacero fuerte', 'luz' => 'Se fue la luz', 'sa
                   <span class="pq-agenda-visita-ver">Ver visita →</span>
                 </a>
               <?php endif; ?>
+              <?php if (\App\Models\PlanTratamiento::esSalud($negocio)): ?>
+                <?php // Salud: el motivo (dato sensible, solo lo ve el equipo) y el plan de tratamiento. ?>
+                <?php if (!empty($cita['motivo_consulta'])): ?>
+                  <p class="pq-agenda-motivo"><span class="pq-sr-solo">Motivo de consulta: </span><?= e($cita['motivo_consulta']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($cita['plan_id'])): ?>
+                  <a class="pq-agenda-visita" href="<?= e(base_url('/panel/planes/' . (int) $cita['plan_id'])) ?>"><span>Sesión de un plan de tratamiento · va por cuenta de los abonos</span><span class="pq-agenda-visita-ver">Ver plan →</span></a>
+                <?php elseif (!in_array($cita['estado'], ['cancelada', 'no_asistio'], true)): ?>
+                  <a class="pq-agenda-plan-nuevo" href="<?= e(base_url('/panel/planes/nuevo?cita=' . (int) $cita['id'])) ?>">Armar plan de tratamiento</a>
+                <?php endif; ?>
+              <?php endif; ?>
               <?php
               // Lo que se movió en esta cita, en una sola línea de marcas.
               $marcas = [];

@@ -449,6 +449,18 @@ class TiendaController
             redirigir($volverConTurno);
         }
 
+        // Salud: el motivo es opcional y es un dato sensible; si lo escribe,
+        // tiene que autorizar aparte su tratamiento (no se puede condicionar
+        // la cita a darlo: por eso es opcional).
+        $motivoConsulta = '';
+        if (\App\Models\PlanTratamiento::esSalud($negocio)) {
+            $motivoConsulta = trim((string) ($_POST['motivo_consulta'] ?? ''));
+            if ($motivoConsulta !== '' && empty($_POST['autorizo_sensibles'])) {
+                flash_set('error', 'Para guardar el motivo de tu consulta necesitamos tu autorización para datos de salud. Si prefieres, déjalo en blanco y lo cuentas en la cita.');
+                redirigir($volverConTurno);
+            }
+        }
+
         // Datos de la visita: a dónde ir y qué pasa. La zona suma su recargo
         // de transporte al valor (se ve antes de reservar).
         $datosVisita = null;
@@ -520,6 +532,9 @@ class TiendaController
         );
         if ($adicionales !== []) {
             Adicional::guardarEnCita($citaId, $adicionales);
+        }
+        if ($motivoConsulta !== '') {
+            \App\Models\PlanTratamiento::guardarMotivo($citaId, $motivoConsulta);
         }
         if ($datosVisita !== null) {
             Visita::guardarDatos($citaId, $datosVisita);
