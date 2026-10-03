@@ -704,6 +704,7 @@
       bajar();
     }
     if (accionInicial === 'ahorro' && !escribiendo) recibir('Calcular mi ahorro vs. Rappi', '#ahorro');
+    else if (accionInicial === 'plan' && !escribiendo) recibir('¿Qué plan me sirve?', '#plan');
     else if (!estado.mensajes.length) {
       responder({ de: 'bot', r: ['¡Hola! Soy el asistente de Veci. Te ayudo a ver si Veci le sirve a tu negocio y cuánto te ahorrarías.', '¿Qué quieres saber?'],
         chips: [C.recomendar, C.ahorro, C.precios, C.ia, C.breb, C.demo] });
@@ -722,6 +723,13 @@
   }
   lanzador.addEventListener('click', function () { panel.hidden ? abrir() : cerrarPanel(); });
   cerrar.addEventListener('click', cerrarPanel);
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-abrir-chat]');
+    if (!b) return;
+    ev.preventDefault();
+    evento('abierto_desde_pagina', { accion: b.getAttribute('data-abrir-chat') || 'general' });
+    abrir(b.getAttribute('data-abrir-chat') || undefined);
+  });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !panel.hidden) cerrarPanel(); });
 
   // ---------------------------------------------------------------------

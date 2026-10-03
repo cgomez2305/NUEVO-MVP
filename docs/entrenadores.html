@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="assets/css/site.css">
 <script src="assets/js/tema.js" defer></script>
 <script src="assets/js/veci-chat.js" defer></script>
+<script src="assets/js/calculadoras.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -121,6 +122,7 @@
       <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
       <a href="demo.html#entrenador" class="btn btn-ghost-oscuro">Ver demo de entrenador →</a>
     </div>
+    <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
   </div>
 </div>
 
@@ -191,6 +193,42 @@
   </div>
 </section>
 
+<section class="seccion-herramienta reveal">
+  <div class="wrap">
+    <div class="herramienta" data-calc="citas-perdidas">
+      <span class="herramienta-eyebrow">CALCULADORA</span>
+      <h3>¿Cuánta plata se te va en citas que no llegan?</h3>
+      <p class="herramienta-intro">Pon tus números; los que ves son solo un ejemplo.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-citas">Citas por semana</label>
+          <input type="number" id="calc-citas" inputmode="numeric" min="1" max="400" step="1" value="20" data-entrada="citas">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-precio">Valor promedio de una cita (COP)</label>
+          <input type="number" id="calc-precio" inputmode="numeric" min="5000" max="2000000" step="1000" value="50000" data-entrada="precio">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-ausencia">De cada 100 citas, cuántas no llegan</label>
+          <output for="calc-ausencia" data-salida="ausencia">10%</output>
+          <input type="range" class="calc-slider" id="calc-ausencia" min="0" max="40" step="1" value="10" data-entrada="ausencia">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila"><span>Citas que se pierden al mes</span><strong data-salida="perdidas">–</strong></div>
+        <div class="recibo-fila total perdida"><span>Plata que no entra al mes</span><strong data-salida="plata">–</strong></div>
+      </div>
+      <p class="herramienta-nota">Calculado con 4,3 semanas por mes. En un año: <span data-salida="anual">–</span>.</p>
+      <p class="herramienta-remate">Con Veci tu cliente agenda sobre tus horarios reales, sin cruces, y puedes pedir un anticipo al reservar: quien ya pagó una parte tiene una razón más para llegar.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+        <a href="demo.html#entrenador" class="btn-texto">Probar la agenda de ejemplo</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
+    </div>
+  </div>
+</section>
+
 <div class="cierre reveal">
   <div class="wrap">
     <h2>Deja de cuadrar sesiones por chat</h2>
@@ -199,6 +237,7 @@
       <a href="https://app.tuveci.co/registro" class="btn btn-caja">Empezar gratis →</a>
       <a href="precios.html" class="btn btn-ghost" style="border-color:rgba(255,253,248,.35)">Ver precios →</a>
     </div>
+    <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
   </div>
 </div>
 

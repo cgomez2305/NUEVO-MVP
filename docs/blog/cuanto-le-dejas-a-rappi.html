@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="../assets/css/site.css">
 <script src="../assets/js/tema.js" defer></script>
 <script src="../assets/js/veci-chat.js" defer></script>
+<script src="../assets/js/calculadoras.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -127,9 +128,28 @@
     <h2>La cuenta con una cuota fija</h2>
     <p>Con un plan de cuota fija mensual (en vez de comisión por pedido), el cálculo cambia de raíz: no importa si vendes $1.000.000 o $10.000.000, pagas lo mismo. Si mueves aunque sea el 20% de tus ventas de las apps a un canal propio, el ahorro mensual suele superar por mucho una cuota fija típica.</p>
 
-    <div class="articulo-cta">
-      <p>Veci cobra una cuota fija desde $0 al mes, no comisión por pedido. Usa la calculadora en la portada para ver tu propio número.</p>
-      <a href="../index.html#calculadora" class="btn btn-sello">Ver la calculadora →</a>
+    <div class="herramienta" data-calc="ahorro-apps">
+      <span class="herramienta-eyebrow">TU CUENTA, NO LA NUESTRA</span>
+      <h3>¿Cuánto le dejas a las apps este mes?</h3>
+      <p class="herramienta-intro">Mueve el control con lo que vendes al mes por Rappi, DiDi u otra app de domicilios.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-ventas">Ventas mensuales por apps</label>
+          <output for="calc-ventas" data-salida="ventas">$5.000.000</output>
+          <input type="range" class="calc-slider" id="calc-ventas" min="500000" max="30000000" step="500000" value="5000000" data-entrada="ventas">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila perdida"><span>Comisión de la app (25%–30%)</span><strong data-salida="comision">$1.250.000 – $1.500.000</strong></div>
+        <div class="recibo-fila"><span>Veci, plan Barrio</span><strong>$59.000 fijos</strong></div>
+        <div class="recibo-fila total"><span>Te quedarías al mes</span><strong data-salida="ahorro">$1.316.000</strong></div>
+      </div>
+      <p class="herramienta-nota">Con la comisión promedio de 27,5%; no incluye el costo de los domicilios. En un año: <span data-salida="anual">$15.792.000</span>.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+        <button type="button" class="btn-texto" data-abrir-chat="plan">¿Qué plan me sirve?</button>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
     </div>
 
     <div class="articulo-fuentes">

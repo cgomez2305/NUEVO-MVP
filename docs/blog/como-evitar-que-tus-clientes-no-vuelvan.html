@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="../assets/css/site.css">
 <script src="../assets/js/tema.js" defer></script>
 <script src="../assets/js/veci-chat.js" defer></script>
+<script src="../assets/js/calculadoras.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -122,9 +123,36 @@
     <h2>Cómo hacerlo sin un CRM caro</h2>
     <p>Un negocio pequeño no necesita un sistema de CRM empresarial para esto. Necesita tres cosas: un registro de quién compró y cuándo, una forma de comparar ese ritmo contra lo normal de cada cliente, y un mensaje ya redactado lista para enviar por WhatsApp — sin tener que sentarse a escribirlo desde cero cada vez.</p>
 
-    <div class="articulo-cta">
-      <p>El copiloto de recompra de Veci hace esa cuenta por ti cada mañana: revisa quién lleva más tiempo del habitual sin comprar y te deja el mensaje listo para enviar por WhatsApp.</p>
-      <a href="../index.html#copiloto" class="btn btn-sello">Ver cómo funciona el copiloto →</a>
+    <div class="herramienta" data-calc="clientes-perdidos">
+      <span class="herramienta-eyebrow">CALCULADORA</span>
+      <h3>¿Cuánto vale un cliente que dejó de volver?</h3>
+      <p class="herramienta-intro">Pon tus números; los que ves son solo un ejemplo.</p>
+      <div class="herramienta-campos">
+        <div class="herramienta-campo">
+          <label for="calc-clientes">Clientes que dejaron de comprarte</label>
+          <input type="number" id="calc-clientes" inputmode="numeric" min="1" max="500" step="1" value="10" data-entrada="clientes">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-compra">Compra promedio (COP)</label>
+          <input type="number" id="calc-compra" inputmode="numeric" min="1000" max="2000000" step="1000" value="25000" data-entrada="compra">
+        </div>
+        <div class="herramienta-campo">
+          <label for="calc-veces">Veces que compraban al mes</label>
+          <output for="calc-veces" data-salida="veces">4 veces</output>
+          <input type="range" class="calc-slider" id="calc-veces" min="1" max="12" step="1" value="4" data-entrada="veces">
+        </div>
+      </div>
+      <div class="herramienta-recibo" aria-live="polite">
+        <div class="recibo-fila"><span>Clientes que ya no vuelven</span><strong data-salida="clientes">10</strong></div>
+        <div class="recibo-fila total perdida"><span>Plata que deja de entrar al mes</span><strong data-salida="plata">–</strong></div>
+      </div>
+      <p class="herramienta-nota">En un año: <span data-salida="anual">–</span>.</p>
+      <p class="herramienta-remate">El copiloto de recompra (planes Barrio y Pro) te dice cada mañana quiénes son y te deja el mensaje listo para enviar por WhatsApp.</p>
+      <div class="herramienta-acciones">
+        <a href="https://app.tuveci.co/registro" class="btn btn-sello">Empezar gratis →</a>
+        <a href="../index.html#copiloto" class="btn-texto">Ver cómo funciona el copiloto</a>
+      </div>
+      <ul class="garantias"><li>Sin tarjeta</li><li>Sin permanencia</li><li>Exportas tus datos cuando quieras</li></ul>
     </div>
   </div>
 

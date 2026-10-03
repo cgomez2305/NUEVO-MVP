@@ -176,3 +176,49 @@
     }, 1500);
   });
 })();
+
+// Atribución: cada enlace a registro lleva de dónde vino el visitante y desde
+// qué bloque hizo clic. Si llegó con UTM (un anuncio, Instagram), se respetan
+// los suyos; si no, se marca como tráfico del sitio. Los enlaces que ya traen
+// utm_source (los del asistente) no se tocan.
+(function () {
+  var CLAVES = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+  var entrada = {};
+  try {
+    var q = new URLSearchParams(location.search);
+    CLAVES.forEach(function (k) { var v = q.get(k); if (v) entrada[k] = v.slice(0, 80); });
+    if (entrada.utm_source) sessionStorage.setItem('veci-utm', JSON.stringify(entrada));
+    else entrada = JSON.parse(sessionStorage.getItem('veci-utm') || '{}') || {};
+  } catch (e) { entrada = {}; }
+
+  var pagina = (location.pathname.replace(/\/$/, '/index.html').split('/').pop() || 'index.html').replace('.html', '');
+  if (/\/blog\//.test(location.pathname)) pagina = 'blog-' + pagina;
+
+  function bloque(a) {
+    if (a.closest('.nav-fija, .nav-panel')) return 'nav';
+    if (a.closest('.hero, .demo-hero')) return 'hero';
+    if (a.closest('.cierre')) return 'cierre';
+    if (a.closest('[data-calc]')) return 'calculadora';
+    if (a.closest('.demo-mi-tienda')) return 'demo';
+    if (a.closest('.plan')) return 'plan';
+    if (a.closest('.articulo-cta, .articulo')) return 'articulo';
+    if (a.closest('footer')) return 'footer';
+    return 'pagina';
+  }
+
+  function decorar() {
+    document.querySelectorAll('a[href^="https://app.tuveci.co/registro"]').forEach(function (a) {
+      var url;
+      try { url = new URL(a.href); } catch (e) { return; }
+      if (url.searchParams.get('utm_source')) return;
+      url.searchParams.set('utm_source', entrada.utm_source || 'web');
+      url.searchParams.set('utm_medium', entrada.utm_medium || 'sitio');
+      url.searchParams.set('utm_campaign', entrada.utm_campaign || pagina);
+      if (entrada.utm_term) url.searchParams.set('utm_term', entrada.utm_term);
+      url.searchParams.set('utm_content', (entrada.utm_source ? pagina + '-' : '') + bloque(a));
+      a.href = url.toString();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', decorar);
+  else decorar();
+})();
