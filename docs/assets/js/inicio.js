@@ -196,3 +196,64 @@
     window.addEventListener('scroll', pedir, { passive: true });
     window.addEventListener('resize', pedir);
   })();
+
+// Hero: "¿Qué tienes?" ajusta el botón principal y el enlace de demo.
+// Conserva los UTM que tema.js ya puso en el enlace de registro.
+(function () {
+  var ops = document.querySelectorAll('[data-hero-modo]');
+  var cta = document.querySelector('[data-hero-cta]');
+  var ver = document.querySelector('[data-hero-ver]');
+  if (!ops.length || !cta) return;
+  var TEXTOS = {
+    pedidos: { cta: 'Crear mi tienda gratis', ver: 'Ver una tienda funcionando', demo: 'demo.html' },
+    reservas: { cta: 'Abrir mi agenda gratis', ver: 'Ver una agenda funcionando', demo: 'demo.html#reservas' }
+  };
+  ops.forEach(function (op) {
+    op.addEventListener('click', function () {
+      var modo = op.getAttribute('data-hero-modo');
+      var t = TEXTOS[modo];
+      if (!t) return;
+      ops.forEach(function (o) { o.setAttribute('aria-pressed', o === op ? 'true' : 'false'); });
+      try { var url = new URL(cta.href); url.searchParams.set('modo', modo); cta.href = url.toString(); } catch (e) {}
+      cta.firstChild.nodeValue = t.cta;
+      if (ver) { ver.firstChild.nodeValue = t.ver + ' '; ver.setAttribute('href', t.demo); }
+    });
+  });
+})();
+
+// "¿Te suena familiar?": interruptor Hoy / Con Veci. La primera vez que la
+// cuenta entra en pantalla, pasa sola a "Con Veci" para mostrar el cambio.
+(function () {
+  var sec = document.querySelector('[data-cuaderno]');
+  if (!sec) return;
+  var botones = sec.querySelectorAll('[data-cuaderno-modo]');
+  var estado = sec.querySelector('.cuaderno-estado');
+  var tocado = false;
+  function poner(modo) {
+    sec.classList.toggle('con-veci', modo === 'veci');
+    botones.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-cuaderno-modo') === modo ? 'true' : 'false'); });
+    if (estado) estado.textContent = modo === 'veci' ? 'Con Veci' : 'Hoy';
+  }
+  botones.forEach(function (b) {
+    b.addEventListener('click', function () { tocado = true; poner(b.getAttribute('data-cuaderno-modo')); });
+  });
+  if (!('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function (e) {
+    if (!e[0].isIntersecting) return;
+    io.disconnect();
+    setTimeout(function () { if (!tocado) poner('veci'); }, 1600);
+  }, { threshold: 0.45 });
+  io.observe(sec.querySelector('.cuaderno'));
+})();
+
+// Rutas del cliente: la ruta Veci se enciende nodo a nodo al entrar en pantalla.
+(function () {
+  var sec = document.querySelector('[data-rutas]');
+  if (!sec || !('IntersectionObserver' in window)) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.documentElement.classList.add('js-rutas');
+  var io = new IntersectionObserver(function (e) {
+    if (e[0].isIntersecting) { sec.classList.add('encendida'); io.disconnect(); }
+  }, { threshold: 0.3 });
+  io.observe(sec.querySelector('.ruta-veci'));
+})();
