@@ -67,6 +67,12 @@ $mesNombre = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'a
   <?php endif; ?>
 </section>
 
+<?php if (($negocio['tipo_negocio'] ?? '') === 'reservas' && !\App\Models\Visita::esDomicilio($negocio)): ?>
+  <a href="<?= e(base_url('/panel/copiloto/huecos')) ?>" class="pq-copiloto-huecos">
+    <span><strong>Llena los huecos de tu agenda</strong><span class="pq-ayuda">A quién ya le toca volver y en qué espacio libre cabe.</span></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </a>
+<?php endif; ?>
 <div class="pq-caja-dia pq-caja-dia-3" role="group" aria-label="Resumen de clientes">
   <div class="pq-caja-casilla<?= $aReactivarCount > 0 ? ' pq-caja-casilla-alerta' : '' ?>">
     <span class="pq-caja-valor"><?= (int) $aReactivarCount ?></span>

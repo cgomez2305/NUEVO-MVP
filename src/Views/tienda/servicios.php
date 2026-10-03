@@ -15,6 +15,27 @@
       <p><strong>La agenda está en preparación.</strong><br>Mientras tanto, puedes escribirle al negocio por WhatsApp.</p>
     </div>
   <?php else: ?>
+    <?php if (!empty($ultimoServicio)): ?>
+      <?php
+      // El cliente ya conocido en este celular reserva lo de siempre, con la
+      // misma persona si sigue en el equipo: dos toques en vez de buscarlo.
+      $urlRepetir = base_url('/t/' . $negocio['slug'] . '/reservar/' . (int) $ultimoServicio['servicio']['id'])
+          . ($ultimoServicio['empleado'] !== null ? '?empleado=' . (int) $ultimoServicio['empleado']['id'] : '');
+      ?>
+      <section class="pq-repetir" aria-labelledby="pq-repetir-titulo">
+        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo">Hola, <?= e($ultimoServicio['nombre']) ?>. ¿Reservas lo de siempre?</h2>
+        <p class="pq-repetir-servicio">
+          <?= e($ultimoServicio['servicio']['nombre']) ?><?= $ultimoServicio['empleado'] !== null ? ' con ' . e($ultimoServicio['empleado']['nombre']) : '' ?>
+        </p>
+        <div class="pq-repetir-acciones">
+          <a href="<?= e($urlRepetir) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reservar de nuevo</a>
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/olvidarme')) ?>">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-repetir-olvidar">No soy <?= e($ultimoServicio['nombre']) ?></button>
+          </form>
+        </div>
+      </section>
+    <?php endif; ?>
     <section class="pq-carta" aria-labelledby="titulo-servicios">
       <h2 class="pq-carta-titulo" id="titulo-servicios">Reserva tu turno</h2>
       <?php

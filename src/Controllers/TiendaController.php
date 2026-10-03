@@ -81,6 +81,7 @@ class TiendaController
                 // A domicilio: las zonas que cubre (con su transporte) en vez de "ven al local".
                 'zonas'            => Visita::esDomicilio($negocio) ? ZonaDomicilio::listarPorSede((int) $negocio['id'], true) : [],
                 'filaAbierta'      => !Visita::esDomicilio($negocio) && (int) $negocio['fila_abierta'] === 1 && ($abiertoAhora === null || $abiertoAhora['abierto']),
+                'ultimoServicio'   => $this->ultimoServicioParaRepetir($negocio, $servicios),
                 'metaDescripcion'  => $metaDescripcion,
                 'canonicalUrl'     => url_publica('/t/' . $negocio['slug']),
             ], 'tienda');
@@ -102,6 +103,7 @@ class TiendaController
             'resenas'         => $this->resenasParaTienda($negocio),
             'zonas'           => ZonaDomicilio::listarPorSede((int) $negocio['id'], true),
             'masPedidos'      => Producto::masPedidos((int) $negocio['id']),
+            'repetir'         => $this->propuestaRepetir($negocio, $productos),
             'abiertoAhora'    => $abiertoAhora,
             'proximaApertura' => $abiertoAhora !== null && !$abiertoAhora['abierto'] ? negocio_proxima_apertura($horarioSede) : null,
             'metaDescripcion' => $metaDescripcion,
@@ -613,6 +615,7 @@ class TiendaController
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
         }
+        $this->recordarCliente($negocio, $clienteId);
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
@@ -1054,6 +1057,7 @@ class TiendaController
         }
 
         $this->guardarCarrito((int) $negocio['id'], []);
+        $this->recordarCliente($negocio, $clienteId);
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
@@ -1430,6 +1434,149 @@ class TiendaController
     }
 
     /** @return array<int, int> productoId => cantidad */
+    // ---------- Volver a pedir (cliente reconocido en este celular) ----------
+
+    private function nombreCookieCliente(array $negocio): string
+    {
+        return 'veci_r' . (int) $negocio['negocio_id'];
+    }
+
+    /**
+     * Tras pedir o reservar, este celular recuerda al cliente (cookie con un
+     * token, 6 meses). Nunca se le reconoce por el número que alguien
+     * escriba: así nadie ve el historial de otra persona tecleando su teléfono.
+     */
+    private function recordarCliente(array $negocio, int $clienteId): void
+    {
+        setcookie($this->nombreCookieCliente($negocio), Cliente::tokenRecompra($clienteId), [
+            'expires'  => time() + 180 * 86400,
+            'path'     => '/',
+            'secure'   => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off'),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    /** El cliente recordado en este celular para este negocio, o null. */
+    private function clienteRecordado(array $negocio): ?array
+    {
+        $token = $_COOKIE[$this->nombreCookieCliente($negocio)] ?? null;
+
+        return is_string($token) ? Cliente::buscarPorTokenRecompra($token, (int) $negocio['negocio_id']) : null;
+    }
+
+    /**
+     * Las líneas de su último pedido que se pueden volver a pedir hoy (el
+     * producto sigue en la carta y no está agotado), en unidades del carrito
+     * (medias libras si va por peso). Lo que ya no está se cuenta aparte.
+     *
+     * @param array<int, array<string, mixed>> $productos los de la carta (Producto::listarPorSede)
+     * @return array{lineas: array<int, array{producto: array<string, mixed>, cantidad: int}>, faltan: int}
+     */
+    private function lineasParaRepetir(array $cliente, array $negocio, array $productos): array
+    {
+        $ultimo = Pedido::ultimoParaRepetir((int) $cliente['id'], (int) $negocio['id']);
+        if ($ultimo === null) {
+            return ['lineas' => [], 'faltan' => 0];
+        }
+        $porId = [];
+        foreach ($productos as $producto) {
+            $porId[(int) $producto['id']] = $producto;
+        }
+        $lineas = [];
+        $faltan = 0;
+        foreach ($ultimo['items'] as $item) {
+            $producto = $porId[(int) ($item['producto_id'] ?? 0)] ?? null;
+            if ($producto === null || (int) $producto['agotado'] === 1) {
+                $faltan++;
+                continue;
+            }
+            if (Producto::esPorPeso($producto)) {
+                $gramos = $item['gramos'] !== null ? (int) $item['gramos'] : (int) $item['cantidad'] * Producto::GRAMOS_POR_KILO;
+                $cantidad = max(1, intdiv($gramos, Producto::GRAMOS_PASO_EN_LINEA));
+            } else {
+                $cantidad = max(1, (int) $item['cantidad']);
+            }
+            $id = (int) $producto['id'];
+            $lineas[$id] = ['producto' => $producto, 'cantidad' => ($lineas[$id]['cantidad'] ?? 0) + $cantidad];
+        }
+
+        return ['lineas' => array_values($lineas), 'faltan' => $faltan];
+    }
+
+    /** @return array{nombre: string, lineas: array, faltan: int}|null */
+    private function propuestaRepetir(array $negocio, array $productos): ?array
+    {
+        $cliente = $this->clienteRecordado($negocio);
+        if ($cliente === null) {
+            return null;
+        }
+        $repetir = $this->lineasParaRepetir($cliente, $negocio, $productos);
+        if ($repetir['lineas'] === []) {
+            return null;
+        }
+
+        return ['nombre' => explode(' ', trim((string) $cliente['nombre']))[0]] + $repetir;
+    }
+
+    /** Reservas: su último servicio (si sigue disponible), para reservarlo de nuevo con la misma persona. */
+    private function ultimoServicioParaRepetir(array $negocio, array $servicios): ?array
+    {
+        $cliente = $this->clienteRecordado($negocio);
+        if ($cliente === null) {
+            return null;
+        }
+        $cita = Cita::ultimaParaRepetir((int) $cliente['id'], (int) $negocio['id']);
+        if ($cita === null) {
+            return null;
+        }
+        foreach ($servicios as $servicio) {
+            if ((int) $servicio['id'] === (int) $cita['servicio_id'] && (int) $servicio['agotado'] === 0) {
+                return [
+                    'nombre'   => explode(' ', trim((string) $cliente['nombre']))[0],
+                    'servicio' => $servicio,
+                    'empleado' => $cita['empleado_id'] !== null ? ['id' => (int) $cita['empleado_id'], 'nombre' => (string) ($cita['empleado_nombre'] ?? '')] : null,
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /** "Pedir lo mismo": suma al carrito lo de su último pedido que hoy se puede pedir. */
+    public function repetirPedido(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+        $cliente = $this->clienteRecordado($negocio);
+        if (!csrf_verificar() || $cliente === null || $negocio['tipo_negocio'] === 'reservas') {
+            redirigir('/t/' . $negocio['slug']);
+        }
+        $repetir = $this->lineasParaRepetir($cliente, $negocio, Producto::listarPorSede((int) $negocio['id'], true));
+        $carrito = $this->carritoDeSesion((int) $negocio['id']);
+        foreach ($repetir['lineas'] as $linea) {
+            $id = (int) $linea['producto']['id'];
+            $carrito[$id] = ($carrito[$id] ?? 0) + $linea['cantidad'];
+        }
+        // El inventario lo ajusta el carrito al abrirlo (y dice qué cambió).
+        $this->guardarCarrito((int) $negocio['id'], $carrito);
+        if ($repetir['faltan'] > 0) {
+            flash_set('error', ($repetir['faltan'] === 1 ? '1 producto de tu último pedido ya no está disponible' : $repetir['faltan'] . ' productos de tu último pedido ya no están disponibles') . ': agregamos el resto.');
+        }
+
+        redirigir('/t/' . $negocio['slug'] . '/carrito');
+    }
+
+    /** "No soy yo": este celular deja de recordar al cliente (p. ej. un celular prestado). */
+    public function olvidarCliente(array $parametros): void
+    {
+        $negocio = $this->negocioOAbortar($parametros['slug']);
+        if (csrf_verificar()) {
+            setcookie($this->nombreCookieCliente($negocio), '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+        }
+
+        redirigir('/t/' . $negocio['slug']);
+    }
+
     private function carritoDeSesion(int $negocioId): array
     {
         return $_SESSION['carrito'][$negocioId] ?? [];

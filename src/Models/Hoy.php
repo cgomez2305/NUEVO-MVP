@@ -24,7 +24,7 @@ class Hoy
      * @param array<string, mixed> $negocio contexto de Auth::exigirSesion()
      * @return array<int, array{tono: string, texto: string, detalle: ?string, url: string}>
      */
-    public static function tareas(array $negocio, int $aReactivar): array
+    public static function tareas(array $negocio, int $aReactivar, int $huecosManana = 0): array
     {
         $sedeId = (int) $negocio['id'];
         $tareas = $negocio['tipo_negocio'] === 'reservas'
@@ -38,6 +38,15 @@ class Hoy
                 'texto'   => $aReactivar === 1 ? '1 cliente debería volver y no ha vuelto' : "{$aReactivar} clientes deberían volver y no han vuelto",
                 'detalle' => 'Ya pasaron su ritmo de compra habitual y aceptan promociones. Un mensaje a tiempo los trae de vuelta.',
                 'url'     => '/panel/copiloto?segmento=inactivo',
+            ];
+        }
+
+        if ($huecosManana > 0) {
+            $tareas[] = [
+                'tono'    => 'oportunidad',
+                'texto'   => ucfirst(Huecos::cuando((string) Huecos::proximoDiaDeAtencion($negocio))) . ($huecosManana === 1 ? ' hay espacio para 1 cliente al que ya le toca' : " hay espacio para {$huecosManana} clientes a los que ya les toca"),
+                'detalle' => 'Su servicio de siempre cabe en un hueco libre de tu agenda.',
+                'url'     => '/panel/copiloto/huecos',
             ];
         }
 

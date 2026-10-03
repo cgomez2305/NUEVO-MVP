@@ -136,6 +136,8 @@ $router->get('/panel/push/clave-publica', [$panel, 'pushClavePublica']);
 $router->post('/panel/push/suscribir', [$panel, 'pushSuscribir']);
 $router->post('/panel/push/desuscribir', [$panel, 'pushDesuscribir']);
 $router->get('/panel/copiloto', [$panel, 'copiloto']);
+$router->get('/panel/copiloto/huecos', [$panel, 'huecosCopiloto']);
+$router->post('/panel/copiloto/huecos/{cliente}/whatsapp', [$panel, 'huecoWhatsapp']);
 $router->get('/panel/copiloto/{cliente}/mensaje', [$panel, 'mensajeCopiloto']);
 $router->post('/panel/copiloto/{cliente}/enviar', [$panel, 'registrarEnvioCopiloto']);
 $router->post('/panel/copiloto/{cliente}/whatsapp', [$panel, 'abrirWhatsappCopiloto']);
@@ -273,6 +275,8 @@ $router->post('/fila/{token}/salir', [$fila, 'salir']);
 $router->post('/t/{slug}/cita', [$tienda, 'crearCita']);
 $router->post('/t/{slug}/lista-espera', [$tienda, 'unirseListaEspera']);
 $router->post('/t/{slug}/lista-espera/salir', [$tienda, 'salirListaEspera']);
+$router->post('/t/{slug}/repetir', [$tienda, 'repetirPedido']);
+$router->post('/t/{slug}/olvidarme', [$tienda, 'olvidarCliente']);
 
 // --- Gestión de cita por el cliente, sin login (enlace con token) -------
 $router->get('/cita/{token}', [$tienda, 'gestionarCita']);

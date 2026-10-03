@@ -216,13 +216,17 @@ CREATE TABLE IF NOT EXISTS clientes (
   -- retire, y cuándo el negocio le pidió permiso (una sola vez).
   marketing_actualizado_en DATETIME DEFAULT NULL,
   token_preferencias CHAR(32)  DEFAULT NULL,
+  -- "Volver a pedir": la tienda lo reconoce por una cookie con este token
+  -- en el celular donde ya pidió, nunca por el número que alguien escriba.
+  token_recompra  CHAR(32)     DEFAULT NULL,
   permiso_pedido_en DATETIME   DEFAULT NULL,
   -- Tope de lo que se le fía (NULL = sin tope). Ver fiado_movimientos.
   fiado_limite    INT UNSIGNED DEFAULT NULL,
   creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono),
-  UNIQUE KEY uniq_cliente_token_preferencias (token_preferencias)
+  UNIQUE KEY uniq_cliente_token_preferencias (token_preferencias),
+  UNIQUE KEY uniq_cliente_token_recompra (token_recompra)
 ) ENGINE=InnoDB;
 
 -- Registro de consentimientos (Ley 1581): cada cambio con origen, versión
@@ -1123,4 +1127,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_29_sesion_version.sql'),
   ('2026-10-03_30_inventario_movido.sql'),
   ('2026-10-03_31_dias_libres_empleado.sql'),
-  ('2026-10-03_32_consentimientos.sql');
+  ('2026-10-03_32_consentimientos.sql'),
+  ('2026-10-03_33_recompra_dispositivo.sql');

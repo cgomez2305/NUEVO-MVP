@@ -44,6 +44,37 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
       <p><strong>El menú está en preparación.</strong><br>Mientras tanto, puedes escribirle al negocio por WhatsApp.</p>
     </div>
   <?php else: ?>
+    <?php if (!empty($repetir)): ?>
+      <?php
+      // "Me manda lo mismo de la vez pasada": el cliente ya conocido en este
+      // celular repite su último pedido de un toque (como lo pediría por
+      // WhatsApp). Solo con lo que hoy se puede pedir; el carrito ajusta el resto.
+      ?>
+      <section class="pq-repetir" aria-labelledby="pq-repetir-titulo">
+        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo">Hola, <?= e($repetir['nombre']) ?>. ¿Lo mismo de la vez pasada?</h2>
+        <ul class="pq-repetir-lista">
+          <?php foreach (array_slice($repetir['lineas'], 0, 4) as $linea): ?>
+            <li><span class="pq-repetir-cantidad"><?= e(\App\Models\Producto::esPorPeso($linea['producto']) ? \App\Models\Producto::cantidadEnLinea($linea['producto'], (int) $linea['cantidad'], true) : (int) $linea['cantidad'] . ' ×') ?></span> <?= e($linea['producto']['nombre']) ?></li>
+          <?php endforeach; ?>
+          <?php if (count($repetir['lineas']) > 4): ?>
+            <li class="pq-repetir-mas">y <?= count($repetir['lineas']) - 4 ?> más</li>
+          <?php endif; ?>
+        </ul>
+        <?php if ($repetir['faltan'] > 0): ?>
+          <p class="pq-ayuda pq-repetir-nota"><?= $repetir['faltan'] === 1 ? '1 producto ya no está disponible.' : $repetir['faltan'] . ' productos ya no están disponibles.' ?></p>
+        <?php endif; ?>
+        <div class="pq-repetir-acciones">
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/repetir')) ?>">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Pedir lo mismo</button>
+          </form>
+          <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/olvidarme')) ?>">
+            <?= csrf_campo() ?>
+            <button type="submit" class="pq-repetir-olvidar">No soy <?= e($repetir['nombre']) ?></button>
+          </form>
+        </div>
+      </section>
+    <?php endif; ?>
     <?php if ($destacados !== []): ?>
       <?php
       // El cliente nuevo no sabe qué pedir: esto se lo dice con lo que de

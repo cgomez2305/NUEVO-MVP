@@ -66,7 +66,11 @@ class PanelController
             'negocio'         => $negocio,
             'esReservas'      => $esReservas,
             // Acción primero: lo que hay que hacer ahora, antes que las cifras.
-            'tareas'          => \App\Models\Hoy::tareas($negocio, $aReactivar),
+            'tareas'          => \App\Models\Hoy::tareas(
+                $negocio,
+                $aReactivar,
+                $esReservas && $esDueno && Copiloto::disponiblePara($negocio) ? count(\App\Models\Huecos::paraManana($negocio)) : 0
+            ),
             'recuperado'      => $esDueno && Copiloto::disponiblePara($negocio) ? Copiloto::recuperadoEsteMes($negocioId, $negocio['tipo_negocio']) : null,
             'pedidosHoy'      => $esReservas ? Cita::contarHoy($sedeId) : Pedido::contarHoy($sedeId),
             'ventasHoy'       => $esReservas ? Cita::ventasHoy($sedeId) : Pedido::ventasHoy($sedeId),
@@ -1247,6 +1251,50 @@ class PanelController
 
         header('Location: https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($texto));
         exit;
+    }
+
+    /** Llenar huecos: los espacios libres de mañana y a quién ya le toca volver (solo reservas). */
+    public function huecosCopiloto(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
+        if ($negocio['tipo_negocio'] !== 'reservas') {
+            redirigir('/panel/copiloto');
+        }
+
+        ver('panel/huecos', [
+            'titulo'  => 'Llenar huecos de mañana · Veci',
+            'activo'  => 'copiloto',
+            'negocio' => $negocio,
+            'huecos'  => \App\Models\Huecos::paraManana($negocio),
+            'ok'      => flash_obtener('ok'),
+        ], 'panel');
+    }
+
+    /**
+     * Abre WhatsApp ofreciéndole el espacio. Se recalcula aquí (no se confía
+     * en el formulario): si ese espacio ya se ocupó, se ofrece el siguiente.
+     */
+    public function huecoWhatsapp(array $parametros): void
+    {
+        $negocio = Auth::exigirSesion();
+        Auth::exigirDueno($negocio);
+        $this->exigirCopiloto($negocio);
+        if (!csrf_verificar()) {
+            redirigir('/panel/copiloto/huecos');
+        }
+        foreach (\App\Models\Huecos::paraManana($negocio) as $hueco) {
+            if ((int) $hueco['cliente']['id'] !== (int) $parametros['cliente']) {
+                continue;
+            }
+            $texto = \App\Models\Huecos::mensaje($hueco, (string) ($negocio['negocio_nombre'] ?? $negocio['nombre']), $this->enlacePreferencias($hueco['cliente']));
+            Copiloto::registrarEnvio((int) $negocio['negocio_id'], (int) $hueco['cliente']['id'], $texto);
+            header('Location: https://wa.me/57' . preg_replace('/\D+/', '', (string) $hueco['cliente']['telefono']) . '?text=' . rawurlencode($texto));
+            exit;
+        }
+        flash_set('ok', 'Ese espacio ya no está disponible o ya tiene cita. La lista se actualizó.');
+        redirigir('/panel/copiloto/huecos');
     }
 
     /** "Me pidió que no le escribiera más": se retira su permiso y queda en el registro. */

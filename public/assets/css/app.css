@@ -5379,3 +5379,60 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
   .pq-caja-dia-hoy .pq-caja-casilla:nth-child(3) { border-left: 1px dashed var(--borde); }
   .pq-caja-dia-hoy .pq-caja-casilla:first-child .pq-caja-valor { font-size: 26px; }
 }
+
+/* ---------- Volver a pedir / reservar lo de siempre (tienda) ----------
+   "Veci, me manda lo mismo de la vez pasada": una nota de papel con la
+   cinta del color del negocio, el último pedido en letra de comanda y un
+   solo botón. "No soy X" para el celular prestado (olvida al cliente). */
+.pq-repetir {
+  position: relative;
+  margin: 0 0 var(--esp-6);
+  padding: var(--esp-5) var(--esp-4) var(--esp-4);
+  background: #FFFDF8;
+  border: 1px solid var(--linea-tienda);
+  border-radius: var(--radio-m);
+  box-shadow: var(--sombra-suave);
+}
+.pq-repetir::before {
+  content: ""; position: absolute; top: -1px; left: var(--esp-4); right: var(--esp-4); height: 4px;
+  background: var(--marca); border-radius: 0 0 4px 4px;
+}
+.pq-repetir-titulo { margin: 0 0 var(--esp-3); font: 700 18px/1.25 var(--fuente-titulo); color: var(--tinta); }
+.pq-repetir-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 15px; color: var(--tinta); }
+.pq-repetir-cantidad { display: inline-block; min-width: 2.6em; font-weight: 700; color: var(--marca-texto); font-variant-numeric: tabular-nums; }
+.pq-repetir-mas { color: var(--texto-tenue); font-size: 14px; }
+.pq-repetir-servicio { margin: 0; font-size: 15.5px; font-weight: 600; color: var(--tinta); }
+.pq-repetir-nota { margin: var(--esp-2) 0 0; color: var(--texto-tenue); }
+.pq-repetir-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2) var(--esp-4); margin-top: var(--esp-4); }
+.pq-repetir-acciones form { margin: 0; }
+.pq-repetir-olvidar {
+  min-height: 44px; padding: 0 var(--esp-1);
+  background: none; border: 0; cursor: pointer;
+  font: 500 13.5px var(--fuente-texto); color: var(--texto-tenue);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.pq-repetir-olvidar:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Llenar huecos de mañana (panel) ----------
+   La hora libre manda (columna fija a la izquierda, como en la agenda);
+   al lado, a quién y por qué; la acción es el botón de WhatsApp. */
+.pq-huecos-lista { list-style: none; margin: var(--esp-5) 0 0; padding: 0; background: #FFFFFF; border: 1px solid var(--recibo); border-radius: var(--radio-m); box-shadow: var(--sombra-suave); overflow: hidden; }
+.pq-hueco { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); }
+.pq-hueco + .pq-hueco { border-top: 1px dashed var(--borde); }
+.pq-hueco-hora { font-size: 14px; font-weight: 700; color: var(--sello); white-space: nowrap; }
+.pq-hueco-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pq-hueco-nombre { font-weight: 700; color: var(--carbon); }
+.pq-hueco-servicio { font-size: 14px; color: var(--carbon); }
+.pq-hueco-texto .pq-ayuda { margin: 0; }
+.pq-hueco form { margin: 0; }
+.pq-huecos-nota { margin-top: var(--esp-3); }
+@media (max-width: 599px) {
+  .pq-hueco { grid-template-columns: 76px minmax(0, 1fr); }
+  .pq-hueco-hora { font-size: 13px; }
+  .pq-hueco form { grid-column: 2; }
+}
+.pq-copiloto-huecos { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-3); min-height: 56px; margin: 0 0 var(--esp-4); padding: var(--esp-3) var(--esp-4); background: var(--tinte-sello); border-radius: var(--radio-m); color: var(--carbon); text-decoration: none; }
+.pq-copiloto-huecos > span { display: flex; flex-direction: column; gap: 2px; }
+.pq-copiloto-huecos .pq-ayuda { margin: 0; }
+.pq-copiloto-huecos svg { width: 18px; height: 18px; flex: none; color: var(--sello); }
+.pq-copiloto-huecos:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }

@@ -90,6 +90,35 @@ class Cliente
         return (string) $stmt->fetchColumn();
     }
 
+    /** Token de la cookie "volver a pedir" de este cliente (se crea la primera vez). */
+    public static function tokenRecompra(int $id): string
+    {
+        $pdo = Database::conexion();
+        $stmt = $pdo->prepare('SELECT token_recompra FROM clientes WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $token = $stmt->fetchColumn();
+        if (is_string($token) && $token !== '') {
+            return $token;
+        }
+        $pdo->prepare('UPDATE clientes SET token_recompra = :t WHERE id = :id AND token_recompra IS NULL')
+            ->execute(['t' => bin2hex(random_bytes(16)), 'id' => $id]);
+        $stmt->execute(['id' => $id]);
+
+        return (string) $stmt->fetchColumn();
+    }
+
+    /** El cliente de ESE negocio dueño del token (un token de otro negocio no sirve aquí). */
+    public static function buscarPorTokenRecompra(string $token, int $negocioId): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
+            return null;
+        }
+        $stmt = Database::conexion()->prepare('SELECT * FROM clientes WHERE token_recompra = :t AND negocio_id = :n');
+        $stmt->execute(['t' => $token, 'n' => $negocioId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function buscarPorTokenPreferencias(string $token): ?array
     {
         if (!preg_match('/^[a-f0-9]{32}$/', $token)) {

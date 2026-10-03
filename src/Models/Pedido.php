@@ -270,6 +270,27 @@ class Pedido
         ];
     }
 
+    /**
+     * El último pedido (no cancelado) del cliente en esta sede, con sus
+     * renglones, para "pedir lo mismo". null si nunca ha pedido aquí.
+     *
+     * @return array{pedido: array<string, mixed>, items: array<int, array<string, mixed>>}|null
+     */
+    public static function ultimoParaRepetir(int $clienteId, int $sedeId): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            "SELECT * FROM pedidos WHERE cliente_id = :c AND sede_id = :s AND estado <> 'cancelado'
+             ORDER BY creado_en DESC, id DESC LIMIT 1"
+        );
+        $stmt->execute(['c' => $clienteId, 's' => $sedeId]);
+        $pedido = $stmt->fetch();
+        if ($pedido === false) {
+            return null;
+        }
+
+        return ['pedido' => $pedido, 'items' => self::items((int) $pedido['id'])];
+    }
+
     public static function buscar(int $id, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(

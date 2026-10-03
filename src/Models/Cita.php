@@ -153,6 +153,28 @@ class Cita
     }
 
     /** Próximas citas (hoy en adelante), para la agenda del panel. */
+    /** La última cita que contó (no cancelada ni "no vino") del cliente en esta sede, con su profesional. */
+    public static function ultimaParaRepetir(int $clienteId, int $sedeId): ?array
+    {
+        $stmt = Database::conexion()->prepare(
+            'SELECT c.servicio_id, c.empleado_id, e.nombre AS empleado_nombre FROM citas c
+             LEFT JOIN empleados e ON e.id = c.empleado_id AND e.activo = 1
+             WHERE c.cliente_id = :c AND c.sede_id = :s AND ' . self::sqlCuenta('c') . '
+             ORDER BY c.fecha_hora DESC, c.id DESC LIMIT 1'
+        );
+        $stmt->execute(['c' => $clienteId, 's' => $sedeId]);
+        $cita = $stmt->fetch();
+        if ($cita === false || $cita['servicio_id'] === null) {
+            return null;
+        }
+        // Si ese profesional ya no está, se reserva sin preferencia.
+        if ($cita['empleado_nombre'] === null) {
+            $cita['empleado_id'] = null;
+        }
+
+        return $cita;
+    }
+
     public static function listarProximas(int $sedeId, int $limite = 100): array
     {
         $stmt = Database::conexion()->prepare(
