@@ -875,11 +875,16 @@ Total — $27.500</span>
     pastilla.style.width = btn.offsetWidth + 'px';
   }
 
+  var ctasPlanPago = Array.prototype.slice.call(contPrecios.querySelectorAll('a[href*="plan=barrio"], a[href*="plan=pro"]'));
   function elegirCiclo(anual) {
     contPrecios.classList.toggle('modo-anual', anual);
     btnMensual.classList.toggle('activo', !anual);
     btnAnual.classList.toggle('activo', anual);
     moverPastilla(anual ? btnAnual : btnMensual);
+    ctasPlanPago.forEach(function (a) {
+      var href = a.getAttribute('href').replace(/[&?]ciclo=anual/, '');
+      a.setAttribute('href', anual ? href + '&ciclo=anual' : href);
+    });
   }
   btnMensual.addEventListener('click', function () { elegirCiclo(false); });
   btnAnual.addEventListener('click', function () { elegirCiclo(true); });
