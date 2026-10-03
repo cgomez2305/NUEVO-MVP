@@ -30,7 +30,7 @@
       });
     });
     var hash = (location.hash || '').replace('#', '');
-    if (hash) {
+    if (/^[a-z0-9-]{1,40}$/.test(hash)) {
       var btn = document.querySelector('.demo-tab[data-demo-tab="' + hash + '"]');
       if (btn) btn.click();
     }

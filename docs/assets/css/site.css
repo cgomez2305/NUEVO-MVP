@@ -1325,3 +1325,84 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
   .demo-teaser-tarjetas{grid-template-columns:1fr}
   .demo-teaser-card:last-child{grid-column:auto}
 }
+
+/* asistente Veci (veci-chat.js): mismo lenguaje de tiquete y sello del hero */
+.vchat-lanzador{position:fixed;right:20px;bottom:20px;z-index:55;display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 20px 0 16px;border:0;border-radius:var(--radio-pill);background:var(--sello);color:var(--tiquete);font-family:var(--fuente-texto);font-size:14.5px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(32,33,36,.18),0 18px 36px -14px rgba(59,76,202,.65);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background .2s ease}
+.vchat-lanzador:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(32,33,36,.2),0 24px 44px -14px rgba(59,76,202,.7)}
+.vchat-lanzador.activo{background:var(--carbon)}
+.menu-abierto .vchat-lanzador,.menu-abierto .vchat-teaser{display:none}
+.vchat-panel{position:fixed;right:20px;bottom:84px;z-index:70;width:384px;height:min(620px,calc(100dvh - 120px));display:flex;flex-direction:column;background:var(--bg);color:var(--texto);border:1px solid var(--borde);border-radius:22px;overflow:hidden;box-shadow:0 2px 6px rgba(32,33,36,.08),0 40px 80px -24px rgba(32,33,36,.45);opacity:0;transform:translateY(14px) scale(.98);transform-origin:bottom right;transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1)}
+.vchat-panel.abierto{opacity:1;transform:none}
+.vchat-panel[hidden]{display:none}
+.vchat-cabecera{display:flex;align-items:center;gap:11px;padding:14px 14px 14px 16px;background:var(--carbon);color:var(--tiquete)}
+.vchat-avatar{width:36px;height:36px;border-radius:50%;background:var(--tiquete);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vchat-titulos{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.vchat-titulos strong{font-family:var(--fuente-titulo);font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.vchat-titulos span{font-size:11.5px;color:rgba(255,253,248,.62)}
+.vchat-cerrar{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:var(--tiquete);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease}
+.vchat-cerrar:hover{background:rgba(255,255,255,.16)}
+.vchat-registro{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px 14px 8px;display:flex;flex-direction:column;gap:10px;background-image:radial-gradient(var(--borde) 1px,transparent 1px);background-size:18px 18px}
+.vchat-msg{max-width:88%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.5;animation:vchatEntra .25s cubic-bezier(.2,.8,.2,1) both}
+.vchat-msg p{margin:0}
+.vchat-msg p+p{margin-top:7px}
+.vchat-msg strong{font-weight:700}
+.vchat-bot{align-self:flex-start;background:var(--superficie);border:1px solid var(--borde);border-bottom-left-radius:4px;color:var(--texto)}
+.vchat-yo{align-self:flex-end;background:var(--sello);color:var(--tiquete);border-bottom-right-radius:4px;white-space:pre-wrap;overflow-wrap:anywhere}
+.vchat-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.vchat-link{display:inline-flex;align-items:center;padding:7px 12px;border-radius:var(--radio-pill);background:var(--tinte-sello);color:var(--sello);font-size:13px;font-weight:600;text-decoration:none;transition:background .15s ease}
+.vchat-link:hover{background:rgba(59,76,202,.18)}
+.vchat-link-cta{background:var(--sello);color:var(--tiquete)}
+.vchat-link-cta:hover{background:#2f3fb0}
+.vchat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px;animation:vchatEntra .3s cubic-bezier(.2,.8,.2,1) .05s both}
+.vchat-chip{padding:8px 13px;border-radius:var(--radio-pill);border:1.5px solid var(--sello);background:var(--bg);color:var(--sello);font-family:var(--fuente-texto);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,color .15s ease}
+.vchat-chip:hover{background:var(--sello);color:var(--tiquete)}
+.vchat-escribiendo{display:flex;gap:4px;padding:14px 16px}
+.vchat-escribiendo span{width:6px;height:6px;border-radius:50%;background:var(--texto-tenue);animation:vchatPunto 1s ease-in-out infinite}
+.vchat-escribiendo span:nth-child(2){animation-delay:.15s}
+.vchat-escribiendo span:nth-child(3){animation-delay:.3s}
+.vchat-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--borde);background:var(--superficie)}
+.vchat-input{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:var(--radio-pill);border:1.5px solid var(--borde);background:var(--bg);color:var(--texto);font-family:var(--fuente-texto);font-size:16px;outline:none;transition:border-color .15s ease}
+.vchat-input:focus{border-color:var(--sello)}
+.vchat-enviar{width:44px;height:44px;flex-shrink:0;border-radius:50%;border:0;background:var(--sello);color:var(--tiquete);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .15s ease}
+.vchat-enviar:disabled{opacity:.45;cursor:default}
+.vchat-pie{margin:0;padding:0 12px 10px;background:var(--superficie);font-size:11.5px;color:var(--texto-tenue);text-align:center}
+.vchat-pie a{color:var(--texto-suave)}
+/* la oferta es un tiquete con sello, no un banner */
+.vchat-oferta{align-self:stretch;display:flex;align-items:flex-start;background:var(--tiquete);color:var(--carbon);border:1px solid rgba(32,33,36,.1);border-radius:14px;padding:16px;box-shadow:0 14px 28px -16px rgba(32,33,36,.35);rotate:-.6deg;animation:vchatEntra .35s cubic-bezier(.2,.8,.2,1) both}
+.vchat-oferta-sello{width:60px;height:60px;flex-shrink:0;border-radius:50%;border:2px solid var(--aji);display:flex;align-items:center;justify-content:center;position:relative;rotate:-12deg;margin-top:4px}
+.vchat-oferta-sello::before{content:"";position:absolute;inset:4px;border:1px solid var(--aji);border-radius:50%;opacity:.5}
+.vchat-oferta-sello span{font-family:var(--fuente-titulo);font-weight:800;font-size:16px;color:var(--aji);letter-spacing:-.02em}
+.vchat-oferta-divisor{width:1px;align-self:stretch;flex-shrink:0;margin:0 14px;background-image:linear-gradient(to bottom,rgba(32,33,36,.2) 0 4px,transparent 4px 7px);background-size:1px 7px}
+.vchat-oferta-cuerpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.vchat-oferta-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--aji)}
+.vchat-oferta-cuerpo strong{font-family:var(--fuente-titulo);font-weight:700;font-size:16.5px;line-height:1.2}
+.vchat-oferta-cuerpo p{margin:0;font-size:12.5px;line-height:1.45;color:#54565f}
+.vchat-oferta-codigo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding:6px 6px 6px 12px;border:1.5px dashed rgba(32,33,36,.25);border-radius:10px}
+.vchat-oferta-codigo .mono{font-weight:700;font-size:14px;letter-spacing:.06em}
+.vchat-copiar{padding:6px 11px;border-radius:8px;border:0;background:var(--carbon);color:var(--tiquete);font-family:var(--fuente-texto);font-size:12px;font-weight:600;cursor:pointer}
+.vchat-oferta-vence{font-size:11.5px;color:#676971}
+.vchat-oferta .vchat-link-cta{align-self:flex-start;margin-top:4px}
+.vchat-oferta.vencida{opacity:.6}
+.vchat-oferta.vencida .vchat-oferta-sello,.vchat-oferta.vencida .vchat-oferta-sello::before{border-color:#8a8d97}
+.vchat-oferta.vencida .vchat-oferta-sello span,.vchat-oferta.vencida .vchat-oferta-eyebrow{color:#8a8d97}
+.vchat-teaser{position:fixed;right:20px;bottom:84px;z-index:55;display:flex;align-items:flex-start;max-width:280px;background:var(--superficie);border:1px solid var(--borde);border-radius:16px 16px 4px 16px;box-shadow:0 20px 40px -18px rgba(32,33,36,.4);animation:vchatEntra .35s cubic-bezier(.2,.8,.2,1) both}
+.vchat-teaser-ir{flex:1;display:flex;flex-direction:column;gap:3px;padding:13px 4px 13px 15px;border:0;background:none;text-align:left;cursor:pointer;color:var(--texto);font-family:var(--fuente-texto)}
+.vchat-teaser-ir strong{font-size:14px;font-weight:700}
+.vchat-teaser-ir span{font-size:12.5px;color:var(--sello);font-weight:600}
+.vchat-teaser-x{width:30px;height:30px;margin:6px 6px 0 0;border:0;border-radius:50%;background:none;color:var(--texto-tenue);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.vchat-teaser-x:hover{background:var(--bg-suave)}
+@keyframes vchatEntra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes vchatPunto{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+@media (max-width:560px){
+  .vchat-lanzador{right:16px;bottom:16px;width:56px;height:56px;padding:0;justify-content:center}
+  .vchat-lanzador-texto{display:none}
+  .vchat-panel{left:0;right:0;bottom:0;width:auto;height:88dvh;border-radius:22px 22px 0 0;border-bottom:0;transform-origin:bottom center}
+  .vchat-abierto body{overflow:hidden}
+  .vchat-abierto .vchat-lanzador{display:none}
+  .vchat-teaser{right:16px;bottom:82px;max-width:calc(100vw - 32px)}
+}
+@media (prefers-reduced-motion: reduce){
+  .vchat-panel,.vchat-lanzador{transition:none}
+  .vchat-msg,.vchat-chips,.vchat-oferta,.vchat-teaser{animation:none}
+  .vchat-escribiendo span{animation:none;opacity:.6}
+}
