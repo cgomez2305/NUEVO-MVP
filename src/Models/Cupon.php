@@ -56,12 +56,16 @@ class Cupon
         return mb_substr(preg_replace('/[^A-Z0-9-]/', '', strtoupper(trim($codigo))) ?? '', 0, 20);
     }
 
-    /** Código que no se presta a confusión al dictarlo (sin 0/O, 1/I). */
-    public static function codigoAleatorio(string $prefijo = ''): string
+    /**
+     * Código que no se presta a confusión al dictarlo (sin 0/O, 1/I). Los
+     * personales (saldo a favor, VUELVE) llevan 8 caracteres: con 4 había
+     * ~1 millón de opciones y se podían adivinar probando.
+     */
+    public static function codigoAleatorio(string $prefijo = '', int $largo = 8): string
     {
         $letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         $codigo = '';
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < $largo; $i++) {
             $codigo .= $letras[random_int(0, strlen($letras) - 1)];
         }
 

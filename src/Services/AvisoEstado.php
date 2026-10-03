@@ -47,8 +47,8 @@ class AvisoEstado
             ? ', ' . \App\Models\Visita::textoFranja($registro)
             : ' a las ' . date('g:i a', strtotime((string) $registro['fecha_hora'])));
         return match ((string) $registro['estado']) {
-            'confirmada' => "Hola {$nombre}, tu cita de {$registro['nombre_servicio']} en {$negocio} quedó confirmada para el {$cuando}.",
-            'cancelada'  => "Hola {$nombre}, tu cita de {$registro['nombre_servicio']} del {$cuando} en {$negocio} fue cancelada. Escríbenos si quieres otra hora.",
+            'confirmada' => "Hola {$nombre}, " . cita_en_mensaje((string) $registro['nombre_servicio'], $sede) . " en {$negocio} quedó confirmada para el {$cuando}.",
+            'cancelada'  => "Hola {$nombre}, " . cita_en_mensaje((string) $registro['nombre_servicio'], $sede) . " del {$cuando} en {$negocio} fue cancelada. Escríbenos si quieres otra hora.",
             default      => null,
         };
     }

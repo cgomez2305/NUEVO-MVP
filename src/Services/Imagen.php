@@ -41,6 +41,13 @@ class Imagen
         if (!function_exists('imagecreatefromstring')) {
             return null;
         }
+        // Antes de decodificar: una imagen pequeña en bytes puede declarar
+        // 30.000 × 30.000 píxeles y tumbar el servidor al abrirla.
+        $medidas = @getimagesize($ruta);
+        if ($medidas === false || $medidas[0] < 1 || $medidas[1] < 1
+            || $medidas[0] > 10000 || $medidas[1] > 10000 || $medidas[0] * $medidas[1] > 40_000_000) {
+            return null;
+        }
         $datos = @file_get_contents($ruta);
         if ($datos === false) {
             return null;

@@ -476,7 +476,7 @@ class Imprevisto
                 . " quedó abonado. Usa el código {$cita['cupon_abono_codigo']} en tu próxima reserva"
                 . (!empty($cita['cupon_abono_vence']) ? ' (vale hasta el ' . fecha_larga((string) $cita['cupon_abono_vence']) . ')' : '')
                 . ': ' . url_publica('/t/' . ($sede['slug'] ?? '')),
-            'ajuste' => "Hola {$nombre}, te escribimos de {$negocio} sobre tu {$cita['nombre_servicio']}: "
+            'ajuste' => "Hola {$nombre}, te escribimos de {$negocio} sobre " . cita_en_mensaje((string) $cita['nombre_servicio'], $sede) . ': '
                 . "{$cita['ajuste_motivo']}. El valor quedaría en " . pesos((int) $cita['ajuste_precio']) . '. '
                 . "Apruébalo (o no) aquí antes de que sigamos: {$enlace}",
             default => null,

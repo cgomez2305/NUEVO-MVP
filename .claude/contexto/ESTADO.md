@@ -156,9 +156,42 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
      token_recompra`, migración 33; "No soy X") y "¿Reservas lo de
      siempre?"; "Llenar huecos" (`Huecos`, `/panel/copiloto/huecos`): el
      próximo día que abre, clientes en su ritmo cuyo servicio cabe.
-  5. Auditoría de seguridad integral + `tests/aislamiento.php` (todas las
-     rutas del panel con ids de otros negocios; probado con 5 cuentas;
-     control negativo comprobado).
+  5. Auditoría de seguridad integral (3 revisiones en paralelo) +
+     `tests/aislamiento.php` (todas las rutas del panel con ids de otros
+     negocios; 5 cuentas; control negativo comprobado). Corregido:
+     - Wompi: el regreso del checkout ya NO activa planes (la API pública
+       responde por cualquier comercio); solo el webhook firmado o un
+       admin. El webhook exige id/estado/monto firmados y toma referencia
+       y moneda de la API.
+     - "Volver a pedir" por celular (migración 34: pedidos/citas.
+       dispositivo; se quitó clientes.token_recompra): teclear el número
+       de otro ya no da su historial; a un cliente existente un formulario
+       público no le cambia el nombre ni le inventa permiso de promociones
+       (salvo su mismo celular); el saludo con nombre solo en el celular
+       que creó al cliente.
+     - IDOR de combos entre sedes/negocios (Producto::guardarComponentes) y
+       ajustes de inventario filtrados por sede.
+     - Webhook Bre-B: pasa a pagado solo si sigue pendiente (bloqueado).
+     - Cupones: códigos personales de 8 caracteres y 15 intentos/hora.
+     - Login: "suspendida" solo con contraseña correcta, mismo tiempo de
+       respuesta exista o no la cuenta; registro con límite antes de
+       revelar si el número existe. IPv6 por /64 en los límites.
+     - Sesión: modo estricto, logout borra toda la sesión, cambiar
+       contraseña anula enlaces de recuperación; sin X-Powered-By; CSP con
+       base-uri/object-src.
+     - Imágenes con más de 40 MP o lado > 10.000 px se rechazan antes de
+       abrirlas; serve.php (desarrollo) ya no sale de public/.
+     - Salud: los WhatsApp al paciente dicen "tu cita", sin el nombre del
+       procedimiento. Cron de recordatorios sin envíos dobles.
+     - Caja: volver a cerrar un día ya cerrado solo el dueño.
+     - Credenciales fuera de ESTADO.md; README: nunca importar seed.sql en
+       producción; crear_admin pide la contraseña por teclado.
+     Pendiente consciente (no se hizo): verificar el teléfono del cliente
+     por WhatsApp (OTP) antes de aplicar automáticamente un bono o cupón
+     personal por número; lockout por cuenta (5 intentos) permite bloquear
+     una cuenta ajena 15 min; anticipos los puede marcar el colaborador
+     (decisión de negocio); pagos de plan pendientes se borran al
+     cancelar/rechazar (sin rastro si Wompi aprueba tarde).
 
 ## Pendiente (en orden)
 0. Diseño: tienda, panel, onboarding y admin completos en v2. Sitio `docs/`
@@ -195,8 +228,11 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
 
 ## Entorno y pruebas
 - `service mariadb start`; `nohup php -S localhost:8000 serve.php &`.
-- Admin local: `admin@tuveci.co` / `admin123`. Dueños demo: `3001234567`,
-  `3005556677` / `veci123`. Tiendas: `donamaria`, `salonbonita`, `donamaria-centro`.
+- Cuentas demo (solo local, ver README "Probar con datos de demostración"):
+  dueños `3001234567` (pedidos) y `3005556677` (reservas). El admin local
+  se crea con `php bin/crear_admin.php` (contraseña por consola, no se
+  anota aquí: este repositorio es público). Tiendas: `donamaria`,
+  `salonbonita`, `donamaria-centro`.
 - Puppeteer: `/tmp/pptr/node_modules/puppeteer-core`, Chromium en
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Capturas:
   `node .claude/skills/diseno-veci/scripts/capturas.js --rutas ... --anchos 360,390,1280 --out <dir> [--cookies jar]`.
@@ -209,7 +245,7 @@ por WhatsApp (pedidos y reservas). Bloque más reciente de trabajo:
   usa `menu-celular.jpg` de 10 MB con EXIF) en el scratchpad; limpiar con `limpiar-onb.sh`
   (borra negocios 31199900xx y sus fotos). Registro: 3 por IP al día, así
   que `DELETE FROM limites_tasa` entre corridas.
-- Admin de prueba: `php bin/crear_admin.php "Prueba QA" qa@tuveci.co prueba12345`
+- Admin de prueba: `php bin/crear_admin.php "Prueba QA" qa@tuveci.co` (pide la contraseña)
   (borrarlo después: `delete from admins where correo='qa@tuveci.co'`);
   `login-admin.sh` y `prueba-admin.js` en el scratchpad.
 - Copiloto bloqueado en plan Gratis: para probarlo, `update negocios set

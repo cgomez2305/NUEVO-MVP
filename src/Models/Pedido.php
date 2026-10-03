@@ -271,24 +271,31 @@ class Pedido
     }
 
     /**
-     * El último pedido (no cancelado) del cliente en esta sede, con sus
-     * renglones, para "pedir lo mismo". null si nunca ha pedido aquí.
+     * El último pedido (no cancelado) hecho DESDE ESTE CELULAR en esta sede,
+     * con sus renglones, para "pedir lo mismo". null si este celular nunca
+     * pidió aquí. Nunca se busca por cliente: así teclear el número de otra
+     * persona no muestra lo que ella pidió.
      *
      * @return array{pedido: array<string, mixed>, items: array<int, array<string, mixed>>}|null
      */
-    public static function ultimoParaRepetir(int $clienteId, int $sedeId): ?array
+    public static function ultimoDelDispositivo(string $dispositivo, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            "SELECT * FROM pedidos WHERE cliente_id = :c AND sede_id = :s AND estado <> 'cancelado'
+            "SELECT * FROM pedidos WHERE dispositivo = :d AND sede_id = :s AND estado <> 'cancelado'
              ORDER BY creado_en DESC, id DESC LIMIT 1"
         );
-        $stmt->execute(['c' => $clienteId, 's' => $sedeId]);
+        $stmt->execute(['d' => $dispositivo, 's' => $sedeId]);
         $pedido = $stmt->fetch();
         if ($pedido === false) {
             return null;
         }
 
         return ['pedido' => $pedido, 'items' => self::items((int) $pedido['id'])];
+    }
+
+    public static function marcarDispositivo(int $id, string $dispositivo): void
+    {
+        Database::conexion()->prepare('UPDATE pedidos SET dispositivo = :d WHERE id = :id')->execute(['d' => $dispositivo, 'id' => $id]);
     }
 
     public static function buscar(int $id, int $sedeId): ?array
@@ -312,10 +319,15 @@ class Pedido
         return $stmt->fetchAll();
     }
 
-    public static function actualizarEstado(int $id, int $sedeId, string $estado): void
+    /**
+     * $soloSiEstaEn: cambia solo si, ya con el pedido bloqueado, sigue en ese
+     * estado (el webhook de pago usa 'pendiente': si el dueño lo canceló un
+     * segundo antes, el pago no lo revive). Devuelve si cambió.
+     */
+    public static function actualizarEstado(int $id, int $sedeId, string $estado, ?string $soloSiEstaEn = null): bool
     {
         if (!in_array($estado, self::ESTADOS, true)) {
-            return;
+            return false;
         }
         $pdo = Database::conexion();
         $pdo->beginTransaction();
@@ -323,9 +335,9 @@ class Pedido
             $stmt = $pdo->prepare('SELECT estado, inventario_movido FROM pedidos WHERE id = :id AND sede_id = :sede_id FOR UPDATE');
             $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
             $pedido = $stmt->fetch();
-            if ($pedido === false) {
+            if ($pedido === false || ($soloSiEstaEn !== null && $pedido['estado'] !== $soloSiEstaEn)) {
                 $pdo->rollBack();
-                return;
+                return false;
             }
             $antes = $pedido['estado'];
             $pdo->prepare('UPDATE pedidos SET estado = :estado WHERE id = :id AND sede_id = :sede_id')
@@ -341,20 +353,21 @@ class Pedido
             if ($signo !== null && is_array($movido)) {
                 // Exactamente lo que este pedido descontó al crearse.
                 ksort($movido);
-                $bloquear = $pdo->prepare('SELECT nombre, stock, vende_por FROM productos WHERE id = :p FOR UPDATE');
-                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
+                // Siempre productos de la misma sede del pedido (defensa extra: nunca se toca inventario ajeno).
+                $bloquear = $pdo->prepare('SELECT nombre, stock, vende_por FROM productos WHERE id = :p AND sede_id = :s FOR UPDATE');
+                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND sede_id = :s AND stock IS NOT NULL");
                 foreach ($movido as $productoId => $unidades) {
                     if ($signo === '-') {
                         // Reabrir un pedido cancelado vuelve a tomar inventario:
                         // solo si todavía alcanza (no se deja el stock en negativo).
-                        $bloquear->execute(['p' => (int) $productoId]);
+                        $bloquear->execute(['p' => (int) $productoId, 's' => $sedeId]);
                         $fila = $bloquear->fetch();
                         if ($fila !== false && $fila['stock'] !== null && (int) $fila['stock'] < (int) $unidades) {
                             $quedan = $fila['vende_por'] === 'peso' ? Producto::gramosLegibles((int) $fila['stock']) : (string) $fila['stock'];
                             throw new \DomainException("No se puede reabrir: de {$fila['nombre']} quedan {$quedan} y este pedido necesita más.");
                         }
                     }
-                    $ajustar->execute(['n' => (int) $unidades, 'p' => (int) $productoId]);
+                    $ajustar->execute(['n' => (int) $unidades, 'p' => (int) $productoId, 's' => $sedeId]);
                 }
             } elseif ($signo !== null) {
                 // Pedidos de antes de guardar lo movido: se calcula como entonces.
@@ -368,10 +381,10 @@ class Pedido
                         + ($item['gramos'] !== null ? (int) $item['gramos'] / Producto::GRAMOS_POR_KILO : (int) $item['cantidad']);
                     $porPeso[(int) $item['producto_id']] = (int) $item['por_peso'] === 1;
                 }
-                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND stock IS NOT NULL");
+                $ajustar = $pdo->prepare("UPDATE productos SET stock = stock {$signo} :n WHERE id = :p AND sede_id = :s AND stock IS NOT NULL");
                 // En la unidad en que se pidió (por_peso copiado), no en la de hoy.
                 foreach (Producto::demandaDeStock($pdo, $pedidas, $porPeso) as $productoId => $unidades) {
-                    $ajustar->execute(['n' => $unidades, 'p' => $productoId]);
+                    $ajustar->execute(['n' => $unidades, 'p' => $productoId, 's' => $sedeId]);
                 }
             }
             $pdo->commit();
@@ -379,6 +392,8 @@ class Pedido
             $pdo->rollBack();
             throw $e;
         }
+
+        return true;
     }
 
     /**

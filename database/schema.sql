@@ -216,17 +216,13 @@ CREATE TABLE IF NOT EXISTS clientes (
   -- retire, y cuándo el negocio le pidió permiso (una sola vez).
   marketing_actualizado_en DATETIME DEFAULT NULL,
   token_preferencias CHAR(32)  DEFAULT NULL,
-  -- "Volver a pedir": la tienda lo reconoce por una cookie con este token
-  -- en el celular donde ya pidió, nunca por el número que alguien escriba.
-  token_recompra  CHAR(32)     DEFAULT NULL,
   permiso_pedido_en DATETIME   DEFAULT NULL,
   -- Tope de lo que se le fía (NULL = sin tope). Ver fiado_movimientos.
   fiado_limite    INT UNSIGNED DEFAULT NULL,
   creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono),
-  UNIQUE KEY uniq_cliente_token_preferencias (token_preferencias),
-  UNIQUE KEY uniq_cliente_token_recompra (token_recompra)
+  UNIQUE KEY uniq_cliente_token_preferencias (token_preferencias)
 ) ENGINE=InnoDB;
 
 -- Registro de consentimientos (Ley 1581): cada cambio con origen, versión
@@ -268,10 +264,13 @@ CREATE TABLE IF NOT EXISTS pedidos (
                 NOT NULL DEFAULT 'pendiente',
   -- Lo que descontó del inventario ({producto_id: unidades|gramos}); se devuelve eso al cancelar/anular.
   inventario_movido TEXT DEFAULT NULL,
+  -- Celular donde se pidió (cookie): "pedir lo mismo" solo ve los suyos.
+  dispositivo   CHAR(32) DEFAULT NULL,
   creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
-  INDEX idx_pedidos_sede_fecha (sede_id, creado_en)
+  INDEX idx_pedidos_sede_fecha (sede_id, creado_en),
+  INDEX idx_pedidos_dispositivo (dispositivo)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS pedido_items (
@@ -443,11 +442,14 @@ CREATE TABLE IF NOT EXISTS citas (
   autorizo_sensibles_en DATETIME     DEFAULT NULL,
   plan_id               INT UNSIGNED DEFAULT NULL,
   plan_fase_id          INT UNSIGNED DEFAULT NULL,
+  -- Celular donde se reservó (cookie): "reservar lo de siempre" solo ve las suyas.
+  dispositivo           CHAR(32)     DEFAULT NULL,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
   FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
   FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE SET NULL,
   FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE SET NULL,
   INDEX idx_citas_sede_fecha (sede_id, fecha_hora),
+  INDEX idx_citas_dispositivo (dispositivo),
   INDEX idx_citas_plan (plan_id),
   UNIQUE KEY uniq_citas_token (token_gestion)
 ) ENGINE=InnoDB;
@@ -1128,4 +1130,5 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_30_inventario_movido.sql'),
   ('2026-10-03_31_dias_libres_empleado.sql'),
   ('2026-10-03_32_consentimientos.sql'),
-  ('2026-10-03_33_recompra_dispositivo.sql');
+  ('2026-10-03_33_recompra_dispositivo.sql'),
+  ('2026-10-03_34_dispositivo_por_pedido.sql');

@@ -23,7 +23,7 @@
           . ($ultimoServicio['empleado'] !== null ? '?empleado=' . (int) $ultimoServicio['empleado']['id'] : '');
       ?>
       <section class="pq-repetir" aria-labelledby="pq-repetir-titulo">
-        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo">Hola, <?= e($ultimoServicio['nombre']) ?>. ¿Reservas lo de siempre?</h2>
+        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo"><?= $ultimoServicio['nombre'] !== null ? 'Hola, ' . e($ultimoServicio['nombre']) . '. ' : '' ?>¿Reservas lo de siempre?</h2>
         <p class="pq-repetir-servicio">
           <?= e($ultimoServicio['servicio']['nombre']) ?><?= $ultimoServicio['empleado'] !== null ? ' con ' . e($ultimoServicio['empleado']['nombre']) : '' ?>
         </p>
@@ -31,7 +31,7 @@
           <a href="<?= e($urlRepetir) ?>" class="pq-btn pq-btn-oscuro pq-btn-chico pq-btn-alto">Reservar de nuevo</a>
           <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/olvidarme')) ?>">
             <?= csrf_campo() ?>
-            <button type="submit" class="pq-repetir-olvidar">No soy <?= e($ultimoServicio['nombre']) ?></button>
+            <button type="submit" class="pq-repetir-olvidar"><?= $ultimoServicio['nombre'] !== null ? 'No soy ' . e($ultimoServicio['nombre']) : 'Olvidar este celular' ?></button>
           </form>
         </div>
       </section>

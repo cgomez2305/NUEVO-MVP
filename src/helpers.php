@@ -155,9 +155,22 @@ function csrf_verificar(): bool
  * confiable configurado delante (no es el caso de este hosting compartido
  * típico), confiar en ellas dejaría falsificar la IP y saltarse el límite.
  */
+/**
+ * La IP del visitante. En IPv6 se usa el bloque /64 (lo que tiene una sola
+ * casa o celular): con la dirección completa, quien tiene IPv6 cambia de
+ * dirección a voluntad y se salta todos los límites de intentos.
+ */
 function ip_cliente(): string
 {
-    return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    if (str_contains($ip, ':')) {
+        $binaria = @inet_pton($ip);
+        if ($binaria !== false && strlen($binaria) === 16) {
+            return (string) inet_ntop(substr($binaria, 0, 8) . str_repeat("\0", 8)) . '/64';
+        }
+    }
+
+    return $ip;
 }
 
 function flash_set(string $clave, string $mensaje): void
@@ -670,3 +683,16 @@ function post_demasiado_grande(): bool
 
     return $bytes > 0 && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $bytes;
 }
+
+/**
+ * "tu cita de Corte de cabello", o solo "tu cita" en negocios de salud: el
+ * nombre de un procedimiento ("Endodoncia") es un dato de salud y en un
+ * WhatsApp queda en el chat y en la vista previa de la pantalla bloqueada.
+ */
+function cita_en_mensaje(string $servicio, array $sede): string
+{
+    $esSalud = ($sede['tipo_negocio'] ?? '') === 'reservas' && ($sede['rubro'] ?? 'general') === 'salud';
+
+    return $esSalud || trim($servicio) === '' ? 'tu cita' : 'tu cita de ' . $servicio;
+}
+

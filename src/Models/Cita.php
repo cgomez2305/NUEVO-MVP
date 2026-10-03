@@ -153,16 +153,16 @@ class Cita
     }
 
     /** Próximas citas (hoy en adelante), para la agenda del panel. */
-    /** La última cita que contó (no cancelada ni "no vino") del cliente en esta sede, con su profesional. */
-    public static function ultimaParaRepetir(int $clienteId, int $sedeId): ?array
+    /** La última cita que contó (no cancelada ni "no vino") reservada DESDE ESTE CELULAR en la sede, con su profesional. */
+    public static function ultimaDelDispositivo(string $dispositivo, int $sedeId): ?array
     {
         $stmt = Database::conexion()->prepare(
-            'SELECT c.servicio_id, c.empleado_id, e.nombre AS empleado_nombre FROM citas c
+            'SELECT c.cliente_id, c.servicio_id, c.empleado_id, e.nombre AS empleado_nombre FROM citas c
              LEFT JOIN empleados e ON e.id = c.empleado_id AND e.activo = 1
-             WHERE c.cliente_id = :c AND c.sede_id = :s AND ' . self::sqlCuenta('c') . '
+             WHERE c.dispositivo = :d AND c.sede_id = :s AND ' . self::sqlCuenta('c') . '
              ORDER BY c.fecha_hora DESC, c.id DESC LIMIT 1'
         );
-        $stmt->execute(['c' => $clienteId, 's' => $sedeId]);
+        $stmt->execute(['d' => $dispositivo, 's' => $sedeId]);
         $cita = $stmt->fetch();
         if ($cita === false || $cita['servicio_id'] === null) {
             return null;
@@ -173,6 +173,11 @@ class Cita
         }
 
         return $cita;
+    }
+
+    public static function marcarDispositivo(int $id, string $dispositivo): void
+    {
+        Database::conexion()->prepare('UPDATE citas SET dispositivo = :d WHERE id = :id')->execute(['d' => $dispositivo, 'id' => $id]);
     }
 
     public static function listarProximas(int $sedeId, int $limite = 100): array
@@ -249,6 +254,21 @@ class Cita
         return $stmt->fetchAll();
     }
 
+    /** El cron toma la cita para enviarle el recordatorio; false si otra ejecución ya la tomó. */
+    public static function reclamarRecordatorio(int $id): bool
+    {
+        $stmt = Database::conexion()->prepare('UPDATE citas SET recordatorio_enviado = 1 WHERE id = :id AND recordatorio_enviado = 0');
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    /** Si el envío falló, la cita vuelve a la cola para el próximo intento. */
+    public static function liberarRecordatorio(int $id): void
+    {
+        Database::conexion()->prepare('UPDATE citas SET recordatorio_enviado = 0 WHERE id = :id')->execute(['id' => $id]);
+    }
+
     public static function marcarRecordatorioEnviado(int $id, int $sedeId): void
     {
         $stmt = Database::conexion()->prepare(
@@ -270,10 +290,11 @@ class Cita
         $stmt->execute(['id' => $id, 'sede_id' => $sedeId]);
     }
 
-    public static function actualizarEstado(int $id, int $sedeId, string $estado): void
+    /** $soloSiEstaEn: cambia solo si sigue en ese estado (ver Pedido::actualizarEstado). Devuelve si cambió. */
+    public static function actualizarEstado(int $id, int $sedeId, string $estado, ?string $soloSiEstaEn = null): bool
     {
         if (!in_array($estado, self::ESTADOS, true)) {
-            return;
+            return false;
         }
         // Empezar y terminar dejan la hora real (la primera vez): de ahí sale
         // cuánto dura de verdad cada servicio (ver Imprevisto::duracionesReales).
@@ -281,14 +302,20 @@ class Cita
             "UPDATE citas SET estado = :estado,
                     iniciada_en = IF(:e1 = 'en_curso', COALESCE(iniciada_en, NOW()), iniciada_en),
                     terminada_en = IF(:e2 = 'completada' AND iniciada_en IS NOT NULL, COALESCE(terminada_en, NOW()), terminada_en)
-             WHERE id = :id AND sede_id = :sede_id"
+             WHERE id = :id AND sede_id = :sede_id" . ($soloSiEstaEn !== null ? ' AND estado = :antes' : '')
         );
-        $stmt->execute(['estado' => $estado, 'e1' => $estado, 'e2' => $estado, 'id' => $id, 'sede_id' => $sedeId]);
+        $valores = ['estado' => $estado, 'e1' => $estado, 'e2' => $estado, 'id' => $id, 'sede_id' => $sedeId];
+        if ($soloSiEstaEn !== null) {
+            $valores['antes'] = $soloSiEstaEn;
+        }
+        $stmt->execute($valores);
         // Cancelada (por el negocio o por el cliente): si se pagó con un
         // bono, la sesión vuelve al bono.
         if ($estado === 'cancelada' && $stmt->rowCount() > 0) {
             Bono::devolverPorCita($id);
         }
+
+        return $stmt->rowCount() > 0;
     }
 
     /**

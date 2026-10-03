@@ -43,6 +43,12 @@ class CajaController
         if (!csrf_verificar()) {
             redirigir('/panel/caja?fecha=' . $fecha);
         }
+        // Cerrar el día lo hace quien esté en la caja; volver a cerrar uno ya
+        // cerrado reescribe lo que se contó, y eso solo lo hace el dueño.
+        if (($negocio['rol'] ?? '') !== 'dueno' && CierreCaja::buscar((int) $negocio['id'], $fecha) !== null) {
+            flash_set('error', 'Este día ya se cerró. Solo el dueño puede volver a cerrarlo.');
+            redirigir('/panel/caja?fecha=' . $fecha);
+        }
         if (trim((string) ($_POST['efectivo_contado'] ?? '')) === '') {
             flash_set('error', 'Escribe cuánto efectivo contaste (si no hay, pon 0).');
             redirigir('/panel/caja?fecha=' . $fecha);

@@ -121,8 +121,10 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    correcto.
 
 2. **Sube los archivos.** Comprime el proyecto en tu computador
-   (`zip -r veci.zip .` en la raíz del repo, sin incluir
-   `config/config.php` si ya lo creaste) y súbelo por el Administrador
+   (`git archive -o veci.zip HEAD` en la raíz del repo: solo lo que
+   está en git, sin `.git/`, sin tu `config/config.php` ni tus fotos;
+   después borra del servidor `.claude/`, `capturas-diseno/` y `tests/`,
+   que no hacen falta para funcionar) y súbelo por el Administrador
    de archivos de cPanel (botón *Upload*, luego *Extract*), o por FTP
    con FileZilla si lo prefieres.
 
@@ -133,8 +135,11 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    - Agrega ese usuario a esa base con **todos los privilegios**.
 
 4. **Importa el esquema.** cPanel → phpMyAdmin → selecciona tu base →
-   pestaña *Import* → sube primero `database/schema.sql` y luego,
-   opcionalmente, `database/seed.sql` (los datos de demostración).
+   pestaña *Import* → sube **solo** `database/schema.sql`.
+   ⚠️ **Nunca importes `database/seed.sql` ni los `demo_*.sql` en el
+   servidor de verdad:** traen cuentas de demostración con la contraseña
+   `veci123`, que está publicada en este repositorio. Son solo para tu
+   computador.
 
 5. **Configura la app.** En el Administrador de archivos, dentro de
    `config/`, duplica `config.example.php` como `config.php` y edítalo
@@ -156,9 +161,10 @@ y MySQL — es todo lo que Veci necesita. Pasos:
    tu hosting lo exige) para que las fotos de menú se puedan guardar.
 
 8. **Pruébala:** entra a `https://app.tudominio.com/registro`, crea un
-   negocio, sube una foto de menú y publica la tienda. Si prefieres
-   partir con datos ya cargados, entra con la cuenta de demostración
-   (`3001234567` / `veci123`) si importaste `seed.sql`.
+   negocio, sube una foto de menú y publica la tienda. Para el panel
+   interno crea tu admin por consola con una contraseña larga y única
+   (`php bin/crear_admin.php "Tu nombre" tu@correo`; la pide sin que
+   quede en el historial).
 
 ### Cobro de planes con Wompi (opcional)
 

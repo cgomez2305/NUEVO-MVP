@@ -16,8 +16,16 @@ class Cliente
      * no lo retira (olvidar una casilla no es retirar un permiso). Retirarlo
      * es explícito: el enlace de preferencias del cliente o el panel.
      * $origen queda en el registro de consentimientos (pedido, reserva, panel).
+     *
+     * Un formulario público no prueba que quien escribe un número sea su
+     * dueño: a un cliente que YA existía solo se le cambia el nombre o se le
+     * da permiso de promociones si $clienteDelDispositivo dice que es él (su
+     * mismo celular ya pidió antes como ese cliente). Si no, se usa su
+     * registro tal cual: nadie le cambia el nombre ni le inventa un permiso
+     * a otro tecleando su número. Desde el panel (lo hace el negocio) se pasa
+     * $deConfianza = true.
      */
-    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos, bool $aceptaMarketing = false, string $origen = 'pedido'): int
+    public static function buscarOCrear(int $negocioId, string $nombre, string $telefono, bool $autorizoDatos, bool $aceptaMarketing = false, string $origen = 'pedido', ?int $clienteDelDispositivo = null, bool $deConfianza = false): int
     {
         $pdo = Database::conexion();
 
@@ -29,12 +37,15 @@ class Cliente
 
         if ($existente !== false) {
             $id = (int) $existente['id'];
-            $pdo->prepare('UPDATE clientes SET nombre = :nombre WHERE id = :id')->execute(['nombre' => $nombre, 'id' => $id]);
+            $esEl = $deConfianza || $clienteDelDispositivo === $id;
+            if ($esEl) {
+                $pdo->prepare('UPDATE clientes SET nombre = :nombre WHERE id = :id')->execute(['nombre' => $nombre, 'id' => $id]);
+            }
             if ($autorizoDatos && (int) $existente['autorizo_datos'] !== 1) {
                 $pdo->prepare('UPDATE clientes SET autorizo_datos = 1, autorizado_en = NOW() WHERE id = :id')->execute(['id' => $id]);
                 Consentimiento::registrar($negocioId, $id, 'datos', true, $origen);
             }
-            if ($aceptaMarketing) {
+            if ($aceptaMarketing && $esEl) {
                 Consentimiento::cambiarMarketing($negocioId, $id, true, $origen);
             }
 
@@ -88,35 +99,6 @@ class Cliente
         $stmt->execute(['id' => $id, 'n' => $negocioId]);
 
         return (string) $stmt->fetchColumn();
-    }
-
-    /** Token de la cookie "volver a pedir" de este cliente (se crea la primera vez). */
-    public static function tokenRecompra(int $id): string
-    {
-        $pdo = Database::conexion();
-        $stmt = $pdo->prepare('SELECT token_recompra FROM clientes WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        $token = $stmt->fetchColumn();
-        if (is_string($token) && $token !== '') {
-            return $token;
-        }
-        $pdo->prepare('UPDATE clientes SET token_recompra = :t WHERE id = :id AND token_recompra IS NULL')
-            ->execute(['t' => bin2hex(random_bytes(16)), 'id' => $id]);
-        $stmt->execute(['id' => $id]);
-
-        return (string) $stmt->fetchColumn();
-    }
-
-    /** El cliente de ESE negocio dueño del token (un token de otro negocio no sirve aquí). */
-    public static function buscarPorTokenRecompra(string $token, int $negocioId): ?array
-    {
-        if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
-            return null;
-        }
-        $stmt = Database::conexion()->prepare('SELECT * FROM clientes WHERE token_recompra = :t AND negocio_id = :n');
-        $stmt->execute(['t' => $token, 'n' => $negocioId]);
-
-        return $stmt->fetch() ?: null;
     }
 
     public static function buscarPorTokenPreferencias(string $token): ?array

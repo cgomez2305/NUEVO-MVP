@@ -45,7 +45,20 @@ class WebhookController
         }
         $resultado = 'ignorado';
         if (($evento['event'] ?? '') === 'transaction.updated' && is_array($evento['data']['transaction'] ?? null)) {
-            $resultado = \App\Services\Wompi::procesarTransaccion($evento['data']['transaction']);
+            $transaccion = $evento['data']['transaction'];
+            // La referencia y la moneda no van firmadas: se toman de la API
+            // usando el id (que sí va firmado, así que la transacción es de
+            // Veci). Si la API no responde, se usa el evento tal cual.
+            $consultada = \App\Services\Wompi::consultarTransaccion((string) ($transaccion['id'] ?? ''));
+            if ($consultada !== null) {
+                if ((string) ($consultada['id'] ?? '') !== (string) ($transaccion['id'] ?? '')) {
+                    http_response_code(409);
+                    echo json_encode(['error' => 'transacción no coincide']);
+                    exit;
+                }
+                $transaccion = $consultada;
+            }
+            $resultado = \App\Services\Wompi::procesarTransaccion($transaccion);
         }
         echo json_encode(['resultado' => $resultado]);
         exit;
@@ -116,8 +129,9 @@ class WebhookController
             return false; // no existe, ya se procesó (idempotencia) o pago incompleto.
         }
 
-        Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado');
-        return true;
+        // Solo si sigue pendiente ya con el pedido bloqueado: si el dueño lo
+        // canceló un instante antes, el pago no lo revive.
+        return Pedido::actualizarEstado($pedidoId, (int) $pedido['sede_id'], 'pagado', 'pendiente');
     }
 
     /** Igual que confirmarPedido: el monto tiene que cubrir el anticipo pedido (o el precio, si la cita no pide anticipo). */
@@ -137,7 +151,9 @@ class WebhookController
             return false;
         }
 
-        Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada');
+        if (!Cita::actualizarEstado($citaId, (int) $cita['sede_id'], 'confirmada', 'pendiente')) {
+            return false;
+        }
         Cita::marcarAnticipoPagado($citaId, (int) $cita['sede_id']);
         return true;
     }

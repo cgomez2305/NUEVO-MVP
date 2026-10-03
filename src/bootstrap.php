@@ -35,6 +35,11 @@ $httpsActivo = (
     || ($_SERVER['SERVER_PORT'] ?? '') === '443'
     || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
 );
+define('VECI_HTTPS', $httpsActivo);
+// Estricto: PHP no acepta un id de sesión que él no creó (evita que alguien
+// "siembre" un id conocido en el navegador de otro antes de que inicie sesión).
+ini_set('session.use_strict_mode', '1');
+header_remove('X-Powered-By');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
@@ -61,7 +66,7 @@ header(
     "Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; "
     . "style-src 'self' 'unsafe-inline'; "
     . "font-src 'self'; "
-    . "script-src 'self'; frame-ancestors 'none'"
+    . "script-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
 );
 
 date_default_timezone_set('America/Bogota');

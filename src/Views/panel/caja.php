@@ -159,6 +159,9 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
       </div>
     <?php endif; ?>
 
+    <?php if ($cerrada && ($negocio['rol'] ?? '') !== 'dueno'): ?>
+      <p class="pq-ayuda">Este día ya está cerrado. Si hay que corregirlo, lo vuelve a cerrar el dueño.</p>
+    <?php else: ?>
     <details class="pq-cierre-form-envoltura"<?= $cerrada ? '' : ' open' ?>>
       <summary class="pq-btn pq-btn-ghost"><?= $cerrada ? 'Volver a cerrar este día' : 'Cerrar caja' ?></summary>
       <form method="post" action="<?= e(base_url('/panel/caja')) ?>" class="pq-cierre-form" data-caja-form data-efectivo-vendido="<?= $efectivoVendido ?>">
@@ -192,6 +195,7 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
         <button type="submit" class="pq-btn pq-btn-sello"><?= $cerrada ? 'Guardar el nuevo cierre' : 'Cerrar caja del día' ?></button>
       </form>
     </details>
+    <?php endif; ?>
   </div>
 </div>
 

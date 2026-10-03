@@ -16,18 +16,36 @@ if (PHP_SAPI !== 'cli') {
  * necesite entrar.
  *
  * Uso:
- *   php bin/crear_admin.php "Nombre Apellido" correo@tuveci.co "contraseña"
+ *   php bin/crear_admin.php "Nombre Apellido" correo@tuveci.co
+ * La contraseña se pide por teclado (sin mostrarla): escrita como
+ * argumento quedaría en el historial de la consola y en `ps`. Para
+ * scripts se puede pasar por la entrada estándar.
  */
 
 require __DIR__ . '/../src/bootstrap.php';
 
 use App\Models\Admin;
 
-[$nombre, $correo, $password] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? ''];
+[$nombre, $correo] = [$argv[1] ?? '', $argv[2] ?? ''];
 
-if ($nombre === '' || $correo === '' || $password === '') {
-    fwrite(STDERR, "Uso: php bin/crear_admin.php \"Nombre\" correo@tuveci.co \"contraseña\"\n");
+if ($nombre === '' || $correo === '') {
+    fwrite(STDERR, "Uso: php bin/crear_admin.php \"Nombre\" correo@tuveci.co   (la contraseña se pide aparte)\n");
     exit(1);
+}
+if (isset($argv[3])) {
+    fwrite(STDERR, "Por seguridad la contraseña ya no va en la línea de comandos: se pide a continuación.\n");
+}
+
+// Sin eco si hay terminal; si viene por tubería (scripts), se lee tal cual.
+$interactivo = function_exists('posix_isatty') && posix_isatty(STDIN);
+if ($interactivo) {
+    fwrite(STDERR, 'Contraseña (no se ve al escribir): ');
+    shell_exec('stty -echo');
+}
+$password = rtrim((string) fgets(STDIN), "\r\n");
+if ($interactivo) {
+    shell_exec('stty echo');
+    fwrite(STDERR, "\n");
 }
 
 if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {

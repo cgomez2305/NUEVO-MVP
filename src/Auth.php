@@ -14,15 +14,30 @@ class Auth
      * temporalmente; usa estaBloqueado() antes de intentar el login para
      * distinguir el mensaje que le muestras al usuario.
      */
+    /** Por qué falló el último intentarLogin(): null (datos incorrectos) o 'suspendido'. */
+    public static ?string $motivoFallo = null;
+
     public static function intentarLogin(string $whatsapp, string $password): bool
     {
+        self::$motivoFallo = null;
         $usuario = Usuario::buscarPorWhatsapp($whatsapp);
-        if ($usuario === null || Usuario::bloqueado($usuario) || (int) $usuario['negocio_suspendido'] === 1) {
+        if ($usuario === null) {
+            // Mismo trabajo que con una cuenta real: por el tiempo de respuesta
+            // no se puede saber qué números tienen cuenta.
+            password_verify($password, '$2y$10$abcdefghijklmnopqrstuuJ1lYcjS8Yl2bJ0n1tq5bWm1N3oQ5rS.');
+            return false;
+        }
+        if (Usuario::bloqueado($usuario)) {
             return false;
         }
 
         if (!password_verify($password, $usuario['password_hash'])) {
             Usuario::registrarIntentoFallido((int) $usuario['id']);
+            return false;
+        }
+        // "Suspendida" solo se le dice a quien ya demostró la contraseña.
+        if ((int) $usuario['negocio_suspendido'] === 1) {
+            self::$motivoFallo = 'suspendido';
             return false;
         }
 
@@ -49,9 +64,20 @@ class Auth
         return $usuario !== null && (int) $usuario['negocio_suspendido'] === 1;
     }
 
+    /**
+     * Cierra la sesión del negocio y borra todo lo que quedó en ella
+     * (borradores del mostrador o del fiado con nombre y teléfono de
+     * clientes, cupones reservados del copiloto): en un celular compartido
+     * nada de eso debe quedarle al siguiente. Solo se conserva una sesión
+     * de admin abierta en el mismo navegador.
+     */
     public static function cerrarSesion(): void
     {
-        unset($_SESSION['usuario_id'], $_SESSION['sede_id'], $_SESSION['sesion_version']);
+        foreach (array_keys($_SESSION) as $clave) {
+            if (!str_starts_with((string) $clave, 'admin')) {
+                unset($_SESSION[$clave]);
+            }
+        }
         session_regenerate_id(true);
     }
 

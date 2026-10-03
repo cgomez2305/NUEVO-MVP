@@ -160,6 +160,11 @@ class Producto
      */
     public static function guardarComponentes(int $comboId, int $sedeId, array $cantidades): void
     {
+        // El combo tiene que ser de esta sede: sin esto, un id ajeno en la URL
+        // dejaba borrar o reescribir los combos de otro negocio.
+        if (self::buscar($comboId, $sedeId) === null) {
+            return;
+        }
         $pdo = Database::conexion();
         $validos = [];
         $porCombo = self::componentesPorCombo($sedeId);

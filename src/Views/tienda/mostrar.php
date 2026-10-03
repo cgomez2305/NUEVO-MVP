@@ -51,7 +51,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
       // WhatsApp). Solo con lo que hoy se puede pedir; el carrito ajusta el resto.
       ?>
       <section class="pq-repetir" aria-labelledby="pq-repetir-titulo">
-        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo">Hola, <?= e($repetir['nombre']) ?>. ¿Lo mismo de la vez pasada?</h2>
+        <h2 class="pq-repetir-titulo" id="pq-repetir-titulo"><?= $repetir['nombre'] !== null ? 'Hola, ' . e($repetir['nombre']) . '. ' : '' ?>¿Lo mismo de la vez pasada?</h2>
         <ul class="pq-repetir-lista">
           <?php foreach (array_slice($repetir['lineas'], 0, 4) as $linea): ?>
             <li><span class="pq-repetir-cantidad"><?= e(\App\Models\Producto::esPorPeso($linea['producto']) ? \App\Models\Producto::cantidadEnLinea($linea['producto'], (int) $linea['cantidad'], true) : (int) $linea['cantidad'] . ' ×') ?></span> <?= e($linea['producto']['nombre']) ?></li>
@@ -70,7 +70,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
           </form>
           <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/olvidarme')) ?>">
             <?= csrf_campo() ?>
-            <button type="submit" class="pq-repetir-olvidar">No soy <?= e($repetir['nombre']) ?></button>
+            <button type="submit" class="pq-repetir-olvidar"><?= $repetir['nombre'] !== null ? 'No soy ' . e($repetir['nombre']) : 'Olvidar este celular' ?></button>
           </form>
         </div>
       </section>

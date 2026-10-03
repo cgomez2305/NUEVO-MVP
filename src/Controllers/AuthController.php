@@ -58,6 +58,14 @@ class AuthController
             redirigir('/registro');
         }
 
+        // Revisar si un número o correo ya tiene cuenta cuesta un intento: así
+        // este formulario no sirve para averiguar en masa quién usa Veci.
+        if (LimiteTasa::excedido('registro_consulta', ip_cliente(), 15, 3600)) {
+            flash_set('error', 'Hiciste muchos intentos seguidos. Espera un rato e intenta de nuevo.');
+            redirigir('/registro');
+        }
+        LimiteTasa::registrar('registro_consulta', ip_cliente());
+
         if (Usuario::buscarPorWhatsapp($whatsapp) !== null) {
             flash_set('error', 'Ya existe una cuenta con ese número de WhatsApp. Inicia sesión.');
             redirigir('/login');
@@ -140,12 +148,11 @@ class AuthController
             redirigir('/login');
         }
 
-        if (Auth::estaSuspendido($whatsapp)) {
-            flash_set('error', 'Esta cuenta está suspendida. Escríbenos a soporte@tuveci.co para resolverlo.');
-            redirigir('/login');
-        }
-
         if (!Auth::intentarLogin($whatsapp, $password)) {
+            if (Auth::$motivoFallo === 'suspendido') {
+                flash_set('error', 'Esta cuenta está suspendida. Escríbenos a soporte@tuveci.co para resolverlo.');
+                redirigir('/login');
+            }
             LimiteTasa::registrar('login', $ip);
             flash_set('error', 'WhatsApp o contraseña incorrectos.');
             redirigir('/login');

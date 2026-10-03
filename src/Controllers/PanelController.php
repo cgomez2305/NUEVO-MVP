@@ -469,6 +469,9 @@ class PanelController
             // se volvieron a escribir, "2,5" kilos quedaría como 25 unidades: no
             // se guarda nada y se pide escribirlas en la unidad nueva.
             $actual = Producto::buscar($id, $sedeId);
+            if ($actual === null) {
+                redirigir('/panel/productos');
+            }
             $vendePorNuevo = ($_POST['vende_por'] ?? 'unidad') === 'peso' ? 'peso' : 'unidad';
             if ($actual !== null && $actual['stock'] !== null && $actual['combo'] === [] && $actual['vende_por'] !== $vendePorNuevo
                 && in_array(trim((string) ($_POST['stock'] ?? '')), ['', trim((string) ($_POST['stock_antes'] ?? ''))], true)) {
@@ -1052,7 +1055,7 @@ class PanelController
             redirigir('/panel/recordatorios');
         }
 
-        $mensaje = RecordatorioWhatsapp::mensajeRecordatorio($cita);
+        $mensaje = RecordatorioWhatsapp::mensajeRecordatorio($cita, $negocio);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cita['cliente_telefono']);
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($mensaje);
 
@@ -1835,14 +1838,20 @@ class PanelController
         if (!\App\Services\Wompi::disponible() || (string) ($_GET['id'] ?? '') === '') {
             redirigir('/panel/plan');
         }
+        // Aquí NO se activa nada: la API pública responde por transacciones
+        // de cualquier comercio de Wompi, así que alguien podría cobrarse a
+        // sí mismo con nuestra referencia. Solo el webhook firmado (o un
+        // admin) confirma el pago; esto solo informa cómo va.
         $transaccion = \App\Services\Wompi::consultarTransaccion((string) ($_GET['id'] ?? ''));
-        $resultado = $transaccion !== null ? \App\Services\Wompi::procesarTransaccion($transaccion) : 'pendiente';
-        match ($resultado) {
-            'confirmado', 'ya_confirmado' => flash_set('ok', '¡Pago recibido! Tu plan ya está activo.'),
-            'rechazado' => flash_set('error', 'El pago no se aprobó. Puedes intentarlo otra vez o transferir por Bre-B.'),
-            'invalido'  => flash_set('error', 'No pudimos asociar ese pago a tu solicitud. Escríbenos a soporte@tuveci.co con el comprobante.'),
-            default     => flash_set('ok', 'Estamos confirmando tu pago con Wompi: tu plan se activa solo en unos minutos.'),
-        };
+        $estado = (string) ($transaccion['status'] ?? '');
+        $pendiente = PagoPlan::pendientePorNegocio((int) $negocio['negocio_id']);
+        if ($pendiente === null && $estado === 'APPROVED') {
+            flash_set('ok', '¡Pago recibido! Tu plan ya está activo.');
+        } elseif (in_array($estado, ['DECLINED', 'VOIDED', 'ERROR'], true)) {
+            flash_set('error', 'El pago no se aprobó. Puedes intentarlo otra vez o transferir por Bre-B.');
+        } else {
+            flash_set('ok', 'Estamos confirmando tu pago con Wompi: tu plan se activa solo en unos minutos.');
+        }
         redirigir('/panel/plan');
     }
 

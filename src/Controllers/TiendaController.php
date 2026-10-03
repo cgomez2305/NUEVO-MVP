@@ -516,7 +516,7 @@ class TiendaController
             ];
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, !empty($_POST['acepta_marketing']), 'reserva');
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, true, !empty($_POST['acepta_marketing']), 'reserva', $this->clienteDelDispositivo($negocio));
         // El anticipo y el cupón son sobre el servicio, como se mostraron al
         // reservar: el transporte de la zona no entra en el porcentaje.
         $anticipo = Servicio::calcularAnticipo(['precio' => $precioTotal - $recargo] + $servicio);
@@ -615,7 +615,7 @@ class TiendaController
         if ($tarjeta !== null) {
             $resumenTexto .= "\n" . $tarjeta['texto'];
         }
-        $this->recordarCliente($negocio, $clienteId);
+        Cita::marcarDispositivo($citaId, $this->dispositivoParaGuardar($negocio));
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
@@ -952,7 +952,7 @@ class TiendaController
             }
         }
 
-        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing, 'pedido');
+        $clienteId = Cliente::buscarOCrear((int) $negocio['negocio_id'], $nombre, $telefono, $autorizo, $aceptaMarketing, 'pedido', $this->clienteDelDispositivo($negocio));
 
         // El cupón se revisa otra vez, ahora con el cliente: si es personal
         // de otro número o ya lo usó, se le devuelve al carrito explicando.
@@ -1057,7 +1057,7 @@ class TiendaController
         }
 
         $this->guardarCarrito((int) $negocio['id'], []);
-        $this->recordarCliente($negocio, $clienteId);
+        Pedido::marcarDispositivo($pedidoId, $this->dispositivoParaGuardar($negocio));
 
         $telefonoNegocio = preg_replace('/\D+/', '', (string) $negocio['whatsapp']) ?? '';
         $enlaceWhatsapp = 'https://wa.me/57' . $telefonoNegocio . '?text=' . rawurlencode($resumenTexto);
@@ -1434,35 +1434,58 @@ class TiendaController
     }
 
     /** @return array<int, int> productoId => cantidad */
-    // ---------- Volver a pedir (cliente reconocido en este celular) ----------
+    // ---------- Volver a pedir (este celular, no "este cliente") ----------
 
     private function nombreCookieCliente(array $negocio): string
     {
         return 'veci_r' . (int) $negocio['negocio_id'];
     }
 
-    /**
-     * Tras pedir o reservar, este celular recuerda al cliente (cookie con un
-     * token, 6 meses). Nunca se le reconoce por el número que alguien
-     * escriba: así nadie ve el historial de otra persona tecleando su teléfono.
-     */
-    private function recordarCliente(array $negocio, int $clienteId): void
-    {
-        setcookie($this->nombreCookieCliente($negocio), Cliente::tokenRecompra($clienteId), [
-            'expires'  => time() + 180 * 86400,
-            'path'     => '/',
-            'secure'   => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off'),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
-
-    /** El cliente recordado en este celular para este negocio, o null. */
-    private function clienteRecordado(array $negocio): ?array
+    /** El token de este celular para el negocio, si ya pidió o reservó aquí. */
+    private function dispositivoActual(array $negocio): ?string
     {
         $token = $_COOKIE[$this->nombreCookieCliente($negocio)] ?? null;
 
-        return is_string($token) ? Cliente::buscarPorTokenRecompra($token, (int) $negocio['negocio_id']) : null;
+        return is_string($token) && preg_match('/^[a-f0-9]{32}$/', $token) ? $token : null;
+    }
+
+    /**
+     * Tras pedir o reservar: el token de este celular (se crea si no hay) y
+     * se renueva la cookie 6 meses. El pedido/cita queda marcado con él, y
+     * "pedir lo mismo" solo ve lo marcado con ESTE token: teclear el número
+     * de otra persona en el checkout no da acceso a nada de ella.
+     */
+    private function dispositivoParaGuardar(array $negocio): string
+    {
+        $token = $this->dispositivoActual($negocio) ?? bin2hex(random_bytes(16));
+        setcookie($this->nombreCookieCliente($negocio), $token, [
+            'expires'  => time() + 180 * 86400,
+            'path'     => '/',
+            'secure'   => defined('VECI_HTTPS') && VECI_HTTPS,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
+        return $token;
+    }
+
+    /** El cliente que este celular ya fue (su último pedido o cita aquí), o null. */
+    private function clienteDelDispositivo(array $negocio): ?int
+    {
+        $token = $this->dispositivoActual($negocio);
+        if ($token === null) {
+            return null;
+        }
+        $stmt = \App\Database::conexion()->prepare(
+            '(SELECT p.cliente_id, p.creado_en AS fecha FROM pedidos p JOIN sedes s ON s.id = p.sede_id WHERE p.dispositivo = :d AND s.negocio_id = :n)
+             UNION ALL
+             (SELECT c.cliente_id, c.creado_en AS fecha FROM citas c JOIN sedes s ON s.id = c.sede_id WHERE c.dispositivo = :d2 AND s.negocio_id = :n2)
+             ORDER BY fecha DESC LIMIT 1'
+        );
+        $stmt->execute(['d' => $token, 'n' => (int) $negocio['negocio_id'], 'd2' => $token, 'n2' => (int) $negocio['negocio_id']]);
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? null : (int) $id;
     }
 
     /**
@@ -1473,9 +1496,9 @@ class TiendaController
      * @param array<int, array<string, mixed>> $productos los de la carta (Producto::listarPorSede)
      * @return array{lineas: array<int, array{producto: array<string, mixed>, cantidad: int}>, faltan: int}
      */
-    private function lineasParaRepetir(array $cliente, array $negocio, array $productos): array
+    private function lineasParaRepetir(string $dispositivo, array $negocio, array $productos): array
     {
-        $ultimo = Pedido::ultimoParaRepetir((int) $cliente['id'], (int) $negocio['id']);
+        $ultimo = Pedido::ultimoDelDispositivo($dispositivo, (int) $negocio['id']);
         if ($ultimo === null) {
             return ['lineas' => [], 'faltan' => 0];
         }
@@ -1504,36 +1527,54 @@ class TiendaController
         return ['lineas' => array_values($lineas), 'faltan' => $faltan];
     }
 
-    /** @return array{nombre: string, lineas: array, faltan: int}|null */
+    /** @return array{nombre: ?string, lineas: array, faltan: int}|null */
     private function propuestaRepetir(array $negocio, array $productos): ?array
     {
-        $cliente = $this->clienteRecordado($negocio);
+        $dispositivo = $this->dispositivoActual($negocio);
+        $clienteId = $dispositivo !== null ? $this->clienteDelDispositivo($negocio) : null;
+        $cliente = $clienteId !== null ? Cliente::buscar($clienteId, (int) $negocio['negocio_id']) : null;
         if ($cliente === null) {
             return null;
         }
-        $repetir = $this->lineasParaRepetir($cliente, $negocio, $productos);
+        $repetir = $this->lineasParaRepetir($dispositivo, $negocio, $productos);
         if ($repetir['lineas'] === []) {
             return null;
         }
 
-        return ['nombre' => explode(' ', trim((string) $cliente['nombre']))[0]] + $repetir;
+        return ['nombre' => $this->nombreParaSaludo($negocio, $cliente, $dispositivo)] + $repetir;
+    }
+
+    /**
+     * El nombre para "Hola, X" solo si este celular es el que creó al
+     * cliente (su primer pedido o cita salió de aquí). Si otro celular usó
+     * ese número, no se le muestra el nombre de la persona: se saluda sin él.
+     */
+    private function nombreParaSaludo(array $negocio, array $cliente, string $dispositivo): ?string
+    {
+        $stmt = \App\Database::conexion()->prepare(
+            '(SELECT p.dispositivo, p.creado_en AS fecha FROM pedidos p JOIN sedes s ON s.id = p.sede_id WHERE p.cliente_id = :c AND s.negocio_id = :n)
+             UNION ALL
+             (SELECT c.dispositivo, c.creado_en AS fecha FROM citas c JOIN sedes s ON s.id = c.sede_id WHERE c.cliente_id = :c2 AND s.negocio_id = :n2)
+             ORDER BY fecha ASC LIMIT 1'
+        );
+        $stmt->execute(['c' => (int) $cliente['id'], 'n' => (int) $negocio['negocio_id'], 'c2' => (int) $cliente['id'], 'n2' => (int) $negocio['negocio_id']]);
+
+        return $stmt->fetchColumn() === $dispositivo ? explode(' ', trim((string) $cliente['nombre']))[0] : null;
     }
 
     /** Reservas: su último servicio (si sigue disponible), para reservarlo de nuevo con la misma persona. */
     private function ultimoServicioParaRepetir(array $negocio, array $servicios): ?array
     {
-        $cliente = $this->clienteRecordado($negocio);
+        $dispositivo = $this->dispositivoActual($negocio);
+        $cita = $dispositivo !== null ? Cita::ultimaDelDispositivo($dispositivo, (int) $negocio['id']) : null;
+        $cliente = $cita !== null ? Cliente::buscar((int) $cita['cliente_id'], (int) $negocio['negocio_id']) : null;
         if ($cliente === null) {
-            return null;
-        }
-        $cita = Cita::ultimaParaRepetir((int) $cliente['id'], (int) $negocio['id']);
-        if ($cita === null) {
             return null;
         }
         foreach ($servicios as $servicio) {
             if ((int) $servicio['id'] === (int) $cita['servicio_id'] && (int) $servicio['agotado'] === 0) {
                 return [
-                    'nombre'   => explode(' ', trim((string) $cliente['nombre']))[0],
+                    'nombre'   => $this->nombreParaSaludo($negocio, $cliente, $dispositivo),
                     'servicio' => $servicio,
                     'empleado' => $cita['empleado_id'] !== null ? ['id' => (int) $cita['empleado_id'], 'nombre' => (string) ($cita['empleado_nombre'] ?? '')] : null,
                 ];
@@ -1547,11 +1588,11 @@ class TiendaController
     public function repetirPedido(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
-        $cliente = $this->clienteRecordado($negocio);
-        if (!csrf_verificar() || $cliente === null || $negocio['tipo_negocio'] === 'reservas') {
+        $dispositivo = $this->dispositivoActual($negocio);
+        if (!csrf_verificar() || $dispositivo === null || $negocio['tipo_negocio'] === 'reservas') {
             redirigir('/t/' . $negocio['slug']);
         }
-        $repetir = $this->lineasParaRepetir($cliente, $negocio, Producto::listarPorSede((int) $negocio['id'], true));
+        $repetir = $this->lineasParaRepetir($dispositivo, $negocio, Producto::listarPorSede((int) $negocio['id'], true));
         $carrito = $this->carritoDeSesion((int) $negocio['id']);
         foreach ($repetir['lineas'] as $linea) {
             $id = (int) $linea['producto']['id'];
@@ -1570,8 +1611,15 @@ class TiendaController
     public function olvidarCliente(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
-        if (csrf_verificar()) {
+        $dispositivo = $this->dispositivoActual($negocio);
+        if (csrf_verificar() && $dispositivo !== null) {
             setcookie($this->nombreCookieCliente($negocio), '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+            // Y el token deja de valer: aunque alguien lo copiara, ya no apunta a nada.
+            $pdo = \App\Database::conexion();
+            foreach (['pedidos', 'citas'] as $tabla) {
+                $pdo->prepare("UPDATE {$tabla} t JOIN sedes s ON s.id = t.sede_id SET t.dispositivo = NULL WHERE t.dispositivo = :d AND s.negocio_id = :n")
+                    ->execute(['d' => $dispositivo, 'n' => (int) $negocio['negocio_id']]);
+            }
         }
 
         redirigir('/t/' . $negocio['slug']);
@@ -1694,8 +1742,16 @@ class TiendaController
     public function aplicarCupon(array $parametros): void
     {
         $negocio = $this->negocioOAbortar($parametros['slug']);
+        // Probar códigos a ciegas: máximo 15 intentos por hora y tienda desde
+        // la misma conexión (un cliente real se equivoca un par de veces).
+        $claveTasa = ip_cliente() . '|' . (int) $negocio['id'];
+        if (csrf_verificar() && LimiteTasa::excedido('cupon', $claveTasa, 15, 3600)) {
+            flash_set('error_cupon', 'Probaste muchos códigos seguidos. Espera un rato o pregúntale el código al negocio.');
+            redirigir('/t/' . $negocio['slug'] . '/carrito');
+        }
 
         if (csrf_verificar()) {
+            LimiteTasa::registrar('cupon', $claveTasa);
             $codigo = Cupon::normalizarCodigo((string) ($_POST['cupon'] ?? ''));
             $productos = Producto::listarPorSede((int) $negocio['id'], true);
             $subtotal = $this->resumenCarrito($negocio, $productos)['subtotal'];

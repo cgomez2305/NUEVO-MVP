@@ -73,6 +73,15 @@ class Wompi
         if ($secreto === '' || !is_array($propiedades) || !is_string($checksum) || !isset($evento['timestamp'])) {
             return false;
         }
+        // Las propiedades firmadas las elige quien manda el evento: se exige
+        // que al menos el id, el estado y el monto vayan firmados (lo que
+        // Wompi firma siempre); si no, un evento viejo con otros campos
+        // cambiados pasaría por válido.
+        foreach (['transaction.id', 'transaction.status', 'transaction.amount_in_cents'] as $obligatoria) {
+            if (!in_array($obligatoria, $propiedades, true)) {
+                return false;
+            }
+        }
         $cadena = '';
         foreach ($propiedades as $ruta) {
             $valor = $evento['data'] ?? null;
@@ -112,7 +121,11 @@ class Wompi
     }
 
     /**
-     * Aplica una transacción de Wompi a su pago de plan. Devuelve
+     * Aplica una transacción de Wompi a su pago de plan. SOLO para el
+     * webhook firmado: la API pública de transacciones responde por
+     * cualquier comercio de Wompi, así que una transacción "consultada"
+     * no prueba que el pago fue a Veci (alguien podría cobrarse a sí mismo
+     * con nuestra referencia desde su propia cuenta). Devuelve
      * 'confirmado' | 'ya_confirmado' | 'pendiente' (aún no aprobada) |
      * 'rechazado' | 'invalido' (referencia o monto que no cuadran).
      */
@@ -133,7 +146,7 @@ class Wompi
         if ($estado !== 'APPROVED') {
             return 'rechazado';
         }
-        if ((int) ($transaccion['amount_in_cents'] ?? 0) !== (int) $pago['monto'] * 100 || ($transaccion['currency'] ?? 'COP') !== 'COP') {
+        if ((int) ($transaccion['amount_in_cents'] ?? 0) !== (int) $pago['monto'] * 100 || ($transaccion['currency'] ?? null) !== 'COP') {
             return 'invalido';
         }
 

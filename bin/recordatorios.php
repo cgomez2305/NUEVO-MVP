@@ -36,12 +36,21 @@ if (!RecordatorioWhatsapp::disponible()) {
 $citas = Cita::pendientesDeRecordatorioGlobal();
 $enviados = 0;
 
+$sedes = [];
 foreach ($citas as $cita) {
-    $mensaje = RecordatorioWhatsapp::mensajeRecordatorio($cita);
+    // Se "reserva" la cita antes de enviar: si dos ejecuciones del cron se
+    // cruzan, solo una le escribe al cliente (nada de recordatorios dobles).
+    if (!Cita::reclamarRecordatorio((int) $cita['id'])) {
+        continue;
+    }
+    $sede = $sedes[(int) $cita['sede_id']] ??= (\App\Models\Sede::buscarPorId((int) $cita['sede_id']) ?? []);
+    $mensaje = RecordatorioWhatsapp::mensajeRecordatorio($cita, $sede);
     $ok = RecordatorioWhatsapp::enviar($cita, (string) $cita['cliente_telefono'], $mensaje);
 
+    if (!$ok) {
+        Cita::liberarRecordatorio((int) $cita['id']);
+    }
     if ($ok) {
-        Cita::marcarRecordatorioEnviado((int) $cita['id'], (int) $cita['sede_id']);
         $enviados++;
     }
 }
