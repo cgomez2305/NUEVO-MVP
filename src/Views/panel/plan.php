@@ -25,6 +25,24 @@ $planActualNombre = $negocio['plan_nombre'] ?? 'gratis';
   <div class="pq-alerta pq-pagina-aviso"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php
+// Cuánto le devolvió el copiloto frente a lo que paga: solo si hay algo
+// real que mostrar (nunca "0 veces" ni cifras infladas).
+$precioMes = (int) ($negocio['plan_precio_mensual'] ?? 0);
+if (!empty($recuperado) && (int) $recuperado['total'] > 0):
+?>
+  <section class="pq-recuperado pq-recuperado-plan" aria-label="Lo recuperado con Veci este mes">
+    <div class="pq-recuperado-cifra">
+      <span class="pq-recuperado-etiqueta">Este mes Veci te ayudó a recuperar</span>
+      <span class="pq-recuperado-valor pq-mono"><?= pesos((int) $recuperado['total']) ?></span>
+    </div>
+    <p class="pq-ayuda pq-recuperado-explica">
+      <?= (int) $recuperado['clientes'] === 1 ? '1 cliente volvió' : (int) $recuperado['clientes'] . ' clientes volvieron' ?> después de tu mensaje del copiloto<?php if ($precioMes > 0 && (int) $recuperado['total'] >= $precioMes): ?>: <?= e(number_format((int) $recuperado['total'] / $precioMes, 1, ',', '.')) ?> veces lo que pagas al mes<?php endif; ?>.
+      <a href="<?= e(base_url('/panel/copiloto')) ?>" class="pq-enlace-suave">Ver quiénes</a>
+    </p>
+  </section>
+<?php endif; ?>
+
 <?php if ($negocio['plan_estado'] === 'degradado_a_gratis'): ?>
   <div class="pq-alerta pq-alerta-aviso pq-pagina-aviso">Tu plan pago venció sin que confirmáramos un pago nuevo, así que volviste al plan Gratis. Tu tienda nunca se bloqueó.</div>
 <?php endif; ?>

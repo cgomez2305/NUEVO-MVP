@@ -5307,3 +5307,23 @@ a.pq-franja:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px
 .pq-chip-sin-permiso { background: transparent; border: 1px dashed var(--borde); color: var(--gris-texto); }
 .pq-copiloto-permiso-nota { margin-top: calc(var(--esp-2) * -1); margin-bottom: var(--esp-4); }
 .pq-copiloto-permiso-pedido { white-space: nowrap; font-size: 12.5px; }
+
+/* ---------- Copiloto: lo recuperado con Veci (panel) ----------
+   El resultado en plata va antes que las listas: es la razón de usar el
+   copiloto. Tiquete con borde verde (el verde de la caja = plata que entró)
+   y, debajo, quién volvió con la carta de puntos guía de siempre. */
+.pq-recuperado {
+  margin: var(--esp-4) 0 var(--esp-5);
+  padding: var(--esp-4) var(--esp-5);
+  background: var(--tiquete);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--caja);
+  border-radius: var(--radio-m);
+}
+.pq-recuperado-cifra { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--esp-2) var(--esp-4); }
+.pq-recuperado-etiqueta { font-size: 13px; font-weight: 600; color: var(--gris-texto); }
+.pq-recuperado-valor { font-size: clamp(26px, 6vw, 34px); font-weight: 700; color: var(--carbon); letter-spacing: -.01em; }
+.pq-recuperado-explica { margin: var(--esp-2) 0 0; }
+.pq-recuperado-lista { list-style: none; margin: var(--esp-3) 0 0; padding: var(--esp-3) 0 0; border-top: 1px dashed var(--borde); display: grid; gap: var(--esp-1); font-size: 14px; }
+.pq-recuperado-lista li { display: flex; align-items: baseline; gap: var(--esp-2); }
+.pq-recuperado-lista li > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

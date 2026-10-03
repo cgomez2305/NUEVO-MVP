@@ -103,5 +103,5 @@ $estaAtrasado = $contexto !== null && $segmento === 'inactivo' && $contexto['fre
   <input type="hidden" name="segmento" value="<?= e($segmento) ?>">
   <input type="hidden" name="descuento" value="<?= (int) $descuento ?>">
   <button type="submit" class="pq-btn pq-btn-ghost">Ya le escribí</button>
-  <p class="pq-ayuda">Así Veci sabe si volvió a comprar después de tu mensaje.</p>
+  <p class="pq-ayuda">Al abrir WhatsApp desde aquí queda anotado solo. Si copiaste el texto, márcalo aquí: así Veci sabe si volvió a comprar.</p>
 </form>

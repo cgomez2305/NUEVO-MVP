@@ -39,6 +39,34 @@ $colorTag = ['inactivo' => 'pq-chip-pendiente', 'vip' => 'pq-chip-caja', 'nuevo'
 </div>
 <p class="pq-lead pq-pagina-bajada-panel">Veci revisa tus ventas y te dice a quién vale la pena escribirle hoy.</p>
 
+<?php
+// Lo recuperado va primero: es el resultado de usar el copiloto, en plata.
+$mesNombre = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][(int) date('n') - 1];
+?>
+<section class="pq-recuperado" aria-labelledby="pq-recuperado-titulo">
+  <div class="pq-recuperado-cifra">
+    <span class="pq-recuperado-etiqueta" id="pq-recuperado-titulo">Recuperado con Veci en <?= e($mesNombre) ?></span>
+    <span class="pq-recuperado-valor pq-mono"><?= pesos((int) $recuperado['total']) ?></span>
+  </div>
+  <p class="pq-ayuda pq-recuperado-explica">
+    <?php if ((int) $recuperado['ventas'] > 0): ?>
+      <?= (int) $recuperado['clientes'] === 1 ? '1 cliente volvió' : (int) $recuperado['clientes'] . ' clientes volvieron' ?>
+      a <?= ($negocio['tipo_negocio'] ?? '') === 'reservas' ? 'reservar' : 'comprar' ?> en los <?= \App\Models\Copiloto::DIAS_ATRIBUCION ?> días siguientes a tu mensaje<?= (int) $recuperado['contactados'] > 0 ? ' · este mes le escribiste a ' . (int) $recuperado['contactados'] : '' ?>.
+    <?php elseif ((int) $recuperado['contactados'] > 0): ?>
+      Este mes le escribiste a <?= (int) $recuperado['contactados'] ?>. Si vuelven en los <?= \App\Models\Copiloto::DIAS_ATRIBUCION ?> días siguientes, lo verás sumado aquí.
+    <?php else: ?>
+      Escríbele a alguien desde aquí: si vuelve en los <?= \App\Models\Copiloto::DIAS_ATRIBUCION ?> días siguientes, su compra se suma aquí.
+    <?php endif; ?>
+  </p>
+  <?php if ($recuperado['detalle'] !== []): ?>
+    <ul class="pq-recuperado-lista">
+      <?php foreach (array_slice($recuperado['detalle'], 0, 5) as $venta): ?>
+        <li><span><?= e($venta['nombre']) ?></span><span class="pq-plato-guia" aria-hidden="true"></span><span class="pq-mono"><?= pesos((int) $venta['monto']) ?></span></li>
+      <?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
+</section>
+
 <div class="pq-caja-dia pq-caja-dia-3" role="group" aria-label="Resumen de clientes">
   <div class="pq-caja-casilla<?= $aReactivarCount > 0 ? ' pq-caja-casilla-alerta' : '' ?>">
     <span class="pq-caja-valor"><?= (int) $aReactivarCount ?></span>

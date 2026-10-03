@@ -1100,6 +1100,7 @@ class PanelController
         ver('panel/copiloto', [
             'titulo'          => 'Copiloto de recompra · Veci',
             'sinPermiso'      => $sinPermiso,
+            'recuperado'      => Copiloto::recuperadoEsteMes($negocioId, $negocio['tipo_negocio']),
             'activo'          => 'copiloto',
             'negocio'         => $negocio,
             'lista'           => $lista,
@@ -1204,6 +1205,9 @@ class PanelController
         }
         $texto = mb_substr(trim((string) ($_POST['text'] ?? '')), 0, 700);
         $telefonoWa = preg_replace('/\D+/', '', (string) $cliente['telefono']);
+        // Abrir el chat con el mensaje ya es el contacto: así "lo que Veci
+        // ayudó a recuperar" no depende de acordarse de tocar "Ya le escribí".
+        Copiloto::registrarEnvio($negocioId, (int) $cliente['id'], $texto);
 
         header('Location: https://wa.me/57' . $telefonoWa . '?text=' . rawurlencode($texto));
         exit;
@@ -1690,6 +1694,8 @@ class PanelController
             'limiteIaMes'       => $limiteIa,
             'iaUsadaEsteMes'    => $iaUsadaEsteMes,
             'sustantivo'        => $esReservas ? 'citas' : 'pedidos',
+            // Lo que el copiloto ayudó a recuperar: la mejor razón para renovar.
+            'recuperado'        => Copiloto::disponiblePara($negocio) ? Copiloto::recuperadoEsteMes($negocioId, $negocio['tipo_negocio']) : null,
             'llaveBreb'         => config('cobro_planes.llave_breb'),
             'wompi'             => \App\Services\Wompi::disponible(),
             'ok'                => flash_obtener('ok'),
