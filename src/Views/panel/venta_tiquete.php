@@ -77,6 +77,9 @@ $puedeAnular = $negocio['rol'] === 'dueno' && Venta::anulableHoy($venta);
     <summary>Anular esta venta</summary>
     <div class="pq-detalle-mas-cuerpo">
       <p class="pq-ayuda">Devuelve los productos al inventario<?= $venta['metodo'] === 'fiado' ? ', borra el cargo de la cuenta del cliente' : '' ?> y la venta deja de contar en el cierre de caja. Solo se puede el mismo día.</p>
+      <?php if (($aFavorSiAnula ?? 0) > 0): ?>
+        <p class="pq-fiado-razon"><?= e((string) $venta['cliente_nombre']) ?> ya abonó a esta cuenta: si la anulas, queda con un saldo a favor de <?= pesos((int) $aFavorSiAnula) ?>.</p>
+      <?php endif; ?>
       <form method="post" action="<?= e(base_url('/panel/mostrador/ventas/' . (int) $venta['id'] . '/anular')) ?>" data-confirmar="¿Anular la venta #<?= (int) $venta['id'] ?> por <?= e(pesos((int) $venta['total'])) ?>? No se puede deshacer.">
         <?= csrf_campo() ?>
         <button type="submit" class="pq-boton-peligro">Anular venta</button>

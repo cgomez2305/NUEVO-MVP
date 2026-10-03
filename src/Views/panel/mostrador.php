@@ -51,6 +51,7 @@ $iconoQuitar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
      data-catalogo-url="<?= e(base_url('/panel/mostrador/catalogo')) ?>"
      data-sincronizar-url="<?= e(base_url('/panel/mostrador/carrito')) ?>"
      data-crear-url="<?= e(base_url('/panel/productos/nuevo?codigo=')) ?>"
+     data-codigos-url="<?= e(base_url('/panel/codigos/')) ?>"
      data-csrf="<?= e(csrf_token()) ?>">
   <div class="pq-mostrador-principal">
     <?php // El campo del lector: el lector USB/Bluetooth "escribe" el código y manda Enter, que agrega. ?>
@@ -223,7 +224,7 @@ $iconoQuitar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 
     <div class="pq-campo pq-mostrador-recibido" data-mostrar-si="metodo=efectivo">
       <label class="pq-label" for="mostrador-recibido">¿Con cuánto paga? <span class="pq-ayuda">(vacío = exacto)</span></label>
-      <input class="pq-input pq-mono pq-mostrador-recibido-campo" id="mostrador-recibido" type="text" inputmode="numeric" name="recibido" maxlength="12" value="<?= e((string) ($form['recibido'] ?? '')) ?>" placeholder="Exacto" data-precio data-mostrador-recibido>
+      <input class="pq-input pq-mono pq-mostrador-recibido-campo" id="mostrador-recibido" type="text" inputmode="numeric" name="recibido" maxlength="24" value="<?= e((string) ($form['recibido'] ?? '')) ?>" placeholder="Exacto" data-precio data-mostrador-recibido>
       <div class="pq-mostrador-billetes" data-mostrador-billetes hidden>
         <?php foreach ([2000, 5000, 10000, 20000, 50000, 100000] as $billete): ?>
           <button type="button" class="pq-mostrador-billete" data-billete="<?= $billete ?>"><?= pesos($billete) ?></button>
@@ -234,23 +235,36 @@ $iconoQuitar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
     <div class="pq-mostrador-fiado" data-mostrar-si="metodo=fiado">
       <div class="pq-campo">
         <label class="pq-label" for="mostrador-cliente">¿A quién le fías?</label>
+        <?php // Con muchos clientes, la lista se filtra escribiendo (JS); sin JS queda la lista entera. ?>
+        <input class="pq-input pq-mostrador-cliente-buscar" type="search" placeholder="Buscar por nombre o WhatsApp" aria-label="Buscar cliente para fiar" data-filtro-clientes="#mostrador-cliente" hidden>
         <select class="pq-select" id="mostrador-cliente" name="cliente_id">
           <option value="">Elige el cliente…</option>
           <option value="nuevo"<?= $clienteElegido === 'nuevo' ? ' selected' : '' ?>>+ Cliente nuevo</option>
           <?php foreach ($clientes as $cliente): ?>
             <?php
             $saldoCliente = (int) $cliente['saldo'];
-            $detalle = $saldoCliente > 0 ? ' · debe ' . pesos($saldoCliente) : '';
+            $detalle = $saldoCliente > 0 ? ' · debe ' . pesos($saldoCliente) : ($saldoCliente < 0 ? ' · a favor ' . pesos(-$saldoCliente) : '');
             if ($cliente['fiado_limite'] !== null) {
                 $detalle .= ' · límite ' . pesos((int) $cliente['fiado_limite']);
             }
             ?>
-            <option value="<?= (int) $cliente['id'] ?>"<?= $clienteElegido === (string) $cliente['id'] ? ' selected' : '' ?>><?= e($cliente['nombre'] . $detalle) ?></option>
+            <option value="<?= (int) $cliente['id'] ?>"<?= $clienteElegido === (string) $cliente['id'] ? ' selected' : '' ?> data-buscar="<?= e($cliente['nombre'] . ' ' . $cliente['telefono']) ?>"><?= e($cliente['nombre'] . $detalle) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
       <div class="pq-mostrador-cliente-nuevo" data-mostrar-si="cliente_id=nuevo">
         <p class="pq-label">Si es un cliente nuevo</p>
+        <p class="pq-ayuda">Si ese WhatsApp ya está guardado, se usa esa cuenta (no se duplica).</p>
+        <?php if (!empty($form['cliente_confirmar'])): ?>
+          <?php // El WhatsApp ya era de otra persona: se pregunta antes de cargarle la cuenta. ?>
+          <label class="pq-consentimiento pq-consentimiento-requerido pq-mostrador-confirmar">
+            <input type="checkbox" name="cliente_confirmado" value="<?= (int) $form['cliente_confirmar']['id'] ?>">
+            <span>
+              <span class="pq-consentimiento-titulo">Sí, es <?= e((string) $form['cliente_confirmar']['nombre']) ?>: fiarle a su cuenta</span>
+              <span class="pq-ayuda">Ese WhatsApp ya está guardado con ese nombre. Si no es la misma persona, corrige el número.</span>
+            </span>
+          </label>
+        <?php endif; ?>
         <div class="pq-campo">
           <label class="pq-label" for="mostrador-cliente-nombre">Nombre</label>
           <input class="pq-input" id="mostrador-cliente-nombre" type="text" name="cliente_nombre" maxlength="120" value="<?= e((string) ($form['cliente_nombre'] ?? '')) ?>">

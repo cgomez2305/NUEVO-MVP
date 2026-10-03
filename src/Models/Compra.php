@@ -87,7 +87,6 @@ class Compra
     public static function crear(int $sedeId, string $proveedor, array $lineas, ?int $usuarioId, string $token): int
     {
         $proveedor = mb_substr(trim($proveedor), 0, 120);
-        $lineas = array_values(array_filter($lineas, fn ($l) => $l['cantidad'] > 0));
         if ($proveedor === '') {
             throw new \DomainException('Escribe de quién es la compra (el proveedor o distribuidor).');
         }
@@ -95,6 +94,10 @@ class Compra
             throw new \DomainException('La compra está vacía: agrega al menos un producto con su cantidad.');
         }
         foreach ($lineas as $linea) {
+            // Una línea sin cantidad no se bota en silencio: se pide (o que la quiten).
+            if ($linea['cantidad'] <= 0) {
+                throw new \DomainException("Escribe cuántos llegaron de {$linea['nombre']}" . ($linea['por_peso'] ? ' (en kilos)' : '') . ', o quítalo de la compra.');
+            }
             if ($linea['costo_unitario'] <= 0) {
                 throw new \DomainException("Escribe cuánto te costó {$linea['nombre']}" . ($linea['por_peso'] ? ' (el kilo).' : ' (cada uno).'));
             }

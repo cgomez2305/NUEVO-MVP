@@ -20,6 +20,10 @@ if (isset($producto['stock']) && $producto['stock'] !== null) {
 <span class="pq-eyebrow pq-eyebrow-tras-volver"><?= $esNuevo ? 'Nuevo producto' : 'Editar producto' ?></span>
 <h1 class="pq-h1"><?= $esNuevo ? '¿Qué vas a vender?' : e($producto['nombre']) ?></h1>
 
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
+
 <form method="post"
       action="<?= e($esNuevo ? base_url('/panel/productos') : base_url('/panel/productos/' . $producto['id'] . '/actualizar')) ?>"
       enctype="multipart/form-data" class="pq-card pq-form-panel">
@@ -158,7 +162,11 @@ if (isset($producto['stock']) && $producto['stock'] !== null) {
 
   <div class="pq-campo">
     <label class="pq-label" for="stock"><span data-etiqueta-unidad="Unidades disponibles" data-etiqueta-peso="Kilos disponibles"><?= $porPeso ? 'Kilos disponibles' : 'Unidades disponibles' ?></span> <span class="pq-ayuda">(opcional)</span></label>
-    <input class="pq-input pq-mono pq-campo-unidades" type="text" inputmode="decimal" maxlength="10" id="stock" name="stock" value="<?= e($stockMostrado) ?>" placeholder="Sin contar">
+    <input class="pq-input pq-mono pq-campo-unidades" type="text" inputmode="decimal" maxlength="10" id="stock" name="stock" value="<?= e($stockMostrado) ?>" placeholder="Sin contar"
+           data-stock-original="<?= e($stockMostrado) ?>" data-vende-por-original="<?= $porPeso ? 'peso' : 'unidad' ?>">
+    <?php // Si cambia "cómo lo vendes", estas existencias ya no sirven: el servidor pide escribirlas otra vez. ?>
+    <input type="hidden" name="stock_antes" value="<?= e($stockMostrado) ?>">
+    <span class="pq-ayuda pq-producto-stock-aviso" data-stock-aviso hidden>Cambiaste cómo lo vendes: escribe otra vez cuántos hay, en la unidad nueva.</span>
     <span class="pq-ayuda">Cada venta o pedido descuenta; en 0 sale agotado solo. Vacío = no contar. Si lo vendes por peso, escribe los kilos (ej.: 2,5).</span>
   </div>
 

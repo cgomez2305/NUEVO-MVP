@@ -351,6 +351,7 @@ class PanelController
             'producto'   => $producto,
             'categorias' => Producto::categoriasPorSede((int) $negocio['id']),
             'partesPosibles' => $this->partesPosiblesDeCombo((int) $negocio['id'], (int) $producto['id']),
+            'error'      => flash_obtener('error'),
         ], 'panel');
     }
 
@@ -434,6 +435,18 @@ class PanelController
         if ($nombre !== '' && $precio > 0) {
             $id = (int) $parametros['id'];
             $sedeId = (int) $negocio['id'];
+            // Tiendas (fase 4): pasar de unidad a peso (o al revés) cambia en qué
+            // se cuenta el inventario (unidades o gramos). Si las existencias no
+            // se volvieron a escribir, "2,5" kilos quedaría como 25 unidades: no
+            // se guarda nada y se pide escribirlas en la unidad nueva.
+            $actual = Producto::buscar($id, $sedeId);
+            $vendePorNuevo = ($_POST['vende_por'] ?? 'unidad') === 'peso' ? 'peso' : 'unidad';
+            if ($actual !== null && $actual['stock'] !== null && $actual['combo'] === [] && $actual['vende_por'] !== $vendePorNuevo
+                && in_array(trim((string) ($_POST['stock'] ?? '')), ['', trim((string) ($_POST['stock_antes'] ?? ''))], true)) {
+                flash_set('error', 'Cambiaste cómo vendes «' . $actual['nombre'] . '»: vuelve a escribir cuántos hay, ahora en '
+                    . ($vendePorNuevo === 'peso' ? 'kilos' : 'unidades') . '. No se guardó ningún cambio.');
+                redirigir('/panel/productos/' . $id . '/editar#stock');
+            }
             Producto::actualizar($id, $sedeId, $nombre, $precio, $categoria, $descripcion);
             Producto::establecerAgotado($id, $sedeId, !isset($_POST['disponible']));
             Producto::establecerActivo($id, $sedeId, isset($_POST['visible']));
@@ -1691,7 +1704,11 @@ class PanelController
 
         if (csrf_verificar()) {
             $cliente = Cliente::buscar((int) $parametros['cliente'], (int) $negocio['negocio_id']);
-            if ($cliente !== null) {
+            // Tiendas (fase 4): borrarlo se llevaría su cuenta de fiado (cascada).
+            $razon = $cliente !== null ? \App\Models\Fiado::razonParaNoBorrar((int) $negocio['negocio_id'], (int) $cliente['id']) : null;
+            if ($razon !== null) {
+                flash_set('error', $cliente['nombre'] . ': ' . lcfirst($razon));
+            } elseif ($cliente !== null) {
                 Cliente::eliminar((int) $cliente['id'], (int) $negocio['negocio_id']);
                 flash_set('ok', 'Se eliminaron los datos de ' . $cliente['nombre'] . ' y todo su historial.');
             }

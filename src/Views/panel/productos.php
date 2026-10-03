@@ -104,7 +104,7 @@
                 <?php if ($oculto): ?>
                   <span class="pq-chip pq-chip-cancelado">Oculto de la tienda</span>
                 <?php elseif ($agotado): ?>
-                  <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => 'Sin unidades', 'combo' => 'Le falta una parte', default => 'Agotado' } ?></span>
+                  <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => (($producto['vende_por'] ?? '') === 'peso' && (int) $producto['stock'] > 0 ? e(\App\Models\Producto::stockLegible($producto)) . ' · menos de 1 kg' : 'Sin unidades'), 'combo' => 'Le falta una parte', default => 'Agotado' } ?></span>
                 <?php elseif ($producto['stock'] !== null): ?>
                   <span class="pq-chip <?= \App\Models\Producto::quedaPoco($producto) ? 'pq-chip-pendiente' : 'pq-chip-caja' ?>"><?= e(\App\Models\Producto::stockLegible($producto)) ?></span>
                 <?php else: ?>

@@ -15,17 +15,20 @@ class Producto
      * mano, agotado solo por hoy (agotado_hasta, se quita solo mañana) o
      * sin unidades (stock en 0). El valor guardado queda en agotado_fijo y
      * el porqué en motivo_agotado ('fijo' | 'hoy' | 'stock' | null).
+     * Por peso el stock va en gramos y en la tienda en línea se pide por
+     * kilos: con menos de 1 kg ya no alcanza para un pedido (en el
+     * mostrador sí se pueden vender esos gramos).
      */
     private const COLUMNAS = "p.*, p.agotado AS agotado_fijo,
         CASE WHEN p.agotado = 1 THEN 'fijo'
              WHEN p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE() THEN 'hoy'
-             WHEN p.stock IS NOT NULL AND p.stock <= 0 THEN 'stock'
+             WHEN p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1) THEN 'stock'
              ELSE NULL END AS motivo_agotado,
         (p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE())
-                       OR (p.stock IS NOT NULL AND p.stock <= 0)) AS agotado";
+                       OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1))) AS agotado";
 
     /** La misma regla, para filtrar en un WHERE. */
-    private const AGOTADO_SQL = "(p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE()) OR (p.stock IS NOT NULL AND p.stock <= 0))";
+    private const AGOTADO_SQL = "(p.agotado = 1 OR (p.agotado_hasta IS NOT NULL AND p.agotado_hasta >= CURDATE()) OR (p.stock IS NOT NULL AND p.stock < IF(p.vende_por = 'peso', 1000, 1)))";
 
     public static function crear(
         int $sedeId,
@@ -126,7 +129,8 @@ class Producto
             foreach ($partes as $parte) {
                 $producto['precio_separado'] += (int) $parte['precio'] * (int) $parte['cantidad'];
                 if ($parte['stock'] !== null) {
-                    $alcanzan = min($alcanzan ?? PHP_INT_MAX, intdiv(max(0, (int) $parte['stock']), max(1, (int) $parte['cantidad'])));
+                    // Una parte por peso cuenta en kilos (su stock va en gramos).
+                    $alcanzan = min($alcanzan ?? PHP_INT_MAX, intdiv((int) self::unidadesDisponibles($parte), max(1, (int) $parte['cantidad'])));
                 }
                 if ((int) $parte['agotado'] === 1 && (int) $producto['agotado'] === 0) {
                     $producto['agotado'] = 1;
@@ -167,11 +171,17 @@ class Producto
         try {
             $pdo->prepare('DELETE FROM combo_items WHERE combo_id = :c')->execute(['c' => $comboId]);
             $insertar = $pdo->prepare('INSERT INTO combo_items (combo_id, producto_id, cantidad) VALUES (:c, :p, :n)');
+            $conPartes = false;
             foreach ($cantidades as $productoId => $cantidad) {
                 $cantidad = min(20, max(0, (int) $cantidad));
                 if ($cantidad > 0 && isset($validos[(int) $productoId])) {
                     $insertar->execute(['c' => $comboId, 'p' => (int) $productoId, 'n' => $cantidad]);
+                    $conPartes = true;
                 }
+            }
+            if ($conPartes) {
+                // Un combo se vende por unidad: "por peso" no tiene sentido para él.
+                $pdo->prepare("UPDATE productos SET vende_por = 'unidad' WHERE id = :c AND sede_id = :s")->execute(['c' => $comboId, 's' => $sedeId]);
             }
             $pdo->commit();
         } catch (\Throwable $e) {
@@ -490,13 +500,16 @@ class Producto
         }
 
         $aviso = null;
+        $codigoPedido = $codigo;
         if ($codigo !== null) {
             $otro = $pdo->prepare('SELECT nombre FROM productos WHERE sede_id = :sede_id AND codigo_barras = :codigo AND id <> :id');
             $otro->execute(['sede_id' => $sedeId, 'codigo' => $codigo, 'id' => $id]);
             $nombreOtro = $otro->fetchColumn();
             if ($nombreOtro !== false) {
-                $aviso = "El código {$codigo} ya es de «{$nombreOtro}». «{$actual['nombre']}» quedó sin código.";
                 $codigo = $actual['codigo_barras'] !== null && $actual['codigo_barras'] !== $codigo ? (string) $actual['codigo_barras'] : null;
+                // El aviso dice lo que de verdad quedó: su código de antes, o ninguno.
+                $aviso = "El código " . (string) $codigoPedido . " ya es de «{$nombreOtro}». «{$actual['nombre']}» "
+                    . ($codigo !== null ? "sigue con su código de antes ({$codigo})." : 'quedó sin código.');
             }
         }
 
@@ -513,10 +526,12 @@ class Producto
             if ((string) $e->getCode() !== '23000') {
                 throw $e;
             }
+            // Lo demás sí se guarda; el código queda como estaba.
             $pdo->prepare('UPDATE productos SET costo = :costo, vende_por = :vende_por WHERE id = :id AND sede_id = :sede_id')
                 ->execute(['costo' => $costo !== null ? max(0, $costo) : null, 'vende_por' => $vendePor, 'id' => $id, 'sede_id' => $sedeId]);
 
-            return "El código {$codigo} ya es de otro producto. «{$actual['nombre']}» quedó sin código.";
+            return "El código {$codigo} ya es de otro producto. «{$actual['nombre']}» "
+                . ($actual['codigo_barras'] !== null ? "sigue con su código de antes ({$actual['codigo_barras']})." : 'quedó sin código.');
         }
 
         if ($codigo !== null && $codigo !== $actual['codigo_barras']) {
@@ -534,10 +549,16 @@ class Producto
      * Lo usan los pedidos de la tienda (donde 1 de un producto por peso es
      * 1 kg) y la venta de mostrador.
      *
+     * $porPesoCopiado: producto_id => si iba por peso CUANDO se vendió
+     * (venta_items.por_peso, pedido_items.por_peso). Al anular o cancelar se
+     * devuelve en esa unidad aunque hoy el producto se venda distinto; sin
+     * él (al vender) manda lo que el producto dice hoy.
+     *
      * @param array<int, int|float> $cantidades
+     * @param array<int, bool> $porPesoCopiado
      * @return array<int, int>
      */
-    public static function demandaDeStock(\PDO $pdo, array $cantidades): array
+    public static function demandaDeStock(\PDO $pdo, array $cantidades, array $porPesoCopiado = []): array
     {
         $demanda = [];
         if ($cantidades === []) {
@@ -546,23 +567,28 @@ class Producto
         $marcas = implode(',', array_fill(0, count($cantidades), '?'));
         $stmt = $pdo->prepare("SELECT combo_id, producto_id, cantidad FROM combo_items WHERE combo_id IN ({$marcas})");
         $stmt->execute(array_keys($cantidades));
-        $enVenta = $cantidades;
+        $partes = [];
         foreach ($stmt->fetchAll() as $parte) {
             $parteId = (int) $parte['producto_id'];
-            $enVenta[$parteId] = ($enVenta[$parteId] ?? 0) + (int) $parte['cantidad'] * $cantidades[(int) $parte['combo_id']];
+            $partes[$parteId] = ($partes[$parteId] ?? 0) + (int) $parte['cantidad'] * $cantidades[(int) $parte['combo_id']];
         }
 
-        $marcas = implode(',', array_fill(0, count($enVenta), '?'));
+        $ids = array_unique(array_merge(array_keys($cantidades), array_keys($partes)));
+        $marcas = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $pdo->prepare("SELECT id, vende_por FROM productos WHERE id IN ({$marcas})");
-        $stmt->execute(array_keys($enVenta));
+        $stmt->execute(array_values($ids));
         $porPeso = [];
         foreach ($stmt->fetchAll() as $fila) {
             $porPeso[(int) $fila['id']] = $fila['vende_por'] === 'peso';
         }
-        foreach ($enVenta as $productoId => $cantidad) {
-            $demanda[(int) $productoId] = !empty($porPeso[(int) $productoId])
-                ? (int) round((float) $cantidad * self::GRAMOS_POR_KILO)
-                : (int) round((float) $cantidad);
+        $aStock = static fn (float $cantidad, bool $peso): int => $peso ? (int) round($cantidad * self::GRAMOS_POR_KILO) : (int) round($cantidad);
+        foreach ($cantidades as $productoId => $cantidad) {
+            $peso = $porPesoCopiado[(int) $productoId] ?? !empty($porPeso[(int) $productoId]);
+            $demanda[(int) $productoId] = ($demanda[(int) $productoId] ?? 0) + $aStock((float) $cantidad, $peso);
+        }
+        // Las partes de un combo se cuentan en la unidad que tienen hoy.
+        foreach ($partes as $productoId => $cantidad) {
+            $demanda[$productoId] = ($demanda[$productoId] ?? 0) + $aStock((float) $cantidad, !empty($porPeso[$productoId]));
         }
         ksort($demanda);
 
@@ -610,6 +636,21 @@ class Producto
         $stock = (int) $producto['stock'];
 
         return ($producto['vende_por'] ?? 'unidad') === 'peso' ? self::gramosLegibles($stock) : (string) $stock;
+    }
+
+    /**
+     * Lo que se puede pedir en la tienda en línea: unidades, o kilos enteros
+     * si va por peso (el stock está en gramos: 2.500 g = 2 kg pedibles).
+     * null = no se lleva inventario.
+     */
+    public static function unidadesDisponibles(array $producto): ?int
+    {
+        if (!isset($producto['stock']) || $producto['stock'] === null) {
+            return null;
+        }
+        $stock = max(0, (int) $producto['stock']);
+
+        return ($producto['vende_por'] ?? 'unidad') === 'peso' ? intdiv($stock, self::GRAMOS_POR_KILO) : $stock;
     }
 
     /** Pocas existencias: 5 unidades, o medio kilo si va por peso. */
@@ -665,7 +706,6 @@ class Producto
                 'id'      => (int) $p['id'],
                 'nombre'  => (string) $p['nombre'],
                 'precio'  => (int) $p['precio'],
-                'costo'   => $p['costo'] !== null ? (int) $p['costo'] : null,
                 'codigo'  => $p['codigo_barras'],
                 'peso'    => $p['vende_por'] === 'peso',
                 'stock'   => $p['stock'] !== null ? (int) $p['stock'] : null,

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\Cliente;
+use App\Models\ClienteDeOtroNombre;
 use App\Models\CodigoBarras;
 use App\Models\Fiado;
 use App\Models\Producto;
@@ -188,9 +189,8 @@ class MostradorController
     {
         $negocio = $this->exigirPedidos();
         if (csrf_verificar()) {
-            $carrito = $this->carrito((int) $negocio['id']);
-            $carrito['cantidades'] = [];
-            $this->guardarCarrito((int) $negocio['id'], $carrito);
+            // Token nuevo también: un formulario de cobro viejo no cobra lo que ya no está.
+            $this->guardarCarrito((int) $negocio['id'], ['cantidades' => [], 'token' => Venta::tokenNuevo()]);
         }
         redirigir('/panel/mostrador');
     }
@@ -206,34 +206,32 @@ class MostradorController
         }
         $carrito = $this->carrito($sedeId);
         $tokenEnviado = (string) ($_POST['token'] ?? '');
-
-        // Doble toque o reintento: si ese token ya hizo una venta, se muestra
-        // esa venta en vez de cobrar otra vez.
-        if (!hash_equals($carrito['token'], $tokenEnviado)) {
-            $yaHecha = Venta::buscarPorToken($tokenEnviado, $sedeId);
-            $enviadas = Venta::armarLineas($sedeId, Venta::cantidadesValidas(is_array($_POST['items'] ?? null) ? $_POST['items'] : []));
-            // Mismo token y mismo total: es el mismo formulario que llegó dos veces.
-            if ($yaHecha !== null && (int) $yaHecha['total'] === array_sum(array_column($enviadas, 'subtotal'))) {
-                flash_set('ok', 'Esa venta ya estaba registrada: no se cobró dos veces.');
-                redirigir('/panel/mostrador?venta=' . (int) $yaHecha['id']);
-            }
-            // Otra pestaña ya usó este formulario: lo que se iba a cobrar queda
-            // en el tiquete para revisarlo, sin cobrar nada todavía.
-            if ($enviadas !== []) {
-                $carrito['cantidades'] = $this->soloDeLaSede($sedeId, $_POST['items']);
-                $this->guardarCarrito($sedeId, $carrito);
-            }
-            flash_set('error', 'El tiquete cambió en otra pestaña. Revísalo y cobra otra vez: no se cobró nada.');
-            redirigir('/panel/mostrador');
-        }
+        $enviados = is_array($_POST['items'] ?? null) ? $_POST['items'] : [];
 
         // Las líneas que llegan del formulario son las que la persona vio.
         // items_presentes va siempre: un tiquete vaciado en el navegador llega
         // sin items y NO debe cobrar lo que quedaba en la sesión.
         if (isset($_POST['items_presentes'])) {
-            $carrito['cantidades'] = $this->soloDeLaSede($sedeId, is_array($_POST['items'] ?? null) ? $_POST['items'] : []);
+            $carrito['cantidades'] = $this->soloDeLaSede($sedeId, $enviados);
             $this->guardarCarrito($sedeId, $carrito);
         }
+
+        // El token del formulario es la llave contra el doble cobro. Si ya hizo
+        // una venta con estos mismos productos y cantidades, es el mismo
+        // formulario que llegó dos veces: se muestra esa venta. Si la venta de
+        // ese token es otra (otra pestaña, formulario viejo), esta es una venta
+        // nueva y va con un token nuevo: no se pierde por tener el mismo total.
+        $token = preg_match('/^[0-9a-f]{32}$/', $tokenEnviado) === 1 ? $tokenEnviado : Venta::tokenNuevo();
+        $yaHecha = Venta::buscarPorToken($token, $sedeId);
+        if ($yaHecha !== null) {
+            if (Venta::mismasLineas((int) $yaHecha['id'], $enviados)) {
+                $this->despuesDeVender($sedeId);
+                flash_set('ok', 'Esa venta ya estaba registrada: no se cobró dos veces.');
+                redirigir('/panel/mostrador?venta=' . (int) $yaHecha['id']);
+            }
+            $token = Venta::tokenNuevo();
+        }
+
         $lineas = Venta::armarLineas($sedeId, $carrito['cantidades']);
         $metodo = (string) ($_POST['metodo'] ?? '');
         $textoRecibido = trim((string) ($_POST['recibido'] ?? ''));
@@ -245,28 +243,64 @@ class MostradorController
             'cliente_telefono' => mb_substr((string) ($_POST['cliente_telefono'] ?? ''), 0, 20),
         ];
 
-        try {
-            $clienteId = null;
-            if ($metodo === 'fiado') {
-                $elegido = (string) ($_POST['cliente_id'] ?? '');
-                if ($elegido === 'nuevo') {
-                    $clienteId = Fiado::clienteParaFiar($negocioId, (string) ($_POST['cliente_nombre'] ?? ''), (string) ($_POST['cliente_telefono'] ?? ''), isset($_POST['cliente_autorizo']));
-                    $_SESSION['mostrador_form']['cliente_id'] = (string) $clienteId;
-                } elseif (ctype_digit($elegido) && Cliente::buscar((int) $elegido, $negocioId) !== null) {
-                    $clienteId = (int) $elegido;
-                }
+        $clienteId = null;
+        $clienteNuevo = null;
+        if ($metodo === 'fiado') {
+            $elegido = (string) ($_POST['cliente_id'] ?? '');
+            if ($elegido === 'nuevo') {
+                // Se crea (o se reconoce) dentro de la transacción de la venta.
+                $clienteNuevo = [
+                    'nombre'     => (string) ($_POST['cliente_nombre'] ?? ''),
+                    'telefono'   => (string) ($_POST['cliente_telefono'] ?? ''),
+                    'autorizo'   => isset($_POST['cliente_autorizo']),
+                    'confirmado' => ctype_digit((string) ($_POST['cliente_confirmado'] ?? '')) ? (int) $_POST['cliente_confirmado'] : null,
+                ];
+            } elseif (ctype_digit($elegido) && Cliente::buscar((int) $elegido, $negocioId) !== null) {
+                $clienteId = (int) $elegido;
             }
-            $ventaId = Venta::crear($sedeId, $negocioId, $lineas, $metodo, $recibido, $clienteId, (int) $negocio['usuario_id'], $carrito['token']);
+        }
+
+        try {
+            $ventaId = Venta::crear($sedeId, $negocioId, $lineas, $metodo, $recibido, $clienteId, (int) $negocio['usuario_id'], $token, $clienteNuevo);
         } catch (VentaDuplicada $e) {
+            $this->despuesDeVender($sedeId);
+            if ($e->ventaId === null) {
+                flash_set('error', 'No pudimos confirmar la venta. Revisa "Ventas de hoy" antes de cobrar otra vez.');
+                redirigir('/panel/mostrador#ventas-hoy');
+            }
+            flash_set('ok', 'Esa venta ya estaba registrada: no se cobró dos veces.');
             redirigir('/panel/mostrador?venta=' . $e->ventaId);
+        } catch (ClienteDeOtroNombre $e) {
+            // Se pregunta: ese WhatsApp ya es de otra persona guardada.
+            $_SESSION['mostrador_form']['cliente_confirmar'] = ['id' => $e->clienteId, 'nombre' => $e->nombre];
+            flash_set('error', $e->getMessage());
+            redirigir('/panel/mostrador#cobrar');
         } catch (\DomainException $e) {
             flash_set('error', $e->getMessage());
             redirigir('/panel/mostrador#cobrar');
         }
 
         unset($_SESSION['mostrador_form']);
-        $this->guardarCarrito($sedeId, ['cantidades' => [], 'token' => Venta::tokenNuevo()]);
+        $this->despuesDeVender($sedeId);
+        if ($metodo === 'fiado') {
+            // Si tenía saldo a favor (abonó y luego se anuló una venta), esta
+            // venta lo usa primero: se dice, no pasa en silencio.
+            $venta = Venta::buscar($ventaId, $sedeId);
+            $saldo = Fiado::saldo($negocioId, (int) $venta['cliente_id']);
+            $antes = $saldo - (int) $venta['total'];
+            if ($antes < 0) {
+                flash_set('ok', 'Se usó su saldo a favor de ' . pesos(min(-$antes, (int) $venta['total'])) . '. '
+                    . ($saldo > 0 ? 'Ahora debe ' . pesos($saldo) . '.' : ($saldo < 0 ? 'Le quedan ' . pesos(-$saldo) . ' a favor.' : 'Queda a paz y salvo.')));
+            }
+        }
         redirigir('/panel/mostrador?venta=' . $ventaId);
+    }
+
+    /** Tiquete vacío y token nuevo: el formulario viejo ya no puede cobrar otra vez. */
+    private function despuesDeVender(int $sedeId): void
+    {
+        unset($_SESSION['mostrador_form']);
+        $this->guardarCarrito($sedeId, ['cantidades' => [], 'token' => Venta::tokenNuevo()]);
     }
 
     public function tiquete(array $parametros): void
@@ -278,7 +312,14 @@ class MostradorController
             redirigir('/panel/mostrador');
         }
 
+        // Si se anula una venta fiada a la que ya abonó, queda saldo a favor: se avisa antes.
+        $aFavorSiAnula = 0;
+        if ($venta['metodo'] === 'fiado' && (int) $venta['anulada'] === 0 && $venta['cliente_id'] !== null) {
+            $aFavorSiAnula = max(0, (int) $venta['total'] - Fiado::saldo((int) $negocio['negocio_id'], (int) $venta['cliente_id']));
+        }
+
         ver('panel/venta_tiquete', [
+            'aFavorSiAnula' => $aFavorSiAnula,
             'titulo'  => 'Venta #' . (int) $venta['id'] . ' · Veci',
             'activo'  => 'mostrador',
             'negocio' => $negocio,
@@ -300,6 +341,15 @@ class MostradorController
         try {
             Venta::anular($id, (int) $negocio['id'], (int) $negocio['usuario_id']);
             flash_set('ok', 'Venta anulada: el inventario volvió y ya no cuenta en la caja.');
+            $venta = Venta::buscar($id, (int) $negocio['id']);
+            if ($venta !== null && $venta['metodo'] === 'fiado' && $venta['cliente_id'] !== null) {
+                $saldo = Fiado::saldo((int) $negocio['negocio_id'], (int) $venta['cliente_id']);
+                if ($saldo < 0) {
+                    // Ya había abonado a esa venta: la plata queda a su favor, a la vista.
+                    flash_set('error', 'Ojo: ' . $venta['cliente_nombre'] . ' ya había abonado, así que queda con un saldo a favor de ' . pesos(-$saldo)
+                        . '. Su próxima compra fiada lo usa primero, o devuélveselo y anota un cargo a mano.');
+                }
+            }
         } catch (\DomainException $e) {
             flash_set('error', $e->getMessage());
         }

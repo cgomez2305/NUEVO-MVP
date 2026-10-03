@@ -35,7 +35,7 @@ class Fiado
         return (int) $stmt->fetchColumn();
     }
 
-    /** Lo que le deben al negocio en total (solo saldos a favor del negocio). */
+    /** Lo que le deben al negocio en total (sin restar los saldos a favor de los clientes). */
     public static function totalPorCobrar(int $negocioId): int
     {
         return array_sum(array_map(fn ($c) => max(0, (int) $c['saldo']), self::clientesConSaldo($negocioId)));
@@ -58,7 +58,7 @@ class Fiado
              FROM clientes c JOIN fiado_movimientos m ON m.cliente_id = c.id AND m.negocio_id = c.negocio_id
              WHERE c.negocio_id = :n
              GROUP BY c.id, c.nombre, c.telefono, c.fiado_limite
-             HAVING saldo > 0'
+             HAVING saldo <> 0'
         );
         $stmt->execute(['n' => $negocioId]);
         $clientes = $stmt->fetchAll();
@@ -198,6 +198,72 @@ class Fiado
         }
     }
 
+    /**
+     * Anula un abono o un cargo a mano (solo el dueño, lo revisa quien llama).
+     * Un abono en efectivo solo el mismo día: ya está contado en la caja y
+     * anularlo después descuadraría un cierre cerrado. El cargo de una venta
+     * no se anula aquí: se anula la venta (devuelve el inventario).
+     */
+    public static function anularMovimiento(int $negocioId, int $clienteId, int $movimientoId): array
+    {
+        $pdo = Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM fiado_movimientos WHERE id = :id AND negocio_id = :n AND cliente_id = :c FOR UPDATE');
+            $stmt->execute(['id' => $movimientoId, 'n' => $negocioId, 'c' => $clienteId]);
+            $mov = $stmt->fetch();
+            if ($mov === false) {
+                throw new \DomainException('Ese movimiento no es de esta cuenta.');
+            }
+            if ((int) $mov['anulado'] === 1) {
+                throw new \DomainException('Ese movimiento ya estaba anulado.');
+            }
+            if ($mov['venta_id'] !== null) {
+                throw new \DomainException('Ese cargo es de una venta del mostrador: anula la venta (así también vuelve el inventario).');
+            }
+            if ($mov['tipo'] === 'abono' && $mov['metodo'] === 'efectivo' && substr((string) $mov['creado_en'], 0, 10) !== date('Y-m-d')) {
+                throw new \DomainException('Un abono en efectivo solo se anula el mismo día: ya está contado en el cierre de caja de ese día.');
+            }
+            $pdo->prepare('UPDATE fiado_movimientos SET anulado = 1 WHERE id = :id')->execute(['id' => $movimientoId]);
+            $pdo->commit();
+
+            return $mov;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /** ¿Se puede anular desde el cuaderno? (Misma regla que anularMovimiento, para pintar el botón.) */
+    public static function anulable(array $mov): bool
+    {
+        return (int) $mov['anulado'] === 0 && $mov['venta_id'] === null
+            && !($mov['tipo'] === 'abono' && $mov['metodo'] === 'efectivo' && substr((string) $mov['creado_en'], 0, 10) !== date('Y-m-d'));
+    }
+
+    /**
+     * ¿Se puede borrar el cliente (Ley 1581, desde el Copiloto)? No mientras
+     * tenga saldo en el cuaderno (a favor o en contra) ni movimientos de hoy:
+     * borrarlo se llevaría su cuenta y descuadraría la caja del día.
+     */
+    public static function razonParaNoBorrar(int $negocioId, int $clienteId): ?string
+    {
+        $saldo = self::saldo($negocioId, $clienteId);
+        if ($saldo > 0) {
+            return 'No se puede borrar: debe ' . pesos($saldo) . ' en el fiado. Cuando quede a paz y salvo, sí.';
+        }
+        if ($saldo < 0) {
+            return 'No se puede borrar: tiene un saldo a favor de ' . pesos(-$saldo) . ' en el fiado. Devuélveselo o úsalo primero.';
+        }
+        $stmt = Database::conexion()->prepare('SELECT COUNT(*) FROM fiado_movimientos WHERE negocio_id = :n AND cliente_id = :c AND creado_en >= CURDATE()');
+        $stmt->execute(['n' => $negocioId, 'c' => $clienteId]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return 'No se puede borrar hoy: tiene movimientos de fiado de hoy que cuentan en el cierre de caja. Mañana sí.';
+        }
+
+        return null;
+    }
+
     public static function establecerLimite(int $negocioId, int $clienteId, ?int $limite): void
     {
         Database::conexion()->prepare('UPDATE clientes SET fiado_limite = :l WHERE id = :c AND negocio_id = :n')
@@ -205,13 +271,21 @@ class Fiado
     }
 
     /**
-     * El cliente con ese WhatsApp, o uno nuevo. A un cliente que ya existe no
-     * se le cambia nada (ni el nombre ni sus autorizaciones de la tienda).
-     * Solo se crea si autorizó guardar sus datos (Ley 1581 de 2012).
+     * El cliente al que se le va a fiar, DENTRO de la transacción de quien
+     * llama (la venta o el alta en el cuaderno): si algo falla después, el
+     * cliente nuevo tampoco queda creado.
+     *
+     * - Si el WhatsApp ya es de un cliente con el mismo nombre (o el mismo
+     *   primer nombre), es él: no se le cambia nada.
+     * - Si es de alguien guardado con otro nombre, no se usa en silencio:
+     *   lanza ClienteDeOtroNombre, salvo que ya se haya confirmado ese id.
+     * - Si no existe, se crea solo con la autorización (Ley 1581 de 2012).
+     *
+     * @return array{id: int, nuevo: bool, nombre: string}
      */
-    public static function clienteParaFiar(int $negocioId, string $nombre, string $telefono, bool $autorizo): int
+    public static function resolverCliente(\PDO $pdo, int $negocioId, string $nombre, string $telefono, bool $autorizo, ?int $confirmadoId = null): array
     {
-        $nombre = mb_substr(trim($nombre), 0, 120);
+        $nombre = mb_substr(trim((string) preg_replace('/\s+/u', ' ', $nombre)), 0, 120);
         $telefono = self::telefonoValido($telefono);
         if ($nombre === '') {
             throw new \DomainException('Escribe el nombre del cliente.');
@@ -219,12 +293,14 @@ class Fiado
         if ($telefono === null) {
             throw new \DomainException('Escribe un WhatsApp de 10 dígitos que empiece por 3.');
         }
-        $pdo = Database::conexion();
-        $stmt = $pdo->prepare('SELECT id FROM clientes WHERE negocio_id = :n AND telefono = :t');
+        $stmt = $pdo->prepare('SELECT id, nombre FROM clientes WHERE negocio_id = :n AND telefono = :t FOR UPDATE');
         $stmt->execute(['n' => $negocioId, 't' => $telefono]);
-        $id = $stmt->fetchColumn();
-        if ($id !== false) {
-            return (int) $id;
+        $existente = $stmt->fetch();
+        if ($existente !== false) {
+            if ($confirmadoId === (int) $existente['id'] || self::mismaPersona($nombre, (string) $existente['nombre'])) {
+                return ['id' => (int) $existente['id'], 'nuevo' => false, 'nombre' => (string) $existente['nombre']];
+            }
+            throw new ClienteDeOtroNombre((int) $existente['id'], (string) $existente['nombre']);
         }
         if (!$autorizo) {
             throw new \DomainException('Marca que el cliente autorizó guardar su nombre y número (Ley 1581): sin eso no se puede crear.');
@@ -234,7 +310,63 @@ class Fiado
              VALUES (:n, :nombre, :t, 1, NOW(), 0)'
         )->execute(['n' => $negocioId, 'nombre' => $nombre, 't' => $telefono]);
 
-        return (int) $pdo->lastInsertId();
+        return ['id' => (int) $pdo->lastInsertId(), 'nuevo' => true, 'nombre' => $nombre];
+    }
+
+    /** "Rosa" y "Rosa Elvira Pinzón" son la misma; "Rosa" y "Carlos", no. Sin tildes ni mayúsculas. */
+    public static function mismaPersona(string $a, string $b): bool
+    {
+        $limpio = static function (string $t): string {
+            $t = mb_strtolower(trim($t));
+            $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+
+            return (string) preg_replace('/[^a-z0-9 ]+/', '', $t);
+        };
+        $a = $limpio($a);
+        $b = $limpio($b);
+        if ($a === '' || $b === '') {
+            return false;
+        }
+
+        return $a === $b || explode(' ', $a)[0] === explode(' ', $b)[0];
+    }
+
+    /**
+     * Alta de un cliente desde el cuaderno, con lo que ya debía en papel y su
+     * límite, todo junto (o nada). Si el WhatsApp ya es de alguien, NO se le
+     * carga ni se le cambia el límite: se devuelve su cuenta para revisarla.
+     *
+     * @return array{id: int, nuevo: bool, nombre: string}
+     */
+    public static function crearCuenta(int $negocioId, int $sedeId, string $nombre, string $telefono, bool $autorizo, int $saldoInicial, ?int $limite, ?int $usuarioId): array
+    {
+        $pdo = Database::conexion();
+        $pdo->beginTransaction();
+        try {
+            try {
+                $cliente = self::resolverCliente($pdo, $negocioId, $nombre, $telefono, $autorizo);
+            } catch (ClienteDeOtroNombre $e) {
+                $cliente = ['id' => $e->clienteId, 'nuevo' => false, 'nombre' => $e->nombre];
+            }
+            if ($cliente['nuevo']) {
+                if ($saldoInicial > 0) {
+                    $pdo->prepare(
+                        "INSERT INTO fiado_movimientos (negocio_id, sede_id, cliente_id, tipo, monto, nota, usuario_id)
+                         VALUES (:n, :s, :c, 'cargo', :m, 'Lo que debía en el cuaderno', :u)"
+                    )->execute(['n' => $negocioId, 's' => $sedeId, 'c' => $cliente['id'], 'm' => $saldoInicial, 'u' => $usuarioId]);
+                }
+                if ($limite !== null) {
+                    $pdo->prepare('UPDATE clientes SET fiado_limite = :l WHERE id = :c AND negocio_id = :n')
+                        ->execute(['l' => max(0, $limite), 'c' => $cliente['id'], 'n' => $negocioId]);
+                }
+            }
+            $pdo->commit();
+
+            return $cliente;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     /** Celular colombiano de 10 dígitos que empieza por 3 (acepta +57, espacios y guiones). */

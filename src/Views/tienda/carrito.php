@@ -53,8 +53,8 @@
                     <?= csrf_campo() ?>
                     <input type="hidden" name="producto_id" value="<?= $id ?>">
                     <input type="hidden" name="volver" value="carrito">
-                    <?php $enTope = $producto['stock'] !== null && $linea['cantidad'] >= (int) $producto['stock']; ?>
-                    <button type="submit" class="pq-stepper-boton" aria-label="Agregar una unidad de <?= e($producto['nombre']) ?>"<?= $enTope ? ' disabled title="No hay más unidades"' : '' ?> data-tope="<?= $producto['stock'] !== null ? (int) $producto['stock'] : '' ?>">
+                    <?php $hay = \App\Models\Producto::unidadesDisponibles($producto); $enTope = $hay !== null && $linea['cantidad'] >= $hay; ?>
+                    <button type="submit" class="pq-stepper-boton" aria-label="Agregar una unidad de <?= e($producto['nombre']) ?>"<?= $enTope ? ' disabled title="No hay más unidades"' : '' ?> data-tope="<?= $hay !== null ? $hay : '' ?>">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                     </button>
                   </form>
