@@ -1145,7 +1145,41 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
 .demo-admin-chip.pendiente{background:#FDF1DA;color:#8a5a00}
 .demo-admin-chip.en_cocina,.demo-admin-chip.en_camino{background:#EAF0FE;color:#2540a8}
 
+/* pestañas del panel de la demo: Panel/Pedidos/Copiloto/Menú (o
+   Agenda/Servicios/Horario en los negocios de reservas) ya cambian de
+   contenido de verdad al hacer clic, no son solo rótulos decorativos. */
+.demo-admin-nav span{cursor:pointer}
+.demo-admin-vista{display:none}
+.demo-admin-vista.activo{display:block;animation:entrada .3s ease both}
+
+.demo-admin-kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.demo-admin-kanban-col h5{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--da-gris-texto);margin:0 0 8px}
+.demo-admin-kanban-card{background:var(--da-tiquete);border:1px solid var(--da-recibo);border-radius:10px;padding:10px 11px;margin-bottom:8px;animation:productoEntra .35s ease both;animation-delay:calc(var(--i, 0) * 60ms)}
+.demo-admin-kanban-card .nombre{font-size:12px;font-weight:600;color:var(--da-carbon);display:block;margin-bottom:2px}
+.demo-admin-kanban-card .meta{font-size:10.5px;color:var(--da-gris-texto);display:block}
+.demo-admin-kanban-card .precio{font-family:var(--fuente-texto);font-variant-numeric:tabular-nums;font-size:11.5px;font-weight:600;color:var(--da-sello);display:block;margin-top:5px}
+
+.demo-admin-copiloto-row{display:flex;align-items:center;gap:11px;background:var(--da-tiquete);border:1px solid var(--da-recibo);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+.demo-admin-copiloto-row .av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.demo-admin-copiloto-row .info{flex-grow:1;min-width:0}
+.demo-admin-copiloto-row .nombre{font-size:13px;font-weight:600;color:var(--da-carbon);display:block}
+.demo-admin-copiloto-row .motivo{font-size:11px;color:var(--da-aji);display:block}
+.demo-admin-copiloto-row .btn-mini{background:var(--da-sello);color:#fff;font-size:11px;font-weight:600;padding:7px 12px;border-radius:999px;border:none;cursor:pointer;flex-shrink:0}
+
+.demo-admin-menu-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 2px;border-bottom:1px solid var(--da-recibo)}
+.demo-admin-menu-row:last-child{border-bottom:none}
+.demo-admin-menu-row .nombre{font-size:12.5px;font-weight:600;color:var(--da-carbon)}
+.demo-admin-menu-row .precio{font-family:var(--fuente-texto);font-variant-numeric:tabular-nums;font-size:12px;color:var(--da-gris-texto)}
+.demo-admin-menu-row .editar{font-size:11px;font-weight:600;color:var(--da-sello);background:none;border:none;cursor:pointer;padding:4px 8px}
+
+.demo-admin-horario-fila{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px dashed var(--da-recibo);font-size:12px}
+.demo-admin-horario-fila:last-child{border-bottom:none}
+.demo-admin-horario-fila .dia{font-weight:600;color:var(--da-carbon)}
+.demo-admin-horario-fila .rango{color:var(--da-gris-texto);font-family:var(--fuente-texto);font-variant-numeric:tabular-nums}
+.demo-admin-horario-fila.cerrado .rango{color:var(--da-aji)}
+
 @media (max-width:760px){
+  .demo-admin-kanban{grid-template-columns:1fr}
   .demo-admin{padding:20px}
   .demo-admin-stats{flex-wrap:wrap}
   .demo-admin-stat{min-width:calc(50% - 5px)}

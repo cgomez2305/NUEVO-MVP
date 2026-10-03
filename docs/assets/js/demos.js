@@ -450,11 +450,140 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  // Pestañas del panel (Panel/Pedidos/Copiloto/Menú, o Agenda/Servicios/
+  // Horario en reservas): antes eran rótulos sueltos que no hacían nada.
+  // Envuelve el contenido actual en una vista "panel" y arma el resto a
+  // partir de datos que ya están en el HTML (las mismas filas del
+  // dashboard, los mismos productos/servicios de la tienda), para no
+  // repetir contenido a mano en las cinco industrias.
+  // ---------------------------------------------------------------------
+  function initAdminTabs(admin) {
+    var nav = admin.querySelectorAll('.demo-admin-nav span');
+    var eyebrow = admin.querySelector('.demo-admin-eyebrow');
+    if (!nav.length || !eyebrow) return;
+
+    var vistaPanel = document.createElement('div');
+    vistaPanel.className = 'demo-admin-vista activo';
+    vistaPanel.setAttribute('data-vista', 'panel');
+    var resto = [];
+    var nodo = eyebrow;
+    while (nodo) { resto.push(nodo); nodo = nodo.nextElementSibling; }
+    resto.forEach(function (el) { vistaPanel.appendChild(el); });
+    admin.appendChild(vistaPanel);
+
+    var raiz = admin.closest('.demo-panel');
+    var esReservas = raiz && raiz.getAttribute('data-tipo') === 'reservas';
+    var filasOriginales = Array.prototype.slice.call(vistaPanel.querySelectorAll('.demo-admin-fila'));
+
+    function crearVista(clave) {
+      var v = document.createElement('div');
+      v.className = 'demo-admin-vista';
+      v.setAttribute('data-vista', clave);
+      admin.appendChild(v);
+      return v;
+    }
+
+    nav.forEach(function (span) {
+      var clave = span.textContent.trim().toLowerCase();
+      if (clave === 'panel') return;
+
+      if (clave === 'pedidos' || clave === 'agenda') {
+        var v = crearVista(clave);
+        var tablero = document.createElement('div');
+        tablero.className = 'demo-admin-kanban';
+        var columnas = esReservas
+          ? [['Confirmadas', ['confirmada']], ['Pendientes', ['pendiente']]]
+          : [['Por preparar', ['pendiente', 'pagado']], ['En camino', ['en_camino']], ['Entregados', ['entregado']]];
+        columnas.forEach(function (col) {
+          var colDiv = document.createElement('div');
+          colDiv.className = 'demo-admin-kanban-col';
+          colDiv.innerHTML = '<h5>' + col[0] + '</h5>';
+          var coincidencias = filasOriginales.filter(function (f) {
+            var chip = f.querySelector('.demo-admin-chip');
+            return chip && col[1].some(function (estado) { return chip.classList.contains(estado); });
+          });
+          (coincidencias.length ? coincidencias : [filasOriginales[0]]).filter(Boolean).forEach(function (f) {
+            var card = document.createElement('div');
+            card.className = 'demo-admin-kanban-card';
+            card.innerHTML = '<span class="nombre"></span><span class="meta"></span><span class="precio"></span>';
+            card.querySelector('.nombre').textContent = (f.querySelector('.nombre') || {}).textContent || '';
+            card.querySelector('.meta').textContent = (f.querySelector('.meta') || {}).textContent || '';
+            card.querySelector('.precio').textContent = (f.querySelector('.precio') || {}).textContent || '';
+            colDiv.appendChild(card);
+          });
+          tablero.appendChild(colDiv);
+        });
+        v.appendChild(tablero);
+      } else if (clave === 'copiloto') {
+        var v2 = crearVista('copiloto');
+        var candidatos = esReservas
+          ? [['María José', 'No pide cita hace 24 días'], ['Esteban Rivas', 'No pide cita hace 31 días']]
+          : [['María José', 'No pide hace 18 días'], ['Esteban Rivas', 'No pide hace 25 días']];
+        candidatos.forEach(function (c, i) {
+          var row = document.createElement('div');
+          row.className = 'demo-admin-copiloto-row';
+          var av = document.createElement('div');
+          av.className = 'av';
+          av.textContent = iniciales(c[0]);
+          av.style.background = COLORES_AVATAR[i % COLORES_AVATAR.length];
+          var info = document.createElement('div');
+          info.className = 'info';
+          info.innerHTML = '<span class="nombre"></span><span class="motivo"></span>';
+          info.querySelector('.nombre').textContent = c[0];
+          info.querySelector('.motivo').textContent = c[1];
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-mini';
+          btn.textContent = 'Enviar';
+          row.appendChild(av);
+          row.appendChild(info);
+          row.appendChild(btn);
+          v2.appendChild(row);
+        });
+      } else if (clave === 'menú' || clave === 'servicios') {
+        var v3 = crearVista(clave);
+        var items = raiz ? Array.prototype.slice.call(raiz.querySelectorAll('.demo-producto, .demo-servicio')) : [];
+        items.forEach(function (it) {
+          var row = document.createElement('div');
+          row.className = 'demo-admin-menu-row';
+          row.innerHTML = '<span class="nombre"></span><span class="precio"></span><button type="button" class="editar">Editar</button>';
+          row.querySelector('.nombre').textContent = it.getAttribute('data-nombre') || '';
+          row.querySelector('.precio').textContent = formatoCOP(parseInt(it.getAttribute('data-precio'), 10) || 0);
+          v3.appendChild(row);
+        });
+      } else if (clave === 'horario') {
+        var v4 = crearVista('horario');
+        [['Lunes', '8:00 a.m. – 6:00 p.m.'], ['Martes', '8:00 a.m. – 6:00 p.m.'], ['Miércoles', '8:00 a.m. – 6:00 p.m.'],
+         ['Jueves', '8:00 a.m. – 6:00 p.m.'], ['Viernes', '8:00 a.m. – 6:00 p.m.'], ['Sábado', '9:00 a.m. – 2:00 p.m.'],
+         ['Domingo', 'Cerrado']].forEach(function (d) {
+          var row = document.createElement('div');
+          row.className = 'demo-admin-horario-fila' + (d[1] === 'Cerrado' ? ' cerrado' : '');
+          row.innerHTML = '<span class="dia"></span><span class="rango"></span>';
+          row.querySelector('.dia').textContent = d[0];
+          row.querySelector('.rango').textContent = d[1];
+          v4.appendChild(row);
+        });
+      }
+    });
+
+    nav.forEach(function (span) {
+      span.addEventListener('click', function () {
+        var clave = span.textContent.trim().toLowerCase();
+        nav.forEach(function (s) { s.classList.toggle('activo', s === span); });
+        admin.querySelectorAll('.demo-admin-vista').forEach(function (v) {
+          v.classList.toggle('activo', v.getAttribute('data-vista') === clave);
+        });
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initTabs();
     initVistaToggle();
     document.querySelectorAll('.demo-panel[data-tipo="pedidos"]').forEach(initPedidos);
     document.querySelectorAll('.demo-panel[data-tipo="reservas"]').forEach(initReservas);
     document.querySelectorAll('.demo-admin').forEach(initAdminExtras);
+    document.querySelectorAll('.demo-admin').forEach(initAdminTabs);
   });
 })();
