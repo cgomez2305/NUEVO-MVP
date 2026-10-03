@@ -385,8 +385,22 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
 
 /* hero: layout de dos columnas + mockup de teléfono */
 .hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding-top:8px}
-.hero-col-tel{display:flex;justify-content:center;animation:entrada .7s ease .3s both}
-.telefono{width:290px;background:linear-gradient(160deg,#3a3d46 0%,#15161b 14%,#0a0b0e 55%);border-radius:40px;padding:12px;position:relative;box-shadow:0 2px 5px rgba(0,0,0,.35),0 45px 90px -24px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08)}
+.hero-col-tel{display:flex;justify-content:center;animation:entrada .7s ease .3s both;perspective:1400px}
+/* el teléfono entra girando en 3D una sola vez (no en loop) y, ya asentado,
+   se inclina siguiendo el cursor — profundidad como respuesta a la
+   interacción, igual que el spotlight de las demás tarjetas, nunca un
+   movimiento propio y continuo que no esté sincronizado con nada más. */
+.telefono{width:290px;background:linear-gradient(160deg,#3a3d46 0%,#15161b 14%,#0a0b0e 55%);border-radius:40px;padding:12px;position:relative;box-shadow:0 2px 5px rgba(0,0,0,.35),0 45px 90px -24px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);transform-style:preserve-3d}
+/* "entrando": la animación de llegada manda sobre transform mientras corre.
+   Al terminar, el JS la cambia por "listo" (animation:none explícito —
+   una animation con fill-mode "both" si no, sigue ganándole a cualquier
+   transform declarado después, sin importar especificidad). */
+.telefono.entrando{animation:telefonoEntrada 1s cubic-bezier(.16,1,.3,1) both}
+.telefono.listo{animation:none;transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg))}
+@keyframes telefonoEntrada{
+  0%{opacity:0;transform:rotateY(-20deg) rotateX(6deg) translateY(18px) scale(.94)}
+  100%{opacity:1;transform:rotateY(0) rotateX(0) translateY(0) scale(1)}
+}
 .telefono::after{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:52px;height:5px;border-radius:4px;background:#000;opacity:.55;z-index:5}
 .telefono-pantalla{background:var(--papel-mock,#F6F1E7);border-radius:30px;overflow:hidden;min-height:492px;position:relative}
 .telefono-pantalla::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 18%,transparent 32%)}
@@ -504,9 +518,14 @@ footer.footer-grande{background:var(--carbon);color:var(--tiquete);border-top:no
   .recibo-badge .dot{animation:none}
   .demo-teaser-en-vivo .dot{animation:none}
   .cierre-glow{animation:none}
+  .telefono.entrando{animation:none;opacity:1}
 }
 
-section{padding:72px 0}
+/* overflow-x:clip (no overflow:hidden, que también recorta en Y): las filas
+   que entran deslizándose desde el costado (.reveal-der/.reveal-izq, antes
+   de llegar a .visto) no deben ensanchar la página ni crear scroll
+   horizontal mientras esperan su turno. */
+section{padding:72px 0;overflow-x:clip}
 section[id],[id]{scroll-margin-top:132px}
 h2{font-family:var(--fuente-titulo);font-weight:700;letter-spacing:-.015em;font-size:clamp(30px,2.4vw + 1.4rem,46px);line-height:1.08;margin:0 0 12px}
 .lead{font-size:clamp(15px,.5vw + .85rem,18px);color:var(--texto-suave);max-width:600px;line-height:1.6;margin:0 0 36px}
@@ -982,27 +1001,43 @@ details p{font-size:14px;color:var(--texto-suave);line-height:1.6;margin:12px 0 
 }
 @media (max-width:620px){
   .blog-grid{grid-template-columns:1fr}
-  .blog-destacado{grid-template-columns:1fr;text-align:center;padding:28px 24px}
-  .blog-destacado .icono-grande{margin:0 auto}
+  .blog-destacado{grid-template-columns:1fr;grid-template-areas:"icono" "texto";text-align:center;padding:28px 24px}
+  .blog-destacado .icono-grande{grid-area:icono;margin:0 auto}
   .blog-destacado .chip-nuevo{justify-content:center}
 }
 
 /* blog: artículo */
-.articulo{padding:56px 0 80px}
+.articulo{padding:40px 0 80px}
+.articulo-volver{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--texto-suave);text-decoration:none;margin-bottom:28px;transition:color .15s ease,gap .15s ease}
+.articulo-volver:hover{color:var(--sello);gap:10px}
+.articulo-categoria{display:inline-flex;align-items:center;gap:9px;margin-bottom:18px}
+.articulo-categoria .icono{width:34px;height:34px;border-radius:var(--radio-badge);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.articulo-categoria span{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--texto-suave)}
 .articulo-meta{display:flex;gap:12px;align-items:center;margin-bottom:8px}
 .articulo-meta .fecha{font-family:var(--fuente-texto);font-size:12px;color:var(--texto-tenue)}
 .articulo h1{font-family:var(--fuente-titulo);font-weight:700;letter-spacing:-.015em;font-size:clamp(30px,4.5vw,44px);line-height:1.1;margin:6px 0 24px}
-.articulo-cuerpo{font-size:17px;line-height:1.7;color:var(--texto)}
+.articulo-cuerpo{font-size:17px;line-height:1.7;color:var(--texto);max-width:68ch}
 .articulo-cuerpo h2{font-size:24px;margin:40px 0 14px}
 .articulo-cuerpo h3{font-size:19px;margin:28px 0 10px}
 .articulo-cuerpo p{margin:0 0 18px}
 .articulo-cuerpo ul,.articulo-cuerpo ol{margin:0 0 18px;padding-left:22px}
 .articulo-cuerpo li{margin-bottom:8px}
 .articulo-cuerpo strong{color:var(--texto)}
-.articulo-cuerpo blockquote{margin:28px 0;padding:4px 0 4px 20px;border-left:3px solid var(--sello);color:var(--texto-suave);font-style:italic}
-.articulo-cuerpo .fuente{font-size:13px;color:var(--texto-tenue)}
-.articulo-cta{margin-top:48px;background:var(--bg-suave);border-radius:20px;padding:28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.articulo-cuerpo blockquote{margin:28px 0;padding:20px 24px;border-radius:14px;background:var(--bg-suave);color:var(--texto);font-style:normal;font-weight:600;font-size:16px;line-height:1.5}
+.articulo-fuentes{margin-top:44px;padding-top:20px;border-top:1px solid var(--borde);max-width:68ch}
+.articulo-fuentes span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-tenue);margin-bottom:6px}
+.articulo-fuentes p{margin:0;font-size:13px;color:var(--texto-tenue);line-height:1.6}
+.articulo-cta{margin-top:40px;background:var(--bg-suave);border-radius:20px;padding:28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;max-width:68ch}
 .articulo-cta p{margin:0;font-size:15px;max-width:420px}
+
+/* relacionados: cierra el post sin dejarlo en un callejón sin salida */
+.articulo-relacionados{margin-top:64px;padding-top:40px;border-top:1px solid var(--borde)}
+.articulo-relacionados>span{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-tenue);margin-bottom:18px}
+.relacionados-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.relacionados-grid .articulo-card{padding:20px}
+.relacionados-grid .articulo-card h2{font-size:16px}
+.relacionados-grid .articulo-card p{display:none}
+@media (max-width:620px){.relacionados-grid{grid-template-columns:1fr}}
 
 @media (max-width: 860px){
   .calc, .copiloto-demo, .dolores, .verificable{grid-template-columns:1fr}

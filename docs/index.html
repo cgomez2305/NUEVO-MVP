@@ -155,7 +155,7 @@
           <span class="icono-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B4CCA" stroke-width="2.2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7Z"/></svg></span>
           <span>Pago Bre-B<br><small>confirmado</small></span>
         </div>
-        <div class="telefono" aria-hidden="true">
+        <div class="telefono entrando" aria-hidden="true">
           <span class="telefono-badge mono">EN VIVO EN WHATSAPP</span>
           <div class="telefono-statusbar">
             <span>9:14</span>
@@ -945,13 +945,28 @@ Total — $27.500</span>
     pendientes = [];
   }, 1500);
 
-  // ---- Luces de fondo del hero: reaccionan al mouse y al scroll ----
+  // ---- Luces de fondo del hero y tilt del teléfono: reaccionan al mouse y al scroll ----
   (function () {
     var hero = document.querySelector('.hero');
     var glows = document.querySelector('.hero-glows');
+    var telefono = document.querySelector('.telefono');
     if (!hero || !glows) return;
     var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducido) return;
+
+    // el teléfono gira en 3D una sola vez al entrar; cuando esa animación
+    // termina, se cambia por "listo" para que el tilt por mouse (abajo)
+    // pueda mover su transform — una animation con fill-mode "both" le
+    // sigue ganando a cualquier transform declarado después, sin importar
+    // la especificidad, así que no basta con agregar la clase nueva.
+    if (telefono) {
+      telefono.addEventListener('animationend', function (e) {
+        if (e.animationName === 'telefonoEntrada') {
+          telefono.classList.remove('entrando');
+          telefono.classList.add('listo');
+        }
+      });
+    }
 
     hero.addEventListener('mousemove', function (e) {
       var rect = hero.getBoundingClientRect();
@@ -959,10 +974,18 @@ Total — $27.500</span>
       var py = (e.clientY - rect.top) / rect.height - 0.5;
       glows.style.setProperty('--gx', (px * 46) + 'px');
       glows.style.setProperty('--gy', (py * 36) + 'px');
+      if (telefono && telefono.classList.contains('listo')) {
+        telefono.style.setProperty('--tilt-y', (px * 14) + 'deg');
+        telefono.style.setProperty('--tilt-x', (py * -10) + 'deg');
+      }
     });
     hero.addEventListener('mouseleave', function () {
       glows.style.setProperty('--gx', '0px');
       glows.style.setProperty('--gy', '0px');
+      if (telefono) {
+        telefono.style.setProperty('--tilt-y', '0deg');
+        telefono.style.setProperty('--tilt-x', '0deg');
+      }
     });
 
     function actualizarScroll() {
