@@ -1,6 +1,16 @@
 <?php
 $esNuevo = $producto === null;
 $volver = base_url('/panel/productos');
+// Tiendas (fase 4): por peso, precio y costo son del kilo y el stock se
+// escribe en kilos (se guarda en gramos).
+$porPeso = ($producto['vende_por'] ?? 'unidad') === 'peso';
+$codigoActual = $producto['codigo_barras'] ?? ($codigoInicial ?? null);
+$stockMostrado = '';
+if (isset($producto['stock']) && $producto['stock'] !== null) {
+    $stockMostrado = $porPeso
+        ? rtrim(rtrim(number_format((int) $producto['stock'] / 1000, 3, ',', ''), '0'), ',')
+        : (string) (int) $producto['stock'];
+}
 ?>
 <a href="<?= e($volver) ?>" class="pq-volver-panel">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
@@ -13,6 +23,13 @@ $volver = base_url('/panel/productos');
 <form method="post"
       action="<?= e($esNuevo ? base_url('/panel/productos') : base_url('/panel/productos/' . $producto['id'] . '/actualizar')) ?>"
       enctype="multipart/form-data" class="pq-card pq-form-panel">
+  <?php
+  // Primer botón del formulario, apagado: Enter en un campo no envía nada.
+  // El lector de códigos escribe el código y manda Enter; sin esto, ese
+  // Enter guardaba el producto a medio llenar (o, con foto, la borraba:
+  // "Eliminar foto" era el primer botón).
+  ?>
+  <button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button>
   <?= csrf_campo() ?>
   <input type="hidden" name="volver" value="<?= e($volver) ?>">
 
@@ -38,12 +55,35 @@ $volver = base_url('/panel/productos');
     </div>
   </div>
 
+  <fieldset class="pq-mostrador-metodos pq-mostrador-metodos-2 pq-producto-vende-por">
+    <legend class="pq-label">¿Cómo lo vendes?</legend>
+    <label class="pq-mostrador-metodo"><input type="radio" name="vende_por" value="unidad"<?= !$porPeso ? ' checked' : '' ?> data-vende-por><span>Por unidad</span></label>
+    <label class="pq-mostrador-metodo"><input type="radio" name="vende_por" value="peso"<?= $porPeso ? ' checked' : '' ?> data-vende-por><span>Por peso (kilo)</span></label>
+  </fieldset>
+
   <div class="pq-campo">
-    <label class="pq-label" for="precio">Precio</label>
+    <label class="pq-label" for="precio" data-etiqueta-unidad="Precio" data-etiqueta-peso="Precio del kilo"><?= $porPeso ? 'Precio del kilo' : 'Precio' ?></label>
     <div class="pq-campo-dinero">
       <input class="pq-input pq-mono" type="text" inputmode="numeric" id="precio" name="precio" data-precio
              value="<?= isset($producto['precio']) ? number_format((int) $producto['precio'], 0, '', '.') : '' ?>" required>
     </div>
+  </div>
+
+  <div class="pq-campo">
+    <label class="pq-label" for="costo"><span data-etiqueta-unidad="Lo que te cuesta" data-etiqueta-peso="Lo que te cuesta el kilo"><?= $porPeso ? 'Lo que te cuesta el kilo' : 'Lo que te cuesta' ?></span> <span class="pq-ayuda">(opcional)</span></label>
+    <div class="pq-campo-dinero">
+      <input class="pq-input pq-mono" type="text" inputmode="numeric" id="costo" name="costo" data-precio
+             value="<?= isset($producto['costo']) && $producto['costo'] !== null ? number_format((int) $producto['costo'], 0, '', '.') : '' ?>" placeholder="Lo que le pagas al proveedor">
+    </div>
+    <span class="pq-ayuda" data-margen-producto>Con el costo, Veci te dice cuánto te deja de verdad cada venta. Las compras a proveedor lo ponen solas.</span>
+  </div>
+
+  <div class="pq-campo">
+    <label class="pq-label" for="codigo_barras">Código de barras <span class="pq-ayuda">(opcional)</span></label>
+    <input class="pq-input pq-mono" type="text" id="codigo_barras" name="codigo_barras" maxlength="32" value="<?= e((string) $codigoActual) ?>"
+           autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Pásalo por el lector o escribe los números" data-campo-lector
+           data-consulta-url="<?= e(base_url('/panel/codigos/')) ?>"<?= $producto !== null ? ' data-producto-id="' . (int) $producto['id'] . '"' : '' ?>>
+    <span class="pq-ayuda pq-codigo-sugerencia" data-codigo-sugerencia aria-live="polite" hidden></span>
   </div>
 
   <div class="pq-campo">
@@ -117,9 +157,9 @@ $volver = base_url('/panel/productos');
   <?php endif; ?>
 
   <div class="pq-campo">
-    <label class="pq-label" for="stock">Unidades disponibles <span class="pq-ayuda">(opcional)</span></label>
-    <input class="pq-input pq-mono pq-campo-unidades" type="number" inputmode="numeric" min="0" step="1" id="stock" name="stock" value="<?= isset($producto['stock']) && $producto['stock'] !== null ? (int) $producto['stock'] : '' ?>" placeholder="Sin contar">
-    <span class="pq-ayuda">Para lo que se hace en cantidad fija (20 empanadas, 8 tortas). Cada pedido descuenta; en 0 sale agotado solo. Vacío = no contar.</span>
+    <label class="pq-label" for="stock"><span data-etiqueta-unidad="Unidades disponibles" data-etiqueta-peso="Kilos disponibles"><?= $porPeso ? 'Kilos disponibles' : 'Unidades disponibles' ?></span> <span class="pq-ayuda">(opcional)</span></label>
+    <input class="pq-input pq-mono pq-campo-unidades" type="text" inputmode="decimal" maxlength="10" id="stock" name="stock" value="<?= e($stockMostrado) ?>" placeholder="Sin contar">
+    <span class="pq-ayuda">Cada venta o pedido descuenta; en 0 sale agotado solo. Vacío = no contar. Si lo vendes por peso, escribe los kilos (ej.: 2,5).</span>
   </div>
 
   <div class="pq-switch-fila">

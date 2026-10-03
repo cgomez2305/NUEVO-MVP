@@ -160,8 +160,14 @@ CREATE TABLE IF NOT EXISTS productos (
   sede_id     INT UNSIGNED NOT NULL,
   nombre      VARCHAR(120) NOT NULL,
   precio      INT UNSIGNED NOT NULL,
+  -- Tiendas (fase 4): lo que le cuesta al tendero y cómo se vende. Por
+  -- peso, precio y costo son POR KILO y stock va en GRAMOS.
+  costo       INT UNSIGNED DEFAULT NULL,
+  vende_por   ENUM('unidad','peso') NOT NULL DEFAULT 'unidad',
   categoria   VARCHAR(60)  NOT NULL DEFAULT 'General',
   descripcion VARCHAR(160) DEFAULT NULL,
+  -- Código de barras (lector o cámara): único por sede cuando existe.
+  codigo_barras VARCHAR(32) DEFAULT NULL,
   imagen      VARCHAR(255) DEFAULT NULL,
   color       CHAR(7)      NOT NULL DEFAULT '#5B7F3A',
   activo      TINYINT(1)   NOT NULL DEFAULT 1,
@@ -173,7 +179,9 @@ CREATE TABLE IF NOT EXISTS productos (
   orden       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-  INDEX idx_productos_sede (sede_id, activo)
+  INDEX idx_productos_sede (sede_id, activo),
+  UNIQUE KEY uniq_producto_codigo_sede (sede_id, codigo_barras),
+  INDEX idx_productos_codigo (codigo_barras)
 ) ENGINE=InnoDB;
 
 -- La base de clientes del NEGOCIO (no de una sede sola): si un cliente
@@ -191,6 +199,8 @@ CREATE TABLE IF NOT EXISTS clientes (
   -- procesar el pedido (requerido); este es, además, querer recibir
   -- promociones (opcional). El checkout público los pide por separado.
   acepta_marketing TINYINT(1)  NOT NULL DEFAULT 0,
+  -- Tope de lo que se le fía (NULL = sin tope). Ver fiado_movimientos.
+  fiado_limite    INT UNSIGNED DEFAULT NULL,
   creado_en       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
   UNIQUE KEY uniq_cliente_por_negocio (negocio_id, telefono)
@@ -632,6 +642,155 @@ CREATE TABLE IF NOT EXISTS referidos (
   FOREIGN KEY (referido_id) REFERENCES negocios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Tiendas (fase 4), ver migrations/2026-10-03_21_ventas_mostrador.sql.
+-- Venta de mostrador: lo que se vende en el local (con lector de códigos o
+-- buscando por nombre), sin pasar por la tienda en línea. Descuenta el
+-- mismo inventario que los pedidos y entra al cierre de caja por método.
+--
+-- recibido/cambio solo para efectivo ("¿con cuánto paga?"); cliente_id
+-- solo si es fiado. token: el del formulario que la creó, único, para que
+-- un doble toque en "Cobrar" no registre la venta dos veces.
+-- Anular (solo el dueño, el mismo día) devuelve el inventario y, si fue
+-- fiado, anula el cargo; la venta queda en el historial marcada.
+
+CREATE TABLE IF NOT EXISTS ventas (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id     INT UNSIGNED NOT NULL,
+  total       INT UNSIGNED NOT NULL,
+  metodo      ENUM('efectivo','nequi','breb','fiado') NOT NULL,
+  recibido    INT UNSIGNED DEFAULT NULL,
+  cambio      INT UNSIGNED DEFAULT NULL,
+  cliente_id  INT UNSIGNED DEFAULT NULL,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  token       CHAR(32)     DEFAULT NULL,
+  anulada     TINYINT(1)   NOT NULL DEFAULT 0,
+  anulada_en  DATETIME     DEFAULT NULL,
+  anulada_por INT UNSIGNED DEFAULT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (anulada_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  UNIQUE KEY uniq_ventas_token (token),
+  INDEX idx_ventas_sede_fecha (sede_id, creado_en)
+) ENGINE=InnoDB;
+
+-- cantidad: unidades, o KILOS si el producto se vende por peso (0,250 =
+-- 250 g). precio_unitario es el de la unidad o el del kilo; costo_unitario
+-- es el costo que tenía el producto al vender (para el margen real, aunque
+-- el costo cambie después). nombre y por_peso se copian: borrar o editar el
+-- producto no cambia el tiquete.
+CREATE TABLE IF NOT EXISTS venta_items (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  venta_id        INT UNSIGNED  NOT NULL,
+  producto_id     INT UNSIGNED  DEFAULT NULL,
+  nombre          VARCHAR(120)  NOT NULL,
+  por_peso        TINYINT(1)    NOT NULL DEFAULT 0,
+  cantidad        DECIMAL(10,3) NOT NULL,
+  precio_unitario INT UNSIGNED  NOT NULL,
+  costo_unitario  INT UNSIGNED  DEFAULT NULL,
+  subtotal        INT UNSIGNED  NOT NULL,
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Tiendas (fase 4), ver migrations/2026-10-03_22_fiado.sql.
+-- Fiado (la cuenta del cliente en la tienda). Es del NEGOCIO, como el
+-- cliente: lo que se fió en una sede se puede abonar en otra.
+-- Saldo = cargos − abonos (sin contar los anulados). Un cargo nace de una
+-- venta de mostrador fiada (venta_id) o a mano, con nota. sede_id dice en
+-- qué local entró el abono: un abono en efectivo suma a la caja de ESA sede.
+-- fiado_limite: tope opcional de lo que se le fía a un cliente (lo pone el
+-- dueño; la venta de mostrador no deja pasarlo).
+
+CREATE TABLE IF NOT EXISTS fiado_movimientos (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id  INT UNSIGNED NOT NULL,
+  sede_id     INT UNSIGNED DEFAULT NULL,
+  cliente_id  INT UNSIGNED NOT NULL,
+  tipo        ENUM('cargo','abono') NOT NULL,
+  monto       INT UNSIGNED NOT NULL,
+  venta_id    INT UNSIGNED DEFAULT NULL,
+  metodo      ENUM('efectivo','nequi','breb') DEFAULT NULL,
+  nota        VARCHAR(160) DEFAULT NULL,
+  anulado     TINYINT(1)   NOT NULL DEFAULT 0,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE SET NULL,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_fiado_cliente (negocio_id, cliente_id, creado_en),
+  INDEX idx_fiado_sede_fecha (sede_id, creado_en)
+) ENGINE=InnoDB;
+
+-- Cada recordatorio de pago que se abrió por WhatsApp. Ley 2300 de 2023:
+-- como mucho uno por cliente a la semana (se revisa aquí) y solo en el
+-- horario permitido (ver App\Services\HorarioCobro).
+CREATE TABLE IF NOT EXISTS fiado_recordatorios (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  negocio_id  INT UNSIGNED NOT NULL,
+  cliente_id  INT UNSIGNED NOT NULL,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  saldo       INT UNSIGNED NOT NULL,
+  enviado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (negocio_id) REFERENCES negocios(id) ON DELETE CASCADE,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_recordatorio_cliente (cliente_id, enviado_en)
+) ENGINE=InnoDB;
+
+-- Tiendas (fase 4), ver migrations/2026-10-03_23_compras.sql.
+-- Compras a proveedor: la llegada del pedido del distribuidor. Suma al
+-- inventario y deja como costo del producto el último costo pagado.
+-- cantidad: unidades, o KILOS si el producto se vende por peso.
+-- stock_antes: lo que había antes de sumar (NULL = el producto no llevaba
+-- inventario y empezó a llevarlo con esta compra).
+
+CREATE TABLE IF NOT EXISTS compras (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sede_id     INT UNSIGNED NOT NULL,
+  proveedor   VARCHAR(120) NOT NULL,
+  total       INT UNSIGNED NOT NULL,
+  usuario_id  INT UNSIGNED DEFAULT NULL,
+  token       CHAR(32)     DEFAULT NULL,
+  creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  UNIQUE KEY uniq_compras_token (token),
+  INDEX idx_compras_sede_fecha (sede_id, creado_en)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS compra_items (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  compra_id       INT UNSIGNED  NOT NULL,
+  producto_id     INT UNSIGNED  DEFAULT NULL,
+  nombre          VARCHAR(120)  NOT NULL,
+  por_peso        TINYINT(1)    NOT NULL DEFAULT 0,
+  cantidad        DECIMAL(10,3) NOT NULL,
+  costo_unitario  INT UNSIGNED  NOT NULL,
+  subtotal        INT UNSIGNED  NOT NULL,
+  stock_antes     INT           DEFAULT NULL,
+  FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Tiendas (fase 4), ver migrations/2026-10-03_24_codigos_barras.sql.
+-- Catálogo compartido de códigos de barras entre todas las tiendas Veci:
+-- solo el código y cómo se llama el producto (nunca precios, costos ni
+-- nada de la tienda que lo registró). Cuando una tienda escanea un código
+-- que no tiene, se le sugiere el nombre ("Otras tiendas lo llaman: …").
+-- Solo entran códigos de producto reales (GTIN con dígito de control
+-- válido), no los internos de la balanza ni los inventados por la tienda.
+
+CREATE TABLE IF NOT EXISTS codigos_barras (
+  codigo          VARCHAR(32)  NOT NULL PRIMARY KEY,
+  nombre          VARCHAR(120) NOT NULL,
+  veces_usado     INT UNSIGNED NOT NULL DEFAULT 1,
+  actualizado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 -- Migraciones ya incluidas en este esquema (ver bin/migrar.php): una
 -- instalación nueva nace al día y el migrador no intenta repetirlas.
 CREATE TABLE IF NOT EXISTS migraciones (
@@ -654,4 +813,9 @@ INSERT IGNORE INTO migraciones (nombre) VALUES
   ('2026-10-03_09_avisos_estado.sql'),
   ('2026-10-03_10_pasarela_wompi.sql'),
   ('2026-10-03_11_referidos.sql'),
-  ('2026-10-03_12_sedes_extra.sql');
+  ('2026-10-03_12_sedes_extra.sql'),
+  ('2026-10-03_20_productos_tienda.sql'),
+  ('2026-10-03_21_ventas_mostrador.sql'),
+  ('2026-10-03_22_fiado.sql'),
+  ('2026-10-03_23_compras.sql'),
+  ('2026-10-03_24_codigos_barras.sql');

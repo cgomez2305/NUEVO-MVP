@@ -82,7 +82,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
                 <div class="pq-plato-linea">
                   <h3 class="pq-plato-nombre"><?= e($producto['nombre']) ?></h3>
                   <span class="pq-plato-guia" aria-hidden="true"></span>
-                  <span class="pq-plato-precio"><?= pesos((int) $producto['precio']) ?></span>
+                  <span class="pq-plato-precio"><?= pesos((int) $producto['precio']) ?><?= ($producto['vende_por'] ?? '') === 'peso' ? ' el kilo' : '' ?></span>
                 </div>
                 <?php if (!empty($producto['combo'])): ?>
                   <?php // El combo dice qué trae y, si es verdad, cuánto se ahorra frente a pedirlo suelto. ?>
@@ -103,7 +103,7 @@ $destacados = array_values(array_filter(array_keys($masPedidos), fn ($id) => iss
                 <?php if ($agotado): ?>
                   <?php // Solo "por hoy" si de verdad vuelve mañana; un agotado indefinido no promete fecha. ?>
                   <span class="pq-plato-agotado-etiqueta"><?= ($producto['motivo_agotado'] ?? '') === 'hoy' ? 'Agotado por hoy' : 'Agotado' ?></span>
-                <?php elseif ($producto['stock'] !== null && (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES): ?>
+                <?php elseif ($producto['stock'] !== null && ($producto['vende_por'] ?? '') !== 'peso' && (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES): ?>
                   <span class="pq-plato-quedan"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
                 <?php endif; ?>
               </div>

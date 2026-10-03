@@ -7,6 +7,10 @@
   <a href="<?= e(base_url('/panel/productos/nuevo')) ?>" class="pq-btn pq-btn-sello pq-btn-chico">+ Nuevo producto</a>
 </div>
 
+<?php if (!empty($error)): ?>
+  <div class="pq-alerta" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
+
 <form method="get" action="<?= e(base_url('/panel/productos')) ?>" class="pq-filtro-barra">
   <input class="pq-input" type="text" name="q" value="<?= e($busqueda) ?>" placeholder="Buscar producto...">
   <select class="pq-select" name="categoria" data-autoenviar>
@@ -47,6 +51,24 @@
   </section>
 <?php endif; ?>
 
+<?php if (!empty($masDeja['filas'])): ?>
+  <?php $topeGanancia = max(array_column($masDeja['filas'], 'ganancia')); ?>
+  <?php // Tiendas (fase 4): la ganancia real, no lo vendido. Solo con datos suficientes (ver Venta::loQueMasDeja). ?>
+  <section class="pq-mas-vendidos pq-mas-deja" aria-labelledby="pq-titulo-mas-deja">
+    <h2 class="pq-seccion-titulo" id="pq-titulo-mas-deja">Lo que más te deja · 30 días</h2>
+    <ol class="pq-mas-vendidos-lista">
+      <?php foreach ($masDeja['filas'] as $fila): ?>
+        <li style="--parte: <?= round($fila['ganancia'] / $topeGanancia, 3) ?>">
+          <span class="pq-mas-vendidos-nombre"><?= e($fila['nombre']) ?></span>
+          <span class="pq-mas-vendidos-barra" aria-hidden="true"></span>
+          <span class="pq-mas-vendidos-veces pq-mono"><?= pesos((int) $fila['ganancia']) ?></span>
+        </li>
+      <?php endforeach; ?>
+    </ol>
+    <p class="pq-ayuda">Ganancia = lo cobrado menos el costo, en ventas de mostrador y pedidos entregados. Solo cuenta lo que tiene costo anotado (<?= (int) $masDeja['lineas'] ?> renglones vendidos).</p>
+  </section>
+<?php endif; ?>
+
 <?php if ($porCategoria === []): ?>
   <?php if ($totalProductos === 0): ?>
     <div class="pq-catalogo-vacio">
@@ -84,11 +106,16 @@
                 <?php elseif ($agotado): ?>
                   <span class="pq-chip pq-chip-pendiente"><?= match ($producto['motivo_agotado'] ?? '') { 'hoy' => 'Agotado hoy', 'stock' => 'Sin unidades', 'combo' => 'Le falta una parte', default => 'Agotado' } ?></span>
                 <?php elseif ($producto['stock'] !== null): ?>
-                  <span class="pq-chip <?= (int) $producto['stock'] <= \App\Models\Producto::POCAS_UNIDADES ? 'pq-chip-pendiente' : 'pq-chip-caja' ?>"><?= (int) $producto['stock'] === 1 ? 'Queda 1' : 'Quedan ' . (int) $producto['stock'] ?></span>
+                  <span class="pq-chip <?= \App\Models\Producto::quedaPoco($producto) ? 'pq-chip-pendiente' : 'pq-chip-caja' ?>"><?= e(\App\Models\Producto::stockLegible($producto)) ?></span>
                 <?php else: ?>
                   <span class="pq-chip pq-chip-caja">Disponible</span>
                 <?php endif; ?>
-                <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?></span>
+                <span class="pq-producto-card-precio"><?= pesos((int) $producto['precio']) ?><?= ($producto['vende_por'] ?? '') === 'peso' ? ' / kg' : '' ?></span>
+                <?php $margen = \App\Models\Producto::margen($producto); ?>
+                <?php if ($margen !== null): ?>
+                  <?php // El margen real, solo si hay costo: sin costo no se inventa. ?>
+                  <span class="pq-producto-margen<?= $margen['ganancia'] < 0 ? ' pq-producto-margen-perdida' : '' ?>"><?= $margen['ganancia'] < 0 ? 'Bajo costo' : 'Margen ' . $margen['porcentaje'] . ' %' ?></span>
+                <?php endif; ?>
                 <?php if (!empty($producto['combo'])): ?>
                   <span class="pq-producto-card-combo">Combo · <?= count($producto['combo']) ?> productos</span>
                 <?php endif; ?>

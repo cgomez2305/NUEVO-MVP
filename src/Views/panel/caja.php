@@ -2,7 +2,12 @@
 use App\Models\CierreCaja;
 
 $cerrada = $cierre !== null;
-$efectivoVendido = (int) ($resumen['por_metodo']['efectivo']['total'] ?? 0);
+// Tiendas (fase 4): el efectivo del mostrador y de los abonos de fiado
+// también está en el cajón (ver CierreCaja::efectivoDeTienda).
+$efectivoVendido = (int) ($resumen['por_metodo']['efectivo']['total'] ?? 0) + CierreCaja::efectivoDeTienda($resumen);
+$mostradorZ = $resumen['mostrador'] ?? null;
+$abonosZ = array_filter($resumen['abonos_fiado'] ?? [], fn ($a) => (int) $a['total'] > 0);
+$hayMostrador = $mostradorZ !== null && ((int) $mostradorZ['ventas'] > 0 || (int) $mostradorZ['anuladas'] > 0);
 $esReservas = ($negocio['tipo_negocio'] ?? 'pedidos') === 'reservas';
 // Citas: se sugiere lo que falta por cobrar (precio − anticipos ya pagados).
 $servicioSugerido = $cerrada ? (int) ($resumen['efectivo_servicios'] ?? 0) : max(0, (int) $resumen['total_citas'] - (int) $resumen['anticipos']);
@@ -53,11 +58,12 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
       </p>
       <?php foreach ($esReservas && (int) $resumen['pedidos'] === 0 ? [] : CierreCaja::METODOS as $clave => $etiqueta): ?>
         <?php $linea = $resumen['por_metodo'][$clave] ?? ['pedidos' => 0, 'total' => 0]; ?>
+        <?php $deMostrador = $mostradorZ['por_metodo'][$clave] ?? ['ventas' => 0, 'total' => 0]; ?>
         <div class="pq-comanda-linea">
           <div class="pq-comanda-fila">
-            <span class="pq-comanda-nombre"><?= e($etiqueta) ?> <span class="pq-cierre-z-cuenta"><?= (int) $linea['pedidos'] ?> ped.</span></span>
+            <span class="pq-comanda-nombre"><?= e($etiqueta) ?> <span class="pq-cierre-z-cuenta"><?= (int) $linea['pedidos'] ?> ped.<?= $hayMostrador ? ' · ' . (int) $deMostrador['ventas'] . ' mostr.' : '' ?></span></span>
             <span class="pq-plato-guia" aria-hidden="true"></span>
-            <span class="pq-comanda-subtotal"><?= pesos((int) $linea['total']) ?></span>
+            <span class="pq-comanda-subtotal"><?= pesos((int) $linea['total'] + (int) $deMostrador['total']) ?></span>
           </div>
         </div>
       <?php endforeach; ?>
@@ -80,6 +86,17 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
         <span>Vendido</span>
         <span><?= pesos((int) $resumen['ventas_total']) ?></span>
       </div>
+      <?php if ((int) ($resumen['fiado_hoy'] ?? 0) > 0 || $abonosZ !== []): ?>
+        <?php // Fiado: se vendió pero no entró plata, por eso va debajo del total y no suma. ?>
+        <div class="pq-cierre-fiado">
+          <?php if ((int) ($resumen['fiado_hoy'] ?? 0) > 0): ?>
+            <div class="pq-comanda-ajuste"><span>Fiado hoy <span class="pq-cierre-z-cuenta"><?= (int) $mostradorZ['por_metodo']['fiado']['ventas'] ?> vent. · no entró plata</span></span><span class="pq-plato-guia" aria-hidden="true"></span><span><?= pesos((int) $resumen['fiado_hoy']) ?></span></div>
+          <?php endif; ?>
+          <?php foreach ($abonosZ as $metodoAbono => $abono): ?>
+            <div class="pq-comanda-ajuste"><span>Abonos de fiado · <?= e(\App\Models\Fiado::METODOS_ABONO[$metodoAbono] ?? $metodoAbono) ?> <span class="pq-cierre-z-cuenta"><?= (int) $abono['abonos'] === 1 ? '1 abono' : (int) $abono['abonos'] . ' abonos' ?></span></span><span class="pq-plato-guia" aria-hidden="true"></span><span><?= pesos((int) $abono['total']) ?></span></div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
       <dl class="pq-comanda-datos">
         <?php if ($cerrada): ?>
           <div><dt>Base</dt><dd><?= pesos((int) $cierre['base']) ?></dd></div>
@@ -96,6 +113,9 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
         <?php endif; ?>
         <?php if ((int) $resumen['cancelados'] > 0): ?>
           <div><dt>Cancelados</dt><dd><?= (int) $resumen['cancelados'] ?> (no suman)</dd></div>
+        <?php endif; ?>
+        <?php if ((int) ($mostradorZ['anuladas'] ?? 0) > 0): ?>
+          <div><dt>Anuladas</dt><dd><?= (int) $mostradorZ['anuladas'] ?> de mostrador (no suman)</dd></div>
         <?php endif; ?>
       </dl>
     </article>
@@ -142,7 +162,7 @@ $tonoDiferencia = static fn (int $d): string => $d === 0 ? 'pq-chip-caja' : ($d 
         </div>
         <p class="pq-cierre-cuadre" data-caja-cuadre aria-live="polite">
           Debería haber <strong class="pq-mono" data-caja-esperado><?= pesos((int) $baseSugerida + $efectivoVendido + ((int) $resumen['total_citas'] > 0 ? $servicioSugerido : 0)) ?></strong>
-          <span class="pq-ayuda">(base + efectivo de <?= (int) $resumen['total_citas'] > 0 && (int) $resumen['pedidos'] > 0 ? 'pedidos y servicios' : ((int) $resumen['total_citas'] > 0 ? 'servicios' : 'pedidos') ?>)</span>
+          <span class="pq-ayuda">(base + efectivo de <?= (int) $resumen['total_citas'] > 0 && (int) $resumen['pedidos'] > 0 ? 'pedidos y servicios' : ((int) $resumen['total_citas'] > 0 ? 'servicios' : 'pedidos') ?><?= $hayMostrador || $abonosZ !== [] ? ', mostrador y abonos de fiado' : '' ?>)</span>
           <span class="pq-chip" data-caja-resultado hidden></span>
         </p>
         <div class="pq-campo">

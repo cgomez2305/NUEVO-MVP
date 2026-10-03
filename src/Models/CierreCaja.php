@@ -65,7 +65,17 @@ class CierreCaja
         $stmt->execute($rango);
         $citas = $stmt->fetch() ?: ['citas' => 0, 'total' => 0, 'anticipos' => 0];
 
+        // Tiendas (fase 4): ventas de mostrador (no anuladas) y abonos de
+        // fiado. Lo fiado no es plata que entró: no suma a "Vendido" ni al
+        // efectivo; va aparte como "Fiado hoy". Un abono en efectivo sí entró.
+        $mostrador = Venta::resumenDelRango($sedeId, $rango['desde'], $rango['hasta']);
+        $abonosFiado = Fiado::abonosDelRango($sedeId, $rango['desde'], $rango['hasta']);
+        $mostradorCobrado = array_sum(array_column($mostrador['por_metodo'], 'total')) - $mostrador['por_metodo']['fiado']['total'];
+
         return [
+            'mostrador'     => $mostrador,
+            'abonos_fiado'  => $abonosFiado,
+            'fiado_hoy'     => $mostrador['por_metodo']['fiado']['total'],
             'fecha'         => $fecha,
             'por_metodo'    => $porMetodo,
             'pedidos'       => $pedidos,
@@ -77,8 +87,18 @@ class CierreCaja
             'citas'         => (int) $citas['citas'],
             'total_citas'   => (int) $citas['total'],
             'anticipos'     => (int) $citas['anticipos'],
-            'ventas_total'  => $totalPedidos + (int) $citas['total'],
+            'ventas_total'  => $totalPedidos + (int) $citas['total'] + $mostradorCobrado,
         ];
+    }
+
+    /**
+     * Efectivo que entró por el mostrador y por abonos de fiado. Los
+     * cierres guardados antes de la fase 4 no traen estas claves: cuentan 0.
+     */
+    public static function efectivoDeTienda(array $resumen): int
+    {
+        return (int) ($resumen['mostrador']['por_metodo']['efectivo']['total'] ?? 0)
+            + (int) ($resumen['abonos_fiado']['efectivo']['total'] ?? 0);
     }
 
     public static function buscar(int $sedeId, string $fecha): ?array
@@ -108,7 +128,7 @@ class CierreCaja
         // Las citas no guardan forma de pago: quien cierra dice cuánto de
         // los servicios le pagaron en efectivo (nunca más de lo vendido).
         $resumen['efectivo_servicios'] = max(0, min($efectivoServicios, (int) $resumen['total_citas']));
-        $esperado = $base + (int) $resumen['por_metodo']['efectivo']['total'] + $resumen['efectivo_servicios'];
+        $esperado = $base + (int) $resumen['por_metodo']['efectivo']['total'] + $resumen['efectivo_servicios'] + self::efectivoDeTienda($resumen);
         Database::conexion()->prepare(
             'INSERT INTO cierres_caja (sede_id, fecha, ventas_total, base, efectivo_esperado, efectivo_contado, diferencia, resumen, notas, usuario_id)
              VALUES (:s, :f, :ventas, :base, :esperado, :contado, :dif, :resumen, :notas, :u)

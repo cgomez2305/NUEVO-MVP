@@ -31,6 +31,10 @@ $pqIconos = [
     'colaboradores'  => '<circle cx="8" cy="9" r="3"/><path d="M2 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/><circle cx="17.5" cy="8" r="2.3"/><path d="M15.8 14.7c2.4.4 4.2 2.5 4.2 5.3"/>',
     'cuenta'         => '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>',
     'plan'           => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/>',
+    // Tiendas (fase 4): lector de códigos, cuaderno del fiado y caja que llega del proveedor.
+    'mostrador'      => '<path d="M4 6v12M7 6v12M10 6v8M13 6v12M16 6v8M20 6v12"/><path d="M10 18h0M16 18h0"/>',
+    'fiado'          => '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6V3Z"/><path d="M6 3v18"/><path d="M10 8h5M10 12h5"/><path d="M3.5 7h2.5M3.5 12h2.5M3.5 17h2.5"/>',
+    'compras'        => '<path d="M3 8l9-5 9 5v8l-9 5-9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
     'mas'            => '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
 ];
 $pqIcono = static function (string $clave) use ($pqIconos): string {
@@ -58,7 +62,14 @@ if ($tipoReservas) {
     }
 } else {
     $navOperacion[] = ['pedidos', 'Pedidos', base_url('/panel/pedidos')];
+    // Tiendas (fase 4): vender en el local y el fiado son de todo el equipo;
+    // las compras a proveedor (inventario y costos) solo del dueño.
+    $navOperacion[] = ['mostrador', 'Mostrador', base_url('/panel/mostrador')];
     $navOperacion[] = ['productos', 'Menú', base_url('/panel/productos')];
+    $navOperacion[] = ['fiado', 'Fiado', base_url('/panel/fiado')];
+    if ($esDueno) {
+        $navOperacion[] = ['compras', 'Compras', base_url('/panel/compras')];
+    }
     // Antes solo los negocios de reservas podían poner horario: una tienda
     // de pedidos nunca mostraba "Abierto ahora" ni su hora de almuerzo.
     if ($esDueno) {
@@ -254,5 +265,8 @@ $marcaNegocio = color_seguro($negocio['color_marca'] ?? null);
   <script src="<?= e(base_url('assets/js/panel-sidebar.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-notificaciones.js')) ?>" defer></script>
   <script src="<?= e(base_url('assets/js/panel-push.js')) ?>" defer></script>
+  <?php if (!$tipoReservas): ?>
+  <script src="<?= e(base_url('assets/js/tiendas.js')) ?>" defer></script>
+  <?php endif; ?>
 </body>
 </html>

@@ -39,7 +39,7 @@
                 <p class="pq-comanda-combo"><?= e(\App\Models\Producto::textoCombo($producto)) ?></p>
               <?php endif; ?>
               <div class="pq-comanda-controles">
-                <span class="pq-comanda-unitario"><?= pesos((int) $producto['precio']) ?> c/u</span>
+                <span class="pq-comanda-unitario"><?= pesos((int) $producto['precio']) ?> <?= ($producto['vende_por'] ?? '') === 'peso' ? 'el kilo' : 'c/u' ?></span>
                 <div class="pq-stepper">
                   <form method="post" action="<?= e(base_url('/t/' . $negocio['slug'] . '/carrito/restar')) ?>" data-carrito-form="restar">
                     <?= csrf_campo() ?>

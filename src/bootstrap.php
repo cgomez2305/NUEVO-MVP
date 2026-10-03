@@ -49,7 +49,9 @@ session_start();
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+// La cámara solo para este mismo sitio: el mostrador lee códigos de barras
+// con ella (BarcodeDetector). Nadie embebido ni de otro origen la pide.
+header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(), usb=()');
 if ($httpsActivo) {
     // Una vez el navegador vio HTTPS, no vuelve a intentar HTTP por un año
     // (evita que alguien en el wifi del barrio degrade la conexión).

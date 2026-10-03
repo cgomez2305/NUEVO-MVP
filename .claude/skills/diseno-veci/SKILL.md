@@ -157,6 +157,9 @@ componentes en `references/tokens.md` y `references/tienda.md`.
 - `references/crecimiento.md` — herramientas de crecimiento del dueño
   (cupones como tiquete recortable, cupón personal del Copiloto) y sus
   reglas de negocio.
+- `references/tiendas.md` — tiendas de barrio (fase 4): mostrador con lector
+  y visor de registradora, báscula, fiado con el cuaderno de margen rojo,
+  recordatorio de cobro con la Ley 2300, compras a proveedor y margen real.
 - `scripts/capturas.js` — capturas por ruta y ancho, con detección de
   errores; `--cookies` para pantallas con sesión del panel.
 

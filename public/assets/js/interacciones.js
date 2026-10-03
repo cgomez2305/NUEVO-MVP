@@ -72,10 +72,14 @@
   // ---------------------------------------------------------------------
   document.addEventListener('submit', function (evento) {
     if (evento.defaultPrevented) return;
-    var boton = evento.target.querySelector('button[type="submit"]');
-    if (!boton || boton.disabled) return;
+    // El botón que envió (o el primero activo): un formulario puede empezar
+    // con un botón apagado que solo bloquea el Enter (formulario de producto).
+    var boton = evento.submitter || evento.target.querySelector('button[type="submit"]:not([disabled])');
+    if (!boton || boton.disabled || boton.tagName !== 'BUTTON') return;
     boton.classList.add('pq-btn-cargando');
-    boton.disabled = true;
+    // Se apaga justo después de que el navegador arma los datos: apagado
+    // antes, su name/value (p. ej. accion=guardar o gramos=500) no viajaría.
+    window.setTimeout(function () { boton.disabled = true; }, 0);
   });
 
   // ---------------------------------------------------------------------

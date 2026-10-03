@@ -7,8 +7,11 @@ require __DIR__ . '/../src/bootstrap.php';
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\CajaController;
+use App\Controllers\ComprasController;
 use App\Controllers\CrecimientoController;
+use App\Controllers\FiadoController;
 use App\Controllers\HomeController;
+use App\Controllers\MostradorController;
 use App\Controllers\OnboardingController;
 use App\Controllers\PanelController;
 use App\Controllers\TiendaController;
@@ -144,6 +147,35 @@ $router->get('/panel/plan', [$panel, 'plan']);
 $router->post('/panel/plan/solicitar', [$panel, 'solicitarCambioPlan']);
 $router->post('/panel/plan/cancelar', [$panel, 'cancelarSolicitudPlan']);
 $router->post('/panel/copiloto/{cliente}/eliminar', [$panel, 'eliminarCliente']);
+
+// Tiendas (fase 4): mostrador con lector, fiado, compras a proveedor y el
+// catálogo compartido de códigos de barras. Solo negocios de pedidos.
+$mostrador = new MostradorController();
+$fiado = new FiadoController();
+$compras = new ComprasController();
+$router->get('/panel/mostrador', [$mostrador, 'ver']);
+$router->get('/panel/mostrador/catalogo', [$mostrador, 'catalogo']);
+$router->post('/panel/mostrador/escanear', [$mostrador, 'escanear']);
+$router->post('/panel/mostrador/agregar', [$mostrador, 'agregar']);
+$router->post('/panel/mostrador/linea', [$mostrador, 'linea']);
+$router->post('/panel/mostrador/carrito', [$mostrador, 'sincronizar']);
+$router->post('/panel/mostrador/vaciar', [$mostrador, 'vaciar']);
+$router->post('/panel/mostrador/cobrar', [$mostrador, 'cobrar']);
+$router->get('/panel/mostrador/ventas/{id}', [$mostrador, 'tiquete']);
+$router->post('/panel/mostrador/ventas/{id}/anular', [$mostrador, 'anular']);
+$router->get('/panel/fiado', [$fiado, 'lista']);
+$router->post('/panel/fiado/clientes', [$fiado, 'crearCliente']);
+$router->get('/panel/fiado/{cliente}', [$fiado, 'detalle']);
+$router->post('/panel/fiado/{cliente}/abono', [$fiado, 'abonar']);
+$router->post('/panel/fiado/{cliente}/cargo', [$fiado, 'cargar']);
+$router->post('/panel/fiado/{cliente}/limite', [$fiado, 'limite']);
+$router->post('/panel/fiado/{cliente}/recordatorio', [$fiado, 'recordar']);
+$router->get('/panel/compras', [$compras, 'ver']);
+$router->post('/panel/compras', [$compras, 'enviar']);
+$router->post('/panel/compras/agregar', [$compras, 'agregar']);
+$router->post('/panel/compras/producto', [$compras, 'crearProducto']);
+$router->get('/panel/compras/{id}', [$compras, 'detalle']);
+$router->get('/panel/codigos/{codigo}', [$compras, 'consultarCodigo']);
 
 // --- Tienda pública del cliente (flujo B de la maqueta) ----------------
 $router->get('/t/{slug}', [$tienda, 'mostrar']);
